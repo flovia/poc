@@ -369,6 +369,8 @@ describe("RPC range ingest", () => {
 
   test("scans a bounded range, fetches receipts only for candidates, and remains idempotent", async () => {
     const { tx, receipt } = fixture("orthogonal-serper");
+    const blockNumber = Number(tx.blockNumber);
+    const blockNumberHex = `0x${blockNumber.toString(16)}`;
     const nonCandidate = {
       ...tx,
       hash: "0xcccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
@@ -402,12 +404,12 @@ describe("RPC range ingest", () => {
             jsonrpc: "2.0",
             id: 1,
             result: {
-              number: "0x2a",
+              number: blockNumberHex,
               timestamp: `0x${tx.blockTimestamp.toString(16)}`,
               transactions: [
-                { ...tx, blockNumber: `0x${Number(tx.blockNumber).toString(16)}` },
-                { ...irrelevantMulticall, blockNumber: `0x${Number(irrelevantMulticall.blockNumber).toString(16)}` },
-                { ...nonCandidate, blockNumber: `0x${Number(nonCandidate.blockNumber).toString(16)}` },
+                { ...tx, blockNumber: blockNumberHex },
+                { ...irrelevantMulticall, blockNumber: blockNumberHex },
+                { ...nonCandidate, blockNumber: blockNumberHex },
               ],
             },
           }),
@@ -419,10 +421,11 @@ describe("RPC range ingest", () => {
       return new Response(JSON.stringify({ jsonrpc: "2.0", id: 1, result }), { status: 200 });
     };
 
-    const first = await runRpcRangeIngest({ rpcUrl: "https://example.invalid", fromBlock: 42, toBlock: 42, fetchFn });
-    const second = await runRpcRangeIngest({ rpcUrl: "https://example.invalid", fromBlock: 42, toBlock: 42, fetchFn });
+    const first = await runRpcRangeIngest({ rpcUrl: "https://example.invalid", fromBlock: blockNumber, toBlock: blockNumber, fetchFn });
+    const second = await runRpcRangeIngest({ rpcUrl: "https://example.invalid", fromBlock: blockNumber, toBlock: blockNumber, fetchFn });
 
     expect(first.scannedBlocks).toBe(1);
+    expect(first.runId).toBeGreaterThan(0);
     expect(first.scannedTransactions).toBe(3);
     expect(first.candidateTransactions).toBe(2);
     expect(first.receiptFetches).toBe(2);
@@ -438,6 +441,35 @@ describe("RPC range ingest", () => {
       tx.hash,
       irrelevantMulticall.hash,
     ]);
-    expect(calls.filter((call) => call.method === "eth_getBlockByNumber")[0]?.params).toEqual(["0x2a", true]);
+    expect(calls.filter((call) => call.method === "eth_getBlockByNumber")[0]?.params).toEqual([blockNumberHex, true]);
+
+    const runs = db.prepare("SELECT source, from_block, to_block, observation_count, inserted_observations FROM ingestion_runs ORDER BY run_id").all() as Array<{
+      source: string;
+      from_block: number;
+      to_block: number;
+      observation_count: number;
+      inserted_observations: number;
+    }>;
+    expect(runs).toEqual([
+      { source: "rpc_range", from_block: blockNumber, to_block: blockNumber, observation_count: 1, inserted_observations: 1 },
+      { source: "rpc_range", from_block: blockNumber, to_block: blockNumber, observation_count: 1, inserted_observations: 0 },
+    ]);
+  });
+
+  test("rejects ranges above the configured max block guard before RPC calls", async () => {
+    const calls: string[] = [];
+    await expect(
+      runRpcRangeIngest({
+        rpcUrl: "https://example.invalid",
+        fromBlock: 42,
+        toBlock: 44,
+        maxBlocks: 2,
+        fetchFn: async (_url, init) => {
+          calls.push(JSON.parse(String(init?.body)).method);
+          return new Response(JSON.stringify({ jsonrpc: "2.0", id: 1, result: "0x2105" }), { status: 200 });
+        },
+      }),
+    ).rejects.toThrow("RPC range too large");
+    expect(calls).toHaveLength(0);
   });
 });

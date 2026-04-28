@@ -2,8 +2,8 @@
 
 ## Current baseline
 
-This repository now has an offline deterministic CLI baseline plus live single
-transaction ingest:
+This repository now has an offline deterministic CLI baseline plus live RPC
+ingest for both single transactions and bounded block ranges:
 
 - frozen real Base transaction / receipt fixtures
 - Base USDC direct authorization parser
@@ -13,6 +13,8 @@ transaction ingest:
 - daily, payer, recipient, and relayer aggregates
 - static report generation
 - RPC transaction ingest by explicit tx hash
+- bounded RPC block range ingest with candidate filtering before receipt fetch
+- ingestion run metadata for bounded range scans
 - `BASE_RPC_URL` support with `ALCHEMY_API_KEY` fallback for Base Alchemy
 - `bun run verify` without live RPC, wallet, paid request, or API server
 
@@ -72,7 +74,7 @@ Acceptance:
 
 ## Phase 3: Bounded block range backfill
 
-Status: next.
+Status: completed for checkpoint-free bounded mode.
 
 Goal: scan a small block range and discover candidate transactions automatically.
 
@@ -89,6 +91,8 @@ Deliverables:
 - Fetch receipts only for candidate transactions.
 - Reuse the existing RPC tx ingest / observation builder / storage path.
 - Persist observation results idempotently.
+- Persist ingestion run metadata.
+- Guard range size with `--max-blocks`.
 - Add checkpoint-free bounded mode first.
 
 Acceptance:
@@ -96,8 +100,15 @@ Acceptance:
 - Bounded range backfill is deterministic for a fixed block range.
 - Non-candidate transactions are skipped before receipt fetch.
 - Candidate transactions reuse the same observation builder.
-- Re-running the same range is idempotent.
+- Re-running the same range is idempotent for observation writes.
+- Ingestion run metadata is append-only and records each completed run.
 - Default `bun run verify` remains fully offline.
+
+Live smoke:
+
+- Block `41729556` scanned successfully through `ingest:rpc-range`.
+- The run scanned 233 transactions, fetched 2 candidate receipts, produced 2
+  observations, and a second run inserted 0 duplicates.
 
 ## Phase 4: Chain indexer foundation
 
@@ -105,7 +116,7 @@ Goal: turn bounded backfill into a reliable indexer foundation without jumping t
 
 Deliverables:
 
-- Add ingestion runs and sync cursor tables.
+- Add sync cursor tables.
 - Store raw transaction and raw log references for auditability.
 - Add finality delay config.
 - Add retry and rate limit handling.
@@ -125,9 +136,9 @@ Goal: improve candidate scoring without weakening the source-of-truth boundary.
 
 Specification: `fingerprint-catalog.md`.
 
-Note: Phase 3 bounded range backfill remains the next implementation priority;
-the fingerprint catalog spec is recorded so attribution work can be picked up
-later without mixing it into ingest or range scanning.
+Note: Phase 4 indexer foundation remains the next implementation priority; the
+fingerprint catalog spec is recorded so attribution work can be picked up later
+without mixing it into ingest or range scanning.
 
 Deliverables:
 
@@ -182,9 +193,8 @@ Acceptance:
 
 ## Recommended immediate next task
 
-Start with Phase 3.
+Start with Phase 4.
 
-The highest leverage next step is `scripts/ingest-rpc-range.ts` because it moves
-the CLI from manually supplied tx hashes to automatic candidate discovery over a
-bounded Base block range while keeping default verification deterministic and
-offline.
+The highest leverage next step is turning bounded range scans into a resumable
+indexer foundation: sync cursors, finality delay, retry / rate-limit handling,
+and reorg detection while keeping default verification deterministic and offline.

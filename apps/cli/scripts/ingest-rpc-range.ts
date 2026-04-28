@@ -5,7 +5,7 @@ import {
   MULTICALL3_AGGREGATE3_SELECTOR,
   TRANSFER_WITH_AUTHORIZATION_SELECTOR,
 } from "../lib/constants";
-import { env, initDb } from "../lib/db";
+import { db, env, initDb, nowIso } from "../lib/db";
 import { buildObservationsFromFixture } from "../lib/observations/build-observation";
 import { storePaymentObservations } from "../lib/observations/store-observations";
 import { resolveBaseRpcUrl, resolveRpcRequestTimeoutMs } from "../lib/rpc-config";
@@ -23,11 +23,13 @@ type RunRpcRangeIngestOptions = {
   rpcUrl: string;
   fromBlock: number;
   toBlock: number;
+  maxBlocks?: number;
   timeoutMs?: number;
   fetchFn?: FetchLike;
 };
 
 export type RpcRangeIngestResult = {
+  runId: number;
   fromBlock: number;
   toBlock: number;
   scannedBlocks: number;
@@ -57,6 +59,13 @@ const parseBlockNumber = (value: string | null, name: string) => {
   return parsed;
 };
 
+const parseMaxBlocks = (value: string | null) => {
+  if (value == null) return 100;
+  const parsed = Number(value);
+  if (!Number.isSafeInteger(parsed) || parsed < 1) throw new Error("--max-blocks must be a positive integer");
+  return parsed;
+};
+
 const sameAddress = (left: string | null | undefined, right: string) => left?.toLowerCase() === right.toLowerCase();
 
 const topLevelSelector = (input: string | undefined) => input?.slice(0, 10).toLowerCase();
@@ -69,17 +78,58 @@ export const isRpcRangeCandidate = (tx: Pick<RpcTransactionPayload, "to" | "inpu
 
 const caseIdForTx = (txHash: string) => `rpc-range-${txHash.slice(2, 14)}`;
 
+const assertRangeWithinLimit = (fromBlock: number, toBlock: number, maxBlocks: number) => {
+  if (!Number.isSafeInteger(maxBlocks) || maxBlocks < 1) throw new Error(`maxBlocks must be a positive safe integer: ${maxBlocks}`);
+  const blockCount = toBlock - fromBlock + 1;
+  if (blockCount > maxBlocks) {
+    throw new Error(`RPC range too large: ${blockCount} blocks exceeds max ${maxBlocks}. Pass --max-blocks to override.`);
+  }
+};
+
+const recordIngestionRun = (result: Omit<RpcRangeIngestResult, "runId">) => {
+  const now = nowIso();
+  const row = db
+    .prepare(
+      `INSERT INTO ingestion_runs (
+        source, from_block, to_block, scanned_blocks, scanned_transactions,
+        candidate_transactions, receipt_fetches, observation_count,
+        inserted_observations, evidence_rows_updated, skipped_missing_receipts,
+        skipped_failed_receipts, status, raw_json, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING run_id`,
+    )
+    .get(
+      "rpc_range",
+      result.fromBlock,
+      result.toBlock,
+      result.scannedBlocks,
+      result.scannedTransactions,
+      result.candidateTransactions,
+      result.receiptFetches,
+      result.observationCount,
+      result.insertedObservations,
+      result.evidenceRowsUpdated,
+      result.skippedMissingReceipts,
+      result.skippedFailedReceipts,
+      "completed",
+      JSON.stringify(result),
+      now,
+    ) as { run_id: number };
+  return row.run_id;
+};
+
 export const runRpcRangeIngest = async ({
   rpcUrl,
   fromBlock,
   toBlock,
+  maxBlocks = 100,
   timeoutMs = 30_000,
   fetchFn,
 }: RunRpcRangeIngestOptions): Promise<RpcRangeIngestResult> => {
   initDb();
+  assertRangeWithinLimit(fromBlock, toBlock, maxBlocks);
 
   const blocks = await fetchRpcBlockRange({ rpcUrl, fromBlock, toBlock, timeoutMs, fetchFn });
-  const result: RpcRangeIngestResult = {
+  const result: Omit<RpcRangeIngestResult, "runId"> = {
     fromBlock,
     toBlock,
     scannedBlocks: blocks.length,
@@ -128,13 +178,14 @@ export const runRpcRangeIngest = async ({
     }
   }
 
-  return result;
+  return { runId: recordIngestionRun(result), ...result };
 };
 
 export const runRpcRangeIngestFromCli = async () => {
   const fromBlock = parseBlockNumber(readArg("--from-block"), "--from-block");
   const toBlock = parseBlockNumber(readArg("--to-block"), "--to-block");
-  return runRpcRangeIngest({ rpcUrl: resolveBaseRpcUrl(), fromBlock, toBlock, timeoutMs: resolveRpcRequestTimeoutMs() });
+  const maxBlocks = parseMaxBlocks(readArg("--max-blocks"));
+  return runRpcRangeIngest({ rpcUrl: resolveBaseRpcUrl(), fromBlock, toBlock, maxBlocks, timeoutMs: resolveRpcRequestTimeoutMs() });
 };
 
 if (import.meta.main) {

@@ -100,6 +100,25 @@ export const initDb = () => {
       FOREIGN KEY(observation_id) REFERENCES payment_observations(observation_id) ON DELETE CASCADE
     );
 
+    CREATE TABLE IF NOT EXISTS ingestion_runs (
+      run_id INTEGER PRIMARY KEY AUTOINCREMENT,
+      source TEXT NOT NULL,
+      from_block INTEGER,
+      to_block INTEGER,
+      scanned_blocks INTEGER NOT NULL,
+      scanned_transactions INTEGER NOT NULL,
+      candidate_transactions INTEGER NOT NULL,
+      receipt_fetches INTEGER NOT NULL,
+      observation_count INTEGER NOT NULL,
+      inserted_observations INTEGER NOT NULL,
+      evidence_rows_updated INTEGER NOT NULL,
+      skipped_missing_receipts INTEGER NOT NULL,
+      skipped_failed_receipts INTEGER NOT NULL,
+      status TEXT NOT NULL,
+      raw_json TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    );
+
     CREATE TABLE IF NOT EXISTS daily_metrics (
       day TEXT PRIMARY KEY,
       observation_count INTEGER NOT NULL,
@@ -149,6 +168,7 @@ export const initDb = () => {
     CREATE INDEX IF NOT EXISTS idx_payment_observations_time ON payment_observations(block_timestamp);
     CREATE INDEX IF NOT EXISTS idx_payment_observations_wallets ON payment_observations(payer_wallet, recipient_wallet, relayer_wallet);
     CREATE INDEX IF NOT EXISTS idx_attribution_candidates_observation ON attribution_candidates(observation_id);
+    CREATE INDEX IF NOT EXISTS idx_ingestion_runs_source_blocks ON ingestion_runs(source, from_block, to_block);
     CREATE INDEX IF NOT EXISTS idx_known_fingerprints_type_value ON known_fingerprints(fingerprint_type, fingerprint_value);
   `);
 };
