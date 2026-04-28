@@ -23,6 +23,7 @@
     "probe:x402:dry-run": "dotenvx run --ignore=MISSING_ENV_FILE -f ../../.env -f .env -- bun scripts/acquisition/run-x402-dry-run-probes.ts",
     "merge:endpoint-manifest:dry-run": "dotenvx run --ignore=MISSING_ENV_FILE -f ../../.env -f .env -- bun scripts/acquisition/merge-dry-run-into-endpoint-manifest.ts",
     "probe:x402:paid": "dotenvx run --ignore=MISSING_ENV_FILE -f ../../.env -f .env -- bun scripts/acquisition/run-x402-paid-probes.ts",
+    "analyze:x402:probes": "bun scripts/acquisition/analyze-x402-probe-artifacts.ts",
     "import:x402-analysis-claims": "dotenvx run --ignore=MISSING_ENV_FILE -f ../../.env -f .env -- bun scripts/import-x402-analysis-claims.ts",
     "validate:endpoint-manifest": "dotenvx run --ignore=MISSING_ENV_FILE -f ../../.env -f .env -- bun scripts/validate-endpoint-manifest.ts",
     "verify:offline": "dotenvx run --ignore=MISSING_ENV_FILE -f ../../.env -f .env -- bun scripts/verify.ts",
