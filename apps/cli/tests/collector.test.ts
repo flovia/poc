@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { beforeEach, describe, expect, test } from "bun:test";
-import { toEventSelector, toFunctionSelector } from "viem";
+import { encodeFunctionData, toEventSelector, toFunctionSelector } from "viem";
 import {
   BASE_CHAIN_ID,
   BASE_USDC_ADDRESS,
@@ -21,6 +21,7 @@ import { decodeReceiptLogsForUsdc } from "../lib/decoder/logs";
 import { buildObservationsFromFixture } from "../lib/observations/build-observation";
 import { db, initDb, resetDb } from "../lib/db";
 import { runIngest } from "../scripts/ingest-fixtures";
+import { isRpcRangeCandidate, runRpcRangeIngest } from "../scripts/ingest-rpc-range";
 import { runRpcTxIngest } from "../scripts/ingest-rpc-tx";
 import { buildAttributionCandidates } from "../lib/attribution/score";
 import { listAttributionCandidates, listPaymentObservations } from "../lib/aggregates/summaries";
@@ -76,6 +77,16 @@ describe("pure decoders", () => {
     expect(aggregate.calls).toHaveLength(1);
     const inner = extractUsdcCallsFromMulticall(tx.input);
     expect(inner).toHaveLength(0);
+  });
+
+  test("ignores USDC Multicall3 inner calls that are not authorization transfers", () => {
+    const calldata = encodeFunctionData({
+      abi: MULTICALL3_AGGREGATE3_ABI,
+      functionName: "aggregate3",
+      args: [[{ target: BASE_USDC_ADDRESS, allowFailure: false, callData: "0xa9059cbb00" }]],
+    });
+
+    expect(extractUsdcCallsFromMulticall(calldata)).toHaveLength(0);
   });
 
   test("decodes USDC AuthorizationUsed and Transfer receipt logs", () => {
@@ -339,5 +350,94 @@ describe("RPC transaction ingest", () => {
     expect(result.observationCount).toBe(0);
     expect(result.skippedReason).toBe("missing_rpc_data");
     expect(listPaymentObservations()).toHaveLength(0);
+  });
+});
+
+describe("RPC range ingest", () => {
+  beforeEach(() => {
+    resetDb();
+    initDb();
+  });
+
+  test("identifies only USDC authorization and Multicall3 aggregate3 candidates", () => {
+    expect(isRpcRangeCandidate({ to: BASE_USDC_ADDRESS, input: `${TRANSFER_WITH_AUTHORIZATION_SELECTOR}00` })).toBe(true);
+    expect(isRpcRangeCandidate({ to: BASE_USDC_ADDRESS, input: `${EXECUTE_WITH_AUTHORIZATION_SELECTOR}00` })).toBe(true);
+    expect(isRpcRangeCandidate({ to: MULTICALL3_ADDRESS, input: `${MULTICALL3_AGGREGATE3_SELECTOR}00` })).toBe(true);
+    expect(isRpcRangeCandidate({ to: BASE_USDC_ADDRESS, input: "0xa9059cbb00" })).toBe(false);
+    expect(isRpcRangeCandidate({ to: "0x0000000000000000000000000000000000000002", input: `${TRANSFER_WITH_AUTHORIZATION_SELECTOR}00` })).toBe(false);
+  });
+
+  test("scans a bounded range, fetches receipts only for candidates, and remains idempotent", async () => {
+    const { tx, receipt } = fixture("orthogonal-serper");
+    const nonCandidate = {
+      ...tx,
+      hash: "0xcccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      to: "0x0000000000000000000000000000000000000002" as RawTransaction["to"],
+      input: `${TRANSFER_WITH_AUTHORIZATION_SELECTOR}00` as RawTransaction["input"],
+    };
+    const irrelevantMulticall = {
+      ...tx,
+      hash: "0xdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd" as RawTransaction["hash"],
+      to: MULTICALL3_ADDRESS as RawTransaction["to"],
+      input: encodeFunctionData({
+        abi: MULTICALL3_AGGREGATE3_ABI,
+        functionName: "aggregate3",
+        args: [[{ target: BASE_USDC_ADDRESS, allowFailure: false, callData: "0xa9059cbb00" as `0x${string}` }]],
+      }) as RawTransaction["input"],
+    };
+    const irrelevantMulticallReceipt: RawReceipt = { ...receipt, transactionHash: irrelevantMulticall.hash, logs: [] };
+    const calls: Array<{ method: string; params: unknown[] }> = [];
+
+    const fetchFn = async (_url: RequestInfo | URL, init?: RequestInit) => {
+      const body = JSON.parse(String(init?.body)) as { method: string; params: unknown[] };
+      calls.push({ method: body.method, params: body.params });
+
+      if (body.method === "eth_chainId") {
+        return new Response(JSON.stringify({ jsonrpc: "2.0", id: 1, result: "0x2105" }), { status: 200 });
+      }
+
+      if (body.method === "eth_getBlockByNumber") {
+        return new Response(
+          JSON.stringify({
+            jsonrpc: "2.0",
+            id: 1,
+            result: {
+              number: "0x2a",
+              timestamp: `0x${tx.blockTimestamp.toString(16)}`,
+              transactions: [
+                { ...tx, blockNumber: `0x${Number(tx.blockNumber).toString(16)}` },
+                { ...irrelevantMulticall, blockNumber: `0x${Number(irrelevantMulticall.blockNumber).toString(16)}` },
+                { ...nonCandidate, blockNumber: `0x${Number(nonCandidate.blockNumber).toString(16)}` },
+              ],
+            },
+          }),
+          { status: 200 },
+        );
+      }
+
+      const result = body.params[0] === tx.hash ? receipt : irrelevantMulticallReceipt;
+      return new Response(JSON.stringify({ jsonrpc: "2.0", id: 1, result }), { status: 200 });
+    };
+
+    const first = await runRpcRangeIngest({ rpcUrl: "https://example.invalid", fromBlock: 42, toBlock: 42, fetchFn });
+    const second = await runRpcRangeIngest({ rpcUrl: "https://example.invalid", fromBlock: 42, toBlock: 42, fetchFn });
+
+    expect(first.scannedBlocks).toBe(1);
+    expect(first.scannedTransactions).toBe(3);
+    expect(first.candidateTransactions).toBe(2);
+    expect(first.receiptFetches).toBe(2);
+    expect(first.observationCount).toBe(1);
+    expect(first.insertedObservations).toBe(1);
+    expect(second.insertedObservations).toBe(0);
+    expect(second.evidenceRowsUpdated).toBe(0);
+    expect(listPaymentObservations()).toHaveLength(1);
+    expect(calls.filter((call) => call.method === "eth_getTransactionReceipt")).toHaveLength(4);
+    expect(calls.filter((call) => call.method === "eth_getTransactionReceipt").map((call) => call.params[0])).toEqual([
+      tx.hash,
+      irrelevantMulticall.hash,
+      tx.hash,
+      irrelevantMulticall.hash,
+    ]);
+    expect(calls.filter((call) => call.method === "eth_getBlockByNumber")[0]?.params).toEqual(["0x2a", true]);
   });
 });

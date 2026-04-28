@@ -3,13 +3,18 @@ import { MULTICALL3_AGGREGATE3_ABI } from "../constants";
 import type { DecodedMulticall, DecodedMulticallCall } from "../schema";
 import { decodeTransferWithAuthorization } from "./direct-usdc";
 import { isHexData } from "./selectors";
-import { BASE_USDC_ADDRESS, MULTICALL3_AGGREGATE3_SELECTOR } from "../constants";
+import { BASE_USDC_ADDRESS, EXECUTE_WITH_AUTHORIZATION_SELECTOR, MULTICALL3_AGGREGATE3_SELECTOR, TRANSFER_WITH_AUTHORIZATION_SELECTOR } from "../constants";
 import type { HexAddress, HexData } from "../schema";
 
 export type InnerUsdcTransfer = {
   call: DecodedMulticallCall;
   args: ReturnType<typeof decodeTransferWithAuthorization>["args"];
 };
+
+const AUTHORIZATION_SELECTORS = [TRANSFER_WITH_AUTHORIZATION_SELECTOR, EXECUTE_WITH_AUTHORIZATION_SELECTOR];
+
+const isAuthorizationSelector = (calldata: HexData) =>
+  AUTHORIZATION_SELECTORS.includes(calldata.slice(0, 10).toLowerCase());
 
 export const decodeAggregate3 = (calldata: HexData): DecodedMulticall => {
   const decoded = decodeFunctionData({
@@ -38,7 +43,9 @@ export const extractUsdcCallsFromMulticall = (calldata: HexData): InnerUsdcTrans
   return aggregate.calls
     .filter(
       (call): call is DecodedMulticallCall & { target: HexAddress } =>
-        isHexData(call.callData) && call.target.toLowerCase() === BASE_USDC_ADDRESS.toLowerCase(),
+        isHexData(call.callData) &&
+        call.target.toLowerCase() === BASE_USDC_ADDRESS.toLowerCase() &&
+        isAuthorizationSelector(call.callData),
     )
     .map((call) => ({
       call,

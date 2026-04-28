@@ -14,6 +14,7 @@
     "fixture:fetch-rpc": "dotenvx run --ignore=MISSING_ENV_FILE -f ../../.env -f .env -- bun scripts/fetch-rpc-fixture.ts",
     "ingest:fixtures": "dotenvx run --ignore=MISSING_ENV_FILE -f ../../.env -f .env -- bun scripts/ingest-fixtures.ts",
     "ingest:rpc-tx": "dotenvx run --ignore=MISSING_ENV_FILE -f ../../.env -f .env -- bun scripts/ingest-rpc-tx.ts",
+    "ingest:rpc-range": "dotenvx run --ignore=MISSING_ENV_FILE -f ../../.env -f .env -- bun scripts/ingest-rpc-range.ts",
     "score": "dotenvx run --ignore=MISSING_ENV_FILE -f ../../.env -f .env -- bun scripts/score.ts",
     "aggregate": "dotenvx run --ignore=MISSING_ENV_FILE -f ../../.env -f .env -- bun scripts/aggregate.ts",
     "report": "dotenvx run --ignore=MISSING_ENV_FILE -f ../../.env -f .env -- bun scripts/report.ts",

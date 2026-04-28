@@ -42,10 +42,30 @@ export type RpcReceiptPayload = {
 };
 
 export type RpcBlockPayload = {
+  number?: string | number;
   timestamp: string | number;
 };
 
+export type RpcBlockWithTransactionsPayload = RpcBlockPayload & {
+  transactions: RpcTransactionPayload[];
+};
+
 export type FetchRpcFixtureOptions = {
+  rpcUrl: string;
+  txHash: string;
+  timeoutMs?: number;
+  fetchFn?: FetchLike;
+};
+
+export type FetchRpcBlockRangeOptions = {
+  rpcUrl: string;
+  fromBlock: number;
+  toBlock: number;
+  timeoutMs?: number;
+  fetchFn?: FetchLike;
+};
+
+export type FetchRpcReceiptOptions = {
   rpcUrl: string;
   txHash: string;
   timeoutMs?: number;
@@ -77,6 +97,11 @@ const toNumber = (value: string | number, label: string): number => {
 };
 
 const toDecimalString = (value: string | number, label: string) => String(toNumber(value, label));
+
+const toRpcQuantity = (value: number) => {
+  if (!Number.isSafeInteger(value) || value < 0) throw new Error(`block number must be a non-negative safe integer: ${value}`);
+  return `0x${value.toString(16)}`;
+};
 
 const toChainId = (value: string | number | null | undefined) => {
   if (value == null) return BASE_CHAIN_ID;
@@ -123,7 +148,7 @@ const assertSame = (label: string, left: string | number, right: string | number
   if (String(left).toLowerCase() !== String(right).toLowerCase()) throw new Error(`${label} mismatch: ${left} !== ${right}`);
 };
 
-const assertFixtureConsistency = (requestedHash: `0x${string}`, tx: RawTransaction, receipt: RawReceipt) => {
+export const assertRpcFixtureConsistency = (requestedHash: `0x${string}`, tx: RawTransaction, receipt: RawReceipt) => {
   assertSame("requested tx hash", requestedHash, tx.hash);
   assertSame("receipt transaction hash", tx.hash, receipt.transactionHash);
   assertSame("transaction block number", tx.blockNumber, receipt.blockNumber);
@@ -155,6 +180,12 @@ const rpcCall = async <T>(rpcUrl: string, method: string, params: unknown[], fet
   }
 };
 
+const assertBaseChain = async (rpcUrl: string, fetchFn: FetchLike, timeoutMs: number) => {
+  const chainId = await rpcCall<string>(rpcUrl, "eth_chainId", [], fetchFn, timeoutMs);
+  const normalizedChainId = toNumber(chainId, "eth_chainId");
+  if (normalizedChainId !== BASE_CHAIN_ID) throw new Error(`RPC chainId mismatch: expected ${BASE_CHAIN_ID}, got ${normalizedChainId}`);
+};
+
 export const fetchRpcFixture = async ({
   rpcUrl,
   txHash,
@@ -162,9 +193,7 @@ export const fetchRpcFixture = async ({
   fetchFn = fetch,
 }: FetchRpcFixtureOptions): Promise<{ tx: RawTransaction; receipt: RawReceipt }> => {
   const normalizedHash = requireHex(txHash, "txHash");
-  const chainId = await rpcCall<string>(rpcUrl, "eth_chainId", [], fetchFn, timeoutMs);
-  const normalizedChainId = toNumber(chainId, "eth_chainId");
-  if (normalizedChainId !== BASE_CHAIN_ID) throw new Error(`RPC chainId mismatch: expected ${BASE_CHAIN_ID}, got ${normalizedChainId}`);
+  await assertBaseChain(rpcUrl, fetchFn, timeoutMs);
 
   const tx = await rpcCall<RpcTransactionPayload>(rpcUrl, "eth_getTransactionByHash", [normalizedHash], fetchFn, timeoutMs);
   const receipt = await rpcCall<RpcReceiptPayload>(rpcUrl, "eth_getTransactionReceipt", [normalizedHash], fetchFn, timeoutMs);
@@ -174,8 +203,49 @@ export const fetchRpcFixture = async ({
     tx: normalizeRpcTransaction(tx, block),
     receipt: normalizeRpcReceipt(receipt),
   };
-  assertFixtureConsistency(normalizedHash, fixture.tx, fixture.receipt);
+  assertRpcFixtureConsistency(normalizedHash, fixture.tx, fixture.receipt);
   return fixture;
+};
+
+export const fetchRpcReceipt = async ({
+  rpcUrl,
+  txHash,
+  timeoutMs = 30_000,
+  fetchFn = fetch,
+}: FetchRpcReceiptOptions): Promise<RawReceipt> => {
+  const normalizedHash = requireHex(txHash, "txHash");
+  const receipt = await rpcCall<RpcReceiptPayload>(rpcUrl, "eth_getTransactionReceipt", [normalizedHash], fetchFn, timeoutMs);
+  return normalizeRpcReceipt(receipt);
+};
+
+export const fetchRpcBlockRange = async ({
+  rpcUrl,
+  fromBlock,
+  toBlock,
+  timeoutMs = 30_000,
+  fetchFn = fetch,
+}: FetchRpcBlockRangeOptions): Promise<RpcBlockWithTransactionsPayload[]> => {
+  if (!Number.isSafeInteger(fromBlock) || fromBlock < 0) throw new Error(`fromBlock must be a non-negative safe integer: ${fromBlock}`);
+  if (!Number.isSafeInteger(toBlock) || toBlock < 0) throw new Error(`toBlock must be a non-negative safe integer: ${toBlock}`);
+  if (fromBlock > toBlock) throw new Error(`fromBlock must be <= toBlock: ${fromBlock} > ${toBlock}`);
+  await assertBaseChain(rpcUrl, fetchFn, timeoutMs);
+
+  const blocks: RpcBlockWithTransactionsPayload[] = [];
+  for (let blockNumber = fromBlock; blockNumber <= toBlock; blockNumber += 1) {
+    const block = await rpcCall<RpcBlockWithTransactionsPayload>(
+      rpcUrl,
+      "eth_getBlockByNumber",
+      [toRpcQuantity(blockNumber), true],
+      fetchFn,
+      timeoutMs,
+    );
+    if (!Array.isArray(block.transactions)) throw new Error(`RPC block ${blockNumber} missing full transactions`);
+    if (block.number != null && toNumber(block.number, "block number") !== blockNumber) {
+      throw new Error(`RPC block number mismatch: requested ${blockNumber}, got ${block.number}`);
+    }
+    blocks.push(block);
+  }
+  return blocks;
 };
 
 export const writeRpcFixtureFiles = (
