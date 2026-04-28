@@ -2,15 +2,18 @@
 
 ## Current baseline
 
-`demo/260427` now has an offline deterministic MVP:
+This repository now has an offline deterministic CLI baseline plus live single
+transaction ingest:
 
-- frozen fixtures
+- frozen real Base transaction / receipt fixtures
 - Base USDC direct authorization parser
 - Multicall3 helper parser
 - payment observations as source of truth
 - attribution candidates from known fingerprints
 - daily, payer, recipient, and relayer aggregates
 - static report generation
+- RPC transaction ingest by explicit tx hash
+- `BASE_RPC_URL` support with `ALCHEMY_API_KEY` fallback for Base Alchemy
 - `bun run verify` without live RPC, wallet, paid request, or API server
 
 The next work should keep the same invariant:
@@ -22,6 +25,8 @@ Provider and middleman labels stay candidates with confidence and evidence.
 ```
 
 ## Phase 1: Real fixture capture
+
+Status: completed.
 
 Goal: replace synthetic raw fixtures with frozen real Base transaction and receipt fixtures while preserving offline verification.
 
@@ -44,6 +49,8 @@ Acceptance:
 
 ## Phase 2: RPC transaction ingest
 
+Status: completed.
+
 Goal: ingest a user supplied transaction hash from Base RPC into the existing observation pipeline.
 
 Deliverables:
@@ -65,17 +72,23 @@ Acceptance:
 
 ## Phase 3: Bounded block range backfill
 
+Status: next.
+
 Goal: scan a small block range and discover candidate transactions automatically.
 
 Deliverables:
 
 - Add `scripts/ingest-rpc-range.ts`.
 - Fetch blocks with transactions for a bounded range.
+- Use the same RPC config path as tx ingest:
+  - prefer `BASE_RPC_URL`
+  - fall back to Base Alchemy via `ALCHEMY_API_KEY`
 - Candidate filter:
-  - `tx.to == Base USDC` and selector is authorization transfer
+  - `tx.to == Base USDC` and selector is authorization transfer / execute authorization
   - `tx.to == Multicall3` and selector is `aggregate3`
 - Fetch receipts only for candidate transactions.
-- Persist raw run metadata and observation results.
+- Reuse the existing RPC tx ingest / observation builder / storage path.
+- Persist observation results idempotently.
 - Add checkpoint-free bounded mode first.
 
 Acceptance:
@@ -84,6 +97,7 @@ Acceptance:
 - Non-candidate transactions are skipped before receipt fetch.
 - Candidate transactions reuse the same observation builder.
 - Re-running the same range is idempotent.
+- Default `bun run verify` remains fully offline.
 
 ## Phase 4: Chain indexer foundation
 
@@ -111,9 +125,9 @@ Goal: improve candidate scoring without weakening the source-of-truth boundary.
 
 Specification: `fingerprint-catalog.md`.
 
-Note: Phase 2 RPC transaction ingest remains the next implementation priority;
-the fingerprint catalog spec is recorded now so attribution work can be picked up
-later without mixing it into ingest.
+Note: Phase 3 bounded range backfill remains the next implementation priority;
+the fingerprint catalog spec is recorded so attribution work can be picked up
+later without mixing it into ingest or range scanning.
 
 Deliverables:
 
@@ -168,6 +182,9 @@ Acceptance:
 
 ## Recommended immediate next task
 
-Start with Phase 1.
+Start with Phase 3.
 
-The highest leverage next step is the raw tx / receipt fetcher because it bridges the current offline parser to real Base data while keeping verification deterministic.
+The highest leverage next step is `scripts/ingest-rpc-range.ts` because it moves
+the CLI from manually supplied tx hashes to automatic candidate discovery over a
+bounded Base block range while keeping default verification deterministic and
+offline.
