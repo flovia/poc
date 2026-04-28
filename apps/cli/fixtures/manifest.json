@@ -9,29 +9,6 @@
       "method": "direct",
       "txFile": "raw/orthogonal-serper.transaction.json",
       "receiptFile": "raw/orthogonal-serper.receipt.json",
-      "catalogEntries": [
-        {
-          "type": "relayer",
-          "value": "0x06f0bfd2c8f36674df5cde852c1eed8025c268c9",
-          "label": "orthogonal-serper relayer",
-          "confidence": 95,
-          "source": "real-fixture-capture"
-        },
-        {
-          "type": "recipient",
-          "value": "0x5d4f109cABe6792dDf98C7dc9413042Ce31C1785",
-          "label": "orthogonal-serper recipient",
-          "confidence": 95,
-          "source": "real-fixture-capture"
-        },
-        {
-          "type": "payer",
-          "value": "0xb2F1C3bEb9C4c4bb7fE8E55a9751603C2a3c0e54",
-          "label": "orthogonal-serper payer",
-          "confidence": 70,
-          "source": "real-fixture-capture"
-        }
-      ],
       "expectedObservation": true
     },
     {
@@ -40,29 +17,6 @@
       "method": "direct",
       "txFile": "raw/orthogonal-olostep.transaction.json",
       "receiptFile": "raw/orthogonal-olostep.receipt.json",
-      "catalogEntries": [
-        {
-          "type": "relayer",
-          "value": "0xa32ccda98ba7529705a059bd2d213da8de10d101",
-          "label": "orthogonal-olostep relayer",
-          "confidence": 95,
-          "source": "real-fixture-capture"
-        },
-        {
-          "type": "recipient",
-          "value": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
-          "label": "orthogonal-olostep recipient",
-          "confidence": 95,
-          "source": "real-fixture-capture"
-        },
-        {
-          "type": "payer",
-          "value": "0x4BB0cFFeA52Ff1A9a523aa9C8f41A0Af513d0442",
-          "label": "orthogonal-olostep payer",
-          "confidence": 70,
-          "source": "real-fixture-capture"
-        }
-      ],
       "expectedObservation": true
     },
     {
@@ -71,29 +25,6 @@
       "method": "direct",
       "txFile": "raw/orthogonal-andi.transaction.json",
       "receiptFile": "raw/orthogonal-andi.receipt.json",
-      "catalogEntries": [
-        {
-          "type": "relayer",
-          "value": "0x8f5cb67b49555e614892b7233cfddebfb746e531",
-          "label": "orthogonal-andi relayer",
-          "confidence": 95,
-          "source": "real-fixture-capture"
-        },
-        {
-          "type": "recipient",
-          "value": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
-          "label": "orthogonal-andi recipient",
-          "confidence": 95,
-          "source": "real-fixture-capture"
-        },
-        {
-          "type": "payer",
-          "value": "0x4BB0cFFeA52Ff1A9a523aa9C8f41A0Af513d0442",
-          "label": "orthogonal-andi payer",
-          "confidence": 70,
-          "source": "real-fixture-capture"
-        }
-      ],
       "expectedObservation": true
     },
     {
@@ -102,29 +33,6 @@
       "method": "direct",
       "txFile": "raw/coingecko.transaction.json",
       "receiptFile": "raw/coingecko.receipt.json",
-      "catalogEntries": [
-        {
-          "type": "relayer",
-          "value": "0x67b9ce703d9ce658d7c4ac3c289cea112fe662af",
-          "label": "coingecko relayer",
-          "confidence": 95,
-          "source": "real-fixture-capture"
-        },
-        {
-          "type": "recipient",
-          "value": "0xe9030014F5DAe217d0A152f02A043567b16c1aBf",
-          "label": "coingecko recipient",
-          "confidence": 95,
-          "source": "real-fixture-capture"
-        },
-        {
-          "type": "payer",
-          "value": "0xC9026d520738084EC403191bfE3B91c6925c55b7",
-          "label": "coingecko payer",
-          "confidence": 70,
-          "source": "real-fixture-capture"
-        }
-      ],
       "expectedObservation": true
     },
     {
@@ -133,29 +41,6 @@
       "method": "direct",
       "txFile": "raw/coinstats-news.transaction.json",
       "receiptFile": "raw/coinstats-news.receipt.json",
-      "catalogEntries": [
-        {
-          "type": "relayer",
-          "value": "0x67b9ce703d9ce658d7c4ac3c289cea112fe662af",
-          "label": "coinstats-news relayer",
-          "confidence": 95,
-          "source": "real-fixture-capture"
-        },
-        {
-          "type": "recipient",
-          "value": "0xEa8F59B504F18Ac7ed25C735f07864ae2EeFa493",
-          "label": "coinstats-news recipient",
-          "confidence": 95,
-          "source": "real-fixture-capture"
-        },
-        {
-          "type": "payer",
-          "value": "0x542656922B6Fbd2c05a975D080ee45631827D462",
-          "label": "coinstats-news payer",
-          "confidence": 70,
-          "source": "real-fixture-capture"
-        }
-      ],
       "expectedObservation": true
     },
     {
@@ -164,29 +49,6 @@
       "method": "direct",
       "txFile": "raw/origindao-quest-board.transaction.json",
       "receiptFile": "raw/origindao-quest-board.receipt.json",
-      "catalogEntries": [
-        {
-          "type": "relayer",
-          "value": "0x7f6d822467df2a85f792d4508c5722ade96be056",
-          "label": "origindao-quest-board relayer",
-          "confidence": 95,
-          "source": "real-fixture-capture"
-        },
-        {
-          "type": "recipient",
-          "value": "0x27599d824bbB4F506F985af865d840F61ba848C8",
-          "label": "origindao-quest-board recipient",
-          "confidence": 95,
-          "source": "real-fixture-capture"
-        },
-        {
-          "type": "payer",
-          "value": "0x0f0BF770601dBdcd8EFF52ca1eaceD484772168E",
-          "label": "origindao-quest-board payer",
-          "confidence": 70,
-          "source": "real-fixture-capture"
-        }
-      ],
       "expectedObservation": true
     },
     {
@@ -195,29 +57,6 @@
       "method": "direct",
       "txFile": "raw/bluepages.transaction.json",
       "receiptFile": "raw/bluepages.receipt.json",
-      "catalogEntries": [
-        {
-          "type": "relayer",
-          "value": "0x7f6d822467df2a85f792d4508c5722ade96be056",
-          "label": "bluepages relayer",
-          "confidence": 95,
-          "source": "real-fixture-capture"
-        },
-        {
-          "type": "recipient",
-          "value": "0x27599d824bbB4F506F985af865d840F61ba848C8",
-          "label": "bluepages recipient",
-          "confidence": 95,
-          "source": "real-fixture-capture"
-        },
-        {
-          "type": "payer",
-          "value": "0x30F4b26dA1fA7CAe7A2bcC4145944FBB684063CA",
-          "label": "bluepages payer",
-          "confidence": 70,
-          "source": "real-fixture-capture"
-        }
-      ],
       "expectedObservation": true
     },
     {
@@ -226,29 +65,6 @@
       "method": "direct",
       "txFile": "raw/paysponge-perplexity.transaction.json",
       "receiptFile": "raw/paysponge-perplexity.receipt.json",
-      "catalogEntries": [
-        {
-          "type": "relayer",
-          "value": "0x7f6d822467df2a85f792d4508c5722ade96be056",
-          "label": "paysponge-perplexity relayer",
-          "confidence": 95,
-          "source": "real-fixture-capture"
-        },
-        {
-          "type": "recipient",
-          "value": "0x27599d824bbB4F506F985af865d840F61ba848C8",
-          "label": "paysponge-perplexity recipient",
-          "confidence": 95,
-          "source": "real-fixture-capture"
-        },
-        {
-          "type": "payer",
-          "value": "0x38c57516207c18C3458FBaE118B80D3a7F1780c7",
-          "label": "paysponge-perplexity payer",
-          "confidence": 70,
-          "source": "real-fixture-capture"
-        }
-      ],
       "expectedObservation": true
     },
     {
@@ -257,29 +73,6 @@
       "method": "direct",
       "txFile": "raw/paysponge-wolframalpha.transaction.json",
       "receiptFile": "raw/paysponge-wolframalpha.receipt.json",
-      "catalogEntries": [
-        {
-          "type": "relayer",
-          "value": "0x7f6d822467df2a85f792d4508c5722ade96be056",
-          "label": "paysponge-wolframalpha relayer",
-          "confidence": 95,
-          "source": "real-fixture-capture"
-        },
-        {
-          "type": "recipient",
-          "value": "0x27599d824bbB4F506F985af865d840F61ba848C8",
-          "label": "paysponge-wolframalpha recipient",
-          "confidence": 95,
-          "source": "real-fixture-capture"
-        },
-        {
-          "type": "payer",
-          "value": "0xcd3770a618B2253c79a83d1DAD095D56396A8E22",
-          "label": "paysponge-wolframalpha payer",
-          "confidence": 70,
-          "source": "real-fixture-capture"
-        }
-      ],
       "expectedObservation": true
     },
     {
@@ -288,29 +81,6 @@
       "method": "direct",
       "txFile": "raw/aimo-search.transaction.json",
       "receiptFile": "raw/aimo-search.receipt.json",
-      "catalogEntries": [
-        {
-          "type": "relayer",
-          "value": "0x7f6d822467df2a85f792d4508c5722ade96be056",
-          "label": "aimo-search relayer",
-          "confidence": 95,
-          "source": "real-fixture-capture"
-        },
-        {
-          "type": "recipient",
-          "value": "0x27599d824bbB4F506F985af865d840F61ba848C8",
-          "label": "aimo-search recipient",
-          "confidence": 95,
-          "source": "real-fixture-capture"
-        },
-        {
-          "type": "payer",
-          "value": "0x37658ECC8f04eF0aE44fD4DA9d43acE3A337563b",
-          "label": "aimo-search payer",
-          "confidence": 70,
-          "source": "real-fixture-capture"
-        }
-      ],
       "expectedObservation": true
     },
     {
@@ -319,15 +89,6 @@
       "method": "other",
       "txFile": "raw/normal-erc20-transfer.transaction.json",
       "receiptFile": "raw/normal-erc20-transfer.receipt.json",
-      "catalogEntries": [
-        {
-          "type": "recipient",
-          "value": "0x0000000000000000000000000000000000009901",
-          "label": "normal-erc20-transfer catalog-only",
-          "confidence": 90,
-          "source": "catalog-seed"
-        }
-      ],
       "expectedObservation": false
     },
     {
@@ -336,15 +97,6 @@
       "method": "multicall3",
       "txFile": "raw/non-usdc-multicall3.transaction.json",
       "receiptFile": "raw/non-usdc-multicall3.receipt.json",
-      "catalogEntries": [
-        {
-          "type": "recipient",
-          "value": "0x0000000000000000000000000000000000009902",
-          "label": "non-usdc-multicall3 catalog-only",
-          "confidence": 90,
-          "source": "catalog-seed"
-        }
-      ],
       "expectedObservation": false
     },
     {
@@ -353,15 +105,6 @@
       "method": "direct",
       "txFile": "raw/missing-required-logs.transaction.json",
       "receiptFile": "raw/missing-required-logs.receipt.json",
-      "catalogEntries": [
-        {
-          "type": "recipient",
-          "value": "0x0000000000000000000000000000000000009903",
-          "label": "missing-required-logs catalog-only",
-          "confidence": 90,
-          "source": "catalog-seed"
-        }
-      ],
       "expectedObservation": false
     },
     {
@@ -370,15 +113,6 @@
       "method": "other",
       "txFile": "raw/unrelated-base-tx.transaction.json",
       "receiptFile": "raw/unrelated-base-tx.receipt.json",
-      "catalogEntries": [
-        {
-          "type": "recipient",
-          "value": "0x0000000000000000000000000000000000009904",
-          "label": "unrelated-base-tx catalog-only",
-          "confidence": 90,
-          "source": "catalog-seed"
-        }
-      ],
       "expectedObservation": false
     }
   ]

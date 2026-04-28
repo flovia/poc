@@ -3,7 +3,6 @@ import path from "node:path";
 import { env, initDb } from "../lib/db";
 import { validateFixtureManifest, type PaymentObservationInput, type RawReceipt, type RawTransaction } from "../lib/schema";
 import { buildObservationsFromFixture } from "../lib/observations/build-observation";
-import { upsertCatalogAndFingerprints } from "../lib/attribution/fingerprints";
 import { storePaymentObservations } from "../lib/observations/store-observations";
 
 const readJson = <T>(filePath: string): T => {
@@ -18,8 +17,6 @@ export const runIngest = (manifestPath = process.env.MANIFEST_PATH ?? env.manife
   const manifest = validateFixtureManifest(manifestJson);
 
   initDb();
-
-  const catalogCount = upsertCatalogAndFingerprints(manifest.cases);
 
   const observations: PaymentObservationInput[] = [];
 
@@ -38,7 +35,6 @@ export const runIngest = (manifestPath = process.env.MANIFEST_PATH ?? env.manife
   return {
     insertedObservations: stored.insertedObservations,
     evidenceRowsUpdated: stored.evidenceRowsUpdated,
-    catalogEntries: catalogCount,
     fixtureCases: manifest.cases.length,
     databasePath: env.databasePath,
   };

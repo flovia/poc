@@ -10,7 +10,7 @@ import {
   MULTICALL3_AGGREGATE3_ABI,
   USDC_TRANSFER_WITH_AUTHORIZATION_ABI,
 } from "../lib/constants";
-import type { FixtureManifest, FixtureCase, RawReceipt, RawTransaction } from "../lib/schema";
+import type { FixtureManifest, FixtureCase, KnownFingerprintsSeed, RawReceipt, RawTransaction } from "../lib/schema";
 import { buildObservationsFromFixture } from "../lib/observations/build-observation";
 
 type HexData = `0x${string}`;
@@ -24,6 +24,7 @@ type FixtureCaseFiles = {
 const fixtureDir = path.resolve(process.cwd(), "fixtures");
 const rawDir = path.join(fixtureDir, "raw");
 const expectedDir = path.join(fixtureDir, "expected");
+const knowledgeDir = path.join(fixtureDir, "knowledge");
 
 const toHex = (value: number, bytes: number): HexData => `0x${value.toString(16).padStart(bytes * 2, "0")}`;
 const hexAddress = (seed: number): HexData => toHex(seed, 20).padEnd(42, "0") as HexData;
@@ -136,11 +137,6 @@ const buildDirectCase = (caseId: string, caseIndex: number): FixtureCaseFiles =>
     method: "direct",
     txFile: `raw/${caseId}.transaction.json`,
     receiptFile: `raw/${caseId}.receipt.json`,
-    catalogEntries: [
-      { type: "relayer", value: relayer, label: `${caseId} relayer`, confidence: 95, source: "catalog-seed" },
-      { type: "recipient", value: recipient, label: `${caseId} recipient`, confidence: 95, source: "catalog-seed" },
-      { type: "payer", value: payer, label: `${caseId} payer`, confidence: 70, source: "catalog-seed" },
-    ],
     expectedObservation: true,
   };
 
@@ -225,11 +221,6 @@ const buildMulticallCase = (caseId: string, caseIndex: number): FixtureCaseFiles
     method: "multicall3",
     txFile: `raw/${caseId}.transaction.json`,
     receiptFile: `raw/${caseId}.receipt.json`,
-    catalogEntries: [
-      { type: "relayer", value: relayer, label: `${caseId} relayer`, confidence: 95, source: "catalog-seed" },
-      { type: "recipient", value: recipient, label: `${caseId} recipient`, confidence: 95, source: "catalog-seed" },
-      { type: "payer", value: payer, label: `${caseId} payer`, confidence: 70, source: "catalog-seed" },
-    ],
     expectedObservation: true,
   };
 
@@ -329,7 +320,6 @@ const buildNegativeCase = (caseId: string, caseIndex: number): FixtureCaseFiles 
       method: caseId === "non-usdc-multicall3" ? "multicall3" : caseId === "missing-required-logs" ? "direct" : "other",
       txFile: `raw/${caseId}.transaction.json`,
       receiptFile: `raw/${caseId}.receipt.json`,
-      catalogEntries: [{ type: "recipient", value: recipient, label: `${caseId} catalog-only`, confidence: 90, source: "catalog-seed" }],
       expectedObservation: false,
     },
     tx,
@@ -340,6 +330,7 @@ const buildNegativeCase = (caseId: string, caseIndex: number): FixtureCaseFiles 
 const writeFixtures = () => {
   fs.mkdirSync(rawDir, { recursive: true });
   fs.mkdirSync(expectedDir, { recursive: true });
+  fs.mkdirSync(knowledgeDir, { recursive: true });
 
   const cases = [
     ...positiveDirectCases.map((caseId, idx) => buildDirectCase(caseId, idx + 1)),
@@ -368,12 +359,13 @@ const writeFixtures = () => {
 
 const cases = writeFixtures();
 
+const positiveObservations = cases
+  .filter((entry) => entry.case.expectedObservation ?? false)
+  .flatMap((entry) => buildObservationsFromFixture(entry.case.caseId, entry.tx, entry.receipt));
+
 const expected = {
   generatedAt: new Date().toISOString(),
-  observations: cases
-    .filter((entry) => entry.case.expectedObservation ?? false)
-    .flatMap((entry) =>
-      buildObservationsFromFixture(entry.case.caseId, entry.tx, entry.receipt).map((observation) => ({
+  observations: positiveObservations.map((observation) => ({
         case_id: observation.caseId,
         tx_hash: observation.txHash,
         block_number: observation.blockNumber,
@@ -387,8 +379,40 @@ const expected = {
         top_level_selector: observation.topLevelSelector,
         stable_hash: observation.stableHash,
       })),
-    ),
+};
+
+const fingerprintSeed: KnownFingerprintsSeed = {
+  schemaVersion: "1",
+  chainId: BASE_CHAIN_ID,
+  collectedAt: new Date().toISOString(),
+  fingerprints: positiveObservations.flatMap((observation) => [
+    {
+      type: "relayer" as const,
+      value: observation.relayer,
+      middlemanLabel: `${observation.caseId} relayer`,
+      confidence: 95,
+      sourceName: "fixture-generator",
+      provenance: [{ caseId: observation.caseId, transaction: observation.txHash, source: "fixture-generator" }],
+    },
+    {
+      type: "recipient" as const,
+      value: observation.recipient,
+      providerLabel: `${observation.caseId} recipient`,
+      confidence: 95,
+      sourceName: "fixture-generator",
+      provenance: [{ caseId: observation.caseId, transaction: observation.txHash, source: "fixture-generator" }],
+    },
+    {
+      type: "payer" as const,
+      value: observation.payer,
+      providerLabel: `${observation.caseId} payer`,
+      confidence: 70,
+      sourceName: "fixture-generator",
+      provenance: [{ caseId: observation.caseId, transaction: observation.txHash, source: "fixture-generator" }],
+    },
+  ]),
 };
 
 fs.writeFileSync(path.join(expectedDir, "observations.json"), JSON.stringify(expected, null, 2));
+fs.writeFileSync(path.join(knowledgeDir, "known_fingerprints.json"), JSON.stringify(fingerprintSeed, null, 2));
 console.log(`Generated ${cases.length} fixture cases under ${fixtureDir}`);

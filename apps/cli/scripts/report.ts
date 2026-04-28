@@ -23,7 +23,7 @@ const buildMarkdown = (summary: Record<string, unknown>) => {
     .join("\n");
 
   const candidateLines = candidates
-    .map((row) => `obs=${row.observation_id} type=${row.candidate_type} confidence=${row.confidence}`)
+    .map((row) => `obs=${row.observation_id} type=${row.candidate_type} matched=${row.matched_fingerprint_type}:${row.matched_fingerprint_value} confidence=${row.confidence}`)
     .join("\n");
 
   const dailyLines = daily

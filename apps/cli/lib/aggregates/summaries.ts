@@ -22,6 +22,8 @@ type AttributionCandidateRow = {
   candidate_id: number;
   observation_id: number;
   candidate_type: string;
+  matched_fingerprint_type: string;
+  matched_fingerprint_value: string;
   confidence: number;
   reasons_json: string;
   evidence_refs_json: string;
@@ -86,13 +88,15 @@ export const listAttributionCandidates = () =>
       candidate_id,
       observation_id,
       candidate_type,
+      matched_fingerprint_type,
+      matched_fingerprint_value,
       confidence,
       reasons_json,
       evidence_refs_json,
       created_at,
       updated_at
     FROM attribution_candidates
-    ORDER BY candidate_id
+    ORDER BY observation_id, candidate_type, matched_fingerprint_value
   `,
     )
     .all() as Array<AttributionCandidateRow>;

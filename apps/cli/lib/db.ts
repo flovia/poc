@@ -80,7 +80,9 @@ export const initDb = () => {
       fingerprint_value TEXT NOT NULL,
       provider_label TEXT,
       middleman_label TEXT,
+      facilitator_label TEXT,
       source_name TEXT,
+      provenance_json TEXT,
       confidence INTEGER NOT NULL,
       first_seen_at TEXT NOT NULL,
       last_seen_at TEXT NOT NULL,
@@ -91,12 +93,14 @@ export const initDb = () => {
       candidate_id INTEGER PRIMARY KEY AUTOINCREMENT,
       observation_id INTEGER NOT NULL,
       candidate_type TEXT NOT NULL,
+      matched_fingerprint_type TEXT NOT NULL,
+      matched_fingerprint_value TEXT NOT NULL,
       confidence INTEGER NOT NULL,
       reasons_json TEXT NOT NULL,
       evidence_refs_json TEXT NOT NULL,
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL,
-      UNIQUE(observation_id, candidate_type, reasons_json),
+      UNIQUE(observation_id, candidate_type, matched_fingerprint_value),
       FOREIGN KEY(observation_id) REFERENCES payment_observations(observation_id) ON DELETE CASCADE
     );
 

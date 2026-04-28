@@ -24,8 +24,9 @@ import { runIngest } from "../scripts/ingest-fixtures";
 import { isRpcRangeCandidate, runRpcRangeIngest } from "../scripts/ingest-rpc-range";
 import { runRpcTxIngest } from "../scripts/ingest-rpc-tx";
 import { buildAttributionCandidates } from "../lib/attribution/score";
+import { seedKnownFingerprints, seedKnownFingerprintsFromFile } from "../lib/attribution/fingerprints";
 import { listAttributionCandidates, listPaymentObservations } from "../lib/aggregates/summaries";
-import type { FixtureManifest, RawReceipt, RawTransaction } from "../lib/schema";
+import { validateFixtureManifest, type FixtureManifest, type KnownFingerprintsSeed, type RawReceipt, type RawTransaction } from "../lib/schema";
 import { fetchRpcFixture, normalizeRpcReceipt, normalizeRpcTransaction, type RpcReceiptPayload, type RpcTransactionPayload } from "../lib/rpc-fixtures";
 import { resolveBaseRpcUrl, resolveRpcRequestTimeoutMs } from "../lib/rpc-config";
 
@@ -33,7 +34,14 @@ const fixtureRoot = path.resolve(import.meta.dir, "..", "fixtures");
 
 const readJson = <T>(relativePath: string): T => JSON.parse(fs.readFileSync(path.join(fixtureRoot, relativePath), "utf8")) as T;
 
+const listFiles = (directory: string): string[] =>
+  fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const entryPath = path.join(directory, entry.name);
+    return entry.isDirectory() ? listFiles(entryPath) : [entryPath];
+  });
+
 const manifest = () => readJson<FixtureManifest>("manifest.json");
+const knownFingerprints = () => readJson<KnownFingerprintsSeed>("knowledge/known_fingerprints.json");
 
 const fixture = (caseId: string) => {
   const fixtureCase = manifest().cases.find((item) => item.caseId === caseId);
@@ -125,24 +133,76 @@ describe("storage and attribution", () => {
     initDb();
   });
 
-  test("ingest is idempotent and catalog entries do not create observations", () => {
+  test("manifest rejects embedded attribution seed fields", () => {
+    const source = manifest();
+    expect(() =>
+      validateFixtureManifest({
+        ...source,
+        cases: [{ ...source.cases[0], catalogEntries: [{ type: "recipient", value: BASE_USDC_ADDRESS, confidence: 95 }] }],
+      }),
+    ).toThrow("must not include attribution seed field");
+  });
+
+  test("ingest is idempotent and independent from fingerprint seeds", () => {
     const first = runIngest();
     const second = runIngest();
     expect(first.insertedObservations).toBe(10);
     expect(second.insertedObservations).toBe(0);
     expect(first.fixtureCases).toBe(14);
-    expect(listPaymentObservations()).toHaveLength(10);
+    const withoutFingerprints = listPaymentObservations();
+    expect(withoutFingerprints).toHaveLength(10);
+
+    resetDb();
+    initDb();
+    seedKnownFingerprints(knownFingerprints());
+    runIngest();
+    const withFingerprints = listPaymentObservations();
+    expect(withFingerprints).toEqual(withoutFingerprints);
+  });
+
+  test("known fingerprint seeds do not create observations and negative matches stay ignored", () => {
+    const seed = knownFingerprints();
+    const normalTransfer = fixture("normal-erc20-transfer");
+    const seeded = seedKnownFingerprints({
+      ...seed,
+      fingerprints: [
+        ...seed.fingerprints,
+        {
+          type: "recipient",
+          value: normalTransfer.tx.to ?? BASE_USDC_ADDRESS,
+          providerLabel: "negative-fixture-match",
+          confidence: 95,
+          sourceName: "test",
+          provenance: [{ caseId: "normal-erc20-transfer", source: "test" }],
+        },
+      ],
+    });
+    expect(seeded).toBeGreaterThan(0);
+    expect(listPaymentObservations()).toHaveLength(0);
+
+    runIngest();
+    expect(listPaymentObservations().map((row) => row.case_id)).not.toContain("normal-erc20-transfer");
+  });
+
+  test("observation code does not depend on attribution loaders", () => {
+    const observationFiles = listFiles(path.resolve(import.meta.dir, "..", "lib", "observations")).filter((filePath) => filePath.endsWith(".ts"));
+    for (const filePath of observationFiles) {
+      expect(fs.readFileSync(filePath, "utf8"), filePath).not.toContain("../attribution");
+    }
   });
 
   test("attribution candidates include confidence, reasons, evidence refs, and observations have no final labels", () => {
+    seedKnownFingerprintsFromFile();
     runIngest();
     const result = buildAttributionCandidates();
     expect(result.observationCount).toBe(10);
-    expect(result.candidateCount).toBeGreaterThanOrEqual(20);
+    expect(result.candidateCount).toBe(20);
 
     const candidates = listAttributionCandidates();
     expect(candidates.length).toBeGreaterThan(0);
     for (const candidate of candidates) {
+      expect(candidate.matched_fingerprint_type).toMatch(/recipient|relayer/);
+      expect(candidate.matched_fingerprint_value).toMatch(/^0x/);
       expect(candidate.confidence).toBeGreaterThan(0);
       expect(JSON.parse(candidate.reasons_json).length).toBeGreaterThan(0);
       expect(JSON.parse(candidate.evidence_refs_json).length).toBeGreaterThan(0);

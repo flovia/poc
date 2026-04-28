@@ -1,0 +1,335 @@
+{
+  "generatedAt": "2026-04-28T03:39:54.093Z",
+  "candidates": [
+    {
+      "case_id": "aimo-search",
+      "candidate_type": "recipient_match",
+      "matched_fingerprint_type": "recipient",
+      "matched_fingerprint_value": "0x27599d824bbB4F506F985af865d840F61ba848C8",
+      "confidence": 95,
+      "reasons": [
+        "recipient matches known recipient fingerprint",
+        "providerLabel=origindao-quest-board recipient",
+        "sourceName=real-fixture-capture"
+      ],
+      "evidence_refs": [
+        "receipt:10:recipient",
+        "fingerprint:recipient:0x27599d824bbb4f506f985af865d840f61ba848c8"
+      ]
+    },
+    {
+      "case_id": "aimo-search",
+      "candidate_type": "relayer_match",
+      "matched_fingerprint_type": "relayer",
+      "matched_fingerprint_value": "0x7f6d822467df2a85f792d4508c5722ade96be056",
+      "confidence": 95,
+      "reasons": [
+        "relayer matches known relayer fingerprint",
+        "providerLabel=unlabeled",
+        "middlemanLabel=origindao-quest-board relayer",
+        "sourceName=real-fixture-capture"
+      ],
+      "evidence_refs": [
+        "receipt:10:relayer",
+        "fingerprint:relayer:0x7f6d822467df2a85f792d4508c5722ade96be056"
+      ]
+    },
+    {
+      "case_id": "bluepages",
+      "candidate_type": "recipient_match",
+      "matched_fingerprint_type": "recipient",
+      "matched_fingerprint_value": "0x27599d824bbB4F506F985af865d840F61ba848C8",
+      "confidence": 95,
+      "reasons": [
+        "recipient matches known recipient fingerprint",
+        "providerLabel=origindao-quest-board recipient",
+        "sourceName=real-fixture-capture"
+      ],
+      "evidence_refs": [
+        "receipt:7:recipient",
+        "fingerprint:recipient:0x27599d824bbb4f506f985af865d840f61ba848c8"
+      ]
+    },
+    {
+      "case_id": "bluepages",
+      "candidate_type": "relayer_match",
+      "matched_fingerprint_type": "relayer",
+      "matched_fingerprint_value": "0x7f6d822467df2a85f792d4508c5722ade96be056",
+      "confidence": 95,
+      "reasons": [
+        "relayer matches known relayer fingerprint",
+        "providerLabel=unlabeled",
+        "middlemanLabel=origindao-quest-board relayer",
+        "sourceName=real-fixture-capture"
+      ],
+      "evidence_refs": [
+        "receipt:7:relayer",
+        "fingerprint:relayer:0x7f6d822467df2a85f792d4508c5722ade96be056"
+      ]
+    },
+    {
+      "case_id": "coingecko",
+      "candidate_type": "recipient_match",
+      "matched_fingerprint_type": "recipient",
+      "matched_fingerprint_value": "0xe9030014F5DAe217d0A152f02A043567b16c1aBf",
+      "confidence": 95,
+      "reasons": [
+        "recipient matches known recipient fingerprint",
+        "providerLabel=coingecko recipient",
+        "sourceName=real-fixture-capture"
+      ],
+      "evidence_refs": [
+        "receipt:4:recipient",
+        "fingerprint:recipient:0xe9030014f5dae217d0a152f02a043567b16c1abf"
+      ]
+    },
+    {
+      "case_id": "coingecko",
+      "candidate_type": "relayer_match",
+      "matched_fingerprint_type": "relayer",
+      "matched_fingerprint_value": "0x67b9ce703d9ce658d7c4ac3c289cea112fe662af",
+      "confidence": 95,
+      "reasons": [
+        "relayer matches known relayer fingerprint",
+        "providerLabel=unlabeled",
+        "middlemanLabel=coingecko relayer",
+        "sourceName=real-fixture-capture"
+      ],
+      "evidence_refs": [
+        "receipt:4:relayer",
+        "fingerprint:relayer:0x67b9ce703d9ce658d7c4ac3c289cea112fe662af"
+      ]
+    },
+    {
+      "case_id": "coinstats-news",
+      "candidate_type": "recipient_match",
+      "matched_fingerprint_type": "recipient",
+      "matched_fingerprint_value": "0xEa8F59B504F18Ac7ed25C735f07864ae2EeFa493",
+      "confidence": 95,
+      "reasons": [
+        "recipient matches known recipient fingerprint",
+        "providerLabel=coinstats-news recipient",
+        "sourceName=real-fixture-capture"
+      ],
+      "evidence_refs": [
+        "receipt:5:recipient",
+        "fingerprint:recipient:0xea8f59b504f18ac7ed25c735f07864ae2eefa493"
+      ]
+    },
+    {
+      "case_id": "coinstats-news",
+      "candidate_type": "relayer_match",
+      "matched_fingerprint_type": "relayer",
+      "matched_fingerprint_value": "0x67b9ce703d9ce658d7c4ac3c289cea112fe662af",
+      "confidence": 95,
+      "reasons": [
+        "relayer matches known relayer fingerprint",
+        "providerLabel=unlabeled",
+        "middlemanLabel=coingecko relayer",
+        "sourceName=real-fixture-capture"
+      ],
+      "evidence_refs": [
+        "receipt:5:relayer",
+        "fingerprint:relayer:0x67b9ce703d9ce658d7c4ac3c289cea112fe662af"
+      ]
+    },
+    {
+      "case_id": "origindao-quest-board",
+      "candidate_type": "recipient_match",
+      "matched_fingerprint_type": "recipient",
+      "matched_fingerprint_value": "0x27599d824bbB4F506F985af865d840F61ba848C8",
+      "confidence": 95,
+      "reasons": [
+        "recipient matches known recipient fingerprint",
+        "providerLabel=origindao-quest-board recipient",
+        "sourceName=real-fixture-capture"
+      ],
+      "evidence_refs": [
+        "receipt:6:recipient",
+        "fingerprint:recipient:0x27599d824bbb4f506f985af865d840f61ba848c8"
+      ]
+    },
+    {
+      "case_id": "origindao-quest-board",
+      "candidate_type": "relayer_match",
+      "matched_fingerprint_type": "relayer",
+      "matched_fingerprint_value": "0x7f6d822467df2a85f792d4508c5722ade96be056",
+      "confidence": 95,
+      "reasons": [
+        "relayer matches known relayer fingerprint",
+        "providerLabel=unlabeled",
+        "middlemanLabel=origindao-quest-board relayer",
+        "sourceName=real-fixture-capture"
+      ],
+      "evidence_refs": [
+        "receipt:6:relayer",
+        "fingerprint:relayer:0x7f6d822467df2a85f792d4508c5722ade96be056"
+      ]
+    },
+    {
+      "case_id": "orthogonal-andi",
+      "candidate_type": "recipient_match",
+      "matched_fingerprint_type": "recipient",
+      "matched_fingerprint_value": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+      "confidence": 95,
+      "reasons": [
+        "recipient matches known recipient fingerprint",
+        "providerLabel=orthogonal-olostep recipient",
+        "sourceName=real-fixture-capture"
+      ],
+      "evidence_refs": [
+        "receipt:3:recipient",
+        "fingerprint:recipient:0x93053f1e7a5efeda532fe69cbbe43cbec3a0f13f"
+      ]
+    },
+    {
+      "case_id": "orthogonal-andi",
+      "candidate_type": "relayer_match",
+      "matched_fingerprint_type": "relayer",
+      "matched_fingerprint_value": "0x8f5cb67b49555e614892b7233cfddebfb746e531",
+      "confidence": 95,
+      "reasons": [
+        "relayer matches known relayer fingerprint",
+        "providerLabel=unlabeled",
+        "middlemanLabel=orthogonal-andi relayer",
+        "sourceName=real-fixture-capture"
+      ],
+      "evidence_refs": [
+        "receipt:3:relayer",
+        "fingerprint:relayer:0x8f5cb67b49555e614892b7233cfddebfb746e531"
+      ]
+    },
+    {
+      "case_id": "orthogonal-olostep",
+      "candidate_type": "recipient_match",
+      "matched_fingerprint_type": "recipient",
+      "matched_fingerprint_value": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+      "confidence": 95,
+      "reasons": [
+        "recipient matches known recipient fingerprint",
+        "providerLabel=orthogonal-olostep recipient",
+        "sourceName=real-fixture-capture"
+      ],
+      "evidence_refs": [
+        "receipt:2:recipient",
+        "fingerprint:recipient:0x93053f1e7a5efeda532fe69cbbe43cbec3a0f13f"
+      ]
+    },
+    {
+      "case_id": "orthogonal-olostep",
+      "candidate_type": "relayer_match",
+      "matched_fingerprint_type": "relayer",
+      "matched_fingerprint_value": "0xa32ccda98ba7529705a059bd2d213da8de10d101",
+      "confidence": 95,
+      "reasons": [
+        "relayer matches known relayer fingerprint",
+        "providerLabel=unlabeled",
+        "middlemanLabel=orthogonal-olostep relayer",
+        "sourceName=real-fixture-capture"
+      ],
+      "evidence_refs": [
+        "receipt:2:relayer",
+        "fingerprint:relayer:0xa32ccda98ba7529705a059bd2d213da8de10d101"
+      ]
+    },
+    {
+      "case_id": "orthogonal-serper",
+      "candidate_type": "recipient_match",
+      "matched_fingerprint_type": "recipient",
+      "matched_fingerprint_value": "0x5d4f109cABe6792dDf98C7dc9413042Ce31C1785",
+      "confidence": 95,
+      "reasons": [
+        "recipient matches known recipient fingerprint",
+        "providerLabel=orthogonal-serper recipient",
+        "sourceName=real-fixture-capture"
+      ],
+      "evidence_refs": [
+        "receipt:1:recipient",
+        "fingerprint:recipient:0x5d4f109cabe6792ddf98c7dc9413042ce31c1785"
+      ]
+    },
+    {
+      "case_id": "orthogonal-serper",
+      "candidate_type": "relayer_match",
+      "matched_fingerprint_type": "relayer",
+      "matched_fingerprint_value": "0x06f0bfd2c8f36674df5cde852c1eed8025c268c9",
+      "confidence": 95,
+      "reasons": [
+        "relayer matches known relayer fingerprint",
+        "providerLabel=unlabeled",
+        "middlemanLabel=orthogonal-serper relayer",
+        "sourceName=real-fixture-capture"
+      ],
+      "evidence_refs": [
+        "receipt:1:relayer",
+        "fingerprint:relayer:0x06f0bfd2c8f36674df5cde852c1eed8025c268c9"
+      ]
+    },
+    {
+      "case_id": "paysponge-perplexity",
+      "candidate_type": "recipient_match",
+      "matched_fingerprint_type": "recipient",
+      "matched_fingerprint_value": "0x27599d824bbB4F506F985af865d840F61ba848C8",
+      "confidence": 95,
+      "reasons": [
+        "recipient matches known recipient fingerprint",
+        "providerLabel=origindao-quest-board recipient",
+        "sourceName=real-fixture-capture"
+      ],
+      "evidence_refs": [
+        "receipt:8:recipient",
+        "fingerprint:recipient:0x27599d824bbb4f506f985af865d840f61ba848c8"
+      ]
+    },
+    {
+      "case_id": "paysponge-perplexity",
+      "candidate_type": "relayer_match",
+      "matched_fingerprint_type": "relayer",
+      "matched_fingerprint_value": "0x7f6d822467df2a85f792d4508c5722ade96be056",
+      "confidence": 95,
+      "reasons": [
+        "relayer matches known relayer fingerprint",
+        "providerLabel=unlabeled",
+        "middlemanLabel=origindao-quest-board relayer",
+        "sourceName=real-fixture-capture"
+      ],
+      "evidence_refs": [
+        "receipt:8:relayer",
+        "fingerprint:relayer:0x7f6d822467df2a85f792d4508c5722ade96be056"
+      ]
+    },
+    {
+      "case_id": "paysponge-wolframalpha",
+      "candidate_type": "recipient_match",
+      "matched_fingerprint_type": "recipient",
+      "matched_fingerprint_value": "0x27599d824bbB4F506F985af865d840F61ba848C8",
+      "confidence": 95,
+      "reasons": [
+        "recipient matches known recipient fingerprint",
+        "providerLabel=origindao-quest-board recipient",
+        "sourceName=real-fixture-capture"
+      ],
+      "evidence_refs": [
+        "receipt:9:recipient",
+        "fingerprint:recipient:0x27599d824bbb4f506f985af865d840f61ba848c8"
+      ]
+    },
+    {
+      "case_id": "paysponge-wolframalpha",
+      "candidate_type": "relayer_match",
+      "matched_fingerprint_type": "relayer",
+      "matched_fingerprint_value": "0x7f6d822467df2a85f792d4508c5722ade96be056",
+      "confidence": 95,
+      "reasons": [
+        "relayer matches known relayer fingerprint",
+        "providerLabel=unlabeled",
+        "middlemanLabel=origindao-quest-board relayer",
+        "sourceName=real-fixture-capture"
+      ],
+      "evidence_refs": [
+        "receipt:9:relayer",
+        "fingerprint:relayer:0x7f6d822467df2a85f792d4508c5722ade96be056"
+      ]
+    }
+  ]
+}

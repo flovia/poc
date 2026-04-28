@@ -3,9 +3,10 @@ import fs from "node:fs";
 import { db, initDb, resetDb, env } from "../lib/db";
 import { runIngest } from "./ingest-fixtures";
 import { buildAttributionCandidates } from "../lib/attribution/score";
+import { seedKnownFingerprintsFromFile } from "../lib/attribution/fingerprints";
 import { buildDailyMetrics } from "../lib/aggregates/daily";
 import { rebuildWalletProfiles } from "../lib/aggregates/wallets";
-import { listPaymentObservations } from "../lib/aggregates/summaries";
+import { listAttributionCandidates, listPaymentObservations } from "../lib/aggregates/summaries";
 import { runReport } from "./report";
 import { validateFixtureManifest, type RawReceipt, type RawTransaction } from "../lib/schema";
 import { buildObservationsFromFixture } from "../lib/observations/build-observation";
@@ -23,6 +24,16 @@ const sortObservations = (observations: Array<Record<string, unknown>>) =>
     .slice()
     .sort((left, right) => String(left.case_id).localeCompare(String(right.case_id)) || String(left.tx_hash).localeCompare(String(right.tx_hash)));
 
+const sortCandidates = (candidates: Array<Record<string, unknown>>) =>
+  candidates
+    .slice()
+    .sort(
+      (left, right) =>
+        String(left.case_id).localeCompare(String(right.case_id)) ||
+        String(left.candidate_type).localeCompare(String(right.candidate_type)) ||
+        String(left.matched_fingerprint_value).localeCompare(String(right.matched_fingerprint_value)),
+    );
+
 const normalize = (observation: Record<string, unknown>) => {
   const clone = structuredClone(observation);
   return clone;
@@ -31,6 +42,7 @@ const normalize = (observation: Record<string, unknown>) => {
 resetDb();
 initDb();
 
+seedKnownFingerprintsFromFile();
 runIngest();
 buildAttributionCandidates();
 buildDailyMetrics();
@@ -53,6 +65,9 @@ const observed = listPaymentObservations().map((row) => ({
 
 const expected = readExpected<{ observations: Array<Record<string, unknown>> }>(
   path.join(env.fixturesDir, "expected", "observations.json"),
+);
+const expectedCandidates = readExpected<{ candidates: Array<Record<string, unknown>> }>(
+  path.join(env.fixturesDir, "expected", "attribution_candidates.json"),
 );
 
 const manifest = validateFixtureManifest(readExpected<Record<string, unknown>>(env.manifestPath));
@@ -91,11 +106,7 @@ if (paymentColumnNames.includes("provider_label") || paymentColumnNames.includes
   process.exit(1);
 }
 
-const candidateRows = db.prepare("SELECT confidence, reasons_json, evidence_refs_json FROM attribution_candidates").all() as Array<{
-  confidence: number;
-  reasons_json: string;
-  evidence_refs_json: string;
-}>;
+const candidateRows = listAttributionCandidates();
 if (candidateRows.length === 0) {
   console.error("Expected attribution candidates");
   process.exit(1);
@@ -107,6 +118,31 @@ for (const candidate of candidateRows) {
   }
 }
 
+const observationsById = new Map(listPaymentObservations().map((row) => [row.observation_id, row]));
+const observedCandidates = candidateRows.map((row) => {
+  const observation = observationsById.get(row.observation_id);
+  if (!observation) throw new Error(`Candidate ${row.candidate_id} references missing observation ${row.observation_id}`);
+  return {
+    case_id: observation.case_id,
+    candidate_type: row.candidate_type,
+    matched_fingerprint_type: row.matched_fingerprint_type,
+    matched_fingerprint_value: row.matched_fingerprint_value,
+    confidence: row.confidence,
+    reasons: JSON.parse(row.reasons_json) as string[],
+    evidence_refs: JSON.parse(row.evidence_refs_json) as string[],
+  };
+});
+
+const observedCandidatesSorted = sortCandidates(observedCandidates.map(normalize));
+const expectedCandidatesSorted = sortCandidates(expectedCandidates.candidates.map((row) => normalize(row)));
+
+if (JSON.stringify(observedCandidatesSorted) !== JSON.stringify(expectedCandidatesSorted)) {
+  console.error("Observed attribution candidates do not match expected/attribution_candidates.json");
+  console.error(`Observed: ${observedCandidatesSorted.length}`);
+  console.error(`Expected: ${expectedCandidatesSorted.length}`);
+  process.exit(1);
+}
+
 await runReport();
 
-console.log(JSON.stringify({ status: "ok", observationCount: observedSorted.length }, null, 2));
+console.log(JSON.stringify({ status: "ok", observationCount: observedSorted.length, attributionCandidateCount: observedCandidatesSorted.length }, null, 2));
