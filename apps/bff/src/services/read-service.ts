@@ -15,6 +15,7 @@ import {
 import { buildReportSummary } from "../../../cli/lib/api/summary";
 import { buildWalletUsageGraph } from "../../../cli/lib/attribution/wallet-graph";
 import type { AppDatabase } from "../../../cli/lib/db";
+import { getCustomerProfileProjection, listCustomerProjections } from "./customer-projections";
 
 export type BffReadService = ReturnType<typeof createBffReadService>;
 
@@ -28,4 +29,6 @@ export const createBffReadService = (database: AppDatabase) => ({
   listRecipientWallets: () => listRecipientSummaries(database).map(toWalletProfileDto),
   listRelayerWallets: () => listRelayerSummaries(database).map(toWalletProfileDto),
   getWalletUsageGraph: () => buildWalletUsageGraph(database),
+  listCustomers: () => listCustomerProjections(database),
+  getCustomerProfile: (address: string) => getCustomerProfileProjection(database, address),
 });

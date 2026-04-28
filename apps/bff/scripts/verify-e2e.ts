@@ -128,6 +128,50 @@ const run = async () => {
           assert.equal(graph.providerWallets[0]?.payTo, "0xrecipient");
         },
       },
+      {
+        path: "/customers",
+        validate: (body) => {
+          const customers = body as Array<{
+            address: string;
+            spendAtomic: string;
+            providerCount: number;
+            upsellOpportunity: string;
+          }>;
+
+          assert.equal(customers.length, 1);
+          assert.equal(customers[0]?.address, "0xpayer");
+          assert.equal(customers[0]?.spendAtomic, "3000000");
+          assert.equal(customers[0]?.providerCount, 2);
+          assert.equal(customers[0]?.upsellOpportunity, "medium");
+        },
+      },
+      {
+        path: "/customers/0xpayer/profile",
+        validate: (body) => {
+          const profile = body as {
+            customer: { address: string; identityBasis: string; caveat: string };
+            metrics: {
+              freeTierProgress: number;
+              entryPointRatio: number;
+              upsellOpportunity: string;
+            };
+            providers: Array<{ providerId: string; payToWallet: string }>;
+            timeline: Array<{ date: string; type: string; title: string; description: string }>;
+            insights: Array<{ title: string }>;
+          };
+
+          assert.equal(profile.customer.address, "0xpayer");
+          assert.equal(profile.customer.identityBasis, "wallet_address");
+          assert.ok(profile.customer.caveat.includes("wallet-address"));
+          assert.equal(profile.metrics.freeTierProgress, 1);
+          assert.equal(profile.metrics.entryPointRatio, 0.5);
+          assert.equal(profile.metrics.upsellOpportunity, "medium");
+          assert.equal(profile.providers.length, 2);
+          assert.equal(profile.timeline[0]?.date, "2026-04-27T23:36:40.000Z");
+          assert.equal(profile.timeline[0]?.type, "payment");
+          assert.ok(profile.insights.some((insight) => insight.title === "Multi-provider usage"));
+        },
+      },
     ];
 
     for (const { path, validate } of checks) {
@@ -146,6 +190,13 @@ const run = async () => {
     assert.equal(unknown.response.status, 404);
     assert.equal(unknown.body.error, "not_found");
     assert.ok(unknown.body.message.includes("/unknown"));
+
+    const unknownCustomer = await verifyJson<{ error: string; message: string }>(
+      "/customers/0xmissing/profile",
+    );
+    assert.equal(unknownCustomer.response.status, 404);
+    assert.equal(unknownCustomer.body.error, "customer_not_found");
+    assert.ok(unknownCustomer.body.message.includes("0xmissing"));
 
     console.log("BFF offline E2E checks passed");
   } finally {

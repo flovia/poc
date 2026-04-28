@@ -21,6 +21,8 @@ describe("BFF routes", () => {
         "/wallets/recipients",
         "/wallets/relayers",
         "/wallet-usage-graph",
+        "/customers",
+        "/customers/0xpayer/profile",
       ] as const;
 
       for (const path of cases) {
@@ -44,6 +46,24 @@ describe("BFF routes", () => {
             expect.objectContaining({ txHash: "0xtx1", payerWallet: "0xpayer" }),
             expect.objectContaining({ txHash: "0xtx2", payerWallet: "0xpayer" }),
           ]);
+        }
+
+        if (path === "/customers") {
+          expect(body).toHaveLength(1);
+          expect(body[0]).toMatchObject({
+            address: "0xpayer",
+            spendAtomic: "3000000",
+            providerCount: 2,
+            upsellOpportunity: "medium",
+          });
+        }
+
+        if (path === "/customers/0xpayer/profile") {
+          expect(body.customer).toMatchObject({ address: "0xpayer" });
+          expect(body.metrics).toMatchObject({ freeTierProgress: 1 });
+          expect(Array.isArray(body.providers)).toBe(true);
+          expect(Array.isArray(body.timeline)).toBe(true);
+          expect(Array.isArray(body.insights)).toBe(true);
         }
       }
     } finally {
@@ -79,6 +99,39 @@ describe("BFF routes", () => {
       expect(response.status).toBe(404);
       expect(body.error).toBe("not_found");
       expect(body.message).toContain("/unknown");
+    } finally {
+      close();
+    }
+  });
+
+  test("returns JSON not found for unknown customer profiles", async () => {
+    const { service, close } = createTestService();
+    const handler = createBffHandler(service);
+
+    try {
+      const response = handler(request("/customers/0xmissing/profile"));
+      const body = (await response.json()) as { error: string; message: string };
+
+      expect(response.status).toBe(404);
+      expect(body.error).toBe("customer_not_found");
+      expect(body.message).toContain("0xmissing");
+    } finally {
+      close();
+    }
+  });
+
+  test("rejects non-GET requests to customer projection routes", async () => {
+    const { service, close } = createTestService();
+    const handler = createBffHandler(service);
+
+    try {
+      for (const path of ["/customers", "/customers/0xpayer/profile"]) {
+        const response = handler(request(path, { method: "POST" }));
+        const body = (await response.json()) as { error: string };
+
+        expect(response.status, path).toBe(405);
+        expect(body.error, path).toBe("method_not_allowed");
+      }
     } finally {
       close();
     }

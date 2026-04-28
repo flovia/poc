@@ -21,6 +21,7 @@ const readonlyRoutes = new Set([
   "/wallets/recipients",
   "/wallets/relayers",
   "/wallet-usage-graph",
+  "/customers",
 ]);
 
 const mutationRoutes = new Set(["/ingest/rpc-tx", "/ingest/rpc-range", "/score", "/aggregate"]);
@@ -30,7 +31,7 @@ export const createBffHandler = (service: BffReadService) => (request: Request) 
   const path = url.pathname.replace(/\/$/, "") || "/";
 
   if (request.method !== "GET") {
-    if (readonlyRoutes.has(path) || mutationRoutes.has(path)) {
+    if (isReadonlyRoute(path) || mutationRoutes.has(path)) {
       return json(
         {
           error: "method_not_allowed",
@@ -62,10 +63,32 @@ export const createBffHandler = (service: BffReadService) => (request: Request) 
       return json(service.listRelayerWallets());
     case "/wallet-usage-graph":
       return json(service.getWalletUsageGraph());
+    case "/customers":
+      return json(service.listCustomers());
     default:
+      if (path.startsWith("/customers/") && path.endsWith("/profile")) {
+        const address = decodeURIComponent(path.slice("/customers/".length, -"/profile".length));
+        const profile = service.getCustomerProfile(address);
+
+        if (profile === null) {
+          return json(
+            {
+              error: "customer_not_found",
+              message: `Customer not found: ${address}`,
+            },
+            { status: 404 },
+          );
+        }
+
+        return json(profile);
+      }
+
       return notFound(path);
   }
 };
+
+const isReadonlyRoute = (path: string) =>
+  readonlyRoutes.has(path) || (path.startsWith("/customers/") && path.endsWith("/profile"));
 
 const notFound = (path: string) =>
   json({ error: "not_found", message: `Route not found: ${path}` }, { status: 404 });
