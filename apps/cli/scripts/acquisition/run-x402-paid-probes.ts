@@ -4,6 +4,8 @@ import fs from "node:fs";
 import path from "node:path";
 import {
   loadEndpointManifestFromFile,
+  loadPaidProbeResultsFromFile,
+  validatePaidProbeResults,
   type EndpointCase,
   type LastDryRun,
   type X402PaymentOption,
@@ -19,7 +21,7 @@ type SelectedPaymentOption = X402PaymentOption & {
 
 type CliOptions = {
   execute: boolean;
-  outputPath: string;
+  outputPath: string | null;
   caseIds: Set<string> | null;
   retryErrorsFrom: string | null;
   limit: number | null;
@@ -39,18 +41,23 @@ type PaidProbeCandidate = {
   amount: bigint;
 };
 
-const defaultOutputPath = () =>
-  path.join(process.cwd(), "fixtures", "acquisition", "paid_probe_results.json");
+export const defaultOutputPath = (execute: boolean) =>
+  path.join(
+    process.cwd(),
+    "fixtures",
+    "acquisition",
+    execute ? "paid_probe_results.json" : "paid_probe_plan_results.json",
+  );
 
 const manifestPath = () =>
   path.join(process.cwd(), "fixtures", "acquisition", "endpoint_manifest.json");
 
 const sha256 = (value: string) => crypto.createHash("sha256").update(value).digest("hex");
 
-const parseArgs = (argv: string[]): CliOptions => {
+export const parseArgs = (argv: string[]): CliOptions => {
   const options: CliOptions = {
     execute: false,
-    outputPath: process.env.X402_PAID_PROBE_RESULTS_PATH ?? defaultOutputPath(),
+    outputPath: process.env.X402_PAID_PROBE_RESULTS_PATH ?? null,
     caseIds: null,
     retryErrorsFrom: null,
     limit: null,
@@ -86,6 +93,9 @@ const parseArgs = (argv: string[]): CliOptions => {
 
   return options;
 };
+
+export const resolveOutputPath = (options: Pick<CliOptions, "execute" | "outputPath">): string =>
+  options.outputPath ?? defaultOutputPath(options.execute);
 
 const normalizeNetwork = (network: string | undefined): string => {
   if (network === "base" || network === "eip155:8453") return "base";
@@ -164,15 +174,13 @@ const runX402 = (args: string[]) => {
 
 const hasUnresolvedParams = (url: string): boolean => /\{[^}]+\}|:[A-Za-z_][A-Za-z0-9_]*/.test(url);
 
-const retryCaseIds = (filePath: string | null): Set<string> | null => {
+export const retryCaseIds = (filePath: string | null): Set<string> | null => {
   if (filePath === null) return null;
-  const artifact = JSON.parse(fs.readFileSync(filePath, "utf8")) as {
-    results?: Array<Record<string, unknown>>;
-  };
+  const artifact = loadPaidProbeResultsFromFile(filePath);
   return new Set(
-    (artifact.results ?? [])
+    artifact.results
       .filter((result) => result.status === "error")
-      .map((result) => String(result.caseId ?? ""))
+      .map((result) => result.caseId)
       .filter((caseId) => caseId.length > 0),
   );
 };
@@ -218,6 +226,15 @@ const recordFrom = (value: unknown): Record<string, unknown> | null =>
 
 const preview = (value: string): string | null => (value.length > 0 ? value.slice(0, 4_000) : null);
 
+export const txHashFromSettlement = (settlement: Record<string, unknown> | null): string | null => {
+  if (typeof settlement?.transaction === "string") return settlement.transaction;
+  if (typeof settlement?.txHash === "string") return settlement.txHash;
+  return null;
+};
+
+const errorDiagnostic = (execution: { stdout: string; stderr: string }): string | null =>
+  execution.stderr.length > 0 ? execution.stderr : preview(execution.stdout);
+
 export const runX402PaidProbes = (options = parseArgs(Bun.argv.slice(2))) => {
   const manifestFile = manifestPath();
   const manifestText = fs.readFileSync(manifestFile, "utf8");
@@ -261,7 +278,8 @@ export const runX402PaidProbes = (options = parseArgs(Bun.argv.slice(2))) => {
     const payment = recordFrom(parsed?.payment);
     const settlement = recordFrom(payment?.settlement);
     const response = recordFrom(parsed?.response);
-    const txHash = typeof settlement?.transaction === "string" ? settlement.transaction : null;
+    const txHash = txHashFromSettlement(settlement);
+    const error = execution.exitCode === 0 ? null : errorDiagnostic(execution);
     results.push({
       caseId: candidate.endpointCase.caseId,
       providerName: candidate.endpointCase.providerName,
@@ -308,7 +326,7 @@ export const runX402PaidProbes = (options = parseArgs(Bun.argv.slice(2))) => {
       stdoutPreview: execution.exitCode === 0 ? null : preview(execution.stdout),
       stderrPreview: execution.exitCode === 0 ? null : preview(execution.stderr),
       exitCode: execution.exitCode,
-      error: execution.exitCode === 0 ? null : execution.stderr,
+      error,
     });
   }
 
@@ -338,11 +356,13 @@ export const runX402PaidProbes = (options = parseArgs(Bun.argv.slice(2))) => {
     results,
   };
 
-  fs.mkdirSync(path.dirname(options.outputPath), { recursive: true });
-  fs.writeFileSync(options.outputPath, `${JSON.stringify(artifact, null, 2)}\n`);
+  const outputPath = resolveOutputPath(options);
+  const validArtifact = validatePaidProbeResults(artifact);
+  fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+  fs.writeFileSync(outputPath, `${JSON.stringify(validArtifact, null, 2)}\n`);
   return {
     status: "ok",
-    outputPath: options.outputPath,
+    outputPath,
     mode: artifact.mode,
     candidateCount: candidates.length,
     paidAtomic: String(spent),

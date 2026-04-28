@@ -1,3 +1,5 @@
+import crypto from "node:crypto";
+import fs from "node:fs";
 import { describe, expect, test } from "bun:test";
 import {
   validateEndpointManifest,
@@ -7,6 +9,11 @@ import {
   type PaidProbeResults,
 } from "../lib/endpoint-manifest";
 import { analyzeX402ProbeArtifacts } from "../scripts/acquisition/analyze-x402-probe-artifacts";
+import {
+  resolveOutputPath,
+  retryCaseIds,
+  txHashFromSettlement,
+} from "../scripts/acquisition/run-x402-paid-probes";
 
 const baseArtifact = (overrides: Partial<PaidProbeResults> = {}): PaidProbeResults =>
   validatePaidProbeResults({
@@ -114,6 +121,58 @@ describe("paid probe artifact validation", () => {
     });
 
     expect(plan.results[0]?.status).toBe("planned");
+  });
+});
+
+describe("paid probe runner helpers", () => {
+  test("normalizes tx hash from settlement.transaction and settlement.txHash", () => {
+    expect(txHashFromSettlement({ transaction: "0xtransaction" })).toBe("0xtransaction");
+    expect(txHashFromSettlement({ txHash: "0xtxhash" })).toBe("0xtxhash");
+    expect(txHashFromSettlement({})).toBeNull();
+  });
+
+  test("separates default plan and execute output paths", () => {
+    expect(resolveOutputPath({ execute: false, outputPath: null })).toEndWith(
+      "paid_probe_plan_results.json",
+    );
+    expect(resolveOutputPath({ execute: true, outputPath: null })).toEndWith(
+      "paid_probe_results.json",
+    );
+    expect(resolveOutputPath({ execute: false, outputPath: "custom.json" })).toBe("custom.json");
+  });
+
+  test("extracts unique retry targets from validated error artifacts", () => {
+    const artifact = baseArtifact({
+      results: [
+        {
+          ...baseArtifact().results[0]!,
+          caseId: "case-error",
+          status: "error",
+          txHash: null,
+          response: { bodySha256: null, contentType: null },
+          exitCode: 2,
+          error: "HTTP 500",
+        },
+        {
+          ...baseArtifact().results[0]!,
+          caseId: "case-paid",
+          status: "paid",
+          txHash: null,
+        },
+      ],
+    });
+    const filePath = `/tmp/flovia-paid-retry-${crypto.randomUUID()}.json`;
+    Bun.write(filePath, JSON.stringify(artifact));
+
+    try {
+      expect([...(retryCaseIds(filePath) ?? [])]).toEqual(["case-error"]);
+    } finally {
+      try {
+        fs.unlinkSync(filePath);
+      } catch {
+        // Best-effort cleanup for temp artifact.
+      }
+    }
   });
 });
 
