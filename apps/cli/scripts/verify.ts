@@ -49,6 +49,9 @@ const normalize = (observation: Record<string, unknown>) => {
   return clone;
 };
 
+const snapshotPath = (...parts: string[]) =>
+  path.join(process.cwd(), "tests", "fixtures", "snapshots", ...parts);
+
 resetDb();
 initDb();
 
@@ -76,13 +79,13 @@ const observed = listPaymentObservations().map((row) => ({
 }));
 
 const expected = readExpected<{ observations: Array<Record<string, unknown>> }>(
-  path.join(env.fixturesDir, "expected", "observations.json"),
+  snapshotPath("observations.json"),
 );
 const expectedCandidates = readExpected<{ candidates: Array<Record<string, unknown>> }>(
-  path.join(env.fixturesDir, "expected", "attribution_candidates.json"),
+  snapshotPath("attribution_candidates.json"),
 );
 const expectedWalletGraph = readExpected<{ graph: Record<string, unknown> }>(
-  path.join(env.fixturesDir, "expected", "wallet_usage_graph.json"),
+  snapshotPath("wallet_usage_graph.json"),
 );
 
 const manifest = validateFixtureManifest(readExpected<Record<string, unknown>>(env.manifestPath));
@@ -98,7 +101,9 @@ const observedSorted = sortObservations(observed.map(normalize));
 const expectedSorted = sortObservations(expected.observations.map((row) => normalize(row)));
 
 if (JSON.stringify(observedSorted) !== JSON.stringify(expectedSorted)) {
-  console.error("Observed payment observations do not match expected/observations.json");
+  console.error(
+    "Observed payment observations do not match tests/fixtures/snapshots/observations.json",
+  );
   console.error(`Observed: ${observedSorted.length}`);
   console.error(`Expected: ${expectedSorted.length}`);
   process.exit(1);
@@ -171,7 +176,7 @@ const expectedCandidatesSorted = sortCandidates(
 
 if (JSON.stringify(observedCandidatesSorted) !== JSON.stringify(expectedCandidatesSorted)) {
   console.error(
-    "Observed attribution candidates do not match expected/attribution_candidates.json",
+    "Observed attribution candidates do not match tests/fixtures/snapshots/attribution_candidates.json",
   );
   console.error(`Observed: ${observedCandidatesSorted.length}`);
   console.error(`Expected: ${expectedCandidatesSorted.length}`);
@@ -180,7 +185,9 @@ if (JSON.stringify(observedCandidatesSorted) !== JSON.stringify(expectedCandidat
 
 const observedWalletGraph = buildWalletUsageGraph();
 if (JSON.stringify(observedWalletGraph) !== JSON.stringify(expectedWalletGraph.graph)) {
-  console.error("Observed wallet usage graph does not match expected/wallet_usage_graph.json");
+  console.error(
+    "Observed wallet usage graph does not match tests/fixtures/snapshots/wallet_usage_graph.json",
+  );
   process.exit(1);
 }
 

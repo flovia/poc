@@ -29,8 +29,8 @@ type FixtureCaseFiles = {
 
 const fixtureDir = path.resolve(process.cwd(), "fixtures");
 const rawDir = path.join(fixtureDir, "raw");
-const expectedDir = path.join(fixtureDir, "expected");
 const knowledgeDir = path.join(fixtureDir, "knowledge");
+const snapshotDir = path.resolve(process.cwd(), "tests", "fixtures", "snapshots");
 
 const toHex = (value: number, bytes: number): HexData =>
   `0x${value.toString(16).padStart(bytes * 2, "0")}`;
@@ -407,8 +407,8 @@ const buildNegativeCase = (caseId: string, caseIndex: number): FixtureCaseFiles 
 
 const writeFixtures = () => {
   fs.mkdirSync(rawDir, { recursive: true });
-  fs.mkdirSync(expectedDir, { recursive: true });
   fs.mkdirSync(knowledgeDir, { recursive: true });
+  fs.mkdirSync(snapshotDir, { recursive: true });
 
   const cases = [
     ...positiveDirectCases.map((caseId, idx) => buildDirectCase(caseId, idx + 1)),
@@ -515,7 +515,7 @@ const fingerprintSeed: KnownFingerprintsSeed = {
   ]),
 };
 
-fs.writeFileSync(path.join(expectedDir, "observations.json"), JSON.stringify(expected, null, 2));
+fs.writeFileSync(path.join(snapshotDir, "observations.json"), JSON.stringify(expected, null, 2));
 fs.writeFileSync(
   path.join(knowledgeDir, "known_fingerprints.json"),
   JSON.stringify(fingerprintSeed, null, 2),
