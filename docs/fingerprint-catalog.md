@@ -9,8 +9,9 @@ It must not create payment observations by itself. It only turns observed facts
 into attribution candidates such as provider, middleman, facilitator, payee, or
 relayer candidates.
 
-Current priority is still Phase 2: RPC transaction ingest. This catalog spec is
-for the later attribution-quality phase and should not block Phase 2.
+Current implementation has completed RPC transaction ingest and bounded range
+ingest. This catalog spec is for the later attribution-quality phase and should
+not block the current indexer-foundation work.
 
 ## Boundary
 
@@ -44,10 +45,10 @@ They should not be collapsed into final labels in `payment_observations`.
 
 ## Initial seed format
 
-Use a checked-in JSON seed file when this is implemented:
+Use the checked-in JSON seed file as the initial offline catalog source:
 
 ```text
-apps/cli/fixtures/known-fingerprints.json
+apps/cli/fixtures/knowledge/known_fingerprints.json
 ```
 
 Suggested top-level shape:
@@ -261,19 +262,20 @@ Offline `bun run verify` should eventually check:
 
 Live RPC or external HTTP checks should not be required by default verify.
 
-## Relationship to Phase 2
+## Relationship to the current roadmap
 
-Phase 2 should focus on live transaction ingest:
+Completed ingest work focuses on turning chain data into observations:
 
 ```text
 tx hash -> RPC tx/receipt -> normalize -> observation builder -> DB
 ```
 
-The fingerprint catalog should remain a separate enrichment layer:
+The fingerprint catalog remains a separate enrichment layer:
 
 ```text
 observations + known fingerprints -> attribution candidates
 ```
 
-Implementing the catalog can wait until after Phase 2 unless Phase 2 exposes a
-minimal seam that naturally helps catalog ingestion.
+Its production-grade shape belongs to the attribution-quality phase. Evidence
+acquisition, revalidation, and promotion policy are covered separately in
+`docs/x402-data-acquisition-strategy.md`.
