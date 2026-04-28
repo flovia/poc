@@ -124,6 +124,109 @@ describe("paid probe artifact validation", () => {
   });
 });
 
+describe("endpoint manifest acquisition validation", () => {
+  const baseEndpointCase = () => ({
+    caseId: "test-endpoint",
+    entityId: "entity-a",
+    providerName: "Provider A",
+    serviceName: "Search",
+    endpointUrl: "https://example.com/search",
+    resourceUrl: "https://example.com/search?q=x402",
+    requestHost: "example.com",
+    method: "POST",
+    sourceName: "sponge_catalog",
+    sourceUrl: "https://catalog.example.com",
+    sourceObservedDate: "2026-04-28",
+    sourceServiceId: "svc-a",
+    sourceEndpointId: "endp-a",
+    sourceEndpointUpdatedAt: "2026-04-28T00:00:00.000Z",
+    sourceBaseUrl: "https://example.com",
+    sourcePath: "/search",
+    sourceProtocol: "x402",
+    sourceNetworks: ["base"],
+    routeKind: "provider_direct_x402",
+    probeReadiness: "ready",
+    discoveryMethod: "catalog",
+    expectedNetwork: "base",
+    expectedAsset: "USDC",
+    requestBodyTemplate: { query: "x402" },
+  });
+
+  test("rejects inconsistent lastDryRun payment metadata", () => {
+    expect(() =>
+      validateEndpointManifest({
+        schemaVersion: "1",
+        cases: [
+          {
+            ...baseEndpointCase(),
+            lastDryRun: {
+              status: "challenge",
+              attemptedAt: "2026-04-28T00:00:00.000Z",
+              url: "https://example.com/search?q=x402",
+              httpStatus: 200,
+            },
+          },
+        ],
+      }),
+    ).toThrow("Challenge dry-runs must record httpStatus=402");
+
+    expect(() =>
+      validateEndpointManifest({
+        schemaVersion: "1",
+        cases: [
+          {
+            ...baseEndpointCase(),
+            lastDryRun: {
+              status: "no_challenge",
+              attemptedAt: "2026-04-28T00:00:00.000Z",
+              url: "https://example.com/search?q=x402",
+              httpStatus: 200,
+              paymentOptions: [
+                {
+                  amount: "10000",
+                  network: "base",
+                  asset: "USDC",
+                  payTo: "0x0000000000000000000000000000000000000000",
+                },
+              ],
+            },
+          },
+        ],
+      }),
+    ).toThrow("No-challenge dry-runs must include noChallengeReason");
+  });
+
+  test("rejects requestBodyTemplateHash mismatches", () => {
+    expect(() =>
+      validateEndpointManifest({
+        schemaVersion: "1",
+        cases: [
+          {
+            ...baseEndpointCase(),
+            requestBodyTemplateHash: "not-the-template-hash",
+          },
+        ],
+      }),
+    ).toThrow("requestBodyTemplateHash must match requestBodyTemplate JSON sha256");
+
+    const body = { query: "x402" };
+    const parsed = validateEndpointManifest({
+      schemaVersion: "1",
+      cases: [
+        {
+          ...baseEndpointCase(),
+          requestBodyTemplate: body,
+          requestBodyTemplateHash: crypto
+            .createHash("sha256")
+            .update(JSON.stringify(body))
+            .digest("hex"),
+        },
+      ],
+    });
+    expect(parsed.cases[0]?.requestBodyTemplate).toEqual(body);
+  });
+});
+
 describe("paid probe runner helpers", () => {
   test("normalizes tx hash from settlement.transaction and settlement.txHash", () => {
     expect(txHashFromSettlement({ transaction: "0xtransaction" })).toBe("0xtransaction");

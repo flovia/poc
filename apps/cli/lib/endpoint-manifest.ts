@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import crypto from "node:crypto";
 import path from "node:path";
 import { z } from "zod";
 
@@ -44,6 +45,9 @@ export const X402PaymentOptionSchema = z
   .strict();
 export type X402PaymentOption = z.infer<typeof X402PaymentOptionSchema>;
 
+const sha256Json = (value: unknown) =>
+  crypto.createHash("sha256").update(JSON.stringify(value)).digest("hex");
+
 export const LastDryRunSchema = z
   .object({
     status: DryRunProbeStatusSchema,
@@ -52,10 +56,35 @@ export const LastDryRunSchema = z
     httpStatus: z.number().int().positive().optional(),
     noChallengeReason: NoChallengeReasonSchema.optional(),
     responseBodySha256: z.string().min(1).optional(),
-    paymentOptions: z.array(X402PaymentOptionSchema).optional(),
+    paymentOptions: z.array(X402PaymentOptionSchema).min(1).optional(),
     requestBodyTemplateSource: z.enum(["x402_bazaar_challenge"]).optional(),
   })
-  .strict();
+  .strict()
+  .superRefine((value, context) => {
+    if (value.status === "challenge" && value.httpStatus !== 402) {
+      context.addIssue({
+        code: "custom",
+        path: ["httpStatus"],
+        message: "Challenge dry-runs must record httpStatus=402",
+      });
+    }
+
+    if (value.status === "no_challenge" && value.noChallengeReason === undefined) {
+      context.addIssue({
+        code: "custom",
+        path: ["noChallengeReason"],
+        message: "No-challenge dry-runs must include noChallengeReason",
+      });
+    }
+
+    if (value.status !== "challenge" && value.paymentOptions !== undefined) {
+      context.addIssue({
+        code: "custom",
+        path: ["paymentOptions"],
+        message: "Only challenge dry-runs may include paymentOptions",
+      });
+    }
+  });
 export type LastDryRun = z.infer<typeof LastDryRunSchema>;
 
 export const EndpointCaseSchema = z
@@ -121,6 +150,18 @@ export const EndpointCaseSchema = z
         path: ["requestBodyTemplate"],
         message:
           "Ready POST endpoint cases must include requestBodyTemplate or requestBodyTemplateHash",
+      });
+    }
+
+    if (
+      value.requestBodyTemplate !== undefined &&
+      value.requestBodyTemplateHash !== undefined &&
+      sha256Json(value.requestBodyTemplate) !== value.requestBodyTemplateHash
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["requestBodyTemplateHash"],
+        message: "requestBodyTemplateHash must match requestBodyTemplate JSON sha256",
       });
     }
 
