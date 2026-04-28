@@ -1,5 +1,23 @@
 # Flovia 260427: x402 Onchain Intelligence
 
+![Flovia 260427 overview infographic](./assets/infographics/index.png)
+
+> この図は、Flovia 260427 の目的、入力、解析 pipeline、出力、利用者を1枚で把握するための概要図です。画像を更新する場合は [`docs/assets/infographics/common.prompt.md`](./assets/infographics/common.prompt.md) とこの Markdown 本文を使って再生成します。
+
+## 30秒で分かる概要
+
+Flovia 260427 は、EVM 上の x402-like payment を onchain settlement data から解析し、HTTP telemetry に依存せずに settlement pattern、recipient intelligence、relayer / facilitator activity、payer wallet overlap、known catalog との照合結果を可視化する offline-first な分析基盤です。
+
+```text
+onchain transaction / fixture data
+  -> normalize / decode
+  -> classify settlement pattern
+  -> build recipient / payer / facilitator candidates
+  -> join known catalog
+  -> aggregate
+  -> JSON / Markdown report
+```
+
 ## 1. これは何か
 
 Flovia 260427 は、EVM 上の x402 支払い transaction を onchain data から解析し、x402 ecosystem の実利用を可視化する分析基盤です。
