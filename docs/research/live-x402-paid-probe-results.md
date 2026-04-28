@@ -1,5 +1,7 @@
 # Live x402 paid probe results
 
+![Live x402 paid probe results infographic](../assets/infographics/artifacts/live-x402-paid-probe-results.png)
+
 2026-04-28 に `x402` CLI で live paid request を実行した endpoint と onchain settlement の記録。
 
 ## Execution context

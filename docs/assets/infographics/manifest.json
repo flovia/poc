@@ -31,6 +31,12 @@
       "slug": "next-actions",
       "image": "docs/assets/infographics/artifacts/next-actions.png",
       "status": "generated"
+    },
+    {
+      "source": "docs/research/live-x402-paid-probe-results.md",
+      "slug": "live-x402-paid-probe-results",
+      "image": "docs/assets/infographics/artifacts/live-x402-paid-probe-results.png",
+      "status": "generated"
     }
   ]
 }
