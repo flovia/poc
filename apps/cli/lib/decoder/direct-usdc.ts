@@ -8,7 +8,9 @@ import {
 import type { HexAddress, HexData, TransferWithAuthorizationArgs } from "../schema";
 
 export type TransferWithAuthorizationDecoded = {
-  selector: typeof TRANSFER_WITH_AUTHORIZATION_SELECTOR | typeof EXECUTE_WITH_AUTHORIZATION_SELECTOR;
+  selector:
+    | typeof TRANSFER_WITH_AUTHORIZATION_SELECTOR
+    | typeof EXECUTE_WITH_AUTHORIZATION_SELECTOR;
   args: TransferWithAuthorizationArgs & {
     signature?: HexData;
   };
@@ -22,14 +24,26 @@ const decodeTransferWithAuthorizationV2 = (calldata: HexData): TransferWithAutho
     data: calldata,
   }) as unknown as {
     functionName: "transferWithAuthorization";
-    args: readonly [HexAddress, HexAddress, bigint, bigint, bigint, HexData, bigint, HexData, HexData];
+    args: readonly [
+      HexAddress,
+      HexAddress,
+      bigint,
+      bigint,
+      bigint,
+      HexData,
+      bigint,
+      HexData,
+      HexData,
+    ];
   };
 
   const [from, to, value, validAfter, validBefore, nonce, v, r, s] = decoded.args;
   return { from, to, value, validAfter, validBefore, nonce, v: Number(v), r, s };
 };
 
-const decodeTransferWithAuthorizationV3 = (calldata: HexData): TransferWithAuthorizationArgs & { signature: HexData } => {
+const decodeTransferWithAuthorizationV3 = (
+  calldata: HexData,
+): TransferWithAuthorizationArgs & { signature: HexData } => {
   const decoded = decodeFunctionData({
     abi: [functionAbi[1]],
     data: calldata,
@@ -42,7 +56,9 @@ const decodeTransferWithAuthorizationV3 = (calldata: HexData): TransferWithAutho
   return { from, to, value, validAfter, validBefore, nonce, v: 0, r: "0x", s: "0x", signature };
 };
 
-export const decodeTransferWithAuthorization = (calldata: HexData): TransferWithAuthorizationDecoded => {
+export const decodeTransferWithAuthorization = (
+  calldata: HexData,
+): TransferWithAuthorizationDecoded => {
   const selector = calldata.slice(0, 10).toLowerCase() as
     | typeof TRANSFER_WITH_AUTHORIZATION_SELECTOR
     | typeof EXECUTE_WITH_AUTHORIZATION_SELECTOR
@@ -69,5 +85,7 @@ export const decodeTransferWithAuthorization = (calldata: HexData): TransferWith
     abi: [functionAbi[0]],
     data: calldata,
   }) as unknown;
-  throw new Error(`Expected transfer/executeWithAuthorization selector, got ${String(selector)}; decode=${JSON.stringify(decoded)}`);
+  throw new Error(
+    `Expected transfer/executeWithAuthorization selector, got ${String(selector)}; decode=${JSON.stringify(decoded)}`,
+  );
 };

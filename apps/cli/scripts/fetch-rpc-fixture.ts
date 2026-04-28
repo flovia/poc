@@ -2,7 +2,8 @@ import path from "node:path";
 import { fetchRpcFixture, writeRpcFixtureFiles } from "../lib/rpc-fixtures";
 import { resolveBaseRpcUrl, resolveRpcRequestTimeoutMs } from "../lib/rpc-config";
 
-const usage = () => `Usage: bun scripts/fetch-rpc-fixture.ts --case-id <case-id> --tx-hash <tx-hash> [--out-dir fixtures/raw] [--force]
+const usage =
+  () => `Usage: bun scripts/fetch-rpc-fixture.ts --case-id <case-id> --tx-hash <tx-hash> [--out-dir fixtures/raw] [--force]
 
 Environment:
   BASE_RPC_URL                 Base JSON-RPC endpoint, preferred when set
@@ -31,7 +32,11 @@ export const runFetchRpcFixture = async () => {
 
   const rpcUrl = resolveBaseRpcUrl();
   const fixture = await fetchRpcFixture({ rpcUrl, txHash, timeoutMs });
-  const files = writeRpcFixtureFiles(fixture, { caseId, outputDir: path.resolve(process.cwd(), outputDir), force });
+  const files = writeRpcFixtureFiles(fixture, {
+    caseId,
+    outputDir: path.resolve(process.cwd(), outputDir),
+    force,
+  });
 
   return {
     caseId,

@@ -1,5 +1,10 @@
 import { decodeEventLog } from "viem";
-import { BASE_USDC_ADDRESS, USDC_TRANSFER_WITH_AUTHORIZATION_ABI, EVENT_AUTHORIZATION_USED_TOPIC, EVENT_TRANSFER_TOPIC } from "../constants";
+import {
+  BASE_USDC_ADDRESS,
+  USDC_TRANSFER_WITH_AUTHORIZATION_ABI,
+  EVENT_AUTHORIZATION_USED_TOPIC,
+  EVENT_TRANSFER_TOPIC,
+} from "../constants";
 import type { DecodedLogEvent, TxLog } from "../schema";
 
 const eventAbi = USDC_TRANSFER_WITH_AUTHORIZATION_ABI;
@@ -13,7 +18,7 @@ export const decodeReceiptLogsForUsdc = (logs: TxLog[]): DecodedLogEvent[] => {
     }
 
     const topic0 = log.topics[0] ?? "";
-    const eventTopics = log.topics as ["0x" & string, ...(Array<`0x${string}`>)];
+    const eventTopics = log.topics as ["0x" & string, ...Array<`0x${string}`>];
 
     if (topic0.toLowerCase() === EVENT_AUTHORIZATION_USED_TOPIC.toLowerCase()) {
       const decoded = decodeEventLog({

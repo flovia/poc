@@ -5,15 +5,23 @@ import { buildProviderClaimsFromNormalizedProbes } from "../lib/attribution/impo
 
 const defaultCorpusPath = () => {
   const candidates = [
-    path.resolve(process.cwd(), "../../../foxytanuki/docs/x402-analysis/probes/normalized-probes.json"),
+    path.resolve(
+      process.cwd(),
+      "../../../foxytanuki/docs/x402-analysis/probes/normalized-probes.json",
+    ),
     path.resolve(process.cwd(), "../foxytanuki/docs/x402-analysis/probes/normalized-probes.json"),
   ];
   return candidates.find((candidate) => fs.existsSync(candidate)) ?? candidates[0]!;
 };
 
-export const runImportX402AnalysisClaims = (options: { corpusPath?: string; outputPath?: string } = {}) => {
+export const runImportX402AnalysisClaims = (
+  options: { corpusPath?: string; outputPath?: string } = {},
+) => {
   const corpusPath = path.resolve(options.corpusPath ?? defaultCorpusPath());
-  const outputPath = path.resolve(options.outputPath ?? path.join(env.fixturesDir, "knowledge", "provider_endpoint_claims.generated.json"));
+  const outputPath = path.resolve(
+    options.outputPath ??
+      path.join(env.fixturesDir, "knowledge", "provider_endpoint_claims.generated.json"),
+  );
   const seed = buildProviderClaimsFromNormalizedProbes(corpusPath);
   ensureDir(path.dirname(outputPath));
   fs.writeFileSync(outputPath, `${JSON.stringify(seed, null, 2)}\n`);

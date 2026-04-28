@@ -3,7 +3,12 @@ import { MULTICALL3_AGGREGATE3_ABI } from "../constants";
 import type { DecodedMulticall, DecodedMulticallCall } from "../schema";
 import { decodeTransferWithAuthorization } from "./direct-usdc";
 import { isHexData } from "./selectors";
-import { BASE_USDC_ADDRESS, EXECUTE_WITH_AUTHORIZATION_SELECTOR, MULTICALL3_AGGREGATE3_SELECTOR, TRANSFER_WITH_AUTHORIZATION_SELECTOR } from "../constants";
+import {
+  BASE_USDC_ADDRESS,
+  EXECUTE_WITH_AUTHORIZATION_SELECTOR,
+  MULTICALL3_AGGREGATE3_SELECTOR,
+  TRANSFER_WITH_AUTHORIZATION_SELECTOR,
+} from "../constants";
 import type { HexAddress, HexData } from "../schema";
 
 export type InnerUsdcTransfer = {
@@ -11,7 +16,10 @@ export type InnerUsdcTransfer = {
   args: ReturnType<typeof decodeTransferWithAuthorization>["args"];
 };
 
-const AUTHORIZATION_SELECTORS = [TRANSFER_WITH_AUTHORIZATION_SELECTOR, EXECUTE_WITH_AUTHORIZATION_SELECTOR];
+const AUTHORIZATION_SELECTORS = [
+  TRANSFER_WITH_AUTHORIZATION_SELECTOR,
+  EXECUTE_WITH_AUTHORIZATION_SELECTOR,
+];
 
 const isAuthorizationSelector = (calldata: HexData) =>
   AUTHORIZATION_SELECTORS.includes(calldata.slice(0, 10).toLowerCase());
@@ -53,4 +61,5 @@ export const extractUsdcCallsFromMulticall = (calldata: HexData): InnerUsdcTrans
     }));
 };
 
-export const isAggregate3Selector = (selector: string): boolean => selector === MULTICALL3_AGGREGATE3_SELECTOR;
+export const isAggregate3Selector = (selector: string): boolean =>
+  selector === MULTICALL3_AGGREGATE3_SELECTOR;

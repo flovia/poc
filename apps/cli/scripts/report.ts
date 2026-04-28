@@ -21,15 +21,24 @@ const buildMarkdown = (summary: Record<string, unknown>) => {
   const walletGraph = buildWalletUsageGraph();
 
   const observationLines = observations
-    .map((row) => `${row.case_id} ${row.tx_hash} payer=${row.payer_wallet} recipient=${row.recipient_wallet} amount=${row.amount_atomic}`)
+    .map(
+      (row) =>
+        `${row.case_id} ${row.tx_hash} payer=${row.payer_wallet} recipient=${row.recipient_wallet} amount=${row.amount_atomic}`,
+    )
     .join("\n");
 
   const candidateLines = candidates
-    .map((row) => `obs=${row.observation_id} type=${row.candidate_type} matched=${row.matched_fingerprint_type}:${row.matched_fingerprint_value} confidence=${row.confidence}`)
+    .map(
+      (row) =>
+        `obs=${row.observation_id} type=${row.candidate_type} matched=${row.matched_fingerprint_type}:${row.matched_fingerprint_value} confidence=${row.confidence}`,
+    )
     .join("\n");
 
   const dailyLines = daily
-    .map((row) => `${row.day}: observations=${row.observation_count} candidates=${row.candidate_count} total_amount=${row.total_amount_atomic}`)
+    .map(
+      (row) =>
+        `${row.day}: observations=${row.observation_count} candidates=${row.candidate_count} total_amount=${row.total_amount_atomic}`,
+    )
     .join("\n");
 
   return `# Offline Payment Observation Report
@@ -64,21 +73,36 @@ ${dailyLines || "No daily metrics"}
 
 ## Payer Profiles
 
-${payerProfiles
-  .map((row) => `${row.wallet}: observations=${row.observation_count} total_amount=${row.total_amount_atomic}`)
-  .join("\n") || "No payer profiles"}
+${
+  payerProfiles
+    .map(
+      (row) =>
+        `${row.wallet}: observations=${row.observation_count} total_amount=${row.total_amount_atomic}`,
+    )
+    .join("\n") || "No payer profiles"
+}
 
 ## Recipient Summaries
 
-${recipientProfiles
-  .map((row) => `${row.wallet}: observations=${row.observation_count} total_amount=${row.total_amount_atomic}`)
-  .join("\n") || "No recipient summaries"}
+${
+  recipientProfiles
+    .map(
+      (row) =>
+        `${row.wallet}: observations=${row.observation_count} total_amount=${row.total_amount_atomic}`,
+    )
+    .join("\n") || "No recipient summaries"
+}
 
 ## Relayer Summaries
 
-${relayerProfiles
-  .map((row) => `${row.wallet}: observations=${row.observation_count} total_amount=${row.total_amount_atomic}`)
-  .join("\n") || "No relayer summaries"}
+${
+  relayerProfiles
+    .map(
+      (row) =>
+        `${row.wallet}: observations=${row.observation_count} total_amount=${row.total_amount_atomic}`,
+    )
+    .join("\n") || "No relayer summaries"
+}
 `;
 };
 

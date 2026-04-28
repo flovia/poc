@@ -4,7 +4,8 @@ export type RpcEnv = {
   RPC_REQUEST_TIMEOUT_MS?: string;
 };
 
-export const buildAlchemyBaseRpcUrl = (apiKey: string) => `https://base-mainnet.g.alchemy.com/v2/${apiKey}`;
+export const buildAlchemyBaseRpcUrl = (apiKey: string) =>
+  `https://base-mainnet.g.alchemy.com/v2/${apiKey}`;
 
 export const resolveBaseRpcUrl = (env: RpcEnv = process.env as RpcEnv) => {
   const explicitUrl = env.BASE_RPC_URL?.trim();
@@ -18,6 +19,7 @@ export const resolveBaseRpcUrl = (env: RpcEnv = process.env as RpcEnv) => {
 
 export const resolveRpcRequestTimeoutMs = (env: RpcEnv = process.env as RpcEnv) => {
   const value = Number(env.RPC_REQUEST_TIMEOUT_MS ?? 30_000);
-  if (!Number.isSafeInteger(value) || value <= 0) throw new Error("RPC_REQUEST_TIMEOUT_MS must be a positive integer");
+  if (!Number.isSafeInteger(value) || value <= 0)
+    throw new Error("RPC_REQUEST_TIMEOUT_MS must be a positive integer");
   return value;
 };

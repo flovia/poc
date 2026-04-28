@@ -1,11 +1,17 @@
 import fs from "node:fs";
 import path from "node:path";
 import { nowIso, db, env } from "../db";
-import { validateKnownFingerprintsSeed, type KnownFingerprint, type KnownFingerprintSeedEntry, type KnownFingerprintsSeed } from "../schema";
+import {
+  validateKnownFingerprintsSeed,
+  type KnownFingerprint,
+  type KnownFingerprintSeedEntry,
+  type KnownFingerprintsSeed,
+} from "../schema";
 
 const readJson = <T>(filePath: string): T => JSON.parse(fs.readFileSync(filePath, "utf8")) as T;
 
-const normalizeKey = (entry: Pick<KnownFingerprintSeedEntry, "type" | "value">) => `${entry.type}|${entry.value.toLowerCase()}`;
+const normalizeKey = (entry: Pick<KnownFingerprintSeedEntry, "type" | "value">) =>
+  `${entry.type}|${entry.value.toLowerCase()}`;
 
 export const dedupeKnownFingerprintSeeds = (fingerprints: KnownFingerprintSeedEntry[]) => {
   const deduped = new Map<string, KnownFingerprintSeedEntry>();
@@ -76,7 +82,9 @@ export const seedKnownFingerprints = (seed: KnownFingerprintsSeed) => {
   return fingerprints.length;
 };
 
-export const seedKnownFingerprintsFromFile = (seedPath = path.join(env.fixturesDir, "knowledge", "known_fingerprints.json")) => {
+export const seedKnownFingerprintsFromFile = (
+  seedPath = path.join(env.fixturesDir, "knowledge", "known_fingerprints.json"),
+) => {
   const absolutePath = path.isAbsolute(seedPath) ? seedPath : path.resolve(process.cwd(), seedPath);
   const seed = validateKnownFingerprintsSeed(readJson<Record<string, unknown>>(absolutePath));
   return seedKnownFingerprints(seed);
@@ -100,15 +108,15 @@ export const listKnownFingerprints = (): KnownFingerprint[] => {
      `,
     )
     .all() as Array<{
-      fingerprint_type: KnownFingerprint["fingerprintType"];
-      fingerprint_value: KnownFingerprint["fingerprintValue"];
-      provider_label: string | null;
-      middleman_label: string | null;
-      facilitator_label: string | null;
-      source_name: string | null;
-      provenance_json: string | null;
-      confidence: number;
-    }>;
+    fingerprint_type: KnownFingerprint["fingerprintType"];
+    fingerprint_value: KnownFingerprint["fingerprintValue"];
+    provider_label: string | null;
+    middleman_label: string | null;
+    facilitator_label: string | null;
+    source_name: string | null;
+    provenance_json: string | null;
+    confidence: number;
+  }>;
 
   return rows.map((row) => ({
     fingerprintType: row.fingerprint_type,
@@ -117,7 +125,9 @@ export const listKnownFingerprints = (): KnownFingerprint[] => {
     middlemanLabel: row.middleman_label,
     facilitatorLabel: row.facilitator_label,
     sourceName: row.source_name,
-    provenance: row.provenance_json ? JSON.parse(row.provenance_json) as KnownFingerprint["provenance"] : [],
+    provenance: row.provenance_json
+      ? (JSON.parse(row.provenance_json) as KnownFingerprint["provenance"])
+      : [],
     confidence: row.confidence,
   }));
 };

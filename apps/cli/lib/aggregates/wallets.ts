@@ -18,39 +18,48 @@ export const rebuildWalletProfiles = () => {
       FROM payment_observations
     `)
     .all() as Array<{
-      payer_wallet: string;
-      recipient_wallet: string;
-      relayer_wallet: string;
-      amount_atomic: string;
-      block_timestamp: number;
-    }>;
+    payer_wallet: string;
+    recipient_wallet: string;
+    relayer_wallet: string;
+    amount_atomic: string;
+    block_timestamp: number;
+  }>;
 
-  const payerMap = new Map<string, {
-    observation_count: number;
-    total_amount_atomic: bigint;
-    uniqueRecipients: Set<string>;
-    uniqueRelayers: Set<string>;
-    firstSeenAt: number;
-    lastSeenAt: number;
-  }>();
+  const payerMap = new Map<
+    string,
+    {
+      observation_count: number;
+      total_amount_atomic: bigint;
+      uniqueRecipients: Set<string>;
+      uniqueRelayers: Set<string>;
+      firstSeenAt: number;
+      lastSeenAt: number;
+    }
+  >();
 
-  const recipientMap = new Map<string, {
-    observation_count: number;
-    total_amount_atomic: bigint;
-    uniquePayers: Set<string>;
-    uniqueRelayers: Set<string>;
-    firstSeenAt: number;
-    lastSeenAt: number;
-  }>();
+  const recipientMap = new Map<
+    string,
+    {
+      observation_count: number;
+      total_amount_atomic: bigint;
+      uniquePayers: Set<string>;
+      uniqueRelayers: Set<string>;
+      firstSeenAt: number;
+      lastSeenAt: number;
+    }
+  >();
 
-  const relayerMap = new Map<string, {
-    observation_count: number;
-    total_amount_atomic: bigint;
-    uniquePayers: Set<string>;
-    uniqueRecipients: Set<string>;
-    firstSeenAt: number;
-    lastSeenAt: number;
-  }>();
+  const relayerMap = new Map<
+    string,
+    {
+      observation_count: number;
+      total_amount_atomic: bigint;
+      uniquePayers: Set<string>;
+      uniqueRecipients: Set<string>;
+      firstSeenAt: number;
+      lastSeenAt: number;
+    }
+  >();
 
   for (const row of payerRows) {
     const payer = payerMap.get(row.payer_wallet);

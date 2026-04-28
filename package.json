@@ -8,8 +8,13 @@
     "packages/*"
   ],
   "scripts": {
+    "format": "biome format --write .",
+    "format:check": "biome format .",
     "verify": "cd apps/cli && bun run verify",
     "test": "cd apps/cli && bun test",
     "typecheck": "cd apps/cli && bun run typecheck"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.13"
   }
 }

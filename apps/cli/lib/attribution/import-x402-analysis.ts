@@ -3,13 +3,15 @@ import path from "node:path";
 import { BASE_CHAIN_ID, BASE_USDC_ADDRESS } from "../constants";
 import type { ProviderEndpointClaimsSeed } from "../schema";
 
-const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === "object" && value !== null;
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
 const getRecord = (value: unknown, key: string): Record<string, unknown> => {
   if (!isRecord(value)) return {};
   const nested = value[key];
   return isRecord(nested) ? nested : {};
 };
-const getString = (value: unknown): string | null => (typeof value === "string" && value.length > 0 ? value : null);
+const getString = (value: unknown): string | null =>
+  typeof value === "string" && value.length > 0 ? value : null;
 const hostFromUrl = (value: string | null) => {
   if (!value) return null;
   try {
@@ -19,7 +21,9 @@ const hostFromUrl = (value: string | null) => {
   }
 };
 
-export const buildProviderClaimsFromNormalizedProbes = (corpusPath: string): ProviderEndpointClaimsSeed => {
+export const buildProviderClaimsFromNormalizedProbes = (
+  corpusPath: string,
+): ProviderEndpointClaimsSeed => {
   const source = JSON.parse(fs.readFileSync(corpusPath, "utf8")) as Record<string, unknown>;
   const probes = Array.isArray(source.probes) ? source.probes : [];
   const claims: ProviderEndpointClaimsSeed["claims"] = [];
@@ -40,7 +44,15 @@ export const buildProviderClaimsFromNormalizedProbes = (corpusPath: string): Pro
     const asset = getString(payment.asset);
     const amountAtomic = getString(payment.amount);
 
-    if (!name || status !== "paid" || !txHash || !payTo || !requestUrl || !asset || asset.toLowerCase() !== BASE_USDC_ADDRESS.toLowerCase()) {
+    if (
+      !name ||
+      status !== "paid" ||
+      !txHash ||
+      !payTo ||
+      !requestUrl ||
+      !asset ||
+      asset.toLowerCase() !== BASE_USDC_ADDRESS.toLowerCase()
+    ) {
       continue;
     }
 
@@ -62,7 +74,15 @@ export const buildProviderClaimsFromNormalizedProbes = (corpusPath: string): Pro
       txHash: txHash as ProviderEndpointClaimsSeed["claims"][number]["txHash"],
       evidenceClass: "paid_probe",
       roles: isPaysponge
-        ? ["provider", "service", "endpoint", "middleman", "market", "facilitator", "settlement_operator"]
+        ? [
+            "provider",
+            "service",
+            "endpoint",
+            "middleman",
+            "market",
+            "facilitator",
+            "settlement_operator",
+          ]
         : ["provider", "service", "endpoint"],
       confidence: 90,
       sourceName: "foxytanuki-x402-analysis",

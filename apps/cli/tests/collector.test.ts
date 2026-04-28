@@ -24,18 +24,34 @@ import { runIngest } from "../scripts/ingest-fixtures";
 import { isRpcRangeCandidate, runRpcRangeIngest } from "../scripts/ingest-rpc-range";
 import { runRpcTxIngest } from "../scripts/ingest-rpc-tx";
 import { buildAttributionCandidates } from "../lib/attribution/score";
-import { seedKnownFingerprints, seedKnownFingerprintsFromFile } from "../lib/attribution/fingerprints";
+import {
+  seedKnownFingerprints,
+  seedKnownFingerprintsFromFile,
+} from "../lib/attribution/fingerprints";
 import { seedProviderEndpointClaimsFromFile } from "../lib/attribution/provider-claims";
 import { seedSettlementFingerprintPacksFromFile } from "../lib/attribution/settlement-fingerprints";
 import { buildWalletUsageGraph } from "../lib/attribution/wallet-graph";
 import { listAttributionCandidates, listPaymentObservations } from "../lib/aggregates/summaries";
-import { validateFixtureManifest, type FixtureManifest, type KnownFingerprintsSeed, type RawReceipt, type RawTransaction } from "../lib/schema";
-import { fetchRpcFixture, normalizeRpcReceipt, normalizeRpcTransaction, type RpcReceiptPayload, type RpcTransactionPayload } from "../lib/rpc-fixtures";
+import {
+  validateFixtureManifest,
+  type FixtureManifest,
+  type KnownFingerprintsSeed,
+  type RawReceipt,
+  type RawTransaction,
+} from "../lib/schema";
+import {
+  fetchRpcFixture,
+  normalizeRpcReceipt,
+  normalizeRpcTransaction,
+  type RpcReceiptPayload,
+  type RpcTransactionPayload,
+} from "../lib/rpc-fixtures";
 import { resolveBaseRpcUrl, resolveRpcRequestTimeoutMs } from "../lib/rpc-config";
 
 const fixtureRoot = path.resolve(import.meta.dir, "..", "fixtures");
 
-const readJson = <T>(relativePath: string): T => JSON.parse(fs.readFileSync(path.join(fixtureRoot, relativePath), "utf8")) as T;
+const readJson = <T>(relativePath: string): T =>
+  JSON.parse(fs.readFileSync(path.join(fixtureRoot, relativePath), "utf8")) as T;
 
 const listFiles = (directory: string): string[] =>
   fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
@@ -44,7 +60,8 @@ const listFiles = (directory: string): string[] =>
   });
 
 const manifest = () => readJson<FixtureManifest>("manifest.json");
-const knownFingerprints = () => readJson<KnownFingerprintsSeed>("knowledge/known_fingerprints.json");
+const knownFingerprints = () =>
+  readJson<KnownFingerprintsSeed>("knowledge/known_fingerprints.json");
 
 const fixture = (caseId: string) => {
   const fixtureCase = manifest().cases.find((item) => item.caseId === caseId);
@@ -64,9 +81,13 @@ describe("constants", () => {
     expect(TRANSFER_WITH_AUTHORIZATION_SELECTOR).toBe("0xe3ee160e");
     expect(EXECUTE_WITH_AUTHORIZATION_SELECTOR).toBe("0xcf092995");
     expect(MULTICALL3_AGGREGATE3_SELECTOR).toBe("0x82ad56cb");
-    expect(toFunctionSelector(USDC_TRANSFER_WITH_AUTHORIZATION_ABI[0])).toBe(TRANSFER_WITH_AUTHORIZATION_SELECTOR);
+    expect(toFunctionSelector(USDC_TRANSFER_WITH_AUTHORIZATION_ABI[0])).toBe(
+      TRANSFER_WITH_AUTHORIZATION_SELECTOR,
+    );
     expect(toFunctionSelector(MULTICALL3_AGGREGATE3_ABI[0])).toBe(MULTICALL3_AGGREGATE3_SELECTOR);
-    expect(toEventSelector(USDC_TRANSFER_WITH_AUTHORIZATION_ABI[2])).toBe(EVENT_AUTHORIZATION_USED_TOPIC);
+    expect(toEventSelector(USDC_TRANSFER_WITH_AUTHORIZATION_ABI[2])).toBe(
+      EVENT_AUTHORIZATION_USED_TOPIC,
+    );
     expect(toEventSelector(USDC_TRANSFER_WITH_AUTHORIZATION_ABI[3])).toBe(EVENT_TRANSFER_TOPIC);
   });
 });
@@ -121,11 +142,21 @@ describe("observation builder", () => {
 
   test("builds Multicall3 observations and rejects incomplete or negative fixtures", () => {
     const multicall = fixture("paysponge-perplexity");
-    expect(buildObservationsFromFixture(multicall.fixtureCase.caseId, multicall.tx, multicall.receipt)).toHaveLength(1);
+    expect(
+      buildObservationsFromFixture(multicall.fixtureCase.caseId, multicall.tx, multicall.receipt),
+    ).toHaveLength(1);
 
-    for (const caseId of ["normal-erc20-transfer", "non-usdc-multicall3", "missing-required-logs", "unrelated-base-tx"]) {
+    for (const caseId of [
+      "normal-erc20-transfer",
+      "non-usdc-multicall3",
+      "missing-required-logs",
+      "unrelated-base-tx",
+    ]) {
       const negative = fixture(caseId);
-      expect(buildObservationsFromFixture(negative.fixtureCase.caseId, negative.tx, negative.receipt), caseId).toHaveLength(0);
+      expect(
+        buildObservationsFromFixture(negative.fixtureCase.caseId, negative.tx, negative.receipt),
+        caseId,
+      ).toHaveLength(0);
     }
   });
 });
@@ -141,7 +172,12 @@ describe("storage and attribution", () => {
     expect(() =>
       validateFixtureManifest({
         ...source,
-        cases: [{ ...source.cases[0], catalogEntries: [{ type: "recipient", value: BASE_USDC_ADDRESS, confidence: 95 }] }],
+        cases: [
+          {
+            ...source.cases[0],
+            catalogEntries: [{ type: "recipient", value: BASE_USDC_ADDRESS, confidence: 95 }],
+          },
+        ],
       }),
     ).toThrow("must not include attribution seed field");
   });
@@ -184,7 +220,9 @@ describe("storage and attribution", () => {
     expect(listPaymentObservations()).toHaveLength(0);
 
     runIngest();
-    expect(listPaymentObservations().map((row) => row.case_id)).not.toContain("normal-erc20-transfer");
+    expect(listPaymentObservations().map((row) => row.case_id)).not.toContain(
+      "normal-erc20-transfer",
+    );
   });
 
   test("provider endpoint claims and settlement packs do not create observations", () => {
@@ -200,17 +238,30 @@ describe("storage and attribution", () => {
     buildAttributionCandidates();
     const graph = buildWalletUsageGraph();
     expect(graph.payerWalletLanguage).toBe(true);
-    expect(graph.identityFieldsExcluded).toEqual(["human_user", "ens", "social", "kyc", "email", "ip_address"]);
+    expect(graph.identityFieldsExcluded).toEqual([
+      "human_user",
+      "ens",
+      "social",
+      "kyc",
+      "email",
+      "ip_address",
+    ]);
     expect(JSON.stringify(graph)).not.toContain("humanUser");
     expect(graph.providerWallets.length).toBeGreaterThan(0);
-    expect(graph.providerWallets.flatMap((item) => item.payerWallets).every((item) => item.wallet.startsWith("0x"))).toBe(true);
+    expect(
+      graph.providerWallets
+        .flatMap((item) => item.payerWallets)
+        .every((item) => item.wallet.startsWith("0x")),
+    ).toBe(true);
   });
 
   test("catalog-only provider candidates are confidence capped", () => {
     seedProviderEndpointClaimsFromFile();
     runIngest();
     buildAttributionCandidates();
-    const catalogCandidates = listAttributionCandidates().filter((candidate) => candidate.matched_claim_id === "origindao-catalog-shared-payto");
+    const catalogCandidates = listAttributionCandidates().filter(
+      (candidate) => candidate.matched_claim_id === "origindao-catalog-shared-payto",
+    );
     expect(catalogCandidates.length).toBeGreaterThan(0);
     expect(catalogCandidates.every((candidate) => candidate.confidence <= 70)).toBe(true);
   });
@@ -220,7 +271,8 @@ describe("storage and attribution", () => {
     runIngest();
     buildAttributionCandidates();
     const namedPaysponge = listAttributionCandidates().filter(
-      (candidate) => candidate.candidate_type === "facilitator_candidate" && candidate.entity_id === "paysponge",
+      (candidate) =>
+        candidate.candidate_type === "facilitator_candidate" && candidate.entity_id === "paysponge",
     );
     expect(namedPaysponge).toHaveLength(0);
   });
@@ -230,17 +282,31 @@ describe("storage and attribution", () => {
     seedSettlementFingerprintPacksFromFile();
     runIngest();
     buildAttributionCandidates();
-    const paysponge = listAttributionCandidates().filter((candidate) => candidate.entity_id === "paysponge");
-    expect(new Set(paysponge.map((candidate) => candidate.candidate_type))).toEqual(
-      new Set(["provider_candidate", "service_candidate", "endpoint_candidate", "middleman_candidate", "market_candidate", "facilitator_candidate", "settlement_operator_candidate"]),
+    const paysponge = listAttributionCandidates().filter(
+      (candidate) => candidate.entity_id === "paysponge",
     );
-    const internalRoles = paysponge.filter((candidate) => ["middleman", "market", "facilitator", "settlement_operator"].includes(candidate.role ?? ""));
+    expect(new Set(paysponge.map((candidate) => candidate.candidate_type))).toEqual(
+      new Set([
+        "provider_candidate",
+        "service_candidate",
+        "endpoint_candidate",
+        "middleman_candidate",
+        "market_candidate",
+        "facilitator_candidate",
+        "settlement_operator_candidate",
+      ]),
+    );
+    const internalRoles = paysponge.filter((candidate) =>
+      ["middleman", "market", "facilitator", "settlement_operator"].includes(candidate.role ?? ""),
+    );
     expect(internalRoles.length).toBeGreaterThanOrEqual(8);
     expect(internalRoles.every((candidate) => candidate.confidence >= 80)).toBe(true);
   });
 
   test("observation code does not depend on attribution loaders", () => {
-    const observationFiles = listFiles(path.resolve(import.meta.dir, "..", "lib", "observations")).filter((filePath) => filePath.endsWith(".ts"));
+    const observationFiles = listFiles(
+      path.resolve(import.meta.dir, "..", "lib", "observations"),
+    ).filter((filePath) => filePath.endsWith(".ts"));
     for (const filePath of observationFiles) {
       expect(fs.readFileSync(filePath, "utf8"), filePath).not.toContain("../attribution");
     }
@@ -258,13 +324,17 @@ describe("storage and attribution", () => {
     const candidates = listAttributionCandidates();
     expect(candidates.length).toBeGreaterThan(0);
     for (const candidate of candidates) {
-      expect(candidate.matched_fingerprint_type).toMatch(/recipient|relayer|provider_endpoint_claim|settlement_fingerprint/);
+      expect(candidate.matched_fingerprint_type).toMatch(
+        /recipient|relayer|provider_endpoint_claim|settlement_fingerprint/,
+      );
       expect(candidate.confidence).toBeGreaterThan(0);
       expect(JSON.parse(candidate.reasons_json).length).toBeGreaterThan(0);
       expect(JSON.parse(candidate.evidence_refs_json).length).toBeGreaterThan(0);
     }
 
-    const columns = db.prepare("PRAGMA table_info(payment_observations)").all() as Array<{ name: string }>;
+    const columns = db.prepare("PRAGMA table_info(payment_observations)").all() as Array<{
+      name: string;
+    }>;
     expect(columns.map((column) => column.name)).not.toContain("provider_label");
     expect(columns.map((column) => column.name)).not.toContain("middleman_label");
   });
@@ -332,15 +402,20 @@ describe("RPC fixture capture", () => {
           body.method === "eth_chainId"
             ? "0x2105"
             : body.method === "eth_getTransactionByHash"
-            ? rpcTx
-            : body.method === "eth_getTransactionReceipt"
-              ? rpcReceipt
-              : { timestamp: "0x65" };
+              ? rpcTx
+              : body.method === "eth_getTransactionReceipt"
+                ? rpcReceipt
+                : { timestamp: "0x65" };
         return new Response(JSON.stringify({ jsonrpc: "2.0", id: 1, result }), { status: 200 });
       },
     });
 
-    expect(calls).toEqual(["eth_chainId", "eth_getTransactionByHash", "eth_getTransactionReceipt", "eth_getBlockByNumber"]);
+    expect(calls).toEqual([
+      "eth_chainId",
+      "eth_getTransactionByHash",
+      "eth_getTransactionReceipt",
+      "eth_getBlockByNumber",
+    ]);
     expect(fixture.tx.blockTimestamp).toBe(101);
     expect(String(fixture.receipt.transactionHash)).toBe(rpcTx.hash);
   });
@@ -348,16 +423,22 @@ describe("RPC fixture capture", () => {
 
 describe("RPC env config", () => {
   test("prefers explicit Base RPC URL over Alchemy API key", () => {
-    expect(resolveBaseRpcUrl({ BASE_RPC_URL: "https://rpc.example", ALCHEMY_API_KEY: "secret" })).toBe("https://rpc.example");
+    expect(
+      resolveBaseRpcUrl({ BASE_RPC_URL: "https://rpc.example", ALCHEMY_API_KEY: "secret" }),
+    ).toBe("https://rpc.example");
   });
 
   test("builds Base Alchemy endpoint when only Alchemy API key is present", () => {
-    expect(resolveBaseRpcUrl({ ALCHEMY_API_KEY: "secret" })).toBe("https://base-mainnet.g.alchemy.com/v2/secret");
+    expect(resolveBaseRpcUrl({ ALCHEMY_API_KEY: "secret" })).toBe(
+      "https://base-mainnet.g.alchemy.com/v2/secret",
+    );
   });
 
   test("validates RPC timeout", () => {
     expect(resolveRpcRequestTimeoutMs({ RPC_REQUEST_TIMEOUT_MS: "1234" })).toBe(1234);
-    expect(() => resolveRpcRequestTimeoutMs({ RPC_REQUEST_TIMEOUT_MS: "0" })).toThrow("positive integer");
+    expect(() => resolveRpcRequestTimeoutMs({ RPC_REQUEST_TIMEOUT_MS: "0" })).toThrow(
+      "positive integer",
+    );
   });
 });
 
@@ -385,8 +466,16 @@ describe("RPC transaction ingest", () => {
       return new Response(JSON.stringify({ jsonrpc: "2.0", id: 1, result }), { status: 200 });
     };
 
-    const first = await runRpcTxIngest({ rpcUrl: "https://example.invalid", txHash: tx.hash, fetchFn });
-    const second = await runRpcTxIngest({ rpcUrl: "https://example.invalid", txHash: tx.hash, fetchFn });
+    const first = await runRpcTxIngest({
+      rpcUrl: "https://example.invalid",
+      txHash: tx.hash,
+      fetchFn,
+    });
+    const second = await runRpcTxIngest({
+      rpcUrl: "https://example.invalid",
+      txHash: tx.hash,
+      fetchFn,
+    });
 
     expect(first.insertedObservations).toBe(1);
     expect(second.insertedObservations).toBe(0);
@@ -476,11 +565,28 @@ describe("RPC range ingest", () => {
   });
 
   test("identifies only USDC authorization and Multicall3 aggregate3 candidates", () => {
-    expect(isRpcRangeCandidate({ to: BASE_USDC_ADDRESS, input: `${TRANSFER_WITH_AUTHORIZATION_SELECTOR}00` })).toBe(true);
-    expect(isRpcRangeCandidate({ to: BASE_USDC_ADDRESS, input: `${EXECUTE_WITH_AUTHORIZATION_SELECTOR}00` })).toBe(true);
-    expect(isRpcRangeCandidate({ to: MULTICALL3_ADDRESS, input: `${MULTICALL3_AGGREGATE3_SELECTOR}00` })).toBe(true);
+    expect(
+      isRpcRangeCandidate({
+        to: BASE_USDC_ADDRESS,
+        input: `${TRANSFER_WITH_AUTHORIZATION_SELECTOR}00`,
+      }),
+    ).toBe(true);
+    expect(
+      isRpcRangeCandidate({
+        to: BASE_USDC_ADDRESS,
+        input: `${EXECUTE_WITH_AUTHORIZATION_SELECTOR}00`,
+      }),
+    ).toBe(true);
+    expect(
+      isRpcRangeCandidate({ to: MULTICALL3_ADDRESS, input: `${MULTICALL3_AGGREGATE3_SELECTOR}00` }),
+    ).toBe(true);
     expect(isRpcRangeCandidate({ to: BASE_USDC_ADDRESS, input: "0xa9059cbb00" })).toBe(false);
-    expect(isRpcRangeCandidate({ to: "0x0000000000000000000000000000000000000002", input: `${TRANSFER_WITH_AUTHORIZATION_SELECTOR}00` })).toBe(false);
+    expect(
+      isRpcRangeCandidate({
+        to: "0x0000000000000000000000000000000000000002",
+        input: `${TRANSFER_WITH_AUTHORIZATION_SELECTOR}00`,
+      }),
+    ).toBe(false);
   });
 
   test("scans a bounded range, fetches receipts only for candidates, and remains idempotent", async () => {
@@ -500,10 +606,22 @@ describe("RPC range ingest", () => {
       input: encodeFunctionData({
         abi: MULTICALL3_AGGREGATE3_ABI,
         functionName: "aggregate3",
-        args: [[{ target: BASE_USDC_ADDRESS, allowFailure: false, callData: "0xa9059cbb00" as `0x${string}` }]],
+        args: [
+          [
+            {
+              target: BASE_USDC_ADDRESS,
+              allowFailure: false,
+              callData: "0xa9059cbb00" as `0x${string}`,
+            },
+          ],
+        ],
       }) as RawTransaction["input"],
     };
-    const irrelevantMulticallReceipt: RawReceipt = { ...receipt, transactionHash: irrelevantMulticall.hash, logs: [] };
+    const irrelevantMulticallReceipt: RawReceipt = {
+      ...receipt,
+      transactionHash: irrelevantMulticall.hash,
+      logs: [],
+    };
     const calls: Array<{ method: string; params: unknown[] }> = [];
 
     const fetchFn = async (_url: RequestInfo | URL, init?: RequestInit) => {
@@ -511,7 +629,9 @@ describe("RPC range ingest", () => {
       calls.push({ method: body.method, params: body.params });
 
       if (body.method === "eth_chainId") {
-        return new Response(JSON.stringify({ jsonrpc: "2.0", id: 1, result: "0x2105" }), { status: 200 });
+        return new Response(JSON.stringify({ jsonrpc: "2.0", id: 1, result: "0x2105" }), {
+          status: 200,
+        });
       }
 
       if (body.method === "eth_getBlockByNumber") {
@@ -537,8 +657,18 @@ describe("RPC range ingest", () => {
       return new Response(JSON.stringify({ jsonrpc: "2.0", id: 1, result }), { status: 200 });
     };
 
-    const first = await runRpcRangeIngest({ rpcUrl: "https://example.invalid", fromBlock: blockNumber, toBlock: blockNumber, fetchFn });
-    const second = await runRpcRangeIngest({ rpcUrl: "https://example.invalid", fromBlock: blockNumber, toBlock: blockNumber, fetchFn });
+    const first = await runRpcRangeIngest({
+      rpcUrl: "https://example.invalid",
+      fromBlock: blockNumber,
+      toBlock: blockNumber,
+      fetchFn,
+    });
+    const second = await runRpcRangeIngest({
+      rpcUrl: "https://example.invalid",
+      fromBlock: blockNumber,
+      toBlock: blockNumber,
+      fetchFn,
+    });
 
     expect(first.scannedBlocks).toBe(1);
     expect(first.runId).toBeGreaterThan(0);
@@ -551,15 +681,21 @@ describe("RPC range ingest", () => {
     expect(second.evidenceRowsUpdated).toBe(0);
     expect(listPaymentObservations()).toHaveLength(1);
     expect(calls.filter((call) => call.method === "eth_getTransactionReceipt")).toHaveLength(4);
-    expect(calls.filter((call) => call.method === "eth_getTransactionReceipt").map((call) => call.params[0])).toEqual([
-      tx.hash,
-      irrelevantMulticall.hash,
-      tx.hash,
-      irrelevantMulticall.hash,
+    expect(
+      calls
+        .filter((call) => call.method === "eth_getTransactionReceipt")
+        .map((call) => call.params[0]),
+    ).toEqual([tx.hash, irrelevantMulticall.hash, tx.hash, irrelevantMulticall.hash]);
+    expect(calls.filter((call) => call.method === "eth_getBlockByNumber")[0]?.params).toEqual([
+      blockNumberHex,
+      true,
     ]);
-    expect(calls.filter((call) => call.method === "eth_getBlockByNumber")[0]?.params).toEqual([blockNumberHex, true]);
 
-    const runs = db.prepare("SELECT source, from_block, to_block, observation_count, inserted_observations FROM ingestion_runs ORDER BY run_id").all() as Array<{
+    const runs = db
+      .prepare(
+        "SELECT source, from_block, to_block, observation_count, inserted_observations FROM ingestion_runs ORDER BY run_id",
+      )
+      .all() as Array<{
       source: string;
       from_block: number;
       to_block: number;
@@ -567,8 +703,20 @@ describe("RPC range ingest", () => {
       inserted_observations: number;
     }>;
     expect(runs).toEqual([
-      { source: "rpc_range", from_block: blockNumber, to_block: blockNumber, observation_count: 1, inserted_observations: 1 },
-      { source: "rpc_range", from_block: blockNumber, to_block: blockNumber, observation_count: 1, inserted_observations: 0 },
+      {
+        source: "rpc_range",
+        from_block: blockNumber,
+        to_block: blockNumber,
+        observation_count: 1,
+        inserted_observations: 1,
+      },
+      {
+        source: "rpc_range",
+        from_block: blockNumber,
+        to_block: blockNumber,
+        observation_count: 1,
+        inserted_observations: 0,
+      },
     ]);
   });
 
@@ -582,7 +730,9 @@ describe("RPC range ingest", () => {
         maxBlocks: 2,
         fetchFn: async (_url, init) => {
           calls.push(JSON.parse(String(init?.body)).method);
-          return new Response(JSON.stringify({ jsonrpc: "2.0", id: 1, result: "0x2105" }), { status: 200 });
+          return new Response(JSON.stringify({ jsonrpc: "2.0", id: 1, result: "0x2105" }), {
+            status: 200,
+          });
         },
       }),
     ).rejects.toThrow("RPC range too large");

@@ -195,7 +195,15 @@ export type ProviderEndpointClaim = {
   amountAtomic?: string | null;
   txHash?: HexData | null;
   evidenceClass: "paid_probe" | "catalog" | "manual";
-  roles: Array<"provider" | "service" | "endpoint" | "middleman" | "market" | "facilitator" | "settlement_operator">;
+  roles: Array<
+    | "provider"
+    | "service"
+    | "endpoint"
+    | "middleman"
+    | "market"
+    | "facilitator"
+    | "settlement_operator"
+  >;
   confidence: number;
   sourceName: string;
   evidenceRefs: string[];
@@ -232,7 +240,8 @@ export type SettlementFingerprintPacksSeed = {
   fingerprints: SettlementFingerprintPack[];
 };
 
-export const assertPositiveInt = (value: number | null): value is number => value !== null && Number.isInteger(value) && value >= 0;
+export const assertPositiveInt = (value: number | null): value is number =>
+  value !== null && Number.isInteger(value) && value >= 0;
 
 export const validateFixtureManifest = (value: unknown): FixtureManifest => {
   if (typeof value !== "object" || value === null) {
@@ -259,9 +268,18 @@ export const validateFixtureManifest = (value: unknown): FixtureManifest => {
     if (typeof record.caseId !== "string" || record.caseId.length < 1) {
       throw new Error(`Case ${index} missing caseId`);
     }
-    for (const forbidden of ["catalogEntries", "fingerprints", "confidence", "label", "source", "sourceName"] as const) {
+    for (const forbidden of [
+      "catalogEntries",
+      "fingerprints",
+      "confidence",
+      "label",
+      "source",
+      "sourceName",
+    ] as const) {
       if (forbidden in record) {
-        throw new Error(`Case ${record.caseId} must not include attribution seed field: ${forbidden}`);
+        throw new Error(
+          `Case ${record.caseId} must not include attribution seed field: ${forbidden}`,
+        );
       }
     }
     return {
@@ -297,12 +315,15 @@ const validateHexData = (value: unknown, label: string): HexData => {
   throw new Error(`Invalid ${label}: ${String(value)}`);
 };
 
-const optionalString = (value: unknown): string | null => (typeof value === "string" && value.length > 0 ? value : null);
+const optionalString = (value: unknown): string | null =>
+  typeof value === "string" && value.length > 0 ? value : null;
 
 const validateConfidence = (value: unknown): number => {
   const confidence = Number(value);
   if (!Number.isInteger(confidence) || confidence < 1 || confidence > 100) {
-    throw new Error(`Fingerprint confidence must be an integer from 1 to 100, got ${String(value)}`);
+    throw new Error(
+      `Fingerprint confidence must be an integer from 1 to 100, got ${String(value)}`,
+    );
   }
   return confidence;
 };
@@ -310,7 +331,8 @@ const validateConfidence = (value: unknown): number => {
 const validateStringArray = (value: unknown, label: string): string[] => {
   if (!Array.isArray(value)) throw new Error(`${label} must be an array`);
   return value.map((entry, index) => {
-    if (typeof entry !== "string" || entry.length < 1) throw new Error(`${label} ${index} must be a non-empty string`);
+    if (typeof entry !== "string" || entry.length < 1)
+      throw new Error(`${label} ${index} must be a non-empty string`);
     return entry;
   });
 };
@@ -319,7 +341,8 @@ const validateProvenance = (value: unknown): FingerprintProvenance[] => {
   if (value === undefined) return [];
   if (!Array.isArray(value)) throw new Error("Fingerprint provenance must be an array");
   return value.map((entry, index) => {
-    if (typeof entry !== "object" || entry === null) throw new Error(`Fingerprint provenance ${index} is invalid`);
+    if (typeof entry !== "object" || entry === null)
+      throw new Error(`Fingerprint provenance ${index} is invalid`);
     const record = entry as Record<string, unknown>;
     return {
       source: optionalString(record.source),
@@ -341,7 +364,9 @@ export const validateKnownFingerprintsSeed = (value: unknown): KnownFingerprints
   const candidate = value as Record<string, unknown>;
   const chainId = Number(candidate.chainId);
   if (chainId !== BASE_CHAIN_ID) {
-    throw new Error(`Known fingerprint seed chainId mismatch: expected ${BASE_CHAIN_ID}, got ${chainId}`);
+    throw new Error(
+      `Known fingerprint seed chainId mismatch: expected ${BASE_CHAIN_ID}, got ${chainId}`,
+    );
   }
   if (!Array.isArray(candidate.fingerprints)) {
     throw new Error("Known fingerprint seed must include fingerprints");
@@ -352,7 +377,8 @@ export const validateKnownFingerprintsSeed = (value: unknown): KnownFingerprints
     chainId,
     collectedAt: String(candidate.collectedAt ?? ""),
     fingerprints: candidate.fingerprints.map((entry, index) => {
-      if (typeof entry !== "object" || entry === null) throw new Error(`Fingerprint ${index} is invalid`);
+      if (typeof entry !== "object" || entry === null)
+        throw new Error(`Fingerprint ${index} is invalid`);
       const record = entry as Record<string, unknown>;
       return {
         type: validateFingerprintType(record.type),
@@ -369,21 +395,28 @@ export const validateKnownFingerprintsSeed = (value: unknown): KnownFingerprints
 };
 
 export const validateProviderEndpointClaimsSeed = (value: unknown): ProviderEndpointClaimsSeed => {
-  if (typeof value !== "object" || value === null) throw new Error("Provider endpoint claims seed must be an object");
+  if (typeof value !== "object" || value === null)
+    throw new Error("Provider endpoint claims seed must be an object");
   const candidate = value as Record<string, unknown>;
   const chainId = Number(candidate.chainId);
-  if (chainId !== BASE_CHAIN_ID) throw new Error(`Provider endpoint claims chainId mismatch: expected ${BASE_CHAIN_ID}, got ${chainId}`);
-  if (!Array.isArray(candidate.claims)) throw new Error("Provider endpoint claims seed must include claims");
+  if (chainId !== BASE_CHAIN_ID)
+    throw new Error(
+      `Provider endpoint claims chainId mismatch: expected ${BASE_CHAIN_ID}, got ${chainId}`,
+    );
+  if (!Array.isArray(candidate.claims))
+    throw new Error("Provider endpoint claims seed must include claims");
 
   return {
     schemaVersion: String(candidate.schemaVersion ?? "1"),
     chainId,
     collectedAt: String(candidate.collectedAt ?? ""),
     claims: candidate.claims.map((entry, index) => {
-      if (typeof entry !== "object" || entry === null) throw new Error(`Provider endpoint claim ${index} is invalid`);
+      if (typeof entry !== "object" || entry === null)
+        throw new Error(`Provider endpoint claim ${index} is invalid`);
       const record = entry as Record<string, unknown>;
       const evidenceClass = String(record.evidenceClass ?? "manual");
-      if (!["paid_probe", "catalog", "manual"].includes(evidenceClass)) throw new Error(`Invalid provider endpoint evidenceClass: ${evidenceClass}`);
+      if (!["paid_probe", "catalog", "manual"].includes(evidenceClass))
+        throw new Error(`Invalid provider endpoint evidenceClass: ${evidenceClass}`);
       return {
         claimId: String(record.claimId ?? ""),
         entityId: String(record.entityId ?? ""),
@@ -396,35 +429,57 @@ export const validateProviderEndpointClaimsSeed = (value: unknown): ProviderEndp
         network: String(record.network ?? "base"),
         asset: validateHexAddress(record.asset, `provider endpoint claim ${index} asset`),
         amountAtomic: optionalString(record.amountAtomic),
-        txHash: record.txHash == null ? null : validateHexData(record.txHash, `provider endpoint claim ${index} txHash`),
+        txHash:
+          record.txHash == null
+            ? null
+            : validateHexData(record.txHash, `provider endpoint claim ${index} txHash`),
         evidenceClass: evidenceClass as ProviderEndpointClaim["evidenceClass"],
-        roles: validateStringArray(record.roles, `provider endpoint claim ${index} roles`) as ProviderEndpointClaim["roles"],
+        roles: validateStringArray(
+          record.roles,
+          `provider endpoint claim ${index} roles`,
+        ) as ProviderEndpointClaim["roles"],
         confidence: validateConfidence(record.confidence),
         sourceName: String(record.sourceName ?? "unknown"),
-        evidenceRefs: validateStringArray(record.evidenceRefs ?? [], `provider endpoint claim ${index} evidenceRefs`),
+        evidenceRefs: validateStringArray(
+          record.evidenceRefs ?? [],
+          `provider endpoint claim ${index} evidenceRefs`,
+        ),
         provenance: validateProvenance(record.provenance),
       };
     }),
   };
 };
 
-export const validateSettlementFingerprintPacksSeed = (value: unknown): SettlementFingerprintPacksSeed => {
-  if (typeof value !== "object" || value === null) throw new Error("Settlement fingerprint packs seed must be an object");
+export const validateSettlementFingerprintPacksSeed = (
+  value: unknown,
+): SettlementFingerprintPacksSeed => {
+  if (typeof value !== "object" || value === null)
+    throw new Error("Settlement fingerprint packs seed must be an object");
   const candidate = value as Record<string, unknown>;
   const chainId = Number(candidate.chainId);
-  if (chainId !== BASE_CHAIN_ID) throw new Error(`Settlement fingerprint packs chainId mismatch: expected ${BASE_CHAIN_ID}, got ${chainId}`);
-  if (!Array.isArray(candidate.fingerprints)) throw new Error("Settlement fingerprint packs seed must include fingerprints");
+  if (chainId !== BASE_CHAIN_ID)
+    throw new Error(
+      `Settlement fingerprint packs chainId mismatch: expected ${BASE_CHAIN_ID}, got ${chainId}`,
+    );
+  if (!Array.isArray(candidate.fingerprints))
+    throw new Error("Settlement fingerprint packs seed must include fingerprints");
   return {
     schemaVersion: String(candidate.schemaVersion ?? "1"),
     chainId,
     collectedAt: String(candidate.collectedAt ?? ""),
     fingerprints: candidate.fingerprints.map((entry, index) => {
-      if (typeof entry !== "object" || entry === null) throw new Error(`Settlement fingerprint ${index} is invalid`);
+      if (typeof entry !== "object" || entry === null)
+        throw new Error(`Settlement fingerprint ${index} is invalid`);
       const record = entry as Record<string, unknown>;
       const evidenceClass = String(record.evidenceClass ?? "pattern_only");
-      if (!["pattern_only", "host_joined", "manual"].includes(evidenceClass)) throw new Error(`Invalid settlement evidenceClass: ${evidenceClass}`);
+      if (!["pattern_only", "host_joined", "manual"].includes(evidenceClass))
+        throw new Error(`Invalid settlement evidenceClass: ${evidenceClass}`);
       const method = optionalString(record.method);
-      if (method !== null && method !== "direct_transferWithAuthorization" && method !== "multicall3_aggregate3") {
+      if (
+        method !== null &&
+        method !== "direct_transferWithAuthorization" &&
+        method !== "multicall3_aggregate3"
+      ) {
         throw new Error(`Invalid settlement method: ${method}`);
       }
       return {
@@ -432,15 +487,24 @@ export const validateSettlementFingerprintPacksSeed = (value: unknown): Settleme
         clusterId: String(record.clusterId ?? ""),
         displayName: String(record.displayName ?? ""),
         method,
-        topLevelTo: record.topLevelTo == null ? null : validateHexAddress(record.topLevelTo, `settlement fingerprint ${index} topLevelTo`),
+        topLevelTo:
+          record.topLevelTo == null
+            ? null
+            : validateHexAddress(record.topLevelTo, `settlement fingerprint ${index} topLevelTo`),
         topLevelSelector: String(record.topLevelSelector ?? ""),
         innerSelector: optionalString(record.innerSelector),
         entityId: optionalString(record.entityId),
         evidenceClass: evidenceClass as SettlementFingerprintPack["evidenceClass"],
         baseConfidence: validateConfidence(record.baseConfidence),
         namedEntityConfidenceCap: validateConfidence(record.namedEntityConfidenceCap),
-        reasons: validateStringArray(record.reasons ?? [], `settlement fingerprint ${index} reasons`),
-        evidenceRefs: validateStringArray(record.evidenceRefs ?? [], `settlement fingerprint ${index} evidenceRefs`),
+        reasons: validateStringArray(
+          record.reasons ?? [],
+          `settlement fingerprint ${index} reasons`,
+        ),
+        evidenceRefs: validateStringArray(
+          record.evidenceRefs ?? [],
+          `settlement fingerprint ${index} evidenceRefs`,
+        ),
       };
     }),
   };

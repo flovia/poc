@@ -10,7 +10,13 @@ import {
   MULTICALL3_AGGREGATE3_ABI,
   USDC_TRANSFER_WITH_AUTHORIZATION_ABI,
 } from "../lib/constants";
-import type { FixtureManifest, FixtureCase, KnownFingerprintsSeed, RawReceipt, RawTransaction } from "../lib/schema";
+import type {
+  FixtureManifest,
+  FixtureCase,
+  KnownFingerprintsSeed,
+  RawReceipt,
+  RawTransaction,
+} from "../lib/schema";
 import { buildObservationsFromFixture } from "../lib/observations/build-observation";
 
 type HexData = `0x${string}`;
@@ -26,7 +32,8 @@ const rawDir = path.join(fixtureDir, "raw");
 const expectedDir = path.join(fixtureDir, "expected");
 const knowledgeDir = path.join(fixtureDir, "knowledge");
 
-const toHex = (value: number, bytes: number): HexData => `0x${value.toString(16).padStart(bytes * 2, "0")}`;
+const toHex = (value: number, bytes: number): HexData =>
+  `0x${value.toString(16).padStart(bytes * 2, "0")}`;
 const hexAddress = (seed: number): HexData => toHex(seed, 20).padEnd(42, "0") as HexData;
 const hex32 = (seed: number): HexData => toHex(seed, 32);
 
@@ -67,7 +74,12 @@ const positiveDirectCases = [
   "origindao-quest-board",
 ] as const;
 
-const positiveMulticallCases = ["bluepages", "paysponge-perplexity", "paysponge-wolframalpha", "aimo-search"] as const;
+const positiveMulticallCases = [
+  "bluepages",
+  "paysponge-perplexity",
+  "paysponge-wolframalpha",
+  "aimo-search",
+] as const;
 
 const buildDirectCase = (caseId: string, caseIndex: number): FixtureCaseFiles => {
   const relayer = hexAddress(0x11_00 + caseIndex);
@@ -76,18 +88,36 @@ const buildDirectCase = (caseId: string, caseIndex: number): FixtureCaseFiles =>
   const amount = 1_000_000_000n + BigInt(caseIndex) * 1000n;
   const blockNumber = 10_000 + caseIndex;
   const blockTimestamp = 1_700_000_000 + caseIndex;
-  const txHash = hex32(0xAAA + caseIndex);
-  const blockHash = hex32(0xBBB + caseIndex);
+  const txHash = hex32(0xaaa + caseIndex);
+  const blockHash = hex32(0xbbb + caseIndex);
   const nonce = hex32(0x1000 + caseIndex);
 
   const input = encodeFunctionData({
     abi: [directFunction],
     functionName: "transferWithAuthorization",
-    args: [payer, recipient, amount, 0n, 0n, nonce, 27 + caseIndex, hex32(0x222 + caseIndex), hex32(0x333 + caseIndex)],
+    args: [
+      payer,
+      recipient,
+      amount,
+      0n,
+      0n,
+      nonce,
+      27 + caseIndex,
+      hex32(0x222 + caseIndex),
+      hex32(0x333 + caseIndex),
+    ],
   });
 
-  const authorizationLog = encodeIndexedEventLog(EVENT_AUTHORIZATION_USED_TOPIC, eventTopicsAuthorization(payer, nonce), "0x");
-  const transferLog = encodeIndexedEventLog(EVENT_TRANSFER_TOPIC, eventTopicsTransfer(payer, recipient), eventDataTransfer(amount));
+  const authorizationLog = encodeIndexedEventLog(
+    EVENT_AUTHORIZATION_USED_TOPIC,
+    eventTopicsAuthorization(payer, nonce),
+    "0x",
+  );
+  const transferLog = encodeIndexedEventLog(
+    EVENT_TRANSFER_TOPIC,
+    eventTopicsTransfer(payer, recipient),
+    eventDataTransfer(amount),
+  );
 
   const tx: RawTransaction = {
     hash: txHash,
@@ -161,7 +191,17 @@ const buildMulticallCase = (caseId: string, caseIndex: number): FixtureCaseFiles
   const innerCallData = encodeFunctionData({
     abi: [directFunction],
     functionName: "transferWithAuthorization",
-    args: [payer, recipient, amount, 0n, 0n, nonce, 27 + caseIndex, hex32(0x444 + caseIndex), hex32(0x555 + caseIndex)],
+    args: [
+      payer,
+      recipient,
+      amount,
+      0n,
+      0n,
+      nonce,
+      27 + caseIndex,
+      hex32(0x444 + caseIndex),
+      hex32(0x555 + caseIndex),
+    ],
   });
 
   const input = encodeFunctionData({
@@ -170,8 +210,16 @@ const buildMulticallCase = (caseId: string, caseIndex: number): FixtureCaseFiles
     args: [[{ target: BASE_USDC_ADDRESS, allowFailure: false, callData: innerCallData }]],
   });
 
-  const authorizationLog = encodeIndexedEventLog(EVENT_AUTHORIZATION_USED_TOPIC, eventTopicsAuthorization(payer, nonce), "0x");
-  const transferLog = encodeIndexedEventLog(EVENT_TRANSFER_TOPIC, eventTopicsTransfer(payer, recipient), eventDataTransfer(amount));
+  const authorizationLog = encodeIndexedEventLog(
+    EVENT_AUTHORIZATION_USED_TOPIC,
+    eventTopicsAuthorization(payer, nonce),
+    "0x",
+  );
+  const transferLog = encodeIndexedEventLog(
+    EVENT_TRANSFER_TOPIC,
+    eventTopicsTransfer(payer, recipient),
+    eventDataTransfer(amount),
+  );
 
   const tx: RawTransaction = {
     hash: txHash,
@@ -246,14 +294,25 @@ const buildNegativeCase = (caseId: string, caseIndex: number): FixtureCaseFiles 
   const directInput = encodeFunctionData({
     abi: [directFunction],
     functionName: "transferWithAuthorization",
-    args: [payer, recipient, amount, 0n, 0n, nonce, 27, hex32(0x666 + caseIndex), hex32(0x777 + caseIndex)],
+    args: [
+      payer,
+      recipient,
+      amount,
+      0n,
+      0n,
+      nonce,
+      27,
+      hex32(0x666 + caseIndex),
+      hex32(0x777 + caseIndex),
+    ],
   });
   const nonUsdcInner = encodeFunctionData({
     abi: [aggregate3Function],
     functionName: "aggregate3",
     args: [[{ target: otherToken, allowFailure: false, callData: directInput }]],
   });
-  const erc20TransferInput = `0xa9059cbb${recipient.slice(2).padStart(64, "0")}${amount.toString(16).padStart(64, "0")}` as HexData;
+  const erc20TransferInput =
+    `0xa9059cbb${recipient.slice(2).padStart(64, "0")}${amount.toString(16).padStart(64, "0")}` as HexData;
 
   const tx: RawTransaction = {
     hash: txHash,
@@ -279,8 +338,16 @@ const buildNegativeCase = (caseId: string, caseIndex: number): FixtureCaseFiles 
     blockTimestamp,
   };
 
-  const authorizationLog = encodeIndexedEventLog(EVENT_AUTHORIZATION_USED_TOPIC, eventTopicsAuthorization(payer, nonce), "0x");
-  const transferLog = encodeIndexedEventLog(EVENT_TRANSFER_TOPIC, eventTopicsTransfer(payer, recipient), eventDataTransfer(amount));
+  const authorizationLog = encodeIndexedEventLog(
+    EVENT_AUTHORIZATION_USED_TOPIC,
+    eventTopicsAuthorization(payer, nonce),
+    "0x",
+  );
+  const transferLog = encodeIndexedEventLog(
+    EVENT_TRANSFER_TOPIC,
+    eventTopicsTransfer(payer, recipient),
+    eventDataTransfer(amount),
+  );
 
   const logs: RawReceipt["logs"] =
     caseId === "missing-required-logs"
@@ -317,13 +384,24 @@ const buildNegativeCase = (caseId: string, caseIndex: number): FixtureCaseFiles 
     case: {
       caseId,
       caseType: "negative",
-      method: caseId === "non-usdc-multicall3" ? "multicall3" : caseId === "missing-required-logs" ? "direct" : "other",
+      method:
+        caseId === "non-usdc-multicall3"
+          ? "multicall3"
+          : caseId === "missing-required-logs"
+            ? "direct"
+            : "other",
       txFile: `raw/${caseId}.transaction.json`,
       receiptFile: `raw/${caseId}.receipt.json`,
       expectedObservation: false,
     },
     tx,
-    receipt: { transactionHash: txHash, blockHash, blockNumber: String(blockNumber), status: "0x1", logs },
+    receipt: {
+      transactionHash: txHash,
+      blockHash,
+      blockNumber: String(blockNumber),
+      status: "0x1",
+      logs,
+    },
   };
 };
 
@@ -335,9 +413,12 @@ const writeFixtures = () => {
   const cases = [
     ...positiveDirectCases.map((caseId, idx) => buildDirectCase(caseId, idx + 1)),
     ...positiveMulticallCases.map((caseId, idx) => buildMulticallCase(caseId, idx + 1)),
-    ...["normal-erc20-transfer", "non-usdc-multicall3", "missing-required-logs", "unrelated-base-tx"].map((caseId, idx) =>
-      buildNegativeCase(caseId, idx + 1),
-    ),
+    ...[
+      "normal-erc20-transfer",
+      "non-usdc-multicall3",
+      "missing-required-logs",
+      "unrelated-base-tx",
+    ].map((caseId, idx) => buildNegativeCase(caseId, idx + 1)),
   ];
 
   const manifest: FixtureManifest = {
@@ -349,7 +430,10 @@ const writeFixtures = () => {
 
   for (const entry of cases) {
     fs.writeFileSync(path.join(fixtureDir, entry.case.txFile), JSON.stringify(entry.tx, null, 2));
-    fs.writeFileSync(path.join(fixtureDir, entry.case.receiptFile), JSON.stringify(entry.receipt, null, 2));
+    fs.writeFileSync(
+      path.join(fixtureDir, entry.case.receiptFile),
+      JSON.stringify(entry.receipt, null, 2),
+    );
   }
 
   fs.writeFileSync(path.join(fixtureDir, "manifest.json"), JSON.stringify(manifest, null, 2));
@@ -366,19 +450,19 @@ const positiveObservations = cases
 const expected = {
   generatedAt: new Date().toISOString(),
   observations: positiveObservations.map((observation) => ({
-        case_id: observation.caseId,
-        tx_hash: observation.txHash,
-        block_number: observation.blockNumber,
-        block_timestamp: observation.blockTimestamp,
-        relayer_wallet: observation.relayer,
-        payer_wallet: observation.payer,
-        recipient_wallet: observation.recipient,
-        token_address: observation.tokenAddress,
-        amount_atomic: observation.amountAtomic,
-        method: observation.method,
-        top_level_selector: observation.topLevelSelector,
-        stable_hash: observation.stableHash,
-      })),
+    case_id: observation.caseId,
+    tx_hash: observation.txHash,
+    block_number: observation.blockNumber,
+    block_timestamp: observation.blockTimestamp,
+    relayer_wallet: observation.relayer,
+    payer_wallet: observation.payer,
+    recipient_wallet: observation.recipient,
+    token_address: observation.tokenAddress,
+    amount_atomic: observation.amountAtomic,
+    method: observation.method,
+    top_level_selector: observation.topLevelSelector,
+    stable_hash: observation.stableHash,
+  })),
 };
 
 const fingerprintSeed: KnownFingerprintsSeed = {
@@ -392,7 +476,13 @@ const fingerprintSeed: KnownFingerprintsSeed = {
       middlemanLabel: `${observation.caseId} relayer`,
       confidence: 95,
       sourceName: "fixture-generator",
-      provenance: [{ caseId: observation.caseId, transaction: observation.txHash, source: "fixture-generator" }],
+      provenance: [
+        {
+          caseId: observation.caseId,
+          transaction: observation.txHash,
+          source: "fixture-generator",
+        },
+      ],
     },
     {
       type: "recipient" as const,
@@ -400,7 +490,13 @@ const fingerprintSeed: KnownFingerprintsSeed = {
       providerLabel: `${observation.caseId} recipient`,
       confidence: 95,
       sourceName: "fixture-generator",
-      provenance: [{ caseId: observation.caseId, transaction: observation.txHash, source: "fixture-generator" }],
+      provenance: [
+        {
+          caseId: observation.caseId,
+          transaction: observation.txHash,
+          source: "fixture-generator",
+        },
+      ],
     },
     {
       type: "payer" as const,
@@ -408,11 +504,20 @@ const fingerprintSeed: KnownFingerprintsSeed = {
       providerLabel: `${observation.caseId} payer`,
       confidence: 70,
       sourceName: "fixture-generator",
-      provenance: [{ caseId: observation.caseId, transaction: observation.txHash, source: "fixture-generator" }],
+      provenance: [
+        {
+          caseId: observation.caseId,
+          transaction: observation.txHash,
+          source: "fixture-generator",
+        },
+      ],
     },
   ]),
 };
 
 fs.writeFileSync(path.join(expectedDir, "observations.json"), JSON.stringify(expected, null, 2));
-fs.writeFileSync(path.join(knowledgeDir, "known_fingerprints.json"), JSON.stringify(fingerprintSeed, null, 2));
+fs.writeFileSync(
+  path.join(knowledgeDir, "known_fingerprints.json"),
+  JSON.stringify(fingerprintSeed, null, 2),
+);
 console.log(`Generated ${cases.length} fixture cases under ${fixtureDir}`);

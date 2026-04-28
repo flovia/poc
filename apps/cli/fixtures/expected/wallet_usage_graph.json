@@ -3,14 +3,7 @@
   "graph": {
     "generatedFrom": "payment_observations+provider_endpoint_claims+attribution_candidates",
     "payerWalletLanguage": true,
-    "identityFieldsExcluded": [
-      "human_user",
-      "ens",
-      "social",
-      "kyc",
-      "email",
-      "ip_address"
-    ],
+    "identityFieldsExcluded": ["human_user", "ens", "social", "kyc", "email", "ip_address"],
     "providerWallets": [
       {
         "payTo": "0x27599d824bbb4f506f985af865d840f61ba848c8",
@@ -94,9 +87,7 @@
       },
       {
         "payTo": "0x551c176d17236ee9ce6f450dc02bd5c2767751b9",
-        "claimIds": [
-          "paysponge-perplexity-multicall-foxytanuki"
-        ],
+        "claimIds": ["paysponge-perplexity-multicall-foxytanuki"],
         "payerWallets": []
       }
     ]

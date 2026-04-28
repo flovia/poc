@@ -76,9 +76,15 @@ export const storePaymentObservations = (observations: PaymentObservationInput[]
         now,
       ) as { changes: number };
 
-      const idRow = selectObservationId.get(observation.chainId, observation.txHash, observation.stableHash) as {
-        observation_id: number;
-      } | undefined;
+      const idRow = selectObservationId.get(
+        observation.chainId,
+        observation.txHash,
+        observation.stableHash,
+      ) as
+        | {
+            observation_id: number;
+          }
+        | undefined;
 
       const observationId = idRow?.observation_id;
       if (observationId == null) continue;

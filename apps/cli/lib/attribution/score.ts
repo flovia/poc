@@ -53,7 +53,9 @@ type FingerprintRecord = {
 
 const listFingerprints = () =>
   db
-    .prepare(`SELECT fingerprint_type, fingerprint_value, confidence, provider_label, middleman_label, source_name FROM known_fingerprints ORDER BY fingerprint_type, fingerprint_value`)
+    .prepare(
+      `SELECT fingerprint_type, fingerprint_value, confidence, provider_label, middleman_label, source_name FROM known_fingerprints ORDER BY fingerprint_type, fingerprint_value`,
+    )
     .all() as Array<FingerprintRecord>;
 
 const normalize = (rows: Array<Record<string, unknown>>) =>
@@ -69,7 +71,8 @@ const normalize = (rows: Array<Record<string, unknown>>) =>
 const normalizeAddress = (value: string | null | undefined) => String(value ?? "").toLowerCase();
 const normalizeNetwork = (value: string | null | undefined) => {
   const normalized = String(value ?? "").toLowerCase();
-  if (normalized === "base" || normalized === "base-mainnet" || normalized === "eip155:8453") return "base";
+  if (normalized === "base" || normalized === "base-mainnet" || normalized === "eip155:8453")
+    return "base";
   return normalized;
 };
 
@@ -92,25 +95,49 @@ const roleToCandidateType = (role: string): AttributionCandidateType | null => {
 
 const listSettlementEvidence = () =>
   db
-    .prepare(`SELECT observation_id, evidence_type, raw_json FROM settlement_evidence ORDER BY observation_id, evidence_id`)
+    .prepare(
+      `SELECT observation_id, evidence_type, raw_json FROM settlement_evidence ORDER BY observation_id, evidence_id`,
+    )
     .all() as Array<{ observation_id: number; evidence_type: string; raw_json: string }>;
 
 const evidenceTextFor = (evidenceByObservationId: Map<number, string[]>, observationId: number) =>
   (evidenceByObservationId.get(observationId) ?? []).join("\n").toLowerCase();
 
 const packMatchesObservation = (
-  pack: { method: string | null; top_level_to: string | null; top_level_selector: string; inner_selector: string | null },
+  pack: {
+    method: string | null;
+    top_level_to: string | null;
+    top_level_selector: string;
+    inner_selector: string | null;
+  },
   observation: { raw_method: string; top_level_selector: string; observation_id: number },
   evidenceByObservationId: Map<number, string[]>,
 ) => {
   if (pack.method && pack.method !== observation.raw_method) return false;
-  if (String(pack.top_level_selector).toLowerCase() !== observation.top_level_selector.toLowerCase()) return false;
+  if (
+    String(pack.top_level_selector).toLowerCase() !== observation.top_level_selector.toLowerCase()
+  )
+    return false;
   if (pack.top_level_to) {
     const normalizedTopLevelTo = pack.top_level_to.toLowerCase();
-    if (observation.raw_method === "direct_transferWithAuthorization" && normalizedTopLevelTo !== BASE_USDC_ADDRESS.toLowerCase()) return false;
-    if (observation.raw_method === "multicall3_aggregate3" && normalizedTopLevelTo !== MULTICALL3_ADDRESS.toLowerCase()) return false;
+    if (
+      observation.raw_method === "direct_transferWithAuthorization" &&
+      normalizedTopLevelTo !== BASE_USDC_ADDRESS.toLowerCase()
+    )
+      return false;
+    if (
+      observation.raw_method === "multicall3_aggregate3" &&
+      normalizedTopLevelTo !== MULTICALL3_ADDRESS.toLowerCase()
+    )
+      return false;
   }
-  if (pack.inner_selector && !evidenceTextFor(evidenceByObservationId, observation.observation_id).includes(pack.inner_selector.toLowerCase())) return false;
+  if (
+    pack.inner_selector &&
+    !evidenceTextFor(evidenceByObservationId, observation.observation_id).includes(
+      pack.inner_selector.toLowerCase(),
+    )
+  )
+    return false;
   return true;
 };
 
@@ -132,7 +159,10 @@ export const buildAttributionCandidates = () => {
   }));
   const evidenceByObservationId = new Map<number, string[]>();
   for (const evidence of listSettlementEvidence()) {
-    evidenceByObservationId.set(evidence.observation_id, [...(evidenceByObservationId.get(evidence.observation_id) ?? []), evidence.raw_json]);
+    evidenceByObservationId.set(evidence.observation_id, [
+      ...(evidenceByObservationId.get(evidence.observation_id) ?? []),
+      evidence.raw_json,
+    ]);
   }
 
   const recipientFingerprints = fingerprints.filter((item) => item.fingerprintType === "recipient");
@@ -207,14 +237,20 @@ export const buildAttributionCandidates = () => {
   };
 
   for (const observation of observations) {
-    const recipientMatch = recipientFingerprints.find((entry) => entry.fingerprintValue.toLowerCase() === observation.recipient_wallet.toLowerCase());
+    const recipientMatch = recipientFingerprints.find(
+      (entry) =>
+        entry.fingerprintValue.toLowerCase() === observation.recipient_wallet.toLowerCase(),
+    );
     if (recipientMatch) {
       const reasons = [
         "recipient matches known recipient fingerprint",
         `providerLabel=${recipientMatch.providerLabel ?? "unlabeled"}`,
         `sourceName=${recipientMatch.sourceName ?? "unknown"}`,
       ];
-      const evidenceRefs = [`receipt:${observation.observation_id}:recipient`, `fingerprint:recipient:${recipientMatch.fingerprintValue.toLowerCase()}`];
+      const evidenceRefs = [
+        `receipt:${observation.observation_id}:recipient`,
+        `fingerprint:recipient:${recipientMatch.fingerprintValue.toLowerCase()}`,
+      ];
       const candidateType = "recipient_match" as const;
 
       writeCandidate({
@@ -228,7 +264,9 @@ export const buildAttributionCandidates = () => {
       });
     }
 
-    const relayerMatch = relayerFingerprints.find((entry) => entry.fingerprintValue.toLowerCase() === observation.relayer_wallet.toLowerCase());
+    const relayerMatch = relayerFingerprints.find(
+      (entry) => entry.fingerprintValue.toLowerCase() === observation.relayer_wallet.toLowerCase(),
+    );
     if (relayerMatch) {
       const reasons = [
         "relayer matches known relayer fingerprint",
@@ -236,7 +274,10 @@ export const buildAttributionCandidates = () => {
         `middlemanLabel=${relayerMatch.middlemanLabel ?? "unlabeled"}`,
         `sourceName=${relayerMatch.sourceName ?? "unknown"}`,
       ];
-      const evidenceRefs = [`receipt:${observation.observation_id}:relayer`, `fingerprint:relayer:${relayerMatch.fingerprintValue.toLowerCase()}`];
+      const evidenceRefs = [
+        `receipt:${observation.observation_id}:relayer`,
+        `fingerprint:relayer:${relayerMatch.fingerprintValue.toLowerCase()}`,
+      ];
       const candidateType = "relayer_match" as const;
 
       writeCandidate({
@@ -250,7 +291,9 @@ export const buildAttributionCandidates = () => {
       });
     }
 
-    const matchedSettlementPacks = settlementPacks.filter((pack) => packMatchesObservation(pack, observation, evidenceByObservationId));
+    const matchedSettlementPacks = settlementPacks.filter((pack) =>
+      packMatchesObservation(pack, observation, evidenceByObservationId),
+    );
 
     for (const pack of matchedSettlementPacks) {
       writeCandidate({
@@ -262,26 +305,39 @@ export const buildAttributionCandidates = () => {
         entityId: pack.entity_id,
         confidence: pack.base_confidence,
         reasons: ["settlement evidence matches fingerprint pack", ...pack.reasons],
-        evidenceRefs: [`receipt:${observation.observation_id}:settlement`, `settlement_fingerprint:${pack.fingerprint_id}`, ...pack.evidenceRefs],
+        evidenceRefs: [
+          `receipt:${observation.observation_id}:settlement`,
+          `settlement_fingerprint:${pack.fingerprint_id}`,
+          ...pack.evidenceRefs,
+        ],
       });
     }
 
     const matchedClaims = providerClaims.filter((claim) => {
-      if (normalizeAddress(claim.pay_to_wallet) !== normalizeAddress(observation.recipient_wallet)) return false;
-      if (claim.tx_hash && normalizeAddress(claim.tx_hash) !== normalizeAddress(observation.tx_hash)) return false;
+      if (normalizeAddress(claim.pay_to_wallet) !== normalizeAddress(observation.recipient_wallet))
+        return false;
+      if (
+        claim.tx_hash &&
+        normalizeAddress(claim.tx_hash) !== normalizeAddress(observation.tx_hash)
+      )
+        return false;
       if (normalizeNetwork(claim.network) !== "base" || observation.chain_id !== 8453) return false;
-      if (normalizeAddress(claim.asset_address) !== normalizeAddress(observation.token_address)) return false;
+      if (normalizeAddress(claim.asset_address) !== normalizeAddress(observation.token_address))
+        return false;
       if (claim.amount_atomic && claim.amount_atomic !== observation.amount_atomic) return false;
       return true;
     });
 
     for (const claim of matchedClaims) {
-      const isPayspongeHostJoined = String(claim.request_host ?? "").endsWith(".x402.paysponge.com") && Boolean(claim.tx_hash);
+      const isPayspongeHostJoined =
+        String(claim.request_host ?? "").endsWith(".x402.paysponge.com") && Boolean(claim.tx_hash);
       const matchedSettlementPack = matchedSettlementPacks[0];
       for (const role of claim.roles) {
         const candidateType = roleToCandidateType(role);
         if (!candidateType) continue;
-        const needsSettlementJoin = claim.entity_id === "paysponge" && ["middleman", "market", "facilitator", "settlement_operator"].includes(role);
+        const needsSettlementJoin =
+          claim.entity_id === "paysponge" &&
+          ["middleman", "market", "facilitator", "settlement_operator"].includes(role);
         if (needsSettlementJoin && (!isPayspongeHostJoined || !matchedSettlementPack)) continue;
         const confidence = confidenceForClaim(claim.confidence, claim.evidence_class);
         const reasons = [
@@ -292,14 +348,17 @@ export const buildAttributionCandidates = () => {
         ];
         if (claim.tx_hash) reasons.push("decoded payment response transaction matches observed tx");
         if (claim.request_host) reasons.push(`requestHost=${claim.request_host}`);
-        if (needsSettlementJoin) reasons.push(`settlementCluster=${matchedSettlementPack.cluster_id}`);
+        if (needsSettlementJoin)
+          reasons.push(`settlementCluster=${matchedSettlementPack.cluster_id}`);
         writeCandidate({
           observationId: observation.observation_id,
           candidateType,
           matchedType: "provider_endpoint_claim",
           matchedValue: `${claim.claim_id}:${role}`,
           matchedClaimId: claim.claim_id,
-          matchedSettlementFingerprintId: needsSettlementJoin ? matchedSettlementPack.fingerprint_id : null,
+          matchedSettlementFingerprintId: needsSettlementJoin
+            ? matchedSettlementPack.fingerprint_id
+            : null,
           entityId: claim.entity_id,
           role,
           confidence,
@@ -307,7 +366,12 @@ export const buildAttributionCandidates = () => {
           evidenceRefs: [
             `receipt:${observation.observation_id}:recipient`,
             `claim:${claim.claim_id}`,
-            ...(needsSettlementJoin ? [`settlement_fingerprint:${matchedSettlementPack.fingerprint_id}`, `receipt:${observation.observation_id}:settlement`] : []),
+            ...(needsSettlementJoin
+              ? [
+                  `settlement_fingerprint:${matchedSettlementPack.fingerprint_id}`,
+                  `receipt:${observation.observation_id}:settlement`,
+                ]
+              : []),
             ...claim.evidenceRefs,
           ],
         });

@@ -8,7 +8,12 @@ import {
   MULTICALL3_AGGREGATE3_SELECTOR,
   TRANSFER_WITH_AUTHORIZATION_SELECTOR,
 } from "../constants";
-import type { RawReceipt, RawTransaction, SettledEvidence, PaymentObservationInput } from "../schema";
+import type {
+  RawReceipt,
+  RawTransaction,
+  SettledEvidence,
+  PaymentObservationInput,
+} from "../schema";
 import { extractTopLevelSelector } from "../decoder/selectors";
 import { decodeReceiptLogsForUsdc } from "../decoder/logs";
 import { decodeTransferWithAuthorization } from "../decoder/direct-usdc";
@@ -21,11 +26,7 @@ const toBlockNumber = (value: string): number => {
 
 const toLower = (value: string) => value.toLowerCase();
 
-const buildStableHash = (input: string) =>
-  crypto
-    .createHash("sha256")
-    .update(input)
-    .digest("hex");
+const buildStableHash = (input: string) => crypto.createHash("sha256").update(input).digest("hex");
 
 const hasRequiredUsdcLogs = (
   events: ReturnType<typeof decodeReceiptLogsForUsdc>,
@@ -33,7 +34,9 @@ const hasRequiredUsdcLogs = (
   recipient: string,
   amount: bigint,
 ) => {
-  const hasAuth = events.some((event) => event.kind === "authorization" && event.authorizer?.toLowerCase() === toLower(payer));
+  const hasAuth = events.some(
+    (event) => event.kind === "authorization" && event.authorizer?.toLowerCase() === toLower(payer),
+  );
   const hasTransfer = events.some(
     (event) =>
       event.kind === "transfer" &&
@@ -48,7 +51,11 @@ const hasRequiredUsdcLogs = (
   };
 };
 
-const makeEvidence = (type: SettledEvidence["type"], detail: string, raw: unknown): SettledEvidence => ({ type, detail, raw });
+const makeEvidence = (
+  type: SettledEvidence["type"],
+  detail: string,
+  raw: unknown,
+): SettledEvidence => ({ type, detail, raw });
 
 export const buildObservationsFromFixture = (
   caseId: string,
@@ -70,15 +77,29 @@ export const buildObservationsFromFixture = (
   const blockNumber = toBlockNumber(tx.blockNumber);
 
   if (
-    (selector === TRANSFER_WITH_AUTHORIZATION_SELECTOR || selector === EXECUTE_WITH_AUTHORIZATION_SELECTOR) &&
+    (selector === TRANSFER_WITH_AUTHORIZATION_SELECTOR ||
+      selector === EXECUTE_WITH_AUTHORIZATION_SELECTOR) &&
     toLower(tx.to) === toLower(BASE_USDC_ADDRESS)
   ) {
     const decoded = decodeTransferWithAuthorization(tx.input);
-    const logsValidation = hasRequiredUsdcLogs(logs, decoded.args.from, decoded.args.to, decoded.args.value);
+    const logsValidation = hasRequiredUsdcLogs(
+      logs,
+      decoded.args.from,
+      decoded.args.to,
+      decoded.args.value,
+    );
     if (!logsValidation.complete) return [];
 
     const stableHash = buildStableHash(
-      [tx.hash, String(blockNumber), tx.chainId, decoded.args.from, decoded.args.to, decoded.args.value.toString(), selector].join("|"),
+      [
+        tx.hash,
+        String(blockNumber),
+        tx.chainId,
+        decoded.args.from,
+        decoded.args.to,
+        decoded.args.value.toString(),
+        selector,
+      ].join("|"),
     );
 
     observations.push({
@@ -97,8 +118,15 @@ export const buildObservationsFromFixture = (
       caseId,
       stableHash,
       evidence: [
-        makeEvidence("authorization", "transferWithAuthorization calldata", { selector, arguments: decoded.args }),
-        makeEvidence("transfer", "USDC Transfer log", logs.filter((event) => event.kind === "transfer")),
+        makeEvidence("authorization", "transferWithAuthorization calldata", {
+          selector,
+          arguments: decoded.args,
+        }),
+        makeEvidence(
+          "transfer",
+          "USDC Transfer log",
+          logs.filter((event) => event.kind === "transfer"),
+        ),
         makeEvidence("fixture", "fixture logs matched", {
           totalLogs: logs.length,
           authorizationLogs: logs.filter((event) => event.kind === "authorization").length,
@@ -109,7 +137,10 @@ export const buildObservationsFromFixture = (
     return observations;
   }
 
-  if (selector === MULTICALL3_AGGREGATE3_SELECTOR && toLower(tx.to) === toLower(MULTICALL3_ADDRESS)) {
+  if (
+    selector === MULTICALL3_AGGREGATE3_SELECTOR &&
+    toLower(tx.to) === toLower(MULTICALL3_ADDRESS)
+  ) {
     const calls = extractUsdcCallsFromMulticall(tx.input);
     if (calls.length === 0) return [];
 
@@ -119,7 +150,16 @@ export const buildObservationsFromFixture = (
       if (!logsValidation.complete) continue;
 
       const stableHash = buildStableHash(
-        [tx.hash, String(blockNumber), tx.chainId, inner.call.target, args.from, args.to, args.value.toString(), String(inner.call.callData)].join("|"),
+        [
+          tx.hash,
+          String(blockNumber),
+          tx.chainId,
+          inner.call.target,
+          args.from,
+          args.to,
+          args.value.toString(),
+          String(inner.call.callData),
+        ].join("|"),
       );
 
       observations.push({
@@ -139,7 +179,11 @@ export const buildObservationsFromFixture = (
         stableHash,
         evidence: [
           makeEvidence("multicall", "multicall3 aggregate3 decoded", inner),
-          makeEvidence("transfer", "USDC Transfer log", logs.filter((event) => event.kind === "transfer")),
+          makeEvidence(
+            "transfer",
+            "USDC Transfer log",
+            logs.filter((event) => event.kind === "transfer"),
+          ),
           makeEvidence("fixture", "fixture logs matched", {
             totalLogs: logs.length,
             authorizationLogs: logs.filter((event) => event.kind === "authorization").length,

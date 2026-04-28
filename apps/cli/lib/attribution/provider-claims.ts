@@ -1,7 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
 import { db, env, nowIso } from "../db";
-import { validateProviderEndpointClaimsSeed, type ProviderEndpointClaim, type ProviderEndpointClaimsSeed } from "../schema";
+import {
+  validateProviderEndpointClaimsSeed,
+  type ProviderEndpointClaim,
+  type ProviderEndpointClaimsSeed,
+} from "../schema";
 
 const readJson = <T>(filePath: string): T => JSON.parse(fs.readFileSync(filePath, "utf8")) as T;
 
@@ -82,7 +86,9 @@ export const seedProviderEndpointClaims = (seed: ProviderEndpointClaimsSeed) => 
   return seed.claims.length;
 };
 
-export const seedProviderEndpointClaimsFromFile = (seedPath = path.join(env.fixturesDir, "knowledge", "provider_endpoint_claims.json")) => {
+export const seedProviderEndpointClaimsFromFile = (
+  seedPath = path.join(env.fixturesDir, "knowledge", "provider_endpoint_claims.json"),
+) => {
   const absolutePath = path.isAbsolute(seedPath) ? seedPath : path.resolve(process.cwd(), seedPath);
   const seed = validateProviderEndpointClaimsSeed(readJson<Record<string, unknown>>(absolutePath));
   return seedProviderEndpointClaims(seed);

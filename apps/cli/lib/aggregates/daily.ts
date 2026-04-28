@@ -10,10 +10,12 @@ type DailyMetricRow = {
   total_amount_atomic: bigint;
 };
 
-const dayFromTimestamp = (epochSeconds: number) => new Date(epochSeconds * 1000).toISOString().slice(0, 10);
+const dayFromTimestamp = (epochSeconds: number) =>
+  new Date(epochSeconds * 1000).toISOString().slice(0, 10);
 
 export const buildDailyMetrics = () => {
-  const rows = db.prepare(`
+  const rows = db
+    .prepare(`
     SELECT
       observation_id,
       amount_atomic,
@@ -23,7 +25,8 @@ export const buildDailyMetrics = () => {
       block_timestamp
     FROM payment_observations
     ORDER BY block_timestamp
-  `).all() as Array<{
+  `)
+    .all() as Array<{
     observation_id: number;
     amount_atomic: string;
     payer_wallet: string;
@@ -33,7 +36,11 @@ export const buildDailyMetrics = () => {
   }>;
 
   const candidateCountsByObs = new Map<number, number>();
-  const candidateRows = db.prepare(`SELECT observation_id, COUNT(*) AS count FROM attribution_candidates GROUP BY observation_id`).all() as Array<{
+  const candidateRows = db
+    .prepare(
+      `SELECT observation_id, COUNT(*) AS count FROM attribution_candidates GROUP BY observation_id`,
+    )
+    .all() as Array<{
     observation_id: number;
     count: number;
   }>;
@@ -41,14 +48,17 @@ export const buildDailyMetrics = () => {
     candidateCountsByObs.set(row.observation_id, row.count);
   }
 
-  const grouped = new Map<string, {
-    observation_count: number;
-    candidate_count: number;
-    unique_payers: Set<string>;
-    unique_recipients: Set<string>;
-    unique_relayers: Set<string>;
-    total_amount_atomic: bigint;
-  }>();
+  const grouped = new Map<
+    string,
+    {
+      observation_count: number;
+      candidate_count: number;
+      unique_payers: Set<string>;
+      unique_recipients: Set<string>;
+      unique_relayers: Set<string>;
+      total_amount_atomic: bigint;
+    }
+  >();
 
   for (const row of rows) {
     const day = dayFromTimestamp(row.block_timestamp);

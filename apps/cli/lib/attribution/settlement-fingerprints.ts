@@ -1,7 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
 import { db, env, nowIso } from "../db";
-import { validateSettlementFingerprintPacksSeed, type SettlementFingerprintPack, type SettlementFingerprintPacksSeed } from "../schema";
+import {
+  validateSettlementFingerprintPacksSeed,
+  type SettlementFingerprintPack,
+  type SettlementFingerprintPacksSeed,
+} from "../schema";
 
 const readJson = <T>(filePath: string): T => JSON.parse(fs.readFileSync(filePath, "utf8")) as T;
 
@@ -67,9 +71,13 @@ export const seedSettlementFingerprintPacks = (seed: SettlementFingerprintPacksS
   return seed.fingerprints.length;
 };
 
-export const seedSettlementFingerprintPacksFromFile = (seedPath = path.join(env.fixturesDir, "knowledge", "settlement_fingerprint_packs.json")) => {
+export const seedSettlementFingerprintPacksFromFile = (
+  seedPath = path.join(env.fixturesDir, "knowledge", "settlement_fingerprint_packs.json"),
+) => {
   const absolutePath = path.isAbsolute(seedPath) ? seedPath : path.resolve(process.cwd(), seedPath);
-  const seed = validateSettlementFingerprintPacksSeed(readJson<Record<string, unknown>>(absolutePath));
+  const seed = validateSettlementFingerprintPacksSeed(
+    readJson<Record<string, unknown>>(absolutePath),
+  );
   return seedSettlementFingerprintPacks(seed);
 };
 

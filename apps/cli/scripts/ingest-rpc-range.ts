@@ -44,7 +44,11 @@ export type RpcRangeIngestResult = {
   databasePath: string;
 };
 
-const AUTHORIZATION_SELECTORS = new Set([TRANSFER_WITH_AUTHORIZATION_SELECTOR, EXECUTE_WITH_AUTHORIZATION_SELECTOR].map((selector) => selector.toLowerCase()));
+const AUTHORIZATION_SELECTORS = new Set(
+  [TRANSFER_WITH_AUTHORIZATION_SELECTOR, EXECUTE_WITH_AUTHORIZATION_SELECTOR].map((selector) =>
+    selector.toLowerCase(),
+  ),
+);
 
 const readArg = (name: string) => {
   const index = process.argv.indexOf(name);
@@ -55,34 +59,44 @@ const readArg = (name: string) => {
 const parseBlockNumber = (value: string | null, name: string) => {
   if (value == null) throw new Error(`Missing ${name}`);
   const parsed = Number(value);
-  if (!Number.isSafeInteger(parsed) || parsed < 0) throw new Error(`${name} must be a non-negative integer`);
+  if (!Number.isSafeInteger(parsed) || parsed < 0)
+    throw new Error(`${name} must be a non-negative integer`);
   return parsed;
 };
 
 const parseMaxBlocks = (value: string | null) => {
   if (value == null) return 100;
   const parsed = Number(value);
-  if (!Number.isSafeInteger(parsed) || parsed < 1) throw new Error("--max-blocks must be a positive integer");
+  if (!Number.isSafeInteger(parsed) || parsed < 1)
+    throw new Error("--max-blocks must be a positive integer");
   return parsed;
 };
 
-const sameAddress = (left: string | null | undefined, right: string) => left?.toLowerCase() === right.toLowerCase();
+const sameAddress = (left: string | null | undefined, right: string) =>
+  left?.toLowerCase() === right.toLowerCase();
 
 const topLevelSelector = (input: string | undefined) => input?.slice(0, 10).toLowerCase();
 
 export const isRpcRangeCandidate = (tx: Pick<RpcTransactionPayload, "to" | "input" | "data">) => {
   const selector = topLevelSelector(tx.input ?? tx.data);
-  if (sameAddress(tx.to, BASE_USDC_ADDRESS)) return selector != null && AUTHORIZATION_SELECTORS.has(selector);
-  return sameAddress(tx.to, MULTICALL3_ADDRESS) && selector === MULTICALL3_AGGREGATE3_SELECTOR.toLowerCase();
+  if (sameAddress(tx.to, BASE_USDC_ADDRESS))
+    return selector != null && AUTHORIZATION_SELECTORS.has(selector);
+  return (
+    sameAddress(tx.to, MULTICALL3_ADDRESS) &&
+    selector === MULTICALL3_AGGREGATE3_SELECTOR.toLowerCase()
+  );
 };
 
 const caseIdForTx = (txHash: string) => `rpc-range-${txHash.slice(2, 14)}`;
 
 const assertRangeWithinLimit = (fromBlock: number, toBlock: number, maxBlocks: number) => {
-  if (!Number.isSafeInteger(maxBlocks) || maxBlocks < 1) throw new Error(`maxBlocks must be a positive safe integer: ${maxBlocks}`);
+  if (!Number.isSafeInteger(maxBlocks) || maxBlocks < 1)
+    throw new Error(`maxBlocks must be a positive safe integer: ${maxBlocks}`);
   const blockCount = toBlock - fromBlock + 1;
   if (blockCount > maxBlocks) {
-    throw new Error(`RPC range too large: ${blockCount} blocks exceeds max ${maxBlocks}. Pass --max-blocks to override.`);
+    throw new Error(
+      `RPC range too large: ${blockCount} blocks exceeds max ${maxBlocks}. Pass --max-blocks to override.`,
+    );
   }
 };
 
@@ -185,7 +199,13 @@ export const runRpcRangeIngestFromCli = async () => {
   const fromBlock = parseBlockNumber(readArg("--from-block"), "--from-block");
   const toBlock = parseBlockNumber(readArg("--to-block"), "--to-block");
   const maxBlocks = parseMaxBlocks(readArg("--max-blocks"));
-  return runRpcRangeIngest({ rpcUrl: resolveBaseRpcUrl(), fromBlock, toBlock, maxBlocks, timeoutMs: resolveRpcRequestTimeoutMs() });
+  return runRpcRangeIngest({
+    rpcUrl: resolveBaseRpcUrl(),
+    fromBlock,
+    toBlock,
+    maxBlocks,
+    timeoutMs: resolveRpcRequestTimeoutMs(),
+  });
 };
 
 if (import.meta.main) {

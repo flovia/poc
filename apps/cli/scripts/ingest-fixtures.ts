@@ -1,7 +1,12 @@
 import fs from "node:fs";
 import path from "node:path";
 import { env, initDb } from "../lib/db";
-import { validateFixtureManifest, type PaymentObservationInput, type RawReceipt, type RawTransaction } from "../lib/schema";
+import {
+  validateFixtureManifest,
+  type PaymentObservationInput,
+  type RawReceipt,
+  type RawTransaction,
+} from "../lib/schema";
 import { buildObservationsFromFixture } from "../lib/observations/build-observation";
 import { storePaymentObservations } from "../lib/observations/store-observations";
 

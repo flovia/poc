@@ -89,10 +89,16 @@ export const runRpcTxIngest = async ({
 export const runRpcTxIngestFromCli = async () => {
   const txHash = readArg("--tx-hash") ?? process.argv[2];
   if (!txHash) {
-    throw new Error("Usage: bun scripts/ingest-rpc-tx.ts --tx-hash <tx-hash>\nEnvironment: BASE_RPC_URL or ALCHEMY_API_KEY, RPC_REQUEST_TIMEOUT_MS");
+    throw new Error(
+      "Usage: bun scripts/ingest-rpc-tx.ts --tx-hash <tx-hash>\nEnvironment: BASE_RPC_URL or ALCHEMY_API_KEY, RPC_REQUEST_TIMEOUT_MS",
+    );
   }
 
-  return runRpcTxIngest({ rpcUrl: resolveBaseRpcUrl(), txHash, timeoutMs: resolveRpcRequestTimeoutMs() });
+  return runRpcTxIngest({
+    rpcUrl: resolveBaseRpcUrl(),
+    txHash,
+    timeoutMs: resolveRpcRequestTimeoutMs(),
+  });
 };
 
 if (import.meta.main) {

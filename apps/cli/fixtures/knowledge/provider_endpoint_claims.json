@@ -17,7 +17,15 @@
       "amountAtomic": "100000",
       "txHash": "0x400ed0f03248264618e8f1bee1998d1e7877d459d9f713eac868c54e7b84a483",
       "evidenceClass": "paid_probe",
-      "roles": ["provider", "service", "endpoint", "middleman", "market", "facilitator", "settlement_operator"],
+      "roles": [
+        "provider",
+        "service",
+        "endpoint",
+        "middleman",
+        "market",
+        "facilitator",
+        "settlement_operator"
+      ],
       "confidence": 90,
       "sourceName": "poc-fixture",
       "evidenceRefs": [
@@ -47,7 +55,15 @@
       "amountAtomic": "100000",
       "txHash": "0x17930e698712a9a5371c80bb1c6748e63adbf8cc41c3e5e2d32e1bd92e8f2521",
       "evidenceClass": "paid_probe",
-      "roles": ["provider", "service", "endpoint", "middleman", "market", "facilitator", "settlement_operator"],
+      "roles": [
+        "provider",
+        "service",
+        "endpoint",
+        "middleman",
+        "market",
+        "facilitator",
+        "settlement_operator"
+      ],
       "confidence": 90,
       "sourceName": "poc-fixture",
       "evidenceRefs": [
@@ -77,7 +93,15 @@
       "amountAtomic": "10000",
       "txHash": "0xcb1ed7950b6f43a001623e9cf3a590ffb16971ec9985fb20eb9b22f483a2e447",
       "evidenceClass": "paid_probe",
-      "roles": ["provider", "service", "endpoint", "middleman", "market", "facilitator", "settlement_operator"],
+      "roles": [
+        "provider",
+        "service",
+        "endpoint",
+        "middleman",
+        "market",
+        "facilitator",
+        "settlement_operator"
+      ],
       "confidence": 90,
       "sourceName": "foxytanuki-x402-analysis",
       "evidenceRefs": [

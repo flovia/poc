@@ -25,7 +25,11 @@ const readExpected = <T>(filePath: string): T => {
 const sortObservations = (observations: Array<Record<string, unknown>>) =>
   observations
     .slice()
-    .sort((left, right) => String(left.case_id).localeCompare(String(right.case_id)) || String(left.tx_hash).localeCompare(String(right.tx_hash)));
+    .sort(
+      (left, right) =>
+        String(left.case_id).localeCompare(String(right.case_id)) ||
+        String(left.tx_hash).localeCompare(String(right.tx_hash)),
+    );
 
 const sortCandidates = (candidates: Array<Record<string, unknown>>) =>
   candidates
@@ -34,7 +38,9 @@ const sortCandidates = (candidates: Array<Record<string, unknown>>) =>
       (left, right) =>
         String(left.case_id).localeCompare(String(right.case_id)) ||
         String(left.candidate_type).localeCompare(String(right.candidate_type)) ||
-        String(left.matched_fingerprint_value).localeCompare(String(right.matched_fingerprint_value)) ||
+        String(left.matched_fingerprint_value).localeCompare(
+          String(right.matched_fingerprint_value),
+        ) ||
         String(left.role ?? "").localeCompare(String(right.role ?? "")),
     );
 
@@ -108,9 +114,14 @@ if (negativeObservationCount !== 0) {
   process.exit(1);
 }
 
-const paymentColumns = db.prepare("PRAGMA table_info(payment_observations)").all() as Array<{ name: string }>;
+const paymentColumns = db.prepare("PRAGMA table_info(payment_observations)").all() as Array<{
+  name: string;
+}>;
 const paymentColumnNames = paymentColumns.map((column) => column.name);
-if (paymentColumnNames.includes("provider_label") || paymentColumnNames.includes("middleman_label")) {
+if (
+  paymentColumnNames.includes("provider_label") ||
+  paymentColumnNames.includes("middleman_label")
+) {
   console.error("payment_observations must not contain provider or middleman final labels");
   process.exit(1);
 }
@@ -121,7 +132,11 @@ if (candidateRows.length === 0) {
   process.exit(1);
 }
 for (const candidate of candidateRows) {
-  if (candidate.confidence <= 0 || JSON.parse(candidate.reasons_json).length === 0 || JSON.parse(candidate.evidence_refs_json).length === 0) {
+  if (
+    candidate.confidence <= 0 ||
+    JSON.parse(candidate.reasons_json).length === 0 ||
+    JSON.parse(candidate.evidence_refs_json).length === 0
+  ) {
     console.error("Attribution candidate missing confidence, reasons, or evidence refs");
     process.exit(1);
   }
@@ -130,7 +145,10 @@ for (const candidate of candidateRows) {
 const observationsById = new Map(listPaymentObservations().map((row) => [row.observation_id, row]));
 const observedCandidates = candidateRows.map((row) => {
   const observation = observationsById.get(row.observation_id);
-  if (!observation) throw new Error(`Candidate ${row.candidate_id} references missing observation ${row.observation_id}`);
+  if (!observation)
+    throw new Error(
+      `Candidate ${row.candidate_id} references missing observation ${row.observation_id}`,
+    );
   return {
     case_id: observation.case_id,
     candidate_type: row.candidate_type,
@@ -147,10 +165,14 @@ const observedCandidates = candidateRows.map((row) => {
 });
 
 const observedCandidatesSorted = sortCandidates(observedCandidates.map(normalize));
-const expectedCandidatesSorted = sortCandidates(expectedCandidates.candidates.map((row) => normalize(row)));
+const expectedCandidatesSorted = sortCandidates(
+  expectedCandidates.candidates.map((row) => normalize(row)),
+);
 
 if (JSON.stringify(observedCandidatesSorted) !== JSON.stringify(expectedCandidatesSorted)) {
-  console.error("Observed attribution candidates do not match expected/attribution_candidates.json");
+  console.error(
+    "Observed attribution candidates do not match expected/attribution_candidates.json",
+  );
   console.error(`Observed: ${observedCandidatesSorted.length}`);
   console.error(`Expected: ${expectedCandidatesSorted.length}`);
   process.exit(1);
@@ -164,4 +186,15 @@ if (JSON.stringify(observedWalletGraph) !== JSON.stringify(expectedWalletGraph.g
 
 await runReport();
 
-console.log(JSON.stringify({ status: "ok", observationCount: observedSorted.length, attributionCandidateCount: observedCandidatesSorted.length, walletGraphProviderWallets: observedWalletGraph.providerWallets.length }, null, 2));
+console.log(
+  JSON.stringify(
+    {
+      status: "ok",
+      observationCount: observedSorted.length,
+      attributionCandidateCount: observedCandidatesSorted.length,
+      walletGraphProviderWallets: observedWalletGraph.providerWallets.length,
+    },
+    null,
+    2,
+  ),
+);

@@ -2,7 +2,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { Database } from "bun:sqlite";
 
-const resolvePath = (value: string) => (path.isAbsolute(value) ? value : path.resolve(process.cwd(), value));
+const resolvePath = (value: string) =>
+  path.isAbsolute(value) ? value : path.resolve(process.cwd(), value);
 
 const toText = (...parts: Array<string>) =>
   parts
@@ -224,11 +225,16 @@ export const initDb = () => {
     CREATE INDEX IF NOT EXISTS idx_settlement_fingerprint_packs_selector ON settlement_fingerprint_packs(method, top_level_selector);
   `);
 
-  const attributionColumns = db.prepare("PRAGMA table_info(attribution_candidates)").all() as Array<{ name: string }>;
+  const attributionColumns = db
+    .prepare("PRAGMA table_info(attribution_candidates)")
+    .all() as Array<{ name: string }>;
   const existing = new Set(attributionColumns.map((column) => column.name));
   for (const [name, ddl] of [
     ["matched_claim_id", "ALTER TABLE attribution_candidates ADD COLUMN matched_claim_id TEXT"],
-    ["matched_settlement_fingerprint_id", "ALTER TABLE attribution_candidates ADD COLUMN matched_settlement_fingerprint_id TEXT"],
+    [
+      "matched_settlement_fingerprint_id",
+      "ALTER TABLE attribution_candidates ADD COLUMN matched_settlement_fingerprint_id TEXT",
+    ],
     ["entity_id", "ALTER TABLE attribution_candidates ADD COLUMN entity_id TEXT"],
     ["role", "ALTER TABLE attribution_candidates ADD COLUMN role TEXT"],
   ] as const) {
@@ -238,7 +244,11 @@ export const initDb = () => {
 
 export const resetDb = () => {
   db.close(false);
-  const candidate = [env.databasePath, toText(env.databasePath, "-wal"), toText(env.databasePath, "-shm")];
+  const candidate = [
+    env.databasePath,
+    toText(env.databasePath, "-wal"),
+    toText(env.databasePath, "-shm"),
+  ];
   for (const filePath of candidate) {
     if (fs.existsSync(filePath)) fs.rmSync(filePath);
   }

@@ -76,7 +76,8 @@ type WriteRpcFixtureOptions = { caseId: string; outputDir: string; force?: boole
 
 const isHex = (value: string): value is `0x${string}` => /^0x[0-9a-fA-F]*$/.test(value);
 
-const isQuantity = (value: string): value is `0x${string}` => /^0x(?:0|[1-9a-fA-F][0-9a-fA-F]*)$/.test(value);
+const isQuantity = (value: string): value is `0x${string}` =>
+  /^0x(?:0|[1-9a-fA-F][0-9a-fA-F]*)$/.test(value);
 
 const requireHex = (value: string, label: string): `0x${string}` => {
   if (!isHex(value)) throw new Error(`${label} must be hex: ${value}`);
@@ -90,16 +91,24 @@ const requireHexLength = (value: string, label: string, bytes: number): `0x${str
 };
 
 const toNumber = (value: string | number, label: string): number => {
-  if (typeof value === "string" && value.startsWith("0x") && !isQuantity(value)) throw new Error(`${label} must be a JSON-RPC quantity`);
-  const parsed = typeof value === "number" ? value : value.startsWith("0x") ? Number(BigInt(value)) : Number(value);
-  if (!Number.isSafeInteger(parsed) || parsed < 0) throw new Error(`${label} must be a non-negative safe integer`);
+  if (typeof value === "string" && value.startsWith("0x") && !isQuantity(value))
+    throw new Error(`${label} must be a JSON-RPC quantity`);
+  const parsed =
+    typeof value === "number"
+      ? value
+      : value.startsWith("0x")
+        ? Number(BigInt(value))
+        : Number(value);
+  if (!Number.isSafeInteger(parsed) || parsed < 0)
+    throw new Error(`${label} must be a non-negative safe integer`);
   return parsed;
 };
 
 const toDecimalString = (value: string | number, label: string) => String(toNumber(value, label));
 
 const toRpcQuantity = (value: number) => {
-  if (!Number.isSafeInteger(value) || value < 0) throw new Error(`block number must be a non-negative safe integer: ${value}`);
+  if (!Number.isSafeInteger(value) || value < 0)
+    throw new Error(`block number must be a non-negative safe integer: ${value}`);
   return `0x${value.toString(16)}`;
 };
 
@@ -108,7 +117,10 @@ const toChainId = (value: string | number | null | undefined) => {
   return toNumber(value, "chainId");
 };
 
-export const normalizeRpcTransaction = (tx: RpcTransactionPayload, block: RpcBlockPayload): RawTransaction => {
+export const normalizeRpcTransaction = (
+  tx: RpcTransactionPayload,
+  block: RpcBlockPayload,
+): RawTransaction => {
   const input = tx.input ?? tx.data;
   if (input == null) throw new Error("RPC transaction missing input");
 
@@ -127,7 +139,9 @@ export const normalizeRpcTransaction = (tx: RpcTransactionPayload, block: RpcBlo
 const normalizeLog = (log: RpcReceiptPayload["logs"][number]): TxLog => ({
   address: requireHexLength(log.address, "log address", 20) as HexAddress,
   data: requireHex(log.data, "log data") as HexData,
-  topics: log.topics.map((topic, index) => requireHexLength(topic, `log topic ${index}`, 32) as HexData),
+  topics: log.topics.map(
+    (topic, index) => requireHexLength(topic, `log topic ${index}`, 32) as HexData,
+  ),
   blockHash: requireHexLength(log.blockHash, "log blockHash", 32) as HexAddress,
   blockNumber: toDecimalString(log.blockNumber, "log blockNumber"),
   transactionHash: requireHexLength(log.transactionHash, "log transactionHash", 32) as HexAddress,
@@ -137,7 +151,11 @@ const normalizeLog = (log: RpcReceiptPayload["logs"][number]): TxLog => ({
 });
 
 export const normalizeRpcReceipt = (receipt: RpcReceiptPayload): RawReceipt => ({
-  transactionHash: requireHexLength(receipt.transactionHash, "receipt transactionHash", 32) as HexAddress,
+  transactionHash: requireHexLength(
+    receipt.transactionHash,
+    "receipt transactionHash",
+    32,
+  ) as HexAddress,
   blockHash: requireHexLength(receipt.blockHash, "receipt blockHash", 32) as HexAddress,
   blockNumber: toDecimalString(receipt.blockNumber, "receipt blockNumber"),
   logs: receipt.logs.map(normalizeLog),
@@ -145,10 +163,15 @@ export const normalizeRpcReceipt = (receipt: RpcReceiptPayload): RawReceipt => (
 });
 
 const assertSame = (label: string, left: string | number, right: string | number) => {
-  if (String(left).toLowerCase() !== String(right).toLowerCase()) throw new Error(`${label} mismatch: ${left} !== ${right}`);
+  if (String(left).toLowerCase() !== String(right).toLowerCase())
+    throw new Error(`${label} mismatch: ${left} !== ${right}`);
 };
 
-export const assertRpcFixtureConsistency = (requestedHash: `0x${string}`, tx: RawTransaction, receipt: RawReceipt) => {
+export const assertRpcFixtureConsistency = (
+  requestedHash: `0x${string}`,
+  tx: RawTransaction,
+  receipt: RawReceipt,
+) => {
   assertSame("requested tx hash", requestedHash, tx.hash);
   assertSame("receipt transaction hash", tx.hash, receipt.transactionHash);
   assertSame("transaction block number", tx.blockNumber, receipt.blockNumber);
@@ -160,7 +183,13 @@ export const assertRpcFixtureConsistency = (requestedHash: `0x${string}`, tx: Ra
   }
 };
 
-const rpcCall = async <T>(rpcUrl: string, method: string, params: unknown[], fetchFn: FetchLike, timeoutMs: number): Promise<T> => {
+const rpcCall = async <T>(
+  rpcUrl: string,
+  method: string,
+  params: unknown[],
+  fetchFn: FetchLike,
+  timeoutMs: number,
+): Promise<T> => {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -183,7 +212,8 @@ const rpcCall = async <T>(rpcUrl: string, method: string, params: unknown[], fet
 const assertBaseChain = async (rpcUrl: string, fetchFn: FetchLike, timeoutMs: number) => {
   const chainId = await rpcCall<string>(rpcUrl, "eth_chainId", [], fetchFn, timeoutMs);
   const normalizedChainId = toNumber(chainId, "eth_chainId");
-  if (normalizedChainId !== BASE_CHAIN_ID) throw new Error(`RPC chainId mismatch: expected ${BASE_CHAIN_ID}, got ${normalizedChainId}`);
+  if (normalizedChainId !== BASE_CHAIN_ID)
+    throw new Error(`RPC chainId mismatch: expected ${BASE_CHAIN_ID}, got ${normalizedChainId}`);
 };
 
 export const fetchRpcFixture = async ({
@@ -195,9 +225,27 @@ export const fetchRpcFixture = async ({
   const normalizedHash = requireHex(txHash, "txHash");
   await assertBaseChain(rpcUrl, fetchFn, timeoutMs);
 
-  const tx = await rpcCall<RpcTransactionPayload>(rpcUrl, "eth_getTransactionByHash", [normalizedHash], fetchFn, timeoutMs);
-  const receipt = await rpcCall<RpcReceiptPayload>(rpcUrl, "eth_getTransactionReceipt", [normalizedHash], fetchFn, timeoutMs);
-  const block = await rpcCall<RpcBlockPayload>(rpcUrl, "eth_getBlockByNumber", [receipt.blockNumber, false], fetchFn, timeoutMs);
+  const tx = await rpcCall<RpcTransactionPayload>(
+    rpcUrl,
+    "eth_getTransactionByHash",
+    [normalizedHash],
+    fetchFn,
+    timeoutMs,
+  );
+  const receipt = await rpcCall<RpcReceiptPayload>(
+    rpcUrl,
+    "eth_getTransactionReceipt",
+    [normalizedHash],
+    fetchFn,
+    timeoutMs,
+  );
+  const block = await rpcCall<RpcBlockPayload>(
+    rpcUrl,
+    "eth_getBlockByNumber",
+    [receipt.blockNumber, false],
+    fetchFn,
+    timeoutMs,
+  );
 
   const fixture = {
     tx: normalizeRpcTransaction(tx, block),
@@ -214,7 +262,13 @@ export const fetchRpcReceipt = async ({
   fetchFn = fetch,
 }: FetchRpcReceiptOptions): Promise<RawReceipt> => {
   const normalizedHash = requireHex(txHash, "txHash");
-  const receipt = await rpcCall<RpcReceiptPayload>(rpcUrl, "eth_getTransactionReceipt", [normalizedHash], fetchFn, timeoutMs);
+  const receipt = await rpcCall<RpcReceiptPayload>(
+    rpcUrl,
+    "eth_getTransactionReceipt",
+    [normalizedHash],
+    fetchFn,
+    timeoutMs,
+  );
   return normalizeRpcReceipt(receipt);
 };
 
@@ -225,9 +279,12 @@ export const fetchRpcBlockRange = async ({
   timeoutMs = 30_000,
   fetchFn = fetch,
 }: FetchRpcBlockRangeOptions): Promise<RpcBlockWithTransactionsPayload[]> => {
-  if (!Number.isSafeInteger(fromBlock) || fromBlock < 0) throw new Error(`fromBlock must be a non-negative safe integer: ${fromBlock}`);
-  if (!Number.isSafeInteger(toBlock) || toBlock < 0) throw new Error(`toBlock must be a non-negative safe integer: ${toBlock}`);
-  if (fromBlock > toBlock) throw new Error(`fromBlock must be <= toBlock: ${fromBlock} > ${toBlock}`);
+  if (!Number.isSafeInteger(fromBlock) || fromBlock < 0)
+    throw new Error(`fromBlock must be a non-negative safe integer: ${fromBlock}`);
+  if (!Number.isSafeInteger(toBlock) || toBlock < 0)
+    throw new Error(`toBlock must be a non-negative safe integer: ${toBlock}`);
+  if (fromBlock > toBlock)
+    throw new Error(`fromBlock must be <= toBlock: ${fromBlock} > ${toBlock}`);
   await assertBaseChain(rpcUrl, fetchFn, timeoutMs);
 
   const blocks: RpcBlockWithTransactionsPayload[] = [];
@@ -239,7 +296,8 @@ export const fetchRpcBlockRange = async ({
       fetchFn,
       timeoutMs,
     );
-    if (!Array.isArray(block.transactions)) throw new Error(`RPC block ${blockNumber} missing full transactions`);
+    if (!Array.isArray(block.transactions))
+      throw new Error(`RPC block ${blockNumber} missing full transactions`);
     if (block.number != null && toNumber(block.number, "block number") !== blockNumber) {
       throw new Error(`RPC block number mismatch: requested ${blockNumber}, got ${block.number}`);
     }
@@ -252,7 +310,8 @@ export const writeRpcFixtureFiles = (
   fixture: { tx: RawTransaction; receipt: RawReceipt },
   options: WriteRpcFixtureOptions,
 ) => {
-  if (!/^[a-z0-9][a-z0-9-]*$/.test(options.caseId)) throw new Error(`Invalid fixture caseId: ${options.caseId}`);
+  if (!/^[a-z0-9][a-z0-9-]*$/.test(options.caseId))
+    throw new Error(`Invalid fixture caseId: ${options.caseId}`);
 
   fs.mkdirSync(options.outputDir, { recursive: true });
   const root = path.resolve(options.outputDir);
