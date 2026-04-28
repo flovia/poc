@@ -307,6 +307,20 @@ POST /aggregate
 
 現時点では、frontend / BFF 共有のために先に package 化することは必須ではありません。
 
+ただし、`apps/bff` が恒久的に `apps/cli` へ依存する設計も避けるべきです。
+`apps/*` は実行アプリ / デプロイ単位であり、共有ライブラリ境界ではありません。
+最終的な依存方向は次の形を目指します。
+
+```text
+apps/cli ─┐
+          ├─> packages/core or packages/api-model
+apps/bff ─┘
+```
+
+短期 PoC で BFF の最初の API surface を探る間だけ、allowlist 付きで
+`apps/bff -> apps/cli/lib/...` の暫定依存を許容できます。ただしこれは恒久設計ではなく、
+BFF が本当に使う surface が見えた時点で最小 package へ移す前提です。
+
 保留する理由:
 
 - BFF API 境界がまだ確定していません。
@@ -339,6 +353,31 @@ packages/protocol
 - CLI scripts
 - RPC client
 - live ingest implementation
+
+短期 PoC で `apps/bff` から参照してもよい候補:
+
+- `apps/cli/lib/api/dto.ts`
+- `apps/cli/lib/constants.ts`
+- `apps/cli/lib/schema.ts` の型・seed validation
+- pure decoder / observation builder
+- pure scoring helper
+
+短期 PoC でも避けたい依存:
+
+- `apps/cli/scripts/*`
+- `apps/cli/lib/db.ts` の default `db`
+- fixture / report file writer
+- seed file loader
+- live RPC client / ingest orchestration
+- DB write orchestration を伴う `buildAttributionCandidates()` など
+
+BFF を本格化する時の現実的な移行順序:
+
+1. 最初の read-only API surface を決める（例: `GET /summary`）。
+2. BFF が実際に使う `apps/cli/lib/api` surface を確認する。
+3. その最小 surface だけを `packages/core` または `packages/api-model` に移す。
+4. `apps/cli` と `apps/bff` の両方を package 依存にする。
+5. `apps/bff -> apps/cli` 依存を禁止する。
 
 ## frontend / BFF 実装者への注意
 
