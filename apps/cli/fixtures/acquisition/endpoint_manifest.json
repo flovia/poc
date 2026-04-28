@@ -1699,6 +1699,7 @@
       "providerName": "AgentMail",
       "serviceName": "Create a new inbox with a real email address.",
       "endpointUrl": "https://x402.api.agentmail.to/v0/inboxes",
+      "resourceUrl": "https://x402.api.agentmail.to/v0/inboxes",
       "requestHost": "x402.api.agentmail.to",
       "method": "POST",
       "requestParameters": {
@@ -1745,6 +1746,7 @@
       "providerName": "AgentMail",
       "serviceName": "Create a new inbox with a real email address.",
       "endpointUrl": "https://mpp.api.agentmail.to/v0/inboxes",
+      "resourceUrl": "https://mpp.api.agentmail.to/v0/inboxes",
       "requestHost": "mpp.api.agentmail.to",
       "method": "POST",
       "requestParameters": {
@@ -1861,6 +1863,7 @@
       "providerName": "AgentMail",
       "serviceName": "Create a new pod.",
       "endpointUrl": "https://x402.api.agentmail.to/v0/pods",
+      "resourceUrl": "https://x402.api.agentmail.to/v0/pods",
       "requestHost": "x402.api.agentmail.to",
       "method": "POST",
       "requestParameters": {
@@ -1903,6 +1906,7 @@
       "providerName": "AgentMail",
       "serviceName": "Create a new pod.",
       "endpointUrl": "https://mpp.api.agentmail.to/v0/pods",
+      "resourceUrl": "https://mpp.api.agentmail.to/v0/pods",
       "requestHost": "mpp.api.agentmail.to",
       "method": "POST",
       "requestParameters": {
@@ -3519,6 +3523,7 @@
       "providerName": "AgentMail",
       "serviceName": "Add a custom domain.",
       "endpointUrl": "https://x402.api.agentmail.to/v0/domains",
+      "resourceUrl": "https://x402.api.agentmail.to/v0/domains",
       "requestHost": "x402.api.agentmail.to",
       "method": "POST",
       "requestParameters": {
@@ -3561,6 +3566,7 @@
       "providerName": "AgentMail",
       "serviceName": "Add a custom domain.",
       "endpointUrl": "https://mpp.api.agentmail.to/v0/domains",
+      "resourceUrl": "https://mpp.api.agentmail.to/v0/domains",
       "requestHost": "mpp.api.agentmail.to",
       "method": "POST",
       "requestParameters": {
@@ -4199,6 +4205,7 @@
       "providerName": "AgentMail",
       "serviceName": "Create a webhook for email events.",
       "endpointUrl": "https://x402.api.agentmail.to/v0/webhooks",
+      "resourceUrl": "https://x402.api.agentmail.to/v0/webhooks",
       "requestHost": "x402.api.agentmail.to",
       "method": "POST",
       "requestParameters": {
@@ -4259,6 +4266,7 @@
       "providerName": "AgentMail",
       "serviceName": "Create a webhook for email events.",
       "endpointUrl": "https://mpp.api.agentmail.to/v0/webhooks",
+      "resourceUrl": "https://mpp.api.agentmail.to/v0/webhooks",
       "requestHost": "mpp.api.agentmail.to",
       "method": "POST",
       "requestParameters": {
@@ -5282,6 +5290,7 @@
       "providerName": "Alchemy",
       "serviceName": "Get historical prices by symbol or by network/address.",
       "endpointUrl": "https://x402.alchemy.com/prices/v1/tokens/historical",
+      "resourceUrl": "https://x402.alchemy.com/prices/v1/tokens/historical",
       "requestHost": "x402.alchemy.com",
       "method": "POST",
       "requestParameters": {
@@ -5333,6 +5342,7 @@
       "providerName": "Alchemy",
       "serviceName": "Get historical prices by symbol or by network/address.",
       "endpointUrl": "https://eth-mainnet.g.alchemy.com/prices/v1/tokens/historical",
+      "resourceUrl": "https://eth-mainnet.g.alchemy.com/prices/v1/tokens/historical",
       "requestHost": "eth-mainnet.g.alchemy.com",
       "method": "POST",
       "requestParameters": {
@@ -5460,6 +5470,7 @@
       "providerName": "Alchemy",
       "serviceName": "Get raw token balances (without price and metadata).",
       "endpointUrl": "https://x402.alchemy.com/data/v1/assets/tokens/balances/by-address",
+      "resourceUrl": "https://x402.alchemy.com/data/v1/assets/tokens/balances/by-address",
       "requestHost": "x402.alchemy.com",
       "method": "POST",
       "requestParameters": {
@@ -5519,6 +5530,7 @@
       "providerName": "Alchemy",
       "serviceName": "Get raw token balances (without price and metadata).",
       "endpointUrl": "https://eth-mainnet.g.alchemy.com/data/v1/assets/tokens/balances/by-address",
+      "resourceUrl": "https://eth-mainnet.g.alchemy.com/data/v1/assets/tokens/balances/by-address",
       "requestHost": "eth-mainnet.g.alchemy.com",
       "method": "POST",
       "requestParameters": {
@@ -5852,6 +5864,7 @@
       "providerName": "Alchemy",
       "serviceName": "Get latest token prices by network and contract address.",
       "endpointUrl": "https://x402.alchemy.com/prices/v1/tokens/by-address",
+      "resourceUrl": "https://x402.alchemy.com/prices/v1/tokens/by-address",
       "requestHost": "x402.alchemy.com",
       "method": "POST",
       "requestParameters": {
@@ -5901,6 +5914,7 @@
       "providerName": "Alchemy",
       "serviceName": "Get latest token prices by network and contract address.",
       "endpointUrl": "https://eth-mainnet.g.alchemy.com/prices/v1/tokens/by-address",
+      "resourceUrl": "https://eth-mainnet.g.alchemy.com/prices/v1/tokens/by-address",
       "requestHost": "eth-mainnet.g.alchemy.com",
       "method": "POST",
       "requestParameters": {
@@ -6112,6 +6126,7 @@
       "providerName": "Alchemy",
       "serviceName": "Get token balances with metadata and prices across chains.",
       "endpointUrl": "https://x402.alchemy.com/data/v1/assets/tokens/by-address",
+      "resourceUrl": "https://x402.alchemy.com/data/v1/assets/tokens/by-address",
       "requestHost": "x402.alchemy.com",
       "method": "POST",
       "requestParameters": {
@@ -6175,6 +6190,7 @@
       "providerName": "Alchemy",
       "serviceName": "Get token balances with metadata and prices across chains.",
       "endpointUrl": "https://eth-mainnet.g.alchemy.com/data/v1/assets/tokens/by-address",
+      "resourceUrl": "https://eth-mainnet.g.alchemy.com/data/v1/assets/tokens/by-address",
       "requestHost": "eth-mainnet.g.alchemy.com",
       "method": "POST",
       "requestParameters": {
@@ -6238,6 +6254,7 @@
       "providerName": "Alchemy",
       "serviceName": "Get NFTs owned by wallets across one or more networks.",
       "endpointUrl": "https://x402.alchemy.com/data/v1/assets/nfts/by-address",
+      "resourceUrl": "https://x402.alchemy.com/data/v1/assets/nfts/by-address",
       "requestHost": "x402.alchemy.com",
       "method": "POST",
       "requestParameters": {
@@ -6309,6 +6326,7 @@
       "providerName": "Alchemy",
       "serviceName": "Get NFTs owned by wallets across one or more networks.",
       "endpointUrl": "https://eth-mainnet.g.alchemy.com/data/v1/assets/nfts/by-address",
+      "resourceUrl": "https://eth-mainnet.g.alchemy.com/data/v1/assets/nfts/by-address",
       "requestHost": "eth-mainnet.g.alchemy.com",
       "method": "POST",
       "requestParameters": {
@@ -6380,6 +6398,7 @@
       "providerName": "Alchemy",
       "serviceName": "Get NFT contracts held by wallet addresses.",
       "endpointUrl": "https://x402.alchemy.com/data/v1/assets/nfts/contracts/by-address",
+      "resourceUrl": "https://x402.alchemy.com/data/v1/assets/nfts/contracts/by-address",
       "requestHost": "x402.alchemy.com",
       "method": "POST",
       "requestParameters": {
@@ -6437,6 +6456,7 @@
       "providerName": "Alchemy",
       "serviceName": "Get NFT contracts held by wallet addresses.",
       "endpointUrl": "https://eth-mainnet.g.alchemy.com/data/v1/assets/nfts/contracts/by-address",
+      "resourceUrl": "https://eth-mainnet.g.alchemy.com/data/v1/assets/nfts/contracts/by-address",
       "requestHost": "eth-mainnet.g.alchemy.com",
       "method": "POST",
       "requestParameters": {
@@ -6494,6 +6514,7 @@
       "providerName": "Alchemy",
       "serviceName": "Get transaction history for wallet addresses across networks (beta).",
       "endpointUrl": "https://x402.alchemy.com/data/v1/transactions/history/by-address",
+      "resourceUrl": "https://x402.alchemy.com/data/v1/transactions/history/by-address",
       "requestHost": "x402.alchemy.com",
       "method": "POST",
       "requestParameters": {
@@ -6559,6 +6580,7 @@
       "providerName": "Alchemy",
       "serviceName": "Get transaction history for wallet addresses across networks (beta).",
       "endpointUrl": "https://eth-mainnet.g.alchemy.com/data/v1/transactions/history/by-address",
+      "resourceUrl": "https://eth-mainnet.g.alchemy.com/data/v1/transactions/history/by-address",
       "requestHost": "eth-mainnet.g.alchemy.com",
       "method": "POST",
       "requestParameters": {
@@ -6696,6 +6718,7 @@
       "providerName": "Allium",
       "serviceName": "Latest Token Balances",
       "endpointUrl": "https://agents.allium.so/api/v1/developer/wallet/balances",
+      "resourceUrl": "https://agents.allium.so/api/v1/developer/wallet/balances",
       "requestHost": "agents.allium.so",
       "method": "POST",
       "requestParameters": {
@@ -6741,6 +6764,7 @@
       "providerName": "Allium",
       "serviceName": "Latest Token Balances",
       "endpointUrl": "https://agents.allium.so/api/v1/developer/wallet/balances",
+      "resourceUrl": "https://agents.allium.so/api/v1/developer/wallet/balances",
       "requestHost": "agents.allium.so",
       "method": "POST",
       "requestParameters": {
@@ -6786,6 +6810,7 @@
       "providerName": "Allium",
       "serviceName": "Token Price at Timestamp",
       "endpointUrl": "https://agents.allium.so/api/v1/developer/prices/at-timestamp",
+      "resourceUrl": "https://agents.allium.so/api/v1/developer/prices/at-timestamp",
       "requestHost": "agents.allium.so",
       "method": "POST",
       "requestParameters": {
@@ -6843,6 +6868,7 @@
       "providerName": "Allium",
       "serviceName": "Token Price at Timestamp",
       "endpointUrl": "https://agents.allium.so/api/v1/developer/prices/at-timestamp",
+      "resourceUrl": "https://agents.allium.so/api/v1/developer/prices/at-timestamp",
       "requestHost": "agents.allium.so",
       "method": "POST",
       "requestParameters": {
@@ -6972,6 +6998,7 @@
       "providerName": "Allium",
       "serviceName": "Token Price History",
       "endpointUrl": "https://agents.allium.so/api/v1/developer/prices/history",
+      "resourceUrl": "https://agents.allium.so/api/v1/developer/prices/history",
       "requestHost": "agents.allium.so",
       "method": "POST",
       "requestParameters": {
@@ -7033,6 +7060,7 @@
       "providerName": "Allium",
       "serviceName": "Token Price History",
       "endpointUrl": "https://agents.allium.so/api/v1/developer/prices/history",
+      "resourceUrl": "https://agents.allium.so/api/v1/developer/prices/history",
       "requestHost": "agents.allium.so",
       "method": "POST",
       "requestParameters": {
@@ -7162,6 +7190,7 @@
       "providerName": "Allium",
       "serviceName": "Holdings PnL",
       "endpointUrl": "https://agents.allium.so/api/v1/developer/wallet/pnl",
+      "resourceUrl": "https://agents.allium.so/api/v1/developer/wallet/pnl",
       "requestHost": "agents.allium.so",
       "method": "POST",
       "requestParameters": {
@@ -7207,6 +7236,7 @@
       "providerName": "Allium",
       "serviceName": "Holdings PnL",
       "endpointUrl": "https://agents.allium.so/api/v1/developer/wallet/pnl",
+      "resourceUrl": "https://agents.allium.so/api/v1/developer/wallet/pnl",
       "requestHost": "agents.allium.so",
       "method": "POST",
       "requestParameters": {
@@ -7252,6 +7282,7 @@
       "providerName": "Allium",
       "serviceName": "Token Price Stats",
       "endpointUrl": "https://agents.allium.so/api/v1/developer/prices/stats",
+      "resourceUrl": "https://agents.allium.so/api/v1/developer/prices/stats",
       "requestHost": "agents.allium.so",
       "method": "POST",
       "requestParameters": {
@@ -7309,6 +7340,7 @@
       "providerName": "Allium",
       "serviceName": "Token Price Stats",
       "endpointUrl": "https://agents.allium.so/api/v1/developer/prices/stats",
+      "resourceUrl": "https://agents.allium.so/api/v1/developer/prices/stats",
       "requestHost": "agents.allium.so",
       "method": "POST",
       "requestParameters": {
@@ -7366,6 +7398,7 @@
       "providerName": "Allium",
       "serviceName": "Token Latest Price",
       "endpointUrl": "https://agents.allium.so/api/v1/developer/prices",
+      "resourceUrl": "https://agents.allium.so/api/v1/developer/prices",
       "requestHost": "agents.allium.so",
       "method": "POST",
       "requestParameters": {
@@ -7421,6 +7454,7 @@
       "providerName": "Allium",
       "serviceName": "Token Latest Price",
       "endpointUrl": "https://agents.allium.so/api/v1/developer/prices",
+      "resourceUrl": "https://agents.allium.so/api/v1/developer/prices",
       "requestHost": "agents.allium.so",
       "method": "POST",
       "requestParameters": {
@@ -7544,6 +7578,7 @@
       "providerName": "Allium",
       "serviceName": "Historical Token Balances",
       "endpointUrl": "https://agents.allium.so/api/v1/developer/wallet/balances/history",
+      "resourceUrl": "https://agents.allium.so/api/v1/developer/wallet/balances/history",
       "requestHost": "agents.allium.so",
       "method": "POST",
       "requestParameters": {
@@ -7593,6 +7628,7 @@
       "providerName": "Allium",
       "serviceName": "Historical Token Balances",
       "endpointUrl": "https://agents.allium.so/api/v1/developer/wallet/balances/history",
+      "resourceUrl": "https://agents.allium.so/api/v1/developer/wallet/balances/history",
       "requestHost": "agents.allium.so",
       "method": "POST",
       "requestParameters": {
@@ -7642,6 +7678,7 @@
       "providerName": "Allium",
       "serviceName": "Get Tokens by Chain Address",
       "endpointUrl": "https://agents.allium.so/api/v1/developer/tokens/chain-address",
+      "resourceUrl": "https://agents.allium.so/api/v1/developer/tokens/chain-address",
       "requestHost": "agents.allium.so",
       "method": "POST",
       "requestParameters": {
@@ -7691,6 +7728,7 @@
       "providerName": "Allium",
       "serviceName": "Get Tokens by Chain Address",
       "endpointUrl": "https://agents.allium.so/api/v1/developer/tokens/chain-address",
+      "resourceUrl": "https://agents.allium.so/api/v1/developer/tokens/chain-address",
       "requestHost": "agents.allium.so",
       "method": "POST",
       "requestParameters": {
@@ -7740,6 +7778,7 @@
       "providerName": "Allium",
       "serviceName": "Transactions",
       "endpointUrl": "https://agents.allium.so/api/v1/developer/wallet/transactions",
+      "resourceUrl": "https://agents.allium.so/api/v1/developer/wallet/transactions",
       "requestHost": "agents.allium.so",
       "method": "POST",
       "requestParameters": {
@@ -7789,6 +7828,7 @@
       "providerName": "Allium",
       "serviceName": "Transactions",
       "endpointUrl": "https://agents.allium.so/api/v1/developer/wallet/transactions",
+      "resourceUrl": "https://agents.allium.so/api/v1/developer/wallet/transactions",
       "requestHost": "agents.allium.so",
       "method": "POST",
       "requestParameters": {
@@ -7838,6 +7878,7 @@
       "providerName": "Anthropic",
       "serviceName": "Send messages to Claude using the native Anthropic Messages API. Supports Claude 4.5 Sonnet, Opus, and Haiku models.",
       "endpointUrl": "https://anthropic.mpp.tempo.xyz/v1/messages",
+      "resourceUrl": "https://anthropic.mpp.tempo.xyz/v1/messages",
       "requestHost": "anthropic.mpp.tempo.xyz",
       "method": "POST",
       "requestParameters": {
@@ -7897,6 +7938,7 @@
       "providerName": "Anthropic",
       "serviceName": "OpenAI-compatible chat completions API for Claude models.",
       "endpointUrl": "https://anthropic.mpp.tempo.xyz/v1/chat/completions",
+      "resourceUrl": "https://anthropic.mpp.tempo.xyz/v1/chat/completions",
       "requestHost": "anthropic.mpp.tempo.xyz",
       "method": "POST",
       "requestParameters": {
@@ -7954,6 +7996,7 @@
       "providerName": "Apollo",
       "serviceName": "Organization Search",
       "endpointUrl": "https://api.paysponge.com/x402/purchase/svc_d6720egbbb4t619h8/api/v1/mixed_companies/search",
+      "resourceUrl": "https://api.paysponge.com/x402/purchase/svc_d6720egbbb4t619h8/api/v1/mixed_companies/search",
       "requestHost": "api.paysponge.com",
       "method": "POST",
       "requestParameters": {
@@ -8016,6 +8059,7 @@
       "providerName": "Apollo",
       "serviceName": "Organization Search",
       "endpointUrl": "https://api.paysponge.com/mpp/purchase/svc_d6720egbbb4t619h8/api/v1/mixed_companies/search",
+      "resourceUrl": "https://api.paysponge.com/mpp/purchase/svc_d6720egbbb4t619h8/api/v1/mixed_companies/search",
       "requestHost": "api.paysponge.com",
       "method": "POST",
       "requestParameters": {
@@ -8077,6 +8121,7 @@
       "providerName": "Apollo",
       "serviceName": "People Enrichment",
       "endpointUrl": "https://api.paysponge.com/x402/purchase/svc_d6720egbbb4t619h8/api/v1/people/match",
+      "resourceUrl": "https://api.paysponge.com/x402/purchase/svc_d6720egbbb4t619h8/api/v1/people/match",
       "requestHost": "api.paysponge.com",
       "method": "POST",
       "requestParameters": {
@@ -8127,6 +8172,7 @@
       "providerName": "Apollo",
       "serviceName": "People Enrichment",
       "endpointUrl": "https://api.paysponge.com/mpp/purchase/svc_d6720egbbb4t619h8/api/v1/people/match",
+      "resourceUrl": "https://api.paysponge.com/mpp/purchase/svc_d6720egbbb4t619h8/api/v1/people/match",
       "requestHost": "api.paysponge.com",
       "method": "POST",
       "requestParameters": {
@@ -8176,6 +8222,7 @@
       "providerName": "Apollo",
       "serviceName": "Bulk People Enrichment",
       "endpointUrl": "https://api.paysponge.com/x402/purchase/svc_d6720egbbb4t619h8/api/v1/people/bulk_match",
+      "resourceUrl": "https://api.paysponge.com/x402/purchase/svc_d6720egbbb4t619h8/api/v1/people/bulk_match",
       "requestHost": "api.paysponge.com",
       "method": "POST",
       "requestParameters": {
@@ -8232,6 +8279,7 @@
       "providerName": "Apollo",
       "serviceName": "Bulk People Enrichment",
       "endpointUrl": "https://api.paysponge.com/mpp/purchase/svc_d6720egbbb4t619h8/api/v1/people/bulk_match",
+      "resourceUrl": "https://api.paysponge.com/mpp/purchase/svc_d6720egbbb4t619h8/api/v1/people/bulk_match",
       "requestHost": "api.paysponge.com",
       "method": "POST",
       "requestParameters": {
@@ -8287,6 +8335,7 @@
       "providerName": "Apollo",
       "serviceName": "People API Search",
       "endpointUrl": "https://api.paysponge.com/x402/purchase/svc_d6720egbbb4t619h8/api/v1/mixed_people/api_search",
+      "resourceUrl": "https://api.paysponge.com/x402/purchase/svc_d6720egbbb4t619h8/api/v1/mixed_people/api_search",
       "requestHost": "api.paysponge.com",
       "method": "POST",
       "requestParameters": {
@@ -8361,6 +8410,7 @@
       "providerName": "Apollo",
       "serviceName": "People API Search",
       "endpointUrl": "https://api.paysponge.com/mpp/purchase/svc_d6720egbbb4t619h8/api/v1/mixed_people/api_search",
+      "resourceUrl": "https://api.paysponge.com/mpp/purchase/svc_d6720egbbb4t619h8/api/v1/mixed_people/api_search",
       "requestHost": "api.paysponge.com",
       "method": "POST",
       "requestParameters": {
@@ -8924,6 +8974,7 @@
       "providerName": "Browser Use",
       "serviceName": "Stop a running browser task.",
       "endpointUrl": "https://beta-api.paywithlocus.com/api/browser-use-mpp/api/browser-use-mpp/stop-task",
+      "resourceUrl": "https://beta-api.paywithlocus.com/api/browser-use-mpp/api/browser-use-mpp/stop-task",
       "requestHost": "beta-api.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -8953,6 +9004,7 @@
       "providerName": "Browser Use",
       "serviceName": "Retrieve the full details and output of a task.",
       "endpointUrl": "https://beta-api.paywithlocus.com/api/browser-use-mpp/api/browser-use-mpp/get-task",
+      "resourceUrl": "https://beta-api.paywithlocus.com/api/browser-use-mpp/api/browser-use-mpp/get-task",
       "requestHost": "beta-api.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -8982,6 +9034,7 @@
       "providerName": "Browser Use",
       "serviceName": "Start an automated browser task with an AI agent.",
       "endpointUrl": "https://beta-api.paywithlocus.com/api/browser-use-mpp/api/browser-use-mpp/run-task",
+      "resourceUrl": "https://beta-api.paywithlocus.com/api/browser-use-mpp/api/browser-use-mpp/run-task",
       "requestHost": "beta-api.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -9011,6 +9064,7 @@
       "providerName": "Browser Use",
       "serviceName": "Check the current status of a running task.",
       "endpointUrl": "https://beta-api.paywithlocus.com/api/browser-use-mpp/api/browser-use-mpp/get-task-status",
+      "resourceUrl": "https://beta-api.paywithlocus.com/api/browser-use-mpp/api/browser-use-mpp/get-task-status",
       "requestHost": "beta-api.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -9110,6 +9164,7 @@
       "providerName": "Browserbase",
       "serviceName": "Create a cloud browser session and get a WebSocket connection URL. Price scales with requested duration ($0.01 for 5 min, $0.03 for 15 min, $0.06 for 30 min, $0.12 for 60 min).",
       "endpointUrl": "https://x402.browserbase.com/browser/session/create",
+      "resourceUrl": "https://x402.browserbase.com/browser/session/create",
       "requestHost": "x402.browserbase.com",
       "method": "POST",
       "requestParameters": {
@@ -9149,6 +9204,7 @@
       "providerName": "Browserbase",
       "serviceName": "Create a cloud browser session and get a WebSocket connection URL. Price scales with requested duration ($0.01 for 5 min, $0.03 for 15 min, $0.06 for 30 min, $0.12 for 60 min).",
       "endpointUrl": "https://mpp.browserbase.com/browser/session/create",
+      "resourceUrl": "https://mpp.browserbase.com/browser/session/create",
       "requestHost": "mpp.browserbase.com",
       "method": "POST",
       "requestParameters": {
@@ -9348,6 +9404,7 @@
       "providerName": "BuiltWith",
       "serviceName": "Check redirect chain for a URL.",
       "endpointUrl": "https://builtwith.mpp.paywithlocus.com/builtwith/redirect",
+      "resourceUrl": "https://builtwith.mpp.paywithlocus.com/builtwith/redirect",
       "requestHost": "builtwith.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -9377,6 +9434,7 @@
       "providerName": "BuiltWith",
       "serviceName": "Get live technology data with redirect analysis.",
       "endpointUrl": "https://builtwith.mpp.paywithlocus.com/builtwith/domain-live-redirects",
+      "resourceUrl": "https://builtwith.mpp.paywithlocus.com/builtwith/domain-live-redirects",
       "requestHost": "builtwith.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -9406,6 +9464,7 @@
       "providerName": "BuiltWith",
       "serviceName": "Get related websites for a domain.",
       "endpointUrl": "https://builtwith.mpp.paywithlocus.com/builtwith/relationships",
+      "resourceUrl": "https://builtwith.mpp.paywithlocus.com/builtwith/relationships",
       "requestHost": "builtwith.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -9435,6 +9494,7 @@
       "providerName": "BuiltWith",
       "serviceName": "Find domains hosted on an IP.",
       "endpointUrl": "https://builtwith.mpp.paywithlocus.com/builtwith/ip-to-domain",
+      "resourceUrl": "https://builtwith.mpp.paywithlocus.com/builtwith/ip-to-domain",
       "requestHost": "builtwith.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -9464,6 +9524,7 @@
       "providerName": "BuiltWith",
       "serviceName": "Get sales intelligence data.",
       "endpointUrl": "https://builtwith.mpp.paywithlocus.com/builtwith/sales-intel",
+      "resourceUrl": "https://builtwith.mpp.paywithlocus.com/builtwith/sales-intel",
       "requestHost": "builtwith.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -9493,6 +9554,7 @@
       "providerName": "BuiltWith",
       "serviceName": "Find a company's website.",
       "endpointUrl": "https://builtwith.mpp.paywithlocus.com/builtwith/company-to-url",
+      "resourceUrl": "https://builtwith.mpp.paywithlocus.com/builtwith/company-to-url",
       "requestHost": "builtwith.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -9522,6 +9584,7 @@
       "providerName": "BuiltWith",
       "serviceName": "Lookup nameserver details.",
       "endpointUrl": "https://builtwith.mpp.paywithlocus.com/builtwith/nameserver",
+      "resourceUrl": "https://builtwith.mpp.paywithlocus.com/builtwith/nameserver",
       "requestHost": "builtwith.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -9551,6 +9614,7 @@
       "providerName": "BuiltWith",
       "serviceName": "Search websites by meta keyword.",
       "endpointUrl": "https://builtwith.mpp.paywithlocus.com/builtwith/keywords",
+      "resourceUrl": "https://builtwith.mpp.paywithlocus.com/builtwith/keywords",
       "requestHost": "builtwith.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -9580,6 +9644,7 @@
       "providerName": "BuiltWith",
       "serviceName": "Get trust score for a domain.",
       "endpointUrl": "https://builtwith.mpp.paywithlocus.com/builtwith/trust",
+      "resourceUrl": "https://builtwith.mpp.paywithlocus.com/builtwith/trust",
       "requestHost": "builtwith.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -9609,6 +9674,7 @@
       "providerName": "BuiltWith",
       "serviceName": "Get technology adoption trends.",
       "endpointUrl": "https://builtwith.mpp.paywithlocus.com/builtwith/trends",
+      "resourceUrl": "https://builtwith.mpp.paywithlocus.com/builtwith/trends",
       "requestHost": "builtwith.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -9638,6 +9704,7 @@
       "providerName": "BuiltWith",
       "serviceName": "Get lists of websites using a specific technology.",
       "endpointUrl": "https://builtwith.mpp.paywithlocus.com/builtwith/lists",
+      "resourceUrl": "https://builtwith.mpp.paywithlocus.com/builtwith/lists",
       "requestHost": "builtwith.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -9667,6 +9734,7 @@
       "providerName": "BuiltWith",
       "serviceName": "Get full technology profile for a domain.",
       "endpointUrl": "https://builtwith.mpp.paywithlocus.com/builtwith/domain",
+      "resourceUrl": "https://builtwith.mpp.paywithlocus.com/builtwith/domain",
       "requestHost": "builtwith.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -9696,6 +9764,7 @@
       "providerName": "BuiltWith",
       "serviceName": "Get live technology data.",
       "endpointUrl": "https://builtwith.mpp.paywithlocus.com/builtwith/domain-live",
+      "resourceUrl": "https://builtwith.mpp.paywithlocus.com/builtwith/domain-live",
       "requestHost": "builtwith.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -9725,6 +9794,7 @@
       "providerName": "BuiltWith",
       "serviceName": "Get search engine indexing data.",
       "endpointUrl": "https://builtwith.mpp.paywithlocus.com/builtwith/search-engines",
+      "resourceUrl": "https://builtwith.mpp.paywithlocus.com/builtwith/search-engines",
       "requestHost": "builtwith.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -9754,6 +9824,7 @@
       "providerName": "Clado",
       "serviceName": "Request additional deep research results.",
       "endpointUrl": "https://clado.mpp.paywithlocus.com/clado/deep-research-more",
+      "resourceUrl": "https://clado.mpp.paywithlocus.com/clado/deep-research-more",
       "requestHost": "clado.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -9783,6 +9854,7 @@
       "providerName": "Clado",
       "serviceName": "Get structured LinkedIn profile data.",
       "endpointUrl": "https://clado.mpp.paywithlocus.com/clado/linkedin-profile",
+      "resourceUrl": "https://clado.mpp.paywithlocus.com/clado/linkedin-profile",
       "requestHost": "clado.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -9812,6 +9884,7 @@
       "providerName": "Clado",
       "serviceName": "Get contact info by LinkedIn URL, email, or phone.",
       "endpointUrl": "https://clado.mpp.paywithlocus.com/clado/contacts",
+      "resourceUrl": "https://clado.mpp.paywithlocus.com/clado/contacts",
       "requestHost": "clado.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -9841,6 +9914,7 @@
       "providerName": "Clado",
       "serviceName": "Check bulk enrichment status.",
       "endpointUrl": "https://clado.mpp.paywithlocus.com/clado/bulk-contacts-status",
+      "resourceUrl": "https://clado.mpp.paywithlocus.com/clado/bulk-contacts-status",
       "requestHost": "clado.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -9870,6 +9944,7 @@
       "providerName": "Clado",
       "serviceName": "Get reactions on a LinkedIn post.",
       "endpointUrl": "https://clado.mpp.paywithlocus.com/clado/post-reactions",
+      "resourceUrl": "https://clado.mpp.paywithlocus.com/clado/post-reactions",
       "requestHost": "clado.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -9899,6 +9974,7 @@
       "providerName": "Clado",
       "serviceName": "Scrape a LinkedIn profile.",
       "endpointUrl": "https://clado.mpp.paywithlocus.com/clado/scrape",
+      "resourceUrl": "https://clado.mpp.paywithlocus.com/clado/scrape",
       "requestHost": "clado.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -9928,6 +10004,7 @@
       "providerName": "Clado",
       "serviceName": "Start async deep research job.",
       "endpointUrl": "https://clado.mpp.paywithlocus.com/clado/deep-research",
+      "resourceUrl": "https://clado.mpp.paywithlocus.com/clado/deep-research",
       "requestHost": "clado.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -9957,6 +10034,7 @@
       "providerName": "Clado",
       "serviceName": "Check deep research status and results.",
       "endpointUrl": "https://clado.mpp.paywithlocus.com/clado/deep-research-status",
+      "resourceUrl": "https://clado.mpp.paywithlocus.com/clado/deep-research-status",
       "requestHost": "clado.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -9986,6 +10064,7 @@
       "providerName": "Clado",
       "serviceName": "Check remaining API credits.",
       "endpointUrl": "https://clado.mpp.paywithlocus.com/clado/credits",
+      "resourceUrl": "https://clado.mpp.paywithlocus.com/clado/credits",
       "requestHost": "clado.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -10015,6 +10094,7 @@
       "providerName": "Clado",
       "serviceName": "Enrich contacts in bulk.",
       "endpointUrl": "https://clado.mpp.paywithlocus.com/clado/bulk-contacts",
+      "resourceUrl": "https://clado.mpp.paywithlocus.com/clado/bulk-contacts",
       "requestHost": "clado.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -10044,6 +10124,7 @@
       "providerName": "Clado",
       "serviceName": "Search for people by query.",
       "endpointUrl": "https://clado.mpp.paywithlocus.com/clado/search",
+      "resourceUrl": "https://clado.mpp.paywithlocus.com/clado/search",
       "requestHost": "clado.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -10073,6 +10154,7 @@
       "providerName": "Clado",
       "serviceName": "Cancel a running deep research job.",
       "endpointUrl": "https://clado.mpp.paywithlocus.com/clado/deep-research-cancel",
+      "resourceUrl": "https://clado.mpp.paywithlocus.com/clado/deep-research-cancel",
       "requestHost": "clado.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -10102,6 +10184,7 @@
       "providerName": "Code Storage",
       "serviceName": "Create a Git repository.",
       "endpointUrl": "https://codestorage.mpp.tempo.xyz/repos",
+      "resourceUrl": "https://codestorage.mpp.tempo.xyz/repos",
       "requestHost": "codestorage.mpp.tempo.xyz",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -10160,6 +10243,7 @@
       "providerName": "Codex",
       "serviceName": "Execute GraphQL queries for DeFi and blockchain data.",
       "endpointUrl": "https://graph.codex.io/graphql",
+      "resourceUrl": "https://graph.codex.io/graphql",
       "requestHost": "graph.codex.io",
       "method": "POST",
       "requestParameters": {
@@ -10201,6 +10285,7 @@
       "providerName": "CoinGecko",
       "serviceName": "Get price and market data for CoinGecko-listed coins by ID or symbol.",
       "endpointUrl": "https://pro-api.coingecko.com/api/v3/x402/simple/price",
+      "resourceUrl": "https://pro-api.coingecko.com/api/v3/x402/simple/price?ids=solana&vs_currencies=usd&include_24hr_change=true",
       "requestHost": "pro-api.coingecko.com",
       "method": "GET",
       "requestParameters": {
@@ -10226,10 +10311,7 @@
         "solana"
       ],
       "routeKind": "provider_direct_x402",
-      "probeReadiness": "needs_request_params",
-      "probeBlockedReasons": [
-        "query parameters require examples"
-      ],
+      "probeReadiness": "ready",
       "discoveryMethod": "catalog",
       "expectedNetwork": "base",
       "expectedAsset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
@@ -10240,6 +10322,7 @@
       "providerName": "CoinGecko",
       "serviceName": "Get trending liquidity pools on a specific network.",
       "endpointUrl": "https://pro-api.coingecko.com/api/v3/x402/onchain/networks/{id}/trending_pools",
+      "resourceUrl": "https://pro-api.coingecko.com/api/v3/x402/onchain/networks/solana/trending_pools",
       "requestHost": "pro-api.coingecko.com",
       "method": "GET",
       "requestParameters": {
@@ -10261,10 +10344,7 @@
         "solana"
       ],
       "routeKind": "provider_direct_x402",
-      "probeReadiness": "needs_request_params",
-      "probeBlockedReasons": [
-        "path parameters require examples"
-      ],
+      "probeReadiness": "ready",
       "discoveryMethod": "catalog",
       "expectedNetwork": "base",
       "expectedAsset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
@@ -10275,6 +10355,7 @@
       "providerName": "CoinGecko",
       "serviceName": "Get token price by contract address on a specific network.",
       "endpointUrl": "https://pro-api.coingecko.com/api/v3/x402/onchain/simple/networks/{id}/token_price/{address}",
+      "resourceUrl": "https://pro-api.coingecko.com/api/v3/x402/onchain/simple/networks/eth/token_price/0xdac17f958d2ee523a2206206994597c13d831ec7",
       "requestHost": "pro-api.coingecko.com",
       "method": "GET",
       "requestParameters": {
@@ -10297,10 +10378,7 @@
         "solana"
       ],
       "routeKind": "provider_direct_x402",
-      "probeReadiness": "needs_request_params",
-      "probeBlockedReasons": [
-        "path parameters require examples"
-      ],
+      "probeReadiness": "ready",
       "discoveryMethod": "catalog",
       "expectedNetwork": "base",
       "expectedAsset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
@@ -10311,6 +10389,7 @@
       "providerName": "CoinGecko",
       "serviceName": "Get price, liquidity, and market data for a token by contract address.",
       "endpointUrl": "https://pro-api.coingecko.com/api/v3/x402/onchain/networks/{id}/tokens/{address}",
+      "resourceUrl": "https://pro-api.coingecko.com/api/v3/x402/onchain/networks/eth/tokens/0xdac17f958d2ee523a2206206994597c13d831ec7",
       "requestHost": "pro-api.coingecko.com",
       "method": "GET",
       "requestParameters": {
@@ -10336,11 +10415,7 @@
         "solana"
       ],
       "routeKind": "provider_direct_x402",
-      "probeReadiness": "needs_request_params",
-      "probeBlockedReasons": [
-        "path parameters require examples",
-        "query parameters require examples"
-      ],
+      "probeReadiness": "ready",
       "discoveryMethod": "catalog",
       "expectedNetwork": "base",
       "expectedAsset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
@@ -10351,6 +10426,7 @@
       "providerName": "CoinGecko",
       "serviceName": "Search liquidity pools and tokens by contract address, name, or symbol across networks.",
       "endpointUrl": "https://pro-api.coingecko.com/api/v3/x402/onchain/search/pools",
+      "resourceUrl": "https://pro-api.coingecko.com/api/v3/x402/onchain/search/pools?query=USDC",
       "requestHost": "pro-api.coingecko.com",
       "method": "GET",
       "requestParameters": {
@@ -10373,10 +10449,7 @@
         "solana"
       ],
       "routeKind": "provider_direct_x402",
-      "probeReadiness": "needs_request_params",
-      "probeBlockedReasons": [
-        "query parameters require examples"
-      ],
+      "probeReadiness": "ready",
       "discoveryMethod": "catalog",
       "expectedNetwork": "base",
       "expectedAsset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
@@ -10547,6 +10620,7 @@
       "providerName": "Diffbot",
       "serviceName": "Extract video data from a URL.",
       "endpointUrl": "https://diffbot.mpp.paywithlocus.com/diffbot/video",
+      "resourceUrl": "https://diffbot.mpp.paywithlocus.com/diffbot/video",
       "requestHost": "diffbot.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -10576,6 +10650,7 @@
       "providerName": "Diffbot",
       "serviceName": "Automatically detect page type and extract data.",
       "endpointUrl": "https://diffbot.mpp.paywithlocus.com/diffbot/analyze",
+      "resourceUrl": "https://diffbot.mpp.paywithlocus.com/diffbot/analyze",
       "requestHost": "diffbot.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -10605,6 +10680,7 @@
       "providerName": "Diffbot",
       "serviceName": "Search the Diffbot Knowledge Graph.",
       "endpointUrl": "https://diffbot.mpp.paywithlocus.com/diffbot/kg/search",
+      "resourceUrl": "https://diffbot.mpp.paywithlocus.com/diffbot/kg/search",
       "requestHost": "diffbot.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -10634,6 +10710,7 @@
       "providerName": "Diffbot",
       "serviceName": "Extract list data from a URL.",
       "endpointUrl": "https://diffbot.mpp.paywithlocus.com/diffbot/list",
+      "resourceUrl": "https://diffbot.mpp.paywithlocus.com/diffbot/list",
       "requestHost": "diffbot.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -10663,6 +10740,7 @@
       "providerName": "Diffbot",
       "serviceName": "Extract event data from a URL.",
       "endpointUrl": "https://diffbot.mpp.paywithlocus.com/diffbot/event",
+      "resourceUrl": "https://diffbot.mpp.paywithlocus.com/diffbot/event",
       "requestHost": "diffbot.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -10692,6 +10770,7 @@
       "providerName": "Diffbot",
       "serviceName": "Start a web crawl job.",
       "endpointUrl": "https://diffbot.mpp.paywithlocus.com/diffbot/crawl",
+      "resourceUrl": "https://diffbot.mpp.paywithlocus.com/diffbot/crawl",
       "requestHost": "diffbot.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -10721,6 +10800,7 @@
       "providerName": "Diffbot",
       "serviceName": "Extract structured product data from a URL.",
       "endpointUrl": "https://diffbot.mpp.paywithlocus.com/diffbot/product",
+      "resourceUrl": "https://diffbot.mpp.paywithlocus.com/diffbot/product",
       "requestHost": "diffbot.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -10750,6 +10830,7 @@
       "providerName": "Diffbot",
       "serviceName": "Extract structured article data from a URL.",
       "endpointUrl": "https://diffbot.mpp.paywithlocus.com/diffbot/article",
+      "resourceUrl": "https://diffbot.mpp.paywithlocus.com/diffbot/article",
       "requestHost": "diffbot.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -10779,6 +10860,7 @@
       "providerName": "Diffbot",
       "serviceName": "Extract discussion/comment threads from a URL.",
       "endpointUrl": "https://diffbot.mpp.paywithlocus.com/diffbot/discussion",
+      "resourceUrl": "https://diffbot.mpp.paywithlocus.com/diffbot/discussion",
       "requestHost": "diffbot.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -10808,6 +10890,7 @@
       "providerName": "Diffbot",
       "serviceName": "Extract image data from a URL.",
       "endpointUrl": "https://diffbot.mpp.paywithlocus.com/diffbot/image",
+      "resourceUrl": "https://diffbot.mpp.paywithlocus.com/diffbot/image",
       "requestHost": "diffbot.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -10837,6 +10920,7 @@
       "providerName": "Diffbot",
       "serviceName": "Natural language processing — entities, sentiment, facts.",
       "endpointUrl": "https://diffbot.mpp.paywithlocus.com/diffbot/nlp",
+      "resourceUrl": "https://diffbot.mpp.paywithlocus.com/diffbot/nlp",
       "requestHost": "diffbot.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -10866,6 +10950,7 @@
       "providerName": "Diffbot",
       "serviceName": "Enhance entity data from the Knowledge Graph.",
       "endpointUrl": "https://diffbot.mpp.paywithlocus.com/diffbot/kg/enhance",
+      "resourceUrl": "https://diffbot.mpp.paywithlocus.com/diffbot/kg/enhance",
       "requestHost": "diffbot.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -12027,6 +12112,7 @@
       "providerName": "Dune",
       "serviceName": "Execute a SQL query on Dune.",
       "endpointUrl": "https://api.dune.com/v1/sql/execute",
+      "resourceUrl": "https://api.dune.com/v1/sql/execute",
       "requestHost": "api.dune.com",
       "method": "POST",
       "requestParameters": {
@@ -12136,6 +12222,7 @@
       "providerName": "EDGAR",
       "serviceName": "Get all XBRL financial data for a company.",
       "endpointUrl": "https://edgar.mpp.paywithlocus.com/edgar/company-facts",
+      "resourceUrl": "https://edgar.mpp.paywithlocus.com/edgar/company-facts",
       "requestHost": "edgar.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -12165,6 +12252,7 @@
       "providerName": "EDGAR",
       "serviceName": "Get time series for a single XBRL financial metric.",
       "endpointUrl": "https://edgar.mpp.paywithlocus.com/edgar/company-concept",
+      "resourceUrl": "https://edgar.mpp.paywithlocus.com/edgar/company-concept",
       "requestHost": "edgar.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -12194,6 +12282,7 @@
       "providerName": "EDGAR",
       "serviceName": "Get filing history and metadata for a SEC filer.",
       "endpointUrl": "https://edgar.mpp.paywithlocus.com/edgar/company-submissions",
+      "resourceUrl": "https://edgar.mpp.paywithlocus.com/edgar/company-submissions",
       "requestHost": "edgar.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -12223,6 +12312,7 @@
       "providerName": "EDGAR Search",
       "serviceName": "Search full text of SEC filings by keyword, company, form type, and date range.",
       "endpointUrl": "https://edgar-search.mpp.paywithlocus.com/edgar-search/search",
+      "resourceUrl": "https://edgar-search.mpp.paywithlocus.com/edgar-search/search",
       "requestHost": "edgar-search.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -12334,6 +12424,7 @@
       "providerName": "ElevenLabs",
       "serviceName": "Transcribe audio to text using Scribe.",
       "endpointUrl": "https://elevenlabs.mpp.tempo.xyz/v1/speech-to-text",
+      "resourceUrl": "https://elevenlabs.mpp.tempo.xyz/v1/speech-to-text",
       "requestHost": "elevenlabs.mpp.tempo.xyz",
       "method": "POST",
       "requestParameters": {
@@ -12448,6 +12539,7 @@
       "providerName": "Exa",
       "serviceName": "Get the contents of web pages by URL or document ID.",
       "endpointUrl": "https://api.exa.ai/contents",
+      "resourceUrl": "https://api.exa.ai/contents",
       "requestHost": "api.exa.ai",
       "method": "POST",
       "requestParameters": {
@@ -12517,6 +12609,7 @@
       "providerName": "Exa",
       "serviceName": "Semantic web search. Returns relevant web pages for a natural language query. Max 10 results per request via x402.",
       "endpointUrl": "https://api.exa.ai/search",
+      "resourceUrl": "https://api.exa.ai/search",
       "requestHost": "api.exa.ai",
       "method": "POST",
       "requestParameters": {
@@ -12594,6 +12687,7 @@
       "providerName": "fal.ai",
       "serviceName": "Text or image to video generation with MiniMax.",
       "endpointUrl": "https://fal.mpp.tempo.xyz/fal-ai/minimax/video-01",
+      "resourceUrl": "https://fal.mpp.tempo.xyz/fal-ai/minimax/video-01",
       "requestHost": "fal.mpp.tempo.xyz",
       "method": "POST",
       "requestParameters": {
@@ -12635,6 +12729,7 @@
       "providerName": "fal.ai",
       "serviceName": "State-of-the-art text-to-image with long text rendering and vector art support.",
       "endpointUrl": "https://fal.mpp.tempo.xyz/fal-ai/recraft-v3",
+      "resourceUrl": "https://fal.mpp.tempo.xyz/fal-ai/recraft-v3",
       "requestHost": "fal.mpp.tempo.xyz",
       "method": "POST",
       "requestParameters": {
@@ -12678,6 +12773,7 @@
       "providerName": "fal.ai",
       "serviceName": "Image-to-video generation with Stable Video Diffusion.",
       "endpointUrl": "https://fal.mpp.tempo.xyz/fal-ai/stable-video",
+      "resourceUrl": "https://fal.mpp.tempo.xyz/fal-ai/stable-video",
       "requestHost": "fal.mpp.tempo.xyz",
       "method": "POST",
       "requestParameters": {
@@ -12717,6 +12813,7 @@
       "providerName": "fal.ai",
       "serviceName": "Fast text-to-image with Flux Schnell (1-4 steps).",
       "endpointUrl": "https://fal.mpp.tempo.xyz/fal-ai/flux/schnell",
+      "resourceUrl": "https://fal.mpp.tempo.xyz/fal-ai/flux/schnell",
       "requestHost": "fal.mpp.tempo.xyz",
       "method": "POST",
       "requestParameters": {
@@ -12760,6 +12857,7 @@
       "providerName": "fal.ai",
       "serviceName": "Ultra-high resolution image generation up to 2K.",
       "endpointUrl": "https://fal.mpp.tempo.xyz/fal-ai/flux-pro/v1.1-ultra",
+      "resourceUrl": "https://fal.mpp.tempo.xyz/fal-ai/flux-pro/v1.1-ultra",
       "requestHost": "fal.mpp.tempo.xyz",
       "method": "POST",
       "requestParameters": {
@@ -12803,6 +12901,7 @@
       "providerName": "fal.ai",
       "serviceName": "High-quality text-to-image with Flux Dev.",
       "endpointUrl": "https://fal.mpp.tempo.xyz/fal-ai/flux/dev",
+      "resourceUrl": "https://fal.mpp.tempo.xyz/fal-ai/flux/dev",
       "requestHost": "fal.mpp.tempo.xyz",
       "method": "POST",
       "requestParameters": {
@@ -12846,6 +12945,7 @@
       "providerName": "fal.ai",
       "serviceName": "Professional-grade image generation with Flux Pro.",
       "endpointUrl": "https://fal.mpp.tempo.xyz/fal-ai/flux-pro/v1.1",
+      "resourceUrl": "https://fal.mpp.tempo.xyz/fal-ai/flux-pro/v1.1",
       "requestHost": "fal.mpp.tempo.xyz",
       "method": "POST",
       "requestParameters": {
@@ -12889,6 +12989,7 @@
       "providerName": "fal.ai",
       "serviceName": "Quick Stable Diffusion XL generation.",
       "endpointUrl": "https://fal.mpp.tempo.xyz/fal-ai/fast-sdxl",
+      "resourceUrl": "https://fal.mpp.tempo.xyz/fal-ai/fast-sdxl",
       "requestHost": "fal.mpp.tempo.xyz",
       "method": "POST",
       "requestParameters": {
@@ -12932,6 +13033,7 @@
       "providerName": "fal.ai",
       "serviceName": "Stable Diffusion 3.5 Large text-to-image.",
       "endpointUrl": "https://fal.mpp.tempo.xyz/fal-ai/stable-diffusion-v35-large",
+      "resourceUrl": "https://fal.mpp.tempo.xyz/fal-ai/stable-diffusion-v35-large",
       "requestHost": "fal.mpp.tempo.xyz",
       "method": "POST",
       "requestParameters": {
@@ -12975,6 +13077,7 @@
       "providerName": "Firecrawl",
       "serviceName": "Scrape a single URL and return clean content.",
       "endpointUrl": "https://firecrawl.mpp.tempo.xyz/v1/scrape",
+      "resourceUrl": "https://firecrawl.mpp.tempo.xyz/v1/scrape",
       "requestHost": "firecrawl.mpp.tempo.xyz",
       "method": "POST",
       "requestParameters": {
@@ -13020,6 +13123,7 @@
       "providerName": "Firecrawl",
       "serviceName": "Search the web and return scraped results.",
       "endpointUrl": "https://firecrawl.mpp.tempo.xyz/v1/search",
+      "resourceUrl": "https://firecrawl.mpp.tempo.xyz/v1/search",
       "requestHost": "firecrawl.mpp.tempo.xyz",
       "method": "POST",
       "requestParameters": {
@@ -13061,6 +13165,7 @@
       "providerName": "Firecrawl",
       "serviceName": "Extract structured data from a web page.",
       "endpointUrl": "https://firecrawl.mpp.tempo.xyz/v1/extract",
+      "resourceUrl": "https://firecrawl.mpp.tempo.xyz/v1/extract",
       "requestHost": "firecrawl.mpp.tempo.xyz",
       "method": "POST",
       "requestParameters": {
@@ -13106,6 +13211,7 @@
       "providerName": "Firecrawl",
       "serviceName": "Map a website's pages to discover all URLs.",
       "endpointUrl": "https://firecrawl.mpp.tempo.xyz/v1/map",
+      "resourceUrl": "https://firecrawl.mpp.tempo.xyz/v1/map",
       "requestHost": "firecrawl.mpp.tempo.xyz",
       "method": "POST",
       "requestParameters": {
@@ -13145,6 +13251,7 @@
       "providerName": "Firecrawl",
       "serviceName": "Crawl a website starting from a URL.",
       "endpointUrl": "https://firecrawl.mpp.tempo.xyz/v1/crawl",
+      "resourceUrl": "https://firecrawl.mpp.tempo.xyz/v1/crawl",
       "requestHost": "firecrawl.mpp.tempo.xyz",
       "method": "POST",
       "requestParameters": {
@@ -14351,6 +14458,7 @@
       "providerName": "Google Maps",
       "serviceName": "New Places API nearby search.",
       "endpointUrl": "https://googlemaps.mpp.tempo.xyz/maps/places/searchNearby",
+      "resourceUrl": "https://googlemaps.mpp.tempo.xyz/maps/places/searchNearby",
       "requestHost": "googlemaps.mpp.tempo.xyz",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -14380,6 +14488,7 @@
       "providerName": "Google Maps",
       "serviceName": "New Places API text search.",
       "endpointUrl": "https://googlemaps.mpp.tempo.xyz/maps/places/searchText",
+      "resourceUrl": "https://googlemaps.mpp.tempo.xyz/maps/places/searchText",
       "requestHost": "googlemaps.mpp.tempo.xyz",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -14630,6 +14739,7 @@
       "providerName": "Google Maps",
       "serviceName": "Compute a route (Routes API).",
       "endpointUrl": "https://googlemaps.mpp.tempo.xyz/maps/routes/computeRoutes",
+      "resourceUrl": "https://googlemaps.mpp.tempo.xyz/maps/routes/computeRoutes",
       "requestHost": "googlemaps.mpp.tempo.xyz",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -14743,6 +14853,7 @@
       "providerName": "Google Maps",
       "serviceName": "Compute a route matrix.",
       "endpointUrl": "https://googlemaps.mpp.tempo.xyz/maps/routes/computeRouteMatrix",
+      "resourceUrl": "https://googlemaps.mpp.tempo.xyz/maps/routes/computeRouteMatrix",
       "requestHost": "googlemaps.mpp.tempo.xyz",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -15110,6 +15221,7 @@
       "providerName": "Hunter",
       "serviceName": "Find email addresses associated with a domain.",
       "endpointUrl": "https://hunter.mpp.paywithlocus.com/hunter/domain-search",
+      "resourceUrl": "https://hunter.mpp.paywithlocus.com/hunter/domain-search",
       "requestHost": "hunter.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -15139,6 +15251,7 @@
       "providerName": "Hunter",
       "serviceName": "Search for articles by author.",
       "endpointUrl": "https://hunter.mpp.paywithlocus.com/hunter/article-search",
+      "resourceUrl": "https://hunter.mpp.paywithlocus.com/hunter/article-search",
       "requestHost": "hunter.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -15168,6 +15281,7 @@
       "providerName": "Hunter",
       "serviceName": "Enrich data for an email address.",
       "endpointUrl": "https://hunter.mpp.paywithlocus.com/hunter/email-enrichment",
+      "resourceUrl": "https://hunter.mpp.paywithlocus.com/hunter/email-enrichment",
       "requestHost": "hunter.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -15197,6 +15311,7 @@
       "providerName": "Hunter",
       "serviceName": "Verify if an email is deliverable.",
       "endpointUrl": "https://hunter.mpp.paywithlocus.com/hunter/email-verifier",
+      "resourceUrl": "https://hunter.mpp.paywithlocus.com/hunter/email-verifier",
       "requestHost": "hunter.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -15226,6 +15341,7 @@
       "providerName": "Hunter",
       "serviceName": "Find the email address of a person at a company.",
       "endpointUrl": "https://hunter.mpp.paywithlocus.com/hunter/email-finder",
+      "resourceUrl": "https://hunter.mpp.paywithlocus.com/hunter/email-finder",
       "requestHost": "hunter.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -15255,6 +15371,7 @@
       "providerName": "Hunter",
       "serviceName": "Enrich both an email and its associated company.",
       "endpointUrl": "https://hunter.mpp.paywithlocus.com/hunter/combined-enrichment",
+      "resourceUrl": "https://hunter.mpp.paywithlocus.com/hunter/combined-enrichment",
       "requestHost": "hunter.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -15284,6 +15401,7 @@
       "providerName": "Hunter",
       "serviceName": "Enrich data for a company domain.",
       "endpointUrl": "https://hunter.mpp.paywithlocus.com/hunter/company-enrichment",
+      "resourceUrl": "https://hunter.mpp.paywithlocus.com/hunter/company-enrichment",
       "requestHost": "hunter.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -15313,6 +15431,7 @@
       "providerName": "Hunter",
       "serviceName": "Discover contacts matching filters.",
       "endpointUrl": "https://hunter.mpp.paywithlocus.com/hunter/discover",
+      "resourceUrl": "https://hunter.mpp.paywithlocus.com/hunter/discover",
       "requestHost": "hunter.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -15369,6 +15488,7 @@
       "providerName": "Judge0",
       "serviceName": "Submit code for async execution and get a token.",
       "endpointUrl": "https://judge0.mpp.paywithlocus.com/judge0/submit-code",
+      "resourceUrl": "https://judge0.mpp.paywithlocus.com/judge0/submit-code",
       "requestHost": "judge0.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -15398,6 +15518,7 @@
       "providerName": "Judge0",
       "serviceName": "Execute code synchronously and return the output.",
       "endpointUrl": "https://judge0.mpp.paywithlocus.com/judge0/execute-code",
+      "resourceUrl": "https://judge0.mpp.paywithlocus.com/judge0/execute-code",
       "requestHost": "judge0.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -15427,6 +15548,7 @@
       "providerName": "Judge0",
       "serviceName": "Get the status and output of a submitted code execution.",
       "endpointUrl": "https://judge0.mpp.paywithlocus.com/judge0/get-submission",
+      "resourceUrl": "https://judge0.mpp.paywithlocus.com/judge0/get-submission",
       "requestHost": "judge0.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -15456,6 +15578,7 @@
       "providerName": "Judge0",
       "serviceName": "Submit multiple code executions in a single request.",
       "endpointUrl": "https://judge0.mpp.paywithlocus.com/judge0/batch-submit",
+      "resourceUrl": "https://judge0.mpp.paywithlocus.com/judge0/batch-submit",
       "requestHost": "judge0.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -16310,6 +16433,7 @@
       "providerName": "Laso Finance",
       "serviceName": "Trigger a card data refresh (re-scrape balance and transactions from issuer). Rate limited to once per card every 5 minutes.",
       "endpointUrl": "https://laso.finance/refresh-card-data",
+      "resourceUrl": "https://laso.finance/refresh-card-data",
       "requestHost": "laso.finance",
       "method": "POST",
       "requestParameters": {
@@ -16349,6 +16473,7 @@
       "providerName": "Laso Finance",
       "serviceName": "Trigger a card data refresh (re-scrape balance and transactions from issuer). Rate limited to once per card every 5 minutes.",
       "endpointUrl": "https://beta-api.paywithlocus.com/api/laso-mpp/refresh-card-data",
+      "resourceUrl": "https://beta-api.paywithlocus.com/api/laso-mpp/refresh-card-data",
       "requestHost": "beta-api.paywithlocus.com",
       "method": "POST",
       "requestParameters": {
@@ -16388,6 +16513,7 @@
       "providerName": "Laso Finance",
       "serviceName": "Withdraw from account balance to connected wallet. Minimum $0.01.",
       "endpointUrl": "https://laso.finance/withdraw",
+      "resourceUrl": "https://laso.finance/withdraw",
       "requestHost": "laso.finance",
       "method": "POST",
       "requestParameters": {
@@ -16427,6 +16553,7 @@
       "providerName": "Laso Finance",
       "serviceName": "Withdraw from account balance to connected wallet. Minimum $0.01.",
       "endpointUrl": "https://beta-api.paywithlocus.com/api/laso-mpp/withdraw",
+      "resourceUrl": "https://beta-api.paywithlocus.com/api/laso-mpp/withdraw",
       "requestHost": "beta-api.paywithlocus.com",
       "method": "POST",
       "requestParameters": {
@@ -16466,6 +16593,7 @@
       "providerName": "Laso Finance",
       "serviceName": "Refresh an expired id_token using a refresh_token. Returns a new id_token and user_id.",
       "endpointUrl": "https://laso.finance/refresh",
+      "resourceUrl": "https://laso.finance/refresh",
       "requestHost": "laso.finance",
       "method": "POST",
       "requestParameters": {
@@ -16505,6 +16633,7 @@
       "providerName": "Laso Finance",
       "serviceName": "Refresh an expired id_token using a refresh_token. Returns a new id_token and user_id.",
       "endpointUrl": "https://beta-api.paywithlocus.com/api/laso-mpp/refresh",
+      "resourceUrl": "https://beta-api.paywithlocus.com/api/laso-mpp/refresh",
       "requestHost": "beta-api.paywithlocus.com",
       "method": "POST",
       "requestParameters": {
@@ -16926,6 +17055,7 @@
       "providerName": "Mapbox",
       "serviceName": "Get turn-by-turn directions between coordinates.",
       "endpointUrl": "https://mapbox.mpp.paywithlocus.com/mapbox/directions",
+      "resourceUrl": "https://mapbox.mpp.paywithlocus.com/mapbox/directions",
       "requestHost": "mapbox.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -16955,6 +17085,7 @@
       "providerName": "Mapbox",
       "serviceName": "Convert coordinates to an address or place name.",
       "endpointUrl": "https://mapbox.mpp.paywithlocus.com/mapbox/geocode-reverse",
+      "resourceUrl": "https://mapbox.mpp.paywithlocus.com/mapbox/geocode-reverse",
       "requestHost": "mapbox.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -16984,6 +17115,7 @@
       "providerName": "Mapbox",
       "serviceName": "Convert an address or place name to coordinates.",
       "endpointUrl": "https://mapbox.mpp.paywithlocus.com/mapbox/geocode-forward",
+      "resourceUrl": "https://mapbox.mpp.paywithlocus.com/mapbox/geocode-forward",
       "requestHost": "mapbox.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -17013,6 +17145,7 @@
       "providerName": "Mapbox",
       "serviceName": "Get reachable areas within a time or distance limit.",
       "endpointUrl": "https://mapbox.mpp.paywithlocus.com/mapbox/isochrone",
+      "resourceUrl": "https://mapbox.mpp.paywithlocus.com/mapbox/isochrone",
       "requestHost": "mapbox.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -17042,6 +17175,7 @@
       "providerName": "Mapbox",
       "serviceName": "Snap GPS traces to roads.",
       "endpointUrl": "https://mapbox.mpp.paywithlocus.com/mapbox/map-matching",
+      "resourceUrl": "https://mapbox.mpp.paywithlocus.com/mapbox/map-matching",
       "requestHost": "mapbox.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -17071,6 +17205,7 @@
       "providerName": "Mapbox",
       "serviceName": "Generate a static map image.",
       "endpointUrl": "https://mapbox.mpp.paywithlocus.com/mapbox/static-map",
+      "resourceUrl": "https://mapbox.mpp.paywithlocus.com/mapbox/static-map",
       "requestHost": "mapbox.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -17100,6 +17235,7 @@
       "providerName": "Mapbox",
       "serviceName": "Query map tile features at a point.",
       "endpointUrl": "https://mapbox.mpp.paywithlocus.com/mapbox/tilequery",
+      "resourceUrl": "https://mapbox.mpp.paywithlocus.com/mapbox/tilequery",
       "requestHost": "mapbox.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -17129,6 +17265,7 @@
       "providerName": "Mapbox",
       "serviceName": "Compute travel-time matrix between many origins and destinations.",
       "endpointUrl": "https://mapbox.mpp.paywithlocus.com/mapbox/matrix",
+      "resourceUrl": "https://mapbox.mpp.paywithlocus.com/mapbox/matrix",
       "requestHost": "mapbox.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -17158,6 +17295,7 @@
       "providerName": "Mathpix",
       "serviceName": "Convert handwritten strokes to LaTeX and text.",
       "endpointUrl": "https://mathpix.mpp.paywithlocus.com/mathpix/process-strokes",
+      "resourceUrl": "https://mathpix.mpp.paywithlocus.com/mathpix/process-strokes",
       "requestHost": "mathpix.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -17187,6 +17325,7 @@
       "providerName": "Mathpix",
       "serviceName": "Extract LaTeX and text from an image of math or scientific content.",
       "endpointUrl": "https://mathpix.mpp.paywithlocus.com/mathpix/process-image",
+      "resourceUrl": "https://mathpix.mpp.paywithlocus.com/mathpix/process-image",
       "requestHost": "mathpix.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -17216,6 +17355,7 @@
       "providerName": "Megapot",
       "serviceName": "Buy a ticket for the next drawing.",
       "endpointUrl": "https://megapot.x402.paysponge.com/",
+      "resourceUrl": "https://megapot.x402.paysponge.com/",
       "requestHost": "megapot.x402.paysponge.com",
       "method": "POST",
       "requestParameters": {
@@ -17255,6 +17395,7 @@
       "providerName": "Megapot",
       "serviceName": "Buy a ticket for the next drawing.",
       "endpointUrl": "https://megapot.mpp.paysponge.com/",
+      "resourceUrl": "https://megapot.mpp.paysponge.com/",
       "requestHost": "megapot.mpp.paysponge.com",
       "method": "POST",
       "requestParameters": {
@@ -17294,6 +17435,7 @@
       "providerName": "Modal",
       "serviceName": "Create a new sandbox for code execution.",
       "endpointUrl": "https://modal.mpp.tempo.xyz/sandbox/create",
+      "resourceUrl": "https://modal.mpp.tempo.xyz/sandbox/create",
       "requestHost": "modal.mpp.tempo.xyz",
       "method": "POST",
       "requestParameters": {
@@ -17335,6 +17477,7 @@
       "providerName": "Modal",
       "serviceName": "Get the status of a sandbox.",
       "endpointUrl": "https://modal.mpp.tempo.xyz/sandbox/status",
+      "resourceUrl": "https://modal.mpp.tempo.xyz/sandbox/status",
       "requestHost": "modal.mpp.tempo.xyz",
       "method": "POST",
       "requestParameters": {
@@ -17374,6 +17517,7 @@
       "providerName": "Modal",
       "serviceName": "Terminate a sandbox.",
       "endpointUrl": "https://modal.mpp.tempo.xyz/sandbox/terminate",
+      "resourceUrl": "https://modal.mpp.tempo.xyz/sandbox/terminate",
       "requestHost": "modal.mpp.tempo.xyz",
       "method": "POST",
       "requestParameters": {
@@ -17413,6 +17557,7 @@
       "providerName": "Modal",
       "serviceName": "Execute a command in an existing sandbox.",
       "endpointUrl": "https://modal.mpp.tempo.xyz/sandbox/exec",
+      "resourceUrl": "https://modal.mpp.tempo.xyz/sandbox/exec",
       "requestHost": "modal.mpp.tempo.xyz",
       "method": "POST",
       "requestParameters": {
@@ -17454,6 +17599,7 @@
       "providerName": "Nansen",
       "serviceName": "Get DEX trade data for tokens or wallets.",
       "endpointUrl": "https://api.nansen.ai/api/v1/tgm/dex-trades",
+      "resourceUrl": "https://api.nansen.ai/api/v1/tgm/dex-trades",
       "requestHost": "api.nansen.ai",
       "method": "POST",
       "requestParameters": {
@@ -17504,6 +17650,7 @@
       "providerName": "Nansen",
       "serviceName": "Get perpetual futures positions for a wallet address.",
       "endpointUrl": "https://api.nansen.ai/api/v1/profiler/perp-positions",
+      "resourceUrl": "https://api.nansen.ai/api/v1/profiler/perp-positions",
       "requestHost": "api.nansen.ai",
       "method": "POST",
       "requestParameters": {
@@ -17550,6 +17697,7 @@
       "providerName": "Nansen",
       "serviceName": "Get holder data for a token.",
       "endpointUrl": "https://api.nansen.ai/api/v1/tgm/holders",
+      "resourceUrl": "https://api.nansen.ai/api/v1/tgm/holders",
       "requestHost": "api.nansen.ai",
       "method": "POST",
       "requestParameters": {
@@ -17598,6 +17746,7 @@
       "providerName": "Nansen",
       "serviceName": "Get smart money inflow data for tokens.",
       "endpointUrl": "https://api.nansen.ai/api/v1/smart-money/inflows",
+      "resourceUrl": "https://api.nansen.ai/api/v1/smart-money/inflows",
       "requestHost": "api.nansen.ai",
       "method": "POST",
       "requestParameters": {
@@ -17646,6 +17795,7 @@
       "providerName": "Nansen",
       "serviceName": "Get perpetual futures trading leaderboard.",
       "endpointUrl": "https://api.nansen.ai/api/v1/perp-leaderboard",
+      "resourceUrl": "https://api.nansen.ai/api/v1/perp-leaderboard",
       "requestHost": "api.nansen.ai",
       "method": "POST",
       "requestParameters": {
@@ -17694,6 +17844,7 @@
       "providerName": "Nansen",
       "serviceName": "Find wallets related to a given address through on-chain activity.",
       "endpointUrl": "https://api.nansen.ai/api/v1/profiler/address/related-wallets",
+      "resourceUrl": "https://api.nansen.ai/api/v1/profiler/address/related-wallets",
       "requestHost": "api.nansen.ai",
       "method": "POST",
       "requestParameters": {
@@ -17740,6 +17891,7 @@
       "providerName": "Nansen",
       "serviceName": "Get token transfers for analysis.",
       "endpointUrl": "https://api.nansen.ai/api/v1/tgm/transfers",
+      "resourceUrl": "https://api.nansen.ai/api/v1/tgm/transfers",
       "requestHost": "api.nansen.ai",
       "method": "POST",
       "requestParameters": {
@@ -17788,6 +17940,7 @@
       "providerName": "Nansen",
       "serviceName": "Get token flow data showing movement between addresses.",
       "endpointUrl": "https://api.nansen.ai/api/v1/tgm/flows",
+      "resourceUrl": "https://api.nansen.ai/api/v1/tgm/flows",
       "requestHost": "api.nansen.ai",
       "method": "POST",
       "requestParameters": {
@@ -17836,6 +17989,7 @@
       "providerName": "Nansen",
       "serviceName": "Get DEX trades made by smart money wallets.",
       "endpointUrl": "https://api.nansen.ai/api/v1/smart-money/dex-trades",
+      "resourceUrl": "https://api.nansen.ai/api/v1/smart-money/dex-trades",
       "requestHost": "api.nansen.ai",
       "method": "POST",
       "requestParameters": {
@@ -17884,6 +18038,7 @@
       "providerName": "Nansen",
       "serviceName": "Get transaction history for a wallet address.",
       "endpointUrl": "https://api.nansen.ai/api/v1/profiler/address/transactions",
+      "resourceUrl": "https://api.nansen.ai/api/v1/profiler/address/transactions",
       "requestHost": "api.nansen.ai",
       "method": "POST",
       "requestParameters": {
@@ -17934,6 +18089,7 @@
       "providerName": "Nansen",
       "serviceName": "Get profit/loss summary for a wallet address.",
       "endpointUrl": "https://api.nansen.ai/api/v1/profiler/address/pnl-summary",
+      "resourceUrl": "https://api.nansen.ai/api/v1/profiler/address/pnl-summary",
       "requestHost": "api.nansen.ai",
       "method": "POST",
       "requestParameters": {
@@ -17980,6 +18136,7 @@
       "providerName": "Nansen",
       "serviceName": "Get perpetual futures PnL leaderboard.",
       "endpointUrl": "https://api.nansen.ai/api/v1/tgm/perp-pnl-leaderboard",
+      "resourceUrl": "https://api.nansen.ai/api/v1/tgm/perp-pnl-leaderboard",
       "requestHost": "api.nansen.ai",
       "method": "POST",
       "requestParameters": {
@@ -18028,6 +18185,7 @@
       "providerName": "Nansen",
       "serviceName": "Get flow intelligence data for tokens showing inflows/outflows.",
       "endpointUrl": "https://api.nansen.ai/api/v1/tgm/flow-intelligence",
+      "resourceUrl": "https://api.nansen.ai/api/v1/tgm/flow-intelligence",
       "requestHost": "api.nansen.ai",
       "method": "POST",
       "requestParameters": {
@@ -18076,6 +18234,7 @@
       "providerName": "Nansen",
       "serviceName": "Get detailed profit/loss data for a wallet address.",
       "endpointUrl": "https://api.nansen.ai/api/v1/profiler/address/pnl",
+      "resourceUrl": "https://api.nansen.ai/api/v1/profiler/address/pnl",
       "requestHost": "api.nansen.ai",
       "method": "POST",
       "requestParameters": {
@@ -18122,6 +18281,7 @@
       "providerName": "Nansen",
       "serviceName": "Get counterparties (addresses that have transacted with) a wallet address.",
       "endpointUrl": "https://api.nansen.ai/api/v1/profiler/address/counterparties",
+      "resourceUrl": "https://api.nansen.ai/api/v1/profiler/address/counterparties",
       "requestHost": "api.nansen.ai",
       "method": "POST",
       "requestParameters": {
@@ -18170,6 +18330,7 @@
       "providerName": "Nansen",
       "serviceName": "Get PnL leaderboard showing top profitable traders.",
       "endpointUrl": "https://api.nansen.ai/api/v1/tgm/pnl-leaderboard",
+      "resourceUrl": "https://api.nansen.ai/api/v1/tgm/pnl-leaderboard",
       "requestHost": "api.nansen.ai",
       "method": "POST",
       "requestParameters": {
@@ -18220,6 +18381,7 @@
       "providerName": "Nansen",
       "serviceName": "Get current holdings of smart money wallets.",
       "endpointUrl": "https://api.nansen.ai/api/v1/smart-money/holdings",
+      "resourceUrl": "https://api.nansen.ai/api/v1/smart-money/holdings",
       "requestHost": "api.nansen.ai",
       "method": "POST",
       "requestParameters": {
@@ -18266,6 +18428,7 @@
       "providerName": "Nansen",
       "serviceName": "Get historical token balance snapshots for a wallet address.",
       "endpointUrl": "https://api.nansen.ai/api/v1/profiler/address/historical-balances",
+      "resourceUrl": "https://api.nansen.ai/api/v1/profiler/address/historical-balances",
       "requestHost": "api.nansen.ai",
       "method": "POST",
       "requestParameters": {
@@ -18316,6 +18479,7 @@
       "providerName": "Nansen",
       "serviceName": "Find who bought or sold a specific token.",
       "endpointUrl": "https://api.nansen.ai/api/v1/tgm/who-bought-sold",
+      "resourceUrl": "https://api.nansen.ai/api/v1/tgm/who-bought-sold",
       "requestHost": "api.nansen.ai",
       "method": "POST",
       "requestParameters": {
@@ -18366,6 +18530,7 @@
       "providerName": "Nansen",
       "serviceName": "Get Jupiter DCA (Dollar Cost Average) orders data.",
       "endpointUrl": "https://api.nansen.ai/api/v1/tgm/jup-dca",
+      "resourceUrl": "https://api.nansen.ai/api/v1/tgm/jup-dca",
       "requestHost": "api.nansen.ai",
       "method": "POST",
       "requestParameters": {
@@ -18410,6 +18575,7 @@
       "providerName": "Nansen",
       "serviceName": "Get smart money net flow data showing where smart money is moving.",
       "endpointUrl": "https://api.nansen.ai/api/v1/smart-money/netflow",
+      "resourceUrl": "https://api.nansen.ai/api/v1/smart-money/netflow",
       "requestHost": "api.nansen.ai",
       "method": "POST",
       "requestParameters": {
@@ -18458,6 +18624,7 @@
       "providerName": "Nansen",
       "serviceName": "Screen perpetual futures markets based on various criteria.",
       "endpointUrl": "https://api.nansen.ai/api/v1/perp-screener",
+      "resourceUrl": "https://api.nansen.ai/api/v1/perp-screener",
       "requestHost": "api.nansen.ai",
       "method": "POST",
       "requestParameters": {
@@ -18506,6 +18673,7 @@
       "providerName": "Nansen",
       "serviceName": "Get perpetual futures trade history for a wallet address.",
       "endpointUrl": "https://api.nansen.ai/api/v1/profiler/perp-trades",
+      "resourceUrl": "https://api.nansen.ai/api/v1/profiler/perp-trades",
       "requestHost": "api.nansen.ai",
       "method": "POST",
       "requestParameters": {
@@ -18554,6 +18722,7 @@
       "providerName": "Nansen",
       "serviceName": "Get current token balances for a wallet address.",
       "endpointUrl": "https://api.nansen.ai/api/v1/profiler/address/current-balance",
+      "resourceUrl": "https://api.nansen.ai/api/v1/profiler/address/current-balance",
       "requestHost": "api.nansen.ai",
       "method": "POST",
       "requestParameters": {
@@ -18600,6 +18769,7 @@
       "providerName": "Nansen",
       "serviceName": "Get DeFi protocol holdings for a wallet address.",
       "endpointUrl": "https://api.nansen.ai/api/v1/portfolio/defi-holdings",
+      "resourceUrl": "https://api.nansen.ai/api/v1/portfolio/defi-holdings",
       "requestHost": "api.nansen.ai",
       "method": "POST",
       "requestParameters": {
@@ -18646,6 +18816,7 @@
       "providerName": "Nansen",
       "serviceName": "Screen and filter tokens based on various criteria.",
       "endpointUrl": "https://api.nansen.ai/api/v1/token-screener",
+      "resourceUrl": "https://api.nansen.ai/api/v1/token-screener",
       "requestHost": "api.nansen.ai",
       "method": "POST",
       "requestParameters": {
@@ -18698,6 +18869,7 @@
       "providerName": "Nyne",
       "serviceName": "Start an async person enrichment by email, phone number, or social media URL. Returns requestId for polling.",
       "endpointUrl": "https://api.paysponge.com/x402/purchase/svc_d5ymfernpzeh58gb8/person/enrichment",
+      "resourceUrl": "https://api.paysponge.com/x402/purchase/svc_d5ymfernpzeh58gb8/person/enrichment",
       "requestHost": "api.paysponge.com",
       "method": "POST",
       "requestParameters": {
@@ -18744,6 +18916,7 @@
       "providerName": "Nyne",
       "serviceName": "Start an async person enrichment by email, phone number, or social media URL. Returns requestId for polling.",
       "endpointUrl": "https://api.paysponge.com/mpp/purchase/svc_d5ymfernpzeh58gb8/person/enrichment",
+      "resourceUrl": "https://api.paysponge.com/mpp/purchase/svc_d5ymfernpzeh58gb8/person/enrichment",
       "requestHost": "api.paysponge.com",
       "method": "POST",
       "requestParameters": {
@@ -18789,6 +18962,7 @@
       "providerName": "Nyne",
       "serviceName": "Start an async person search by company name, role, geography, and person name. Returns requestId for polling.",
       "endpointUrl": "https://api.paysponge.com/x402/purchase/svc_d5ymfernpzeh58gb8/person/search",
+      "resourceUrl": "https://api.paysponge.com/x402/purchase/svc_d5ymfernpzeh58gb8/person/search",
       "requestHost": "api.paysponge.com",
       "method": "POST",
       "requestParameters": {
@@ -18843,6 +19017,7 @@
       "providerName": "Nyne",
       "serviceName": "Start an async person search by company name, role, geography, and person name. Returns requestId for polling.",
       "endpointUrl": "https://api.paysponge.com/mpp/purchase/svc_d5ymfernpzeh58gb8/person/search",
+      "resourceUrl": "https://api.paysponge.com/mpp/purchase/svc_d5ymfernpzeh58gb8/person/search",
       "requestHost": "api.paysponge.com",
       "method": "POST",
       "requestParameters": {
@@ -19172,6 +19347,7 @@
       "providerName": "Nyne",
       "serviceName": "Start an async lookup for a single social media profile. Requires social_media_url and site. Returns requestId for polling.",
       "endpointUrl": "https://api.paysponge.com/x402/purchase/svc_d5ymfernpzeh58gb8/person/single-social-lookup",
+      "resourceUrl": "https://api.paysponge.com/x402/purchase/svc_d5ymfernpzeh58gb8/person/single-social-lookup",
       "requestHost": "api.paysponge.com",
       "method": "POST",
       "requestParameters": {
@@ -19214,6 +19390,7 @@
       "providerName": "Nyne",
       "serviceName": "Start an async lookup for a single social media profile. Requires social_media_url and site. Returns requestId for polling.",
       "endpointUrl": "https://api.paysponge.com/mpp/purchase/svc_d5ymfernpzeh58gb8/person/single-social-lookup",
+      "resourceUrl": "https://api.paysponge.com/mpp/purchase/svc_d5ymfernpzeh58gb8/person/single-social-lookup",
       "requestHost": "api.paysponge.com",
       "method": "POST",
       "requestParameters": {
@@ -19255,6 +19432,7 @@
       "providerName": "Nyne",
       "serviceName": "Start an async lookup to find social media profiles by email, phone, or social_media_url. Returns request_id for polling.",
       "endpointUrl": "https://api.paysponge.com/x402/purchase/svc_d5ymfernpzeh58gb8/person/social-profiles",
+      "resourceUrl": "https://api.paysponge.com/x402/purchase/svc_d5ymfernpzeh58gb8/person/social-profiles",
       "requestHost": "api.paysponge.com",
       "method": "POST",
       "requestParameters": {
@@ -19301,6 +19479,7 @@
       "providerName": "Nyne",
       "serviceName": "Start an async lookup to find social media profiles by email, phone, or social_media_url. Returns request_id for polling.",
       "endpointUrl": "https://api.paysponge.com/mpp/purchase/svc_d5ymfernpzeh58gb8/person/social-profiles",
+      "resourceUrl": "https://api.paysponge.com/mpp/purchase/svc_d5ymfernpzeh58gb8/person/social-profiles",
       "requestHost": "api.paysponge.com",
       "method": "POST",
       "requestParameters": {
@@ -19346,6 +19525,7 @@
       "providerName": "Nyne",
       "serviceName": "Start an async company search by industry, website keyword, and location. Returns request_id for polling.",
       "endpointUrl": "https://api.paysponge.com/x402/purchase/svc_d5ymfernpzeh58gb8/company/search",
+      "resourceUrl": "https://api.paysponge.com/x402/purchase/svc_d5ymfernpzeh58gb8/company/search",
       "requestHost": "api.paysponge.com",
       "method": "POST",
       "requestParameters": {
@@ -19396,6 +19576,7 @@
       "providerName": "Nyne",
       "serviceName": "Start an async company search by industry, website keyword, and location. Returns request_id for polling.",
       "endpointUrl": "https://api.paysponge.com/mpp/purchase/svc_d5ymfernpzeh58gb8/company/search",
+      "resourceUrl": "https://api.paysponge.com/mpp/purchase/svc_d5ymfernpzeh58gb8/company/search",
       "requestHost": "api.paysponge.com",
       "method": "POST",
       "requestParameters": {
@@ -19445,6 +19626,7 @@
       "providerName": "Nyne",
       "serviceName": "Start an async company enrichment by email, phone, or social_media_url. Returns request_id for polling.",
       "endpointUrl": "https://api.paysponge.com/x402/purchase/svc_d5ymfernpzeh58gb8/company/enrichment",
+      "resourceUrl": "https://api.paysponge.com/x402/purchase/svc_d5ymfernpzeh58gb8/company/enrichment",
       "requestHost": "api.paysponge.com",
       "method": "POST",
       "requestParameters": {
@@ -19491,6 +19673,7 @@
       "providerName": "Nyne",
       "serviceName": "Start an async company enrichment by email, phone, or social_media_url. Returns request_id for polling.",
       "endpointUrl": "https://api.paysponge.com/mpp/purchase/svc_d5ymfernpzeh58gb8/company/enrichment",
+      "resourceUrl": "https://api.paysponge.com/mpp/purchase/svc_d5ymfernpzeh58gb8/company/enrichment",
       "requestHost": "api.paysponge.com",
       "method": "POST",
       "requestParameters": {
@@ -19536,6 +19719,7 @@
       "providerName": "Nyne",
       "serviceName": "Start an async company needs analysis using filing content topics. Returns request_id for polling.",
       "endpointUrl": "https://api.paysponge.com/x402/purchase/svc_d5ymfernpzeh58gb8/company/needs",
+      "resourceUrl": "https://api.paysponge.com/x402/purchase/svc_d5ymfernpzeh58gb8/company/needs",
       "requestHost": "api.paysponge.com",
       "method": "POST",
       "requestParameters": {
@@ -19582,6 +19766,7 @@
       "providerName": "Nyne",
       "serviceName": "Start an async company needs analysis using filing content topics. Returns request_id for polling.",
       "endpointUrl": "https://api.paysponge.com/mpp/purchase/svc_d5ymfernpzeh58gb8/company/needs",
+      "resourceUrl": "https://api.paysponge.com/mpp/purchase/svc_d5ymfernpzeh58gb8/company/needs",
       "requestHost": "api.paysponge.com",
       "method": "POST",
       "requestParameters": {
@@ -19972,6 +20157,7 @@
       "providerName": "Nyne",
       "serviceName": "Start an async company funding lookup by company name or domain. Returns request_id for polling.",
       "endpointUrl": "https://api.paysponge.com/x402/purchase/svc_d5ymfernpzeh58gb8/company/funding",
+      "resourceUrl": "https://api.paysponge.com/x402/purchase/svc_d5ymfernpzeh58gb8/company/funding",
       "requestHost": "api.paysponge.com",
       "method": "POST",
       "requestParameters": {
@@ -20016,6 +20202,7 @@
       "providerName": "Nyne",
       "serviceName": "Start an async company funding lookup by company name or domain. Returns request_id for polling.",
       "endpointUrl": "https://api.paysponge.com/mpp/purchase/svc_d5ymfernpzeh58gb8/company/funding",
+      "resourceUrl": "https://api.paysponge.com/mpp/purchase/svc_d5ymfernpzeh58gb8/company/funding",
       "requestHost": "api.paysponge.com",
       "method": "POST",
       "requestParameters": {
@@ -20059,6 +20246,7 @@
       "providerName": "Nyne",
       "serviceName": "Start an async event-based person search. Returns request_id for polling.",
       "endpointUrl": "https://api.paysponge.com/x402/purchase/svc_d5ymfernpzeh58gb8/person/events",
+      "resourceUrl": "https://api.paysponge.com/x402/purchase/svc_d5ymfernpzeh58gb8/person/events",
       "requestHost": "api.paysponge.com",
       "method": "POST",
       "requestParameters": {
@@ -20109,6 +20297,7 @@
       "providerName": "Nyne",
       "serviceName": "Start an async event-based person search. Returns request_id for polling.",
       "endpointUrl": "https://api.paysponge.com/mpp/purchase/svc_d5ymfernpzeh58gb8/person/events",
+      "resourceUrl": "https://api.paysponge.com/mpp/purchase/svc_d5ymfernpzeh58gb8/person/events",
       "requestHost": "api.paysponge.com",
       "method": "POST",
       "requestParameters": {
@@ -20287,6 +20476,7 @@
       "providerName": "OpenAI",
       "serviceName": "Generate speech from text.",
       "endpointUrl": "https://openai.mpp.tempo.xyz/v1/audio/speech",
+      "resourceUrl": "https://openai.mpp.tempo.xyz/v1/audio/speech",
       "requestHost": "openai.mpp.tempo.xyz",
       "method": "POST",
       "requestParameters": {
@@ -20330,6 +20520,7 @@
       "providerName": "OpenAI",
       "serviceName": "Transcribe audio with Whisper.",
       "endpointUrl": "https://openai.mpp.tempo.xyz/v1/audio/transcriptions",
+      "resourceUrl": "https://openai.mpp.tempo.xyz/v1/audio/transcriptions",
       "requestHost": "openai.mpp.tempo.xyz",
       "method": "POST",
       "requestParameters": {
@@ -20371,6 +20562,7 @@
       "providerName": "OpenAI",
       "serviceName": "Generate images with DALL-E.",
       "endpointUrl": "https://openai.mpp.tempo.xyz/v1/images/generations",
+      "resourceUrl": "https://openai.mpp.tempo.xyz/v1/images/generations",
       "requestHost": "openai.mpp.tempo.xyz",
       "method": "POST",
       "requestParameters": {
@@ -20418,6 +20610,7 @@
       "providerName": "OpenAI",
       "serviceName": "Create text embeddings.",
       "endpointUrl": "https://openai.mpp.tempo.xyz/v1/embeddings",
+      "resourceUrl": "https://openai.mpp.tempo.xyz/v1/embeddings",
       "requestHost": "openai.mpp.tempo.xyz",
       "method": "POST",
       "requestParameters": {
@@ -20459,6 +20652,7 @@
       "providerName": "OpenAI",
       "serviceName": "Chat completions with GPT-4o, GPT-4, o1, and other models.",
       "endpointUrl": "https://openai.mpp.tempo.xyz/v1/chat/completions",
+      "resourceUrl": "https://openai.mpp.tempo.xyz/v1/chat/completions",
       "requestHost": "openai.mpp.tempo.xyz",
       "method": "POST",
       "requestParameters": {
@@ -20516,6 +20710,7 @@
       "providerName": "OpenAI",
       "serviceName": "Responses API for Codex, GPT-4o, and other models.",
       "endpointUrl": "https://openai.mpp.tempo.xyz/v1/responses",
+      "resourceUrl": "https://openai.mpp.tempo.xyz/v1/responses",
       "requestHost": "openai.mpp.tempo.xyz",
       "method": "POST",
       "requestParameters": {
@@ -20561,6 +20756,7 @@
       "providerName": "OpenRouter",
       "serviceName": "Send chat completion requests to any supported LLM model.",
       "endpointUrl": "https://api.paysponge.com/x402/purchase/svc_d5zgtpg00dvssgj28/chat/completions",
+      "resourceUrl": "https://api.paysponge.com/x402/purchase/svc_d5zgtpg00dvssgj28/chat/completions",
       "requestHost": "api.paysponge.com",
       "method": "POST",
       "requestParameters": {
@@ -20625,6 +20821,7 @@
       "providerName": "OpenRouter",
       "serviceName": "Send chat completion requests to any supported LLM model.",
       "endpointUrl": "https://api.paysponge.com/mpp/purchase/svc_d5zgtpg00dvssgj28/chat/completions",
+      "resourceUrl": "https://api.paysponge.com/mpp/purchase/svc_d5zgtpg00dvssgj28/chat/completions",
       "requestHost": "api.paysponge.com",
       "method": "POST",
       "requestParameters": {
@@ -20688,6 +20885,7 @@
       "providerName": "OpenRouter",
       "serviceName": "Send messages (Anthropic-compatible).",
       "endpointUrl": "https://api.paysponge.com/x402/purchase/svc_d5zgtpg00dvssgj28/messages",
+      "resourceUrl": "https://api.paysponge.com/x402/purchase/svc_d5zgtpg00dvssgj28/messages",
       "requestHost": "api.paysponge.com",
       "method": "POST",
       "requestParameters": {
@@ -20746,6 +20944,7 @@
       "providerName": "OpenRouter",
       "serviceName": "Send messages (Anthropic-compatible).",
       "endpointUrl": "https://api.paysponge.com/mpp/purchase/svc_d5zgtpg00dvssgj28/messages",
+      "resourceUrl": "https://api.paysponge.com/mpp/purchase/svc_d5zgtpg00dvssgj28/messages",
       "requestHost": "api.paysponge.com",
       "method": "POST",
       "requestParameters": {
@@ -20803,6 +21002,7 @@
       "providerName": "OpenRouter",
       "serviceName": "Send text completion requests.",
       "endpointUrl": "https://api.paysponge.com/x402/purchase/svc_d5zgtpg00dvssgj28/completions",
+      "resourceUrl": "https://api.paysponge.com/x402/purchase/svc_d5zgtpg00dvssgj28/completions",
       "requestHost": "api.paysponge.com",
       "method": "POST",
       "requestParameters": {
@@ -20849,6 +21049,7 @@
       "providerName": "OpenRouter",
       "serviceName": "Send text completion requests.",
       "endpointUrl": "https://api.paysponge.com/mpp/purchase/svc_d5zgtpg00dvssgj28/completions",
+      "resourceUrl": "https://api.paysponge.com/mpp/purchase/svc_d5zgtpg00dvssgj28/completions",
       "requestHost": "api.paysponge.com",
       "method": "POST",
       "requestParameters": {
@@ -20894,6 +21095,7 @@
       "providerName": "OpenRouter",
       "serviceName": "Generate embeddings for text input.",
       "endpointUrl": "https://api.paysponge.com/x402/purchase/svc_d5zgtpg00dvssgj28/embeddings",
+      "resourceUrl": "https://api.paysponge.com/x402/purchase/svc_d5zgtpg00dvssgj28/embeddings",
       "requestHost": "api.paysponge.com",
       "method": "POST",
       "requestParameters": {
@@ -20936,6 +21138,7 @@
       "providerName": "OpenRouter",
       "serviceName": "Generate embeddings for text input.",
       "endpointUrl": "https://api.paysponge.com/mpp/purchase/svc_d5zgtpg00dvssgj28/embeddings",
+      "resourceUrl": "https://api.paysponge.com/mpp/purchase/svc_d5zgtpg00dvssgj28/embeddings",
       "requestHost": "api.paysponge.com",
       "method": "POST",
       "requestParameters": {
@@ -20977,6 +21180,7 @@
       "providerName": "OpenRouter",
       "serviceName": "Send a response request (OpenAI Responses API compatible).",
       "endpointUrl": "https://api.paysponge.com/x402/purchase/svc_d5zgtpg00dvssgj28/responses",
+      "resourceUrl": "https://api.paysponge.com/x402/purchase/svc_d5zgtpg00dvssgj28/responses",
       "requestHost": "api.paysponge.com",
       "method": "POST",
       "requestParameters": {
@@ -21025,6 +21229,7 @@
       "providerName": "OpenRouter",
       "serviceName": "Send a response request (OpenAI Responses API compatible).",
       "endpointUrl": "https://api.paysponge.com/mpp/purchase/svc_d5zgtpg00dvssgj28/responses",
+      "resourceUrl": "https://api.paysponge.com/mpp/purchase/svc_d5zgtpg00dvssgj28/responses",
       "requestHost": "api.paysponge.com",
       "method": "POST",
       "requestParameters": {
@@ -21072,6 +21277,7 @@
       "providerName": "OpenWeather",
       "serviceName": "Convert a location name to coordinates.",
       "endpointUrl": "https://weather.mpp.paywithlocus.com/openweather/geocode-direct",
+      "resourceUrl": "https://weather.mpp.paywithlocus.com/openweather/geocode-direct",
       "requestHost": "weather.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -21101,6 +21307,7 @@
       "providerName": "OpenWeather",
       "serviceName": "Get a comprehensive weather overview.",
       "endpointUrl": "https://weather.mpp.paywithlocus.com/openweather/weather-overview",
+      "resourceUrl": "https://weather.mpp.paywithlocus.com/openweather/weather-overview",
       "requestHost": "weather.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -21130,6 +21337,7 @@
       "providerName": "OpenWeather",
       "serviceName": "Get 5-day / 3-hour weather forecast.",
       "endpointUrl": "https://weather.mpp.paywithlocus.com/openweather/forecast-5day",
+      "resourceUrl": "https://weather.mpp.paywithlocus.com/openweather/forecast-5day",
       "requestHost": "weather.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -21159,6 +21367,7 @@
       "providerName": "OpenWeather",
       "serviceName": "Get current weather conditions for a location.",
       "endpointUrl": "https://weather.mpp.paywithlocus.com/openweather/current-weather",
+      "resourceUrl": "https://weather.mpp.paywithlocus.com/openweather/current-weather",
       "requestHost": "weather.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -21188,6 +21397,7 @@
       "providerName": "OpenWeather",
       "serviceName": "Convert coordinates to a location name.",
       "endpointUrl": "https://weather.mpp.paywithlocus.com/openweather/geocode-reverse",
+      "resourceUrl": "https://weather.mpp.paywithlocus.com/openweather/geocode-reverse",
       "requestHost": "weather.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -21217,6 +21427,7 @@
       "providerName": "OpenWeather",
       "serviceName": "Get air quality index and pollutant data.",
       "endpointUrl": "https://weather.mpp.paywithlocus.com/openweather/air-quality",
+      "resourceUrl": "https://weather.mpp.paywithlocus.com/openweather/air-quality",
       "requestHost": "weather.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -21246,6 +21457,7 @@
       "providerName": "OpenWeather",
       "serviceName": "Convert a zip code to coordinates.",
       "endpointUrl": "https://weather.mpp.paywithlocus.com/openweather/geocode-zip",
+      "resourceUrl": "https://weather.mpp.paywithlocus.com/openweather/geocode-zip",
       "requestHost": "weather.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -21275,6 +21487,7 @@
       "providerName": "Orca Whirlpools",
       "serviceName": "Build a withdrawal transaction for an existing liquidity position. If withdrawing 100%, also closes the position and burns the Orca NFT.",
       "endpointUrl": "https://api.paysponge.com/x402/purchase/svc_d6y9cggxhd3pcq41m/v1/withdraw",
+      "resourceUrl": "https://api.paysponge.com/x402/purchase/svc_d6y9cggxhd3pcq41m/v1/withdraw",
       "requestHost": "api.paysponge.com",
       "method": "POST",
       "requestParameters": {
@@ -21323,6 +21536,7 @@
       "providerName": "Orca Whirlpools",
       "serviceName": "Build a withdrawal transaction for an existing liquidity position. If withdrawing 100%, also closes the position and burns the Orca NFT.",
       "endpointUrl": "https://api.paysponge.com/mpp/purchase/svc_d6y9cggxhd3pcq41m/v1/withdraw",
+      "resourceUrl": "https://api.paysponge.com/mpp/purchase/svc_d6y9cggxhd3pcq41m/v1/withdraw",
       "requestHost": "api.paysponge.com",
       "method": "POST",
       "requestParameters": {
@@ -21370,6 +21584,7 @@
       "providerName": "Orca Whirlpools",
       "serviceName": "One-shot deposit into a concentrated liquidity pool. Handles pool selection, price range, and transaction creation automatically.",
       "endpointUrl": "https://api.paysponge.com/x402/purchase/svc_d6y9cggxhd3pcq41m/v1/deposit",
+      "resourceUrl": "https://api.paysponge.com/x402/purchase/svc_d6y9cggxhd3pcq41m/v1/deposit",
       "requestHost": "api.paysponge.com",
       "method": "POST",
       "requestParameters": {
@@ -21428,6 +21643,7 @@
       "providerName": "Orca Whirlpools",
       "serviceName": "One-shot deposit into a concentrated liquidity pool. Handles pool selection, price range, and transaction creation automatically.",
       "endpointUrl": "https://api.paysponge.com/mpp/purchase/svc_d6y9cggxhd3pcq41m/v1/deposit",
+      "resourceUrl": "https://api.paysponge.com/mpp/purchase/svc_d6y9cggxhd3pcq41m/v1/deposit",
       "requestHost": "api.paysponge.com",
       "method": "POST",
       "requestParameters": {
@@ -21485,6 +21701,7 @@
       "providerName": "Orca Whirlpools",
       "serviceName": "Calculate liquidity and token amounts for a proposed deposit before building a transaction.",
       "endpointUrl": "https://api.paysponge.com/x402/purchase/svc_d6y9cggxhd3pcq41m/v1/quote",
+      "resourceUrl": "https://api.paysponge.com/x402/purchase/svc_d6y9cggxhd3pcq41m/v1/quote",
       "requestHost": "api.paysponge.com",
       "method": "POST",
       "requestParameters": {
@@ -21541,6 +21758,7 @@
       "providerName": "Orca Whirlpools",
       "serviceName": "Calculate liquidity and token amounts for a proposed deposit before building a transaction.",
       "endpointUrl": "https://api.paysponge.com/mpp/purchase/svc_d6y9cggxhd3pcq41m/v1/quote",
+      "resourceUrl": "https://api.paysponge.com/mpp/purchase/svc_d6y9cggxhd3pcq41m/v1/quote",
       "requestHost": "api.paysponge.com",
       "method": "POST",
       "requestParameters": {
@@ -21596,6 +21814,7 @@
       "providerName": "Orca Whirlpools",
       "serviceName": "Build a ready-to-sign deposit transaction with explicit tick and liquidity parameters.",
       "endpointUrl": "https://api.paysponge.com/x402/purchase/svc_d6y9cggxhd3pcq41m/v1/transaction",
+      "resourceUrl": "https://api.paysponge.com/x402/purchase/svc_d6y9cggxhd3pcq41m/v1/transaction",
       "requestHost": "api.paysponge.com",
       "method": "POST",
       "requestParameters": {
@@ -21656,6 +21875,7 @@
       "providerName": "Orca Whirlpools",
       "serviceName": "Build a ready-to-sign deposit transaction with explicit tick and liquidity parameters.",
       "endpointUrl": "https://api.paysponge.com/mpp/purchase/svc_d6y9cggxhd3pcq41m/v1/transaction",
+      "resourceUrl": "https://api.paysponge.com/mpp/purchase/svc_d6y9cggxhd3pcq41m/v1/transaction",
       "requestHost": "api.paysponge.com",
       "method": "POST",
       "requestParameters": {
@@ -21942,6 +22162,7 @@
       "providerName": "Oxylabs",
       "serviceName": "Scrape a public URL with optional geo-targeting and JS rendering.",
       "endpointUrl": "https://oxylabs.mpp.tempo.xyz/v1/proxy",
+      "resourceUrl": "https://oxylabs.mpp.tempo.xyz/v1/proxy",
       "requestHost": "oxylabs.mpp.tempo.xyz",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -21971,6 +22192,7 @@
       "providerName": "Parallel",
       "serviceName": "Extract content from a web page.",
       "endpointUrl": "https://parallelmpp.dev/api/extract",
+      "resourceUrl": "https://parallelmpp.dev/api/extract",
       "requestHost": "parallelmpp.dev",
       "method": "POST",
       "requestParameters": {
@@ -22010,6 +22232,7 @@
       "providerName": "Parallel",
       "serviceName": "Search the web.",
       "endpointUrl": "https://parallelmpp.dev/api/search",
+      "resourceUrl": "https://parallelmpp.dev/api/search",
       "requestHost": "parallelmpp.dev",
       "method": "POST",
       "requestParameters": {
@@ -22049,6 +22272,7 @@
       "providerName": "Parallel",
       "serviceName": "Run a multi-hop web research task.",
       "endpointUrl": "https://parallelmpp.dev/api/task",
+      "resourceUrl": "https://parallelmpp.dev/api/task",
       "requestHost": "parallelmpp.dev",
       "method": "POST",
       "requestParameters": {
@@ -22088,6 +22312,7 @@
       "providerName": "Perplexity",
       "serviceName": "Chat completion with Sonar models and web citations.",
       "endpointUrl": "https://perplexity.mpp.paywithlocus.com/perplexity/chat",
+      "resourceUrl": "https://perplexity.mpp.paywithlocus.com/perplexity/chat",
       "requestHost": "perplexity.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -22117,6 +22342,7 @@
       "providerName": "Perplexity",
       "serviceName": "Generate text embeddings.",
       "endpointUrl": "https://perplexity.mpp.paywithlocus.com/perplexity/embed",
+      "resourceUrl": "https://perplexity.mpp.paywithlocus.com/perplexity/embed",
       "requestHost": "perplexity.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -22146,6 +22372,7 @@
       "providerName": "Perplexity",
       "serviceName": "Web search with structured results.",
       "endpointUrl": "https://perplexity.mpp.paywithlocus.com/perplexity/search",
+      "resourceUrl": "https://perplexity.mpp.paywithlocus.com/perplexity/search",
       "requestHost": "perplexity.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -22202,6 +22429,7 @@
       "providerName": "PostalForm",
       "serviceName": "Create and pay for a print-and-mail order.",
       "endpointUrl": "https://postalform.com/api/machine/mpp/orders",
+      "resourceUrl": "https://postalform.com/api/machine/mpp/orders",
       "requestHost": "postalform.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -22231,6 +22459,7 @@
       "providerName": "PostalForm",
       "serviceName": "Quote and validate an order before payment.",
       "endpointUrl": "https://postalform.com/api/machine/mpp/orders/validate",
+      "resourceUrl": "https://postalform.com/api/machine/mpp/orders/validate",
       "requestHost": "postalform.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -22289,6 +22518,7 @@
       "providerName": "Quick Intel",
       "serviceName": "Scan any token contract across 60+ blockchains for security risks — honeypots, tax analysis, ownership status, scam patterns, and more.",
       "endpointUrl": "https://x402.quickintel.io/v1/scan/full",
+      "resourceUrl": "https://x402.quickintel.io/v1/scan/full",
       "requestHost": "x402.quickintel.io",
       "method": "POST",
       "requestParameters": {
@@ -22422,6 +22652,7 @@
       "providerName": "Reducto",
       "serviceName": "Parse a document by URL and extract structured content. Supports PDFs, images, spreadsheets, and other document formats.",
       "endpointUrl": "https://api.paysponge.com/x402/purchase/svc_d672d90ggvqqygj60/parse",
+      "resourceUrl": "https://api.paysponge.com/x402/purchase/svc_d672d90ggvqqygj60/parse",
       "requestHost": "api.paysponge.com",
       "method": "POST",
       "requestParameters": {
@@ -22470,6 +22701,7 @@
       "providerName": "Reducto",
       "serviceName": "Parse a document by URL and extract structured content. Supports PDFs, images, spreadsheets, and other document formats.",
       "endpointUrl": "https://api.paysponge.com/mpp/purchase/svc_d672d90ggvqqygj60/parse",
+      "resourceUrl": "https://api.paysponge.com/mpp/purchase/svc_d672d90ggvqqygj60/parse",
       "requestHost": "api.paysponge.com",
       "method": "POST",
       "requestParameters": {
@@ -22517,6 +22749,7 @@
       "providerName": "Reducto",
       "serviceName": "Pull specific data from documents into structured JSON.",
       "endpointUrl": "https://api.paysponge.com/x402/purchase/svc_d672d90ggvqqygj60/extract",
+      "resourceUrl": "https://api.paysponge.com/x402/purchase/svc_d672d90ggvqqygj60/extract",
       "requestHost": "api.paysponge.com",
       "method": "POST",
       "requestParameters": {
@@ -22577,6 +22810,7 @@
       "providerName": "Reducto",
       "serviceName": "Pull specific data from documents into structured JSON.",
       "endpointUrl": "https://api.paysponge.com/mpp/purchase/svc_d672d90ggvqqygj60/extract",
+      "resourceUrl": "https://api.paysponge.com/mpp/purchase/svc_d672d90ggvqqygj60/extract",
       "requestHost": "api.paysponge.com",
       "method": "POST",
       "requestParameters": {
@@ -22636,6 +22870,7 @@
       "providerName": "RentCast",
       "serviceName": "Get comparable sale properties.",
       "endpointUrl": "https://rentcast.mpp.paywithlocus.com/rentcast/comparable-sale",
+      "resourceUrl": "https://rentcast.mpp.paywithlocus.com/rentcast/comparable-sale",
       "requestHost": "rentcast.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -22665,6 +22900,7 @@
       "providerName": "RentCast",
       "serviceName": "Get comparable rental properties.",
       "endpointUrl": "https://rentcast.mpp.paywithlocus.com/rentcast/comparable-rent",
+      "resourceUrl": "https://rentcast.mpp.paywithlocus.com/rentcast/comparable-rent",
       "requestHost": "rentcast.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -22694,6 +22930,7 @@
       "providerName": "RentCast",
       "serviceName": "Get property details by ID.",
       "endpointUrl": "https://rentcast.mpp.paywithlocus.com/rentcast/property-by-id",
+      "resourceUrl": "https://rentcast.mpp.paywithlocus.com/rentcast/property-by-id",
       "requestHost": "rentcast.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -22723,6 +22960,7 @@
       "providerName": "RentCast",
       "serviceName": "Get random property records.",
       "endpointUrl": "https://rentcast.mpp.paywithlocus.com/rentcast/random-properties",
+      "resourceUrl": "https://rentcast.mpp.paywithlocus.com/rentcast/random-properties",
       "requestHost": "rentcast.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -22752,6 +22990,7 @@
       "providerName": "RentCast",
       "serviceName": "Search property records by address, city, state, zip, or coordinates.",
       "endpointUrl": "https://rentcast.mpp.paywithlocus.com/rentcast/properties",
+      "resourceUrl": "https://rentcast.mpp.paywithlocus.com/rentcast/properties",
       "requestHost": "rentcast.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -22781,6 +23020,7 @@
       "providerName": "RentCast",
       "serviceName": "Get rent estimate for a property.",
       "endpointUrl": "https://rentcast.mpp.paywithlocus.com/rentcast/rent-estimate",
+      "resourceUrl": "https://rentcast.mpp.paywithlocus.com/rentcast/rent-estimate",
       "requestHost": "rentcast.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -22810,6 +23050,7 @@
       "providerName": "RentCast",
       "serviceName": "Get market statistics for an area.",
       "endpointUrl": "https://rentcast.mpp.paywithlocus.com/rentcast/market-statistics",
+      "resourceUrl": "https://rentcast.mpp.paywithlocus.com/rentcast/market-statistics",
       "requestHost": "rentcast.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -22839,6 +23080,7 @@
       "providerName": "RentCast",
       "serviceName": "Get property value estimate.",
       "endpointUrl": "https://rentcast.mpp.paywithlocus.com/rentcast/value-estimate",
+      "resourceUrl": "https://rentcast.mpp.paywithlocus.com/rentcast/value-estimate",
       "requestHost": "rentcast.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -22868,6 +23110,7 @@
       "providerName": "RentCast",
       "serviceName": "Search sale listings.",
       "endpointUrl": "https://rentcast.mpp.paywithlocus.com/rentcast/sale-listings",
+      "resourceUrl": "https://rentcast.mpp.paywithlocus.com/rentcast/sale-listings",
       "requestHost": "rentcast.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -22897,6 +23140,7 @@
       "providerName": "RentCast",
       "serviceName": "Search rental listings.",
       "endpointUrl": "https://rentcast.mpp.paywithlocus.com/rentcast/rental-listings",
+      "resourceUrl": "https://rentcast.mpp.paywithlocus.com/rentcast/rental-listings",
       "requestHost": "rentcast.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -22926,6 +23170,7 @@
       "providerName": "Replicate",
       "serviceName": "Get details about a model.",
       "endpointUrl": "https://replicate.mpp.paywithlocus.com/replicate/get-model",
+      "resourceUrl": "https://replicate.mpp.paywithlocus.com/replicate/get-model",
       "requestHost": "replicate.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -22955,6 +23200,7 @@
       "providerName": "Replicate",
       "serviceName": "Get the status and output of a prediction.",
       "endpointUrl": "https://replicate.mpp.paywithlocus.com/replicate/get-prediction",
+      "resourceUrl": "https://replicate.mpp.paywithlocus.com/replicate/get-prediction",
       "requestHost": "replicate.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -22984,6 +23230,7 @@
       "providerName": "Replicate",
       "serviceName": "List available models.",
       "endpointUrl": "https://replicate.mpp.paywithlocus.com/replicate/list-models",
+      "resourceUrl": "https://replicate.mpp.paywithlocus.com/replicate/list-models",
       "requestHost": "replicate.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -23013,6 +23260,7 @@
       "providerName": "Replicate",
       "serviceName": "Run a model prediction — price varies by model.",
       "endpointUrl": "https://replicate.mpp.paywithlocus.com/replicate/run",
+      "resourceUrl": "https://replicate.mpp.paywithlocus.com/replicate/run",
       "requestHost": "replicate.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -23592,6 +23840,7 @@
       "providerName": "Stability AI",
       "serviceName": "Generate images with Stable Diffusion 3.",
       "endpointUrl": "https://stability.mpp.paywithlocus.com/stability-ai/generate-sd3",
+      "resourceUrl": "https://stability.mpp.paywithlocus.com/stability-ai/generate-sd3",
       "requestHost": "stability.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -23621,6 +23870,7 @@
       "providerName": "Stability AI",
       "serviceName": "Erase objects from an image.",
       "endpointUrl": "https://stability.mpp.paywithlocus.com/stability-ai/edit-erase",
+      "resourceUrl": "https://stability.mpp.paywithlocus.com/stability-ai/edit-erase",
       "requestHost": "stability.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -23650,6 +23900,7 @@
       "providerName": "Stability AI",
       "serviceName": "Generate from style guidance.",
       "endpointUrl": "https://stability.mpp.paywithlocus.com/stability-ai/control-style",
+      "resourceUrl": "https://stability.mpp.paywithlocus.com/stability-ai/control-style",
       "requestHost": "stability.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -23679,6 +23930,7 @@
       "providerName": "Stability AI",
       "serviceName": "Search and replace objects in an image.",
       "endpointUrl": "https://stability.mpp.paywithlocus.com/stability-ai/edit-search-replace",
+      "resourceUrl": "https://stability.mpp.paywithlocus.com/stability-ai/edit-search-replace",
       "requestHost": "stability.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -23708,6 +23960,7 @@
       "providerName": "Stability AI",
       "serviceName": "Generate high-quality images with Ultra model.",
       "endpointUrl": "https://stability.mpp.paywithlocus.com/stability-ai/generate-ultra",
+      "resourceUrl": "https://stability.mpp.paywithlocus.com/stability-ai/generate-ultra",
       "requestHost": "stability.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -23737,6 +23990,7 @@
       "providerName": "Stability AI",
       "serviceName": "Generate video from an image.",
       "endpointUrl": "https://stability.mpp.paywithlocus.com/stability-ai/image-to-video",
+      "resourceUrl": "https://stability.mpp.paywithlocus.com/stability-ai/image-to-video",
       "requestHost": "stability.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -23795,6 +24049,7 @@
       "providerName": "Stability AI",
       "serviceName": "Conservative image upscale.",
       "endpointUrl": "https://stability.mpp.paywithlocus.com/stability-ai/upscale-conservative",
+      "resourceUrl": "https://stability.mpp.paywithlocus.com/stability-ai/upscale-conservative",
       "requestHost": "stability.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -23824,6 +24079,7 @@
       "providerName": "Stability AI",
       "serviceName": "Generate audio from a prompt.",
       "endpointUrl": "https://stability.mpp.paywithlocus.com/stability-ai/generate-audio",
+      "resourceUrl": "https://stability.mpp.paywithlocus.com/stability-ai/generate-audio",
       "requestHost": "stability.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -23911,6 +24167,7 @@
       "providerName": "Stability AI",
       "serviceName": "Remove background from an image.",
       "endpointUrl": "https://stability.mpp.paywithlocus.com/stability-ai/edit-remove-background",
+      "resourceUrl": "https://stability.mpp.paywithlocus.com/stability-ai/edit-remove-background",
       "requestHost": "stability.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -23940,6 +24197,7 @@
       "providerName": "Stability AI",
       "serviceName": "Inpaint part of an image.",
       "endpointUrl": "https://stability.mpp.paywithlocus.com/stability-ai/edit-inpaint",
+      "resourceUrl": "https://stability.mpp.paywithlocus.com/stability-ai/edit-inpaint",
       "requestHost": "stability.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -23969,6 +24227,7 @@
       "providerName": "Stability AI",
       "serviceName": "Generate images with Core model.",
       "endpointUrl": "https://stability.mpp.paywithlocus.com/stability-ai/generate-core",
+      "resourceUrl": "https://stability.mpp.paywithlocus.com/stability-ai/generate-core",
       "requestHost": "stability.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -23998,6 +24257,7 @@
       "providerName": "Stability AI",
       "serviceName": "Fast 4x image upscale.",
       "endpointUrl": "https://stability.mpp.paywithlocus.com/stability-ai/upscale-fast",
+      "resourceUrl": "https://stability.mpp.paywithlocus.com/stability-ai/upscale-fast",
       "requestHost": "stability.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -24027,6 +24287,7 @@
       "providerName": "Stability AI",
       "serviceName": "Generate from structure guidance.",
       "endpointUrl": "https://stability.mpp.paywithlocus.com/stability-ai/control-structure",
+      "resourceUrl": "https://stability.mpp.paywithlocus.com/stability-ai/control-structure",
       "requestHost": "stability.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -24085,6 +24346,7 @@
       "providerName": "Stability AI",
       "serviceName": "Image-to-video with custom parameters.",
       "endpointUrl": "https://stability.mpp.paywithlocus.com/stability-ai/video-from-image",
+      "resourceUrl": "https://stability.mpp.paywithlocus.com/stability-ai/video-from-image",
       "requestHost": "stability.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -24114,6 +24376,7 @@
       "providerName": "Stability AI",
       "serviceName": "Generate a 3D model from an image.",
       "endpointUrl": "https://stability.mpp.paywithlocus.com/stability-ai/generate-3d",
+      "resourceUrl": "https://stability.mpp.paywithlocus.com/stability-ai/generate-3d",
       "requestHost": "stability.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -24143,6 +24406,7 @@
       "providerName": "Stability AI",
       "serviceName": "Generate from sketch guidance.",
       "endpointUrl": "https://stability.mpp.paywithlocus.com/stability-ai/control-sketch",
+      "resourceUrl": "https://stability.mpp.paywithlocus.com/stability-ai/control-sketch",
       "requestHost": "stability.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -24172,6 +24436,7 @@
       "providerName": "Stability AI",
       "serviceName": "Extend an image beyond its borders.",
       "endpointUrl": "https://stability.mpp.paywithlocus.com/stability-ai/edit-outpaint",
+      "resourceUrl": "https://stability.mpp.paywithlocus.com/stability-ai/edit-outpaint",
       "requestHost": "stability.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -24230,6 +24495,7 @@
       "providerName": "Stability AI",
       "serviceName": "Creative image upscale.",
       "endpointUrl": "https://stability.mpp.paywithlocus.com/stability-ai/upscale-creative",
+      "resourceUrl": "https://stability.mpp.paywithlocus.com/stability-ai/upscale-creative",
       "requestHost": "stability.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -24259,6 +24525,7 @@
       "providerName": "StableEmail",
       "serviceName": "Send email from an inbox address.",
       "endpointUrl": "https://stableemail.dev/api/inbox/send",
+      "resourceUrl": "https://stableemail.dev/api/inbox/send",
       "requestHost": "stableemail.dev",
       "method": "POST",
       "requestParameters": {
@@ -24306,6 +24573,7 @@
       "providerName": "StableEmail",
       "serviceName": "Read a single inbox message.",
       "endpointUrl": "https://stableemail.dev/api/inbox/messages/read",
+      "resourceUrl": "https://stableemail.dev/api/inbox/messages/read",
       "requestHost": "stableemail.dev",
       "method": "POST",
       "requestParameters": {
@@ -24347,6 +24615,7 @@
       "providerName": "StableEmail",
       "serviceName": "Send an email from a relay address.",
       "endpointUrl": "https://stableemail.dev/api/send",
+      "resourceUrl": "https://stableemail.dev/api/send",
       "requestHost": "stableemail.dev",
       "method": "POST",
       "requestParameters": {
@@ -24392,6 +24661,7 @@
       "providerName": "StableEmail",
       "serviceName": "Purchase a custom email subdomain.",
       "endpointUrl": "https://stableemail.dev/api/subdomain/buy",
+      "resourceUrl": "https://stableemail.dev/api/subdomain/buy",
       "requestHost": "stableemail.dev",
       "method": "POST",
       "requestParameters": {
@@ -24431,6 +24701,7 @@
       "providerName": "StableEmail",
       "serviceName": "Buy a forwarding inbox (30 days).",
       "endpointUrl": "https://stableemail.dev/api/inbox/buy",
+      "resourceUrl": "https://stableemail.dev/api/inbox/buy",
       "requestHost": "stableemail.dev",
       "method": "POST",
       "requestParameters": {
@@ -24470,6 +24741,7 @@
       "providerName": "StableEmail",
       "serviceName": "List messages in an inbox.",
       "endpointUrl": "https://stableemail.dev/api/inbox/messages",
+      "resourceUrl": "https://stableemail.dev/api/inbox/messages",
       "requestHost": "stableemail.dev",
       "method": "POST",
       "requestParameters": {
@@ -24509,6 +24781,7 @@
       "providerName": "StableEmail",
       "serviceName": "Send email from a custom subdomain.",
       "endpointUrl": "https://stableemail.dev/api/subdomain/send",
+      "resourceUrl": "https://stableemail.dev/api/subdomain/send",
       "requestHost": "stableemail.dev",
       "method": "POST",
       "requestParameters": {
@@ -24558,6 +24831,7 @@
       "providerName": "StableEnrich",
       "serviceName": "Google Maps text search with full place details.",
       "endpointUrl": "https://stableenrich.dev/api/google-maps/text-search/full",
+      "resourceUrl": "https://stableenrich.dev/api/google-maps/text-search/full",
       "requestHost": "stableenrich.dev",
       "method": "POST",
       "requestParameters": {
@@ -24597,6 +24871,7 @@
       "providerName": "StableEnrich",
       "serviceName": "Scrape a full LinkedIn profile.",
       "endpointUrl": "https://stableenrich.dev/api/clado/linkedin-scrape",
+      "resourceUrl": "https://stableenrich.dev/api/clado/linkedin-scrape",
       "requestHost": "stableenrich.dev",
       "method": "POST",
       "requestParameters": {
@@ -24636,6 +24911,7 @@
       "providerName": "StableEnrich",
       "serviceName": "Find companies by filters.",
       "endpointUrl": "https://stableenrich.dev/api/apollo/org-search",
+      "resourceUrl": "https://stableenrich.dev/api/apollo/org-search",
       "requestHost": "stableenrich.dev",
       "method": "POST",
       "requestParameters": {
@@ -24687,6 +24963,7 @@
       "providerName": "StableEnrich",
       "serviceName": "Scrape a URL with full JavaScript rendering.",
       "endpointUrl": "https://stableenrich.dev/api/firecrawl/scrape",
+      "resourceUrl": "https://stableenrich.dev/api/firecrawl/scrape",
       "requestHost": "stableenrich.dev",
       "method": "POST",
       "requestParameters": {
@@ -24726,6 +25003,7 @@
       "providerName": "StableEnrich",
       "serviceName": "Enrich a company by domain.",
       "endpointUrl": "https://stableenrich.dev/api/apollo/org-enrich",
+      "resourceUrl": "https://stableenrich.dev/api/apollo/org-enrich",
       "requestHost": "stableenrich.dev",
       "method": "POST",
       "requestParameters": {
@@ -24765,6 +25043,7 @@
       "providerName": "StableEnrich",
       "serviceName": "Enrich a person by email, name, or domain.",
       "endpointUrl": "https://stableenrich.dev/api/apollo/people-enrich",
+      "resourceUrl": "https://stableenrich.dev/api/apollo/people-enrich",
       "requestHost": "stableenrich.dev",
       "method": "POST",
       "requestParameters": {
@@ -24810,6 +25089,7 @@
       "providerName": "StableEnrich",
       "serviceName": "Find prospects by filters.",
       "endpointUrl": "https://stableenrich.dev/api/apollo/people-search",
+      "resourceUrl": "https://stableenrich.dev/api/apollo/people-search",
       "requestHost": "stableenrich.dev",
       "method": "POST",
       "requestParameters": {
@@ -24869,6 +25149,7 @@
       "providerName": "StableEnrich",
       "serviceName": "Search Reddit posts.",
       "endpointUrl": "https://stableenrich.dev/api/reddit/search",
+      "resourceUrl": "https://stableenrich.dev/api/reddit/search",
       "requestHost": "stableenrich.dev",
       "method": "POST",
       "requestParameters": {
@@ -24908,6 +25189,7 @@
       "providerName": "StableEnrich",
       "serviceName": "Search X/Twitter posts.",
       "endpointUrl": "https://stableenrich.dev/api/grok/x-search",
+      "resourceUrl": "https://stableenrich.dev/api/grok/x-search",
       "requestHost": "stableenrich.dev",
       "method": "POST",
       "requestParameters": {
@@ -24947,6 +25229,7 @@
       "providerName": "StableEnrich",
       "serviceName": "Verify email deliverability.",
       "endpointUrl": "https://stableenrich.dev/api/hunter/email-verifier",
+      "resourceUrl": "https://stableenrich.dev/api/hunter/email-verifier",
       "requestHost": "stableenrich.dev",
       "method": "POST",
       "requestParameters": {
@@ -24986,6 +25269,7 @@
       "providerName": "StableEnrich",
       "serviceName": "Google News search.",
       "endpointUrl": "https://stableenrich.dev/api/serper/news",
+      "resourceUrl": "https://stableenrich.dev/api/serper/news",
       "requestHost": "stableenrich.dev",
       "method": "POST",
       "requestParameters": {
@@ -25025,6 +25309,7 @@
       "providerName": "StableEnrich",
       "serviceName": "Neural web search.",
       "endpointUrl": "https://stableenrich.dev/api/exa/search",
+      "resourceUrl": "https://stableenrich.dev/api/exa/search",
       "requestHost": "stableenrich.dev",
       "method": "POST",
       "requestParameters": {
@@ -25066,6 +25351,7 @@
       "providerName": "StablePhone",
       "serviceName": "Make an AI phone call.",
       "endpointUrl": "https://stablephone.dev/api/call",
+      "resourceUrl": "https://stablephone.dev/api/call",
       "requestHost": "stablephone.dev",
       "method": "POST",
       "requestParameters": {
@@ -25170,6 +25456,7 @@
       "providerName": "StablePhone",
       "serviceName": "Extend a phone number 30 days.",
       "endpointUrl": "https://stablephone.dev/api/number/topup",
+      "resourceUrl": "https://stablephone.dev/api/number/topup",
       "requestHost": "stablephone.dev",
       "method": "POST",
       "requestParameters": {
@@ -25209,6 +25496,7 @@
       "providerName": "StablePhone",
       "serviceName": "Buy a phone number (30 days).",
       "endpointUrl": "https://stablephone.dev/api/number",
+      "resourceUrl": "https://stablephone.dev/api/number",
       "requestHost": "stablephone.dev",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -25238,6 +25526,7 @@
       "providerName": "StablePhone",
       "serviceName": "iMessage/FaceTime lookup.",
       "endpointUrl": "https://stablephone.dev/api/lookup",
+      "resourceUrl": "https://stablephone.dev/api/lookup",
       "requestHost": "stablephone.dev",
       "method": "POST",
       "requestParameters": {
@@ -25277,6 +25566,7 @@
       "providerName": "StableSocial",
       "serviceName": "Get Instagram user profile.",
       "endpointUrl": "https://stablesocial.dev/api/instagram/profile",
+      "resourceUrl": "https://stablesocial.dev/api/instagram/profile",
       "requestHost": "stablesocial.dev",
       "method": "POST",
       "requestParameters": {
@@ -25316,6 +25606,7 @@
       "providerName": "StableSocial",
       "serviceName": "Get Facebook page/user posts.",
       "endpointUrl": "https://stablesocial.dev/api/facebook/posts",
+      "resourceUrl": "https://stablesocial.dev/api/facebook/posts",
       "requestHost": "stablesocial.dev",
       "method": "POST",
       "requestParameters": {
@@ -25355,6 +25646,7 @@
       "providerName": "StableSocial",
       "serviceName": "Get TikTok user posts.",
       "endpointUrl": "https://stablesocial.dev/api/tiktok/posts",
+      "resourceUrl": "https://stablesocial.dev/api/tiktok/posts",
       "requestHost": "stablesocial.dev",
       "method": "POST",
       "requestParameters": {
@@ -25394,6 +25686,7 @@
       "providerName": "StableSocial",
       "serviceName": "Search Reddit posts by keyword.",
       "endpointUrl": "https://stablesocial.dev/api/reddit/search",
+      "resourceUrl": "https://stablesocial.dev/api/reddit/search",
       "requestHost": "stablesocial.dev",
       "method": "POST",
       "requestParameters": {
@@ -25433,6 +25726,7 @@
       "providerName": "StableSocial",
       "serviceName": "Get Facebook page/user profile.",
       "endpointUrl": "https://stablesocial.dev/api/facebook/profile",
+      "resourceUrl": "https://stablesocial.dev/api/facebook/profile",
       "requestHost": "stablesocial.dev",
       "method": "POST",
       "requestParameters": {
@@ -25472,6 +25766,7 @@
       "providerName": "StableSocial",
       "serviceName": "Get Reddit post details.",
       "endpointUrl": "https://stablesocial.dev/api/reddit/post",
+      "resourceUrl": "https://stablesocial.dev/api/reddit/post",
       "requestHost": "stablesocial.dev",
       "method": "POST",
       "requestParameters": {
@@ -25511,6 +25806,7 @@
       "providerName": "StableSocial",
       "serviceName": "Search Facebook posts by keyword.",
       "endpointUrl": "https://stablesocial.dev/api/facebook/search",
+      "resourceUrl": "https://stablesocial.dev/api/facebook/search",
       "requestHost": "stablesocial.dev",
       "method": "POST",
       "requestParameters": {
@@ -25550,6 +25846,7 @@
       "providerName": "StableSocial",
       "serviceName": "Get TikTok user profile.",
       "endpointUrl": "https://stablesocial.dev/api/tiktok/profile",
+      "resourceUrl": "https://stablesocial.dev/api/tiktok/profile",
       "requestHost": "stablesocial.dev",
       "method": "POST",
       "requestParameters": {
@@ -25589,6 +25886,7 @@
       "providerName": "StableSocial",
       "serviceName": "Get subreddit posts.",
       "endpointUrl": "https://stablesocial.dev/api/reddit/subreddit",
+      "resourceUrl": "https://stablesocial.dev/api/reddit/subreddit",
       "requestHost": "stablesocial.dev",
       "method": "POST",
       "requestParameters": {
@@ -25628,6 +25926,7 @@
       "providerName": "StableSocial",
       "serviceName": "Search Instagram posts by keyword.",
       "endpointUrl": "https://stablesocial.dev/api/instagram/search",
+      "resourceUrl": "https://stablesocial.dev/api/instagram/search",
       "requestHost": "stablesocial.dev",
       "method": "POST",
       "requestParameters": {
@@ -25667,6 +25966,7 @@
       "providerName": "StableSocial",
       "serviceName": "Search TikTok posts by keyword.",
       "endpointUrl": "https://stablesocial.dev/api/tiktok/search",
+      "resourceUrl": "https://stablesocial.dev/api/tiktok/search",
       "requestHost": "stablesocial.dev",
       "method": "POST",
       "requestParameters": {
@@ -25706,6 +26006,7 @@
       "providerName": "StableSocial",
       "serviceName": "Get Instagram user posts.",
       "endpointUrl": "https://stablesocial.dev/api/instagram/posts",
+      "resourceUrl": "https://stablesocial.dev/api/instagram/posts",
       "requestHost": "stablesocial.dev",
       "method": "POST",
       "requestParameters": {
@@ -25745,6 +26046,7 @@
       "providerName": "StableStudio",
       "serviceName": "Grok image generation.",
       "endpointUrl": "https://stablestudio.dev/api/generate/grok/generate",
+      "resourceUrl": "https://stablestudio.dev/api/generate/grok/generate",
       "requestHost": "stablestudio.dev",
       "method": "POST",
       "requestParameters": {
@@ -25784,6 +26086,7 @@
       "providerName": "StableStudio",
       "serviceName": "Seedance fast video generation (~40s).",
       "endpointUrl": "https://stablestudio.dev/api/generate/seedance/generate",
+      "resourceUrl": "https://stablestudio.dev/api/generate/seedance/generate",
       "requestHost": "stablestudio.dev",
       "method": "POST",
       "requestParameters": {
@@ -25825,6 +26128,7 @@
       "providerName": "StableStudio",
       "serviceName": "GPT Image 1 generation (~10s).",
       "endpointUrl": "https://stablestudio.dev/api/generate/gpt-image/generate",
+      "resourceUrl": "https://stablestudio.dev/api/generate/gpt-image/generate",
       "requestHost": "stablestudio.dev",
       "method": "POST",
       "requestParameters": {
@@ -25868,6 +26172,7 @@
       "providerName": "StableStudio",
       "serviceName": "Sora 2 video generation (1-3 min).",
       "endpointUrl": "https://stablestudio.dev/api/generate/sora/generate",
+      "resourceUrl": "https://stablestudio.dev/api/generate/sora/generate",
       "requestHost": "stablestudio.dev",
       "method": "POST",
       "requestParameters": {
@@ -25909,6 +26214,7 @@
       "providerName": "StableStudio",
       "serviceName": "Nano Banana image generation (~5s).",
       "endpointUrl": "https://stablestudio.dev/api/generate/nano-banana/generate",
+      "resourceUrl": "https://stablestudio.dev/api/generate/nano-banana/generate",
       "requestHost": "stablestudio.dev",
       "method": "POST",
       "requestParameters": {
@@ -25952,6 +26258,7 @@
       "providerName": "StableStudio",
       "serviceName": "Flux 2 Pro image generation (~5s).",
       "endpointUrl": "https://stablestudio.dev/api/generate/flux/generate",
+      "resourceUrl": "https://stablestudio.dev/api/generate/flux/generate",
       "requestHost": "stablestudio.dev",
       "method": "POST",
       "requestParameters": {
@@ -25995,6 +26302,7 @@
       "providerName": "StableStudio",
       "serviceName": "Veo 3.1 video generation (1-2 min).",
       "endpointUrl": "https://stablestudio.dev/api/generate/veo/generate",
+      "resourceUrl": "https://stablestudio.dev/api/generate/veo/generate",
       "requestHost": "stablestudio.dev",
       "method": "POST",
       "requestParameters": {
@@ -26036,6 +26344,7 @@
       "providerName": "StableStudio",
       "serviceName": "Wan 2.5 video generation (2-5 min).",
       "endpointUrl": "https://stablestudio.dev/api/generate/wan/generate",
+      "resourceUrl": "https://stablestudio.dev/api/generate/wan/generate",
       "requestHost": "stablestudio.dev",
       "method": "POST",
       "requestParameters": {
@@ -26180,6 +26489,7 @@
       "providerName": "StableTravel",
       "serviceName": "Search flight offers.",
       "endpointUrl": "https://stabletravel.dev/api/flights/search",
+      "resourceUrl": "https://stabletravel.dev/api/flights/search",
       "requestHost": "stabletravel.dev",
       "method": "POST",
       "requestParameters": {
@@ -26299,6 +26609,7 @@
       "providerName": "StableTravel",
       "serviceName": "Book a flight (create order).",
       "endpointUrl": "https://stabletravel.dev/api/flights/book",
+      "resourceUrl": "https://stabletravel.dev/api/flights/book",
       "requestHost": "stabletravel.dev",
       "method": "POST",
       "requestParameters": {
@@ -26374,6 +26685,7 @@
       "providerName": "StableTravel",
       "serviceName": "Confirm pricing for a flight offer.",
       "endpointUrl": "https://stabletravel.dev/api/flights/price",
+      "resourceUrl": "https://stabletravel.dev/api/flights/price",
       "requestHost": "stabletravel.dev",
       "method": "POST",
       "requestParameters": {
@@ -26483,6 +26795,7 @@
       "providerName": "StableTravel",
       "serviceName": "Book a hotel offer.",
       "endpointUrl": "https://stabletravel.dev/api/hotels/book",
+      "resourceUrl": "https://stabletravel.dev/api/hotels/book",
       "requestHost": "stabletravel.dev",
       "method": "POST",
       "requestParameters": {
@@ -26551,6 +26864,7 @@
       "providerName": "StableUpload",
       "serviceName": "Buy a site upload slot for zip hosting.",
       "endpointUrl": "https://stableupload.dev/api/site",
+      "resourceUrl": "https://stableupload.dev/api/site",
       "requestHost": "stableupload.dev",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -26580,6 +26894,7 @@
       "providerName": "StableUpload",
       "serviceName": "Connect a custom domain to a site.",
       "endpointUrl": "https://stableupload.dev/api/site/domain",
+      "resourceUrl": "https://stableupload.dev/api/site/domain",
       "requestHost": "stableupload.dev",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -26609,6 +26924,7 @@
       "providerName": "StableUpload",
       "serviceName": "Extract zip and make site live.",
       "endpointUrl": "https://stableupload.dev/api/site/activate",
+      "resourceUrl": "https://stableupload.dev/api/site/activate",
       "requestHost": "stableupload.dev",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -26638,6 +26954,7 @@
       "providerName": "StableUpload",
       "serviceName": "Buy an upload slot (10MB $0.02, 100MB $0.20, 1GB $2.00).",
       "endpointUrl": "https://stableupload.dev/api/upload",
+      "resourceUrl": "https://stableupload.dev/api/upload",
       "requestHost": "stableupload.dev",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -26723,6 +27040,7 @@
       "providerName": "Stripe Climate",
       "serviceName": "Create a climate contribution. Amount in USDC cents.",
       "endpointUrl": "https://climate.stripe.dev/api/contribute",
+      "resourceUrl": "https://climate.stripe.dev/api/contribute",
       "requestHost": "climate.stripe.dev",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -26752,6 +27070,7 @@
       "providerName": "Stripe Climate",
       "serviceName": "Create a climate contribution. Amount in USDC cents.",
       "endpointUrl": "https://climate.stripe.dev/api/contribute",
+      "resourceUrl": "https://climate.stripe.dev/api/contribute",
       "requestHost": "climate.stripe.dev",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -26781,6 +27100,7 @@
       "providerName": "Suno",
       "serviceName": "Generate song lyrics from a text prompt.",
       "endpointUrl": "https://suno.mpp.paywithlocus.com/suno/generate-lyrics",
+      "resourceUrl": "https://suno.mpp.paywithlocus.com/suno/generate-lyrics",
       "requestHost": "suno.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -26810,6 +27130,7 @@
       "providerName": "Suno",
       "serviceName": "Generate a song from a text prompt or lyrics.",
       "endpointUrl": "https://suno.mpp.paywithlocus.com/suno/generate-music",
+      "resourceUrl": "https://suno.mpp.paywithlocus.com/suno/generate-music",
       "requestHost": "suno.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -26839,6 +27160,7 @@
       "providerName": "Suno",
       "serviceName": "Check the status of a music generation task.",
       "endpointUrl": "https://suno.mpp.paywithlocus.com/suno/get-music-status",
+      "resourceUrl": "https://suno.mpp.paywithlocus.com/suno/get-music-status",
       "requestHost": "suno.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -26868,6 +27190,7 @@
       "providerName": "Suno",
       "serviceName": "Extend or continue an existing song.",
       "endpointUrl": "https://suno.mpp.paywithlocus.com/suno/extend-music",
+      "resourceUrl": "https://suno.mpp.paywithlocus.com/suno/extend-music",
       "requestHost": "suno.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -26897,6 +27220,7 @@
       "providerName": "Suno",
       "serviceName": "Check the status of a music extension task.",
       "endpointUrl": "https://suno.mpp.paywithlocus.com/suno/get-extend-status",
+      "resourceUrl": "https://suno.mpp.paywithlocus.com/suno/get-extend-status",
       "requestHost": "suno.mpp.paywithlocus.com",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -26926,6 +27250,7 @@
       "providerName": "Tempo RPC",
       "serviceName": "Send a JSON-RPC request to the Tempo blockchain.",
       "endpointUrl": "https://rpc.mpp.tempo.xyz/",
+      "resourceUrl": "https://rpc.mpp.tempo.xyz/",
       "requestHost": "rpc.mpp.tempo.xyz",
       "method": "POST",
       "requestParameters": {
@@ -27040,6 +27365,7 @@
       "providerName": "Textbelt",
       "serviceName": "Send an SMS message to a US or Canada phone number.",
       "endpointUrl": "https://api.paysponge.com/x402/purchase/svc_d6kszbre4qwg5n4n4/text",
+      "resourceUrl": "https://api.paysponge.com/x402/purchase/svc_d6kszbre4qwg5n4n4/text",
       "requestHost": "api.paysponge.com",
       "method": "POST",
       "requestParameters": {
@@ -27082,6 +27408,7 @@
       "providerName": "Textbelt",
       "serviceName": "Send an SMS message to a US or Canada phone number.",
       "endpointUrl": "https://api.paysponge.com/mpp/purchase/svc_d6kszbre4qwg5n4n4/text",
+      "resourceUrl": "https://api.paysponge.com/mpp/purchase/svc_d6kszbre4qwg5n4n4/text",
       "requestHost": "api.paysponge.com",
       "method": "POST",
       "requestParameters": {
@@ -27123,6 +27450,7 @@
       "providerName": "2Captcha",
       "serviceName": "Poll for task result.",
       "endpointUrl": "https://twocaptcha.mpp.tempo.xyz/getTaskResult",
+      "resourceUrl": "https://twocaptcha.mpp.tempo.xyz/getTaskResult",
       "requestHost": "twocaptcha.mpp.tempo.xyz",
       "method": "POST",
       "sourceName": "sponge_catalog",
@@ -27152,6 +27480,7 @@
       "providerName": "2Captcha",
       "serviceName": "Submit a captcha task for solving.",
       "endpointUrl": "https://twocaptcha.mpp.tempo.xyz/createTask",
+      "resourceUrl": "https://twocaptcha.mpp.tempo.xyz/createTask",
       "requestHost": "twocaptcha.mpp.tempo.xyz",
       "method": "POST",
       "sourceName": "sponge_catalog",

@@ -97,18 +97,51 @@ const expectedAsset = (endpoint: CatalogEndpoint, route: PaymentRoute): string =
 const joinUrl = (baseUrl: string, endpointPath: string): string =>
   `${baseUrl.replace(/\/$/, "")}/${endpointPath.replace(/^\//, "")}`;
 
+const cleanExamplePath = (value: string): string =>
+  value
+    .trim()
+    .replace(/[),.;]+$/, "")
+    .replace(/^`|`$/g, "");
+
+const extractExamplePath = (instructions: string | null | undefined): string | null => {
+  if (!instructions) return null;
+
+  const match = instructions.match(/(?:example|e\.g\.)\s*:?\s*(`?https?:\/\/\S+`?|`?\/\S+`?)/i);
+  if (!match?.[1]) return null;
+
+  const example = cleanExamplePath(match[1]);
+  return example.startsWith("http://") || example.startsWith("https://") || example.startsWith("/")
+    ? example
+    : null;
+};
+
+const resolveExampleUrl = (baseUrl: string, examplePath: string | null): string | null => {
+  if (!examplePath) return null;
+  if (examplePath.startsWith("http://") || examplePath.startsWith("https://")) return examplePath;
+  return joinUrl(baseUrl, examplePath);
+};
+
 const isSupportedMethod = (method: string): method is "GET" | "POST" | "DELETE" | "PATCH" | "PUT" =>
   method === "GET" || method === "POST" || method === "DELETE" || method === "PATCH" || method === "PUT";
 
-const probeState = (method: string, sourcePath: string, parameters: unknown) => {
+const probeState = (
+  method: string,
+  sourcePath: string,
+  parameters: unknown,
+  concreteResourceUrl: string | null,
+) => {
   const reasons: string[] = [];
 
   if (method !== "GET" && method !== "POST") {
     return { probeReadiness: "unsupported_method" as const, reasons: [`unsupported method: ${method}`] };
   }
 
-  if (hasPathParams(sourcePath)) reasons.push("path parameters require examples");
-  if (method === "GET" && hasQueryParams(parameters)) reasons.push("query parameters require examples");
+  if (hasPathParams(sourcePath) && concreteResourceUrl === null) {
+    reasons.push("path parameters require examples");
+  }
+  if (method === "GET" && hasQueryParams(parameters) && concreteResourceUrl === null) {
+    reasons.push("query parameters require examples");
+  }
   if (method === "POST") {
     if (!hasRequestBodySchema(parameters)) reasons.push("request body schema/example missing");
     else reasons.push("request body template requires review");
@@ -142,8 +175,16 @@ const buildCatalogCases = (snapshot: Snapshot) => {
         if (sourcePath.length < 1) continue;
 
         const requestParameters = parseParameters(endpoint.parameters);
-        const { probeReadiness, reasons } = probeState(method, sourcePath, requestParameters);
         const endpointUrl = joinUrl(route.baseUrl, sourcePath);
+        const exampleUrl = method === "GET" ? resolveExampleUrl(route.baseUrl, extractExamplePath(endpoint.instructions)) : null;
+        const concreteResourceUrl =
+          exampleUrl ?? (!hasPathParams(sourcePath) && !hasQueryParams(requestParameters) ? endpointUrl : null);
+        const { probeReadiness, reasons } = probeState(
+          method,
+          sourcePath,
+          requestParameters,
+          concreteResourceUrl,
+        );
         const sourceNetworks = route.networks;
 
         cases.push({
@@ -152,7 +193,7 @@ const buildCatalogCases = (snapshot: Snapshot) => {
           providerName: detail.name ?? service.slug,
           serviceName: endpoint.description ?? detail.name ?? service.slug,
           endpointUrl,
-          ...(probeReadiness === "ready" ? { resourceUrl: endpointUrl } : {}),
+          ...(concreteResourceUrl !== null ? { resourceUrl: concreteResourceUrl } : {}),
           requestHost,
           method,
           ...(requestParameters === undefined ? {} : { requestParameters }),
