@@ -9,7 +9,10 @@ import {
   type LastDryRun,
   type PaidProbeResults,
 } from "../lib/endpoint-manifest";
-import { analyzeX402ProbeArtifacts } from "../scripts/acquisition/analyze-x402-probe-artifacts";
+import {
+  analyzeX402ProbeArtifacts,
+  buildRetryChainReport,
+} from "../scripts/acquisition/analyze-x402-probe-artifacts";
 import {
   resolveOutputPath,
   retryCaseIds,
@@ -352,6 +355,33 @@ describe("paid probe runner helpers", () => {
 });
 
 describe("x402 artifact analyzer", () => {
+  test("checks retry chain consistency against previous error cases", () => {
+    const first = baseArtifact({
+      results: [
+        { ...baseArtifact().results[0]!, caseId: "case-error", status: "error", txHash: null },
+        { ...baseArtifact().results[0]!, caseId: "case-paid", status: "paid", txHash: null },
+      ],
+    });
+    const retry = baseArtifact({
+      collectedAt: "2026-04-28T01:00:00.000Z",
+      selection: { ...first.selection, retryErrorsFrom: "paid_probe_results.json" },
+      results: [{ ...first.results[0]!, caseId: "case-error" }],
+    });
+
+    expect(buildRetryChainReport([first, retry]).issueCount).toBe(0);
+
+    const badRetry = baseArtifact({
+      collectedAt: "2026-04-28T01:00:00.000Z",
+      selection: { ...first.selection, retryErrorsFrom: "paid_probe_results.json" },
+      results: [{ ...first.results[1]!, caseId: "case-paid" }],
+    });
+
+    expect(buildRetryChainReport([first, badRetry]).issues.map((issue) => issue.kind)).toEqual([
+      "retry_included_non_error",
+      "retry_omitted_previous_error",
+    ]);
+  });
+
   test("aggregates paid and retry artifacts by provider, endpoint, status, http status, tx hash, and body source", () => {
     const manifest = validateEndpointManifest({
       schemaVersion: "1",

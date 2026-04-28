@@ -19,6 +19,17 @@ type CliOptions = {
 
 type CountMap = Record<string, number>;
 
+type RetryChainIssue = {
+  kind:
+    | "retry_source_missing"
+    | "retry_included_non_error"
+    | "retry_omitted_previous_error"
+    | "retry_reference_unexpected";
+  artifactIndex: number;
+  caseId?: string;
+  retryErrorsFrom?: string | null;
+};
+
 type FailureClassification =
   | "http_401_auth_or_business_rejected"
   | "http_4xx_business_request_rejected"
@@ -77,6 +88,70 @@ const latestByCase = (artifacts: PaidProbeResults[]): Map<string, PaidProbeResul
   return latest;
 };
 
+const caseIdsByStatus = (
+  artifact: PaidProbeResults,
+  status: PaidProbeResult["status"],
+): Set<string> =>
+  new Set(
+    artifact.results.filter((result) => result.status === status).map((result) => result.caseId),
+  );
+
+export const buildRetryChainReport = (artifacts: PaidProbeResults[]) => {
+  const issues: RetryChainIssue[] = [];
+  const rounds = artifacts.map((artifact, index) => {
+    const previous = artifacts[index - 1];
+    const retryErrorsFrom = artifact.selection.retryErrorsFrom ?? null;
+    const retryTargetCaseIds = new Set(artifact.results.map((result) => result.caseId));
+    const previousErrorCaseIds = previous ? caseIdsByStatus(previous, "error") : new Set<string>();
+
+    if (index === 0 && retryErrorsFrom !== null) {
+      issues.push({ kind: "retry_reference_unexpected", artifactIndex: index, retryErrorsFrom });
+    }
+
+    if (index > 0 && retryErrorsFrom === null) {
+      issues.push({ kind: "retry_source_missing", artifactIndex: index, retryErrorsFrom });
+    }
+
+    if (previous) {
+      for (const caseId of retryTargetCaseIds) {
+        if (!previousErrorCaseIds.has(caseId)) {
+          issues.push({
+            kind: "retry_included_non_error",
+            artifactIndex: index,
+            caseId,
+            retryErrorsFrom,
+          });
+        }
+      }
+      for (const caseId of previousErrorCaseIds) {
+        if (!retryTargetCaseIds.has(caseId)) {
+          issues.push({
+            kind: "retry_omitted_previous_error",
+            artifactIndex: index,
+            caseId,
+            retryErrorsFrom,
+          });
+        }
+      }
+    }
+
+    return {
+      artifactIndex: index,
+      collectedAt: artifact.collectedAt,
+      retryErrorsFrom,
+      resultCount: artifact.results.length,
+      errorCount: previousErrorCaseIds.size,
+      targetCount: retryTargetCaseIds.size,
+    };
+  });
+
+  return {
+    rounds,
+    issueCount: issues.length,
+    issues,
+  };
+};
+
 const httpStatusFromPreview = (result: PaidProbeResult): number | null => {
   if (typeof result.response?.status === "number") return result.response.status;
   const preview = result.stdoutPreview ?? result.stderrPreview ?? result.error ?? "";
@@ -109,6 +184,7 @@ export const analyzeX402ProbeArtifacts = (
   const paidResults = paidArtifacts.flatMap((artifact) => artifact.results);
   const latestResults = latestByCase(paidArtifacts);
   const latestFailures = [...latestResults.values()].filter((result) => result.status === "error");
+  const retryChain = buildRetryChainReport(paidArtifacts);
 
   const provider: Record<
     string,
@@ -192,6 +268,7 @@ export const analyzeX402ProbeArtifacts = (
     byHttpStatus: httpStatus,
     byTxHash: txHash,
     byBodySource: bodySource,
+    retryChain,
     remainingFailures: {
       byClassification: failureClassifications,
       cases: latestFailures.map((result) => ({
