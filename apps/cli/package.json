@@ -13,6 +13,7 @@
     "db:reset": "dotenvx run -- bun scripts/reset-db.ts",
     "fixture:fetch-rpc": "dotenvx run -- bun scripts/fetch-rpc-fixture.ts",
     "ingest:fixtures": "dotenvx run -- bun scripts/ingest-fixtures.ts",
+    "ingest:rpc-tx": "dotenvx run -- bun scripts/ingest-rpc-tx.ts",
     "score": "dotenvx run -- bun scripts/score.ts",
     "aggregate": "dotenvx run -- bun scripts/aggregate.ts",
     "report": "dotenvx run -- bun scripts/report.ts",

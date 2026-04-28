@@ -57,6 +57,7 @@ export const buildObservationsFromFixture = (
 ): PaymentObservationInput[] => {
   if (tx.chainId !== BASE_CHAIN_ID) return [];
   if (tx.to == null) return [];
+  if (receipt.status !== "0x1") return [];
 
   const selector = extractTopLevelSelector(tx.input);
   if (!selector) return [];
@@ -77,7 +78,7 @@ export const buildObservationsFromFixture = (
     if (!logsValidation.complete) return [];
 
     const stableHash = buildStableHash(
-      [caseId, tx.hash, String(blockNumber), tx.chainId, decoded.args.from, decoded.args.to, decoded.args.value.toString(), selector].join("|"),
+      [tx.hash, String(blockNumber), tx.chainId, decoded.args.from, decoded.args.to, decoded.args.value.toString(), selector].join("|"),
     );
 
     observations.push({
@@ -118,7 +119,7 @@ export const buildObservationsFromFixture = (
       if (!logsValidation.complete) continue;
 
       const stableHash = buildStableHash(
-        [caseId, tx.hash, String(blockNumber), tx.chainId, inner.call.target, args.from, args.to, args.value.toString(), String(inner.call.callData)].join("|"),
+        [tx.hash, String(blockNumber), tx.chainId, inner.call.target, args.from, args.to, args.value.toString(), String(inner.call.callData)].join("|"),
       );
 
       observations.push({

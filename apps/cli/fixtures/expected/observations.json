@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-28T01:53:23.441Z",
+  "generatedAt": "2026-04-28T02:12:11.982Z",
   "observations": [
     {
       "case_id": "orthogonal-serper",
@@ -13,7 +13,7 @@
       "amount_atomic": "10000",
       "method": "direct_transferWithAuthorization",
       "top_level_selector": "0xe3ee160e",
-      "stable_hash": "669c537894053aa9948d6fcec129fe9bdbe1e0493b76e76dbb0346064317a991"
+      "stable_hash": "ed6d20719fd8d2ee8d9484df95c4ecbdad9d17acc5edbd18227f0871d0151f7c"
     },
     {
       "case_id": "orthogonal-olostep",
@@ -27,7 +27,7 @@
       "amount_atomic": "10000",
       "method": "direct_transferWithAuthorization",
       "top_level_selector": "0xe3ee160e",
-      "stable_hash": "b310dd08c06ae85810ba96bc26d0c05d7e68fc717b6b246d5828e601eebe312c"
+      "stable_hash": "d8fbf8d4f001ce97a18c07bf0d0e1189283d6c04fd48ec32b57865379ff2b3fa"
     },
     {
       "case_id": "orthogonal-andi",
@@ -41,7 +41,7 @@
       "amount_atomic": "10000",
       "method": "direct_transferWithAuthorization",
       "top_level_selector": "0xe3ee160e",
-      "stable_hash": "aac5f64c88d5f0bfb2d1b291de160375f1121f23a0612c5181107da78f44def2"
+      "stable_hash": "cb3d01608d8a7927541900733e05e75a52247baba9b97a4d55d47b4b50f00e38"
     },
     {
       "case_id": "coingecko",
@@ -55,7 +55,7 @@
       "amount_atomic": "20337",
       "method": "direct_transferWithAuthorization",
       "top_level_selector": "0xe3ee160e",
-      "stable_hash": "8897b9ce3d87b674e7dd13d4a013d9f5230fd8a5723ee2799b387aaa123346b2"
+      "stable_hash": "c033f909da1f206bc38be5c72d453139f84b21f0544234fdd76d9361d576de44"
     },
     {
       "case_id": "coinstats-news",
@@ -69,7 +69,7 @@
       "amount_atomic": "10000",
       "method": "direct_transferWithAuthorization",
       "top_level_selector": "0xe3ee160e",
-      "stable_hash": "ede515f06ba21c2f1e8baffc05e7a1487eb59b41379b06220ec91a11093dbe2b"
+      "stable_hash": "4f436f8ea7d6aaac90b71d66de58a3b8ea0e8bdca3b837aaecae4d97a8ef3768"
     },
     {
       "case_id": "origindao-quest-board",
@@ -83,7 +83,7 @@
       "amount_atomic": "100000",
       "method": "direct_transferWithAuthorization",
       "top_level_selector": "0xcf092995",
-      "stable_hash": "f4af103968475920d23530062298922b0c23c50f2e166d250e70082506a28b0c"
+      "stable_hash": "a18e45ff768984f3aff6f1dbfa67661a999fda43df4a2b6fa14e33e489e4f4ab"
     },
     {
       "case_id": "bluepages",
@@ -97,7 +97,7 @@
       "amount_atomic": "100000",
       "method": "direct_transferWithAuthorization",
       "top_level_selector": "0xcf092995",
-      "stable_hash": "c990a6f8e673df9d948b90a48857e4773cf43db14f409a9a89c11bdf98fa3580"
+      "stable_hash": "fed5266081372c987b58a463fe2039ab8c6c06edb81ecf16583d8267e6529d1f"
     },
     {
       "case_id": "paysponge-perplexity",
@@ -111,7 +111,7 @@
       "amount_atomic": "100000",
       "method": "direct_transferWithAuthorization",
       "top_level_selector": "0xcf092995",
-      "stable_hash": "6e496135b093b9fffdf13a2a2ebf49215de68eafdfd8fe59d5e44b91c42d81b6"
+      "stable_hash": "58ff52aeedf1ea7951c8b7bd81a104629c2286d98633df62217ed78f5f0df301"
     },
     {
       "case_id": "paysponge-wolframalpha",
@@ -125,7 +125,7 @@
       "amount_atomic": "100000",
       "method": "direct_transferWithAuthorization",
       "top_level_selector": "0xcf092995",
-      "stable_hash": "fa990a537ba0faaf93f3226a9aaf951a6414c3b2e2ba2831a01695873f62fc9f"
+      "stable_hash": "f27d1e1145169aa5e9f8f8bdc38af50287b137bb50352fec9e66bc82012ac986"
     },
     {
       "case_id": "aimo-search",
@@ -139,7 +139,7 @@
       "amount_atomic": "100000",
       "method": "direct_transferWithAuthorization",
       "top_level_selector": "0xcf092995",
-      "stable_hash": "0ec3f5cb811ffe48d29274163a979c7caff4b961030d930af0e5c35c8a0fe3a8"
+      "stable_hash": "198dcf76d7b253f0361f95dedf4993968a339d1b2e5f639a3096e5328a6e86d1"
     }
   ]
 }

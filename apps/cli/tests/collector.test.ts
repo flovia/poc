@@ -21,6 +21,7 @@ import { decodeReceiptLogsForUsdc } from "../lib/decoder/logs";
 import { buildObservationsFromFixture } from "../lib/observations/build-observation";
 import { db, initDb, resetDb } from "../lib/db";
 import { runIngest } from "../scripts/ingest-fixtures";
+import { runRpcTxIngest } from "../scripts/ingest-rpc-tx";
 import { buildAttributionCandidates } from "../lib/attribution/score";
 import { listAttributionCandidates, listPaymentObservations } from "../lib/aggregates/summaries";
 import type { FixtureManifest, RawReceipt, RawTransaction } from "../lib/schema";
@@ -214,5 +215,113 @@ describe("RPC fixture capture", () => {
     expect(calls).toEqual(["eth_chainId", "eth_getTransactionByHash", "eth_getTransactionReceipt", "eth_getBlockByNumber"]);
     expect(fixture.tx.blockTimestamp).toBe(101);
     expect(String(fixture.receipt.transactionHash)).toBe(rpcTx.hash);
+  });
+});
+
+describe("RPC transaction ingest", () => {
+  beforeEach(() => {
+    resetDb();
+    initDb();
+  });
+
+  test("ingests a user supplied tx hash idempotently through mocked RPC", async () => {
+    const { tx, receipt } = fixture("orthogonal-serper");
+    const calls: string[] = [];
+
+    const fetchFn = async (_url: RequestInfo | URL, init?: RequestInit) => {
+      const body = JSON.parse(String(init?.body)) as { method: string };
+      calls.push(body.method);
+      const result =
+        body.method === "eth_chainId"
+          ? "0x2105"
+          : body.method === "eth_getTransactionByHash"
+            ? { ...tx, blockNumber: `0x${Number(tx.blockNumber).toString(16)}` }
+            : body.method === "eth_getTransactionReceipt"
+              ? { ...receipt, blockNumber: `0x${Number(receipt.blockNumber).toString(16)}` }
+              : { timestamp: `0x${tx.blockTimestamp.toString(16)}` };
+      return new Response(JSON.stringify({ jsonrpc: "2.0", id: 1, result }), { status: 200 });
+    };
+
+    const first = await runRpcTxIngest({ rpcUrl: "https://example.invalid", txHash: tx.hash, fetchFn });
+    const second = await runRpcTxIngest({ rpcUrl: "https://example.invalid", txHash: tx.hash, fetchFn });
+
+    expect(first.insertedObservations).toBe(1);
+    expect(second.insertedObservations).toBe(0);
+    expect(second.evidenceRowsUpdated).toBe(0);
+    expect(first.observationCount).toBe(1);
+    expect(second.observationCount).toBe(1);
+    expect(listPaymentObservations()).toHaveLength(1);
+    expect(calls.filter((method) => method === "eth_getTransactionReceipt")).toHaveLength(2);
+  });
+
+  test("does not duplicate a transaction already inserted from fixtures", async () => {
+    runIngest();
+    const { tx, receipt } = fixture("orthogonal-serper");
+    const result = await runRpcTxIngest({
+      rpcUrl: "https://example.invalid",
+      txHash: tx.hash,
+      fetchFn: async (_url, init) => {
+        const body = JSON.parse(String(init?.body)) as { method: string };
+        const result =
+          body.method === "eth_chainId"
+            ? "0x2105"
+            : body.method === "eth_getTransactionByHash"
+              ? tx
+              : body.method === "eth_getTransactionReceipt"
+                ? receipt
+                : { timestamp: `0x${tx.blockTimestamp.toString(16)}` };
+        return new Response(JSON.stringify({ jsonrpc: "2.0", id: 1, result }), { status: 200 });
+      },
+    });
+
+    expect(result.observationCount).toBe(1);
+    expect(result.insertedObservations).toBe(0);
+    expect(listPaymentObservations()).toHaveLength(10);
+  });
+
+  test("does not create observations when RPC receipt failed", async () => {
+    const { tx, receipt } = fixture("orthogonal-serper");
+    const result = await runRpcTxIngest({
+      rpcUrl: "https://example.invalid",
+      txHash: tx.hash,
+      fetchFn: async (_url, init) => {
+        const body = JSON.parse(String(init?.body)) as { method: string };
+        const result =
+          body.method === "eth_chainId"
+            ? "0x2105"
+            : body.method === "eth_getTransactionByHash"
+              ? tx
+              : body.method === "eth_getTransactionReceipt"
+                ? { ...receipt, status: "0x0" }
+                : { timestamp: `0x${tx.blockTimestamp.toString(16)}` };
+        return new Response(JSON.stringify({ jsonrpc: "2.0", id: 1, result }), { status: 200 });
+      },
+    });
+
+    expect(result.insertedObservations).toBe(0);
+    expect(result.observationCount).toBe(0);
+    expect(result.skippedReason).toBe("failed_receipt");
+    expect(listPaymentObservations()).toHaveLength(0);
+  });
+
+  test("does not create observations when RPC receipt is missing", async () => {
+    const { tx } = fixture("orthogonal-serper");
+    const result = await runRpcTxIngest({
+      rpcUrl: "https://example.invalid",
+      txHash: tx.hash,
+      fetchFn: async (_url, init) => {
+        const body = JSON.parse(String(init?.body)) as { method: string };
+        const payload =
+          body.method === "eth_getTransactionReceipt"
+            ? { jsonrpc: "2.0", id: 1, result: null }
+            : { jsonrpc: "2.0", id: 1, result: body.method === "eth_chainId" ? "0x2105" : tx };
+        return new Response(JSON.stringify(payload), { status: 200 });
+      },
+    });
+
+    expect(result.insertedObservations).toBe(0);
+    expect(result.observationCount).toBe(0);
+    expect(result.skippedReason).toBe("missing_rpc_data");
+    expect(listPaymentObservations()).toHaveLength(0);
   });
 });

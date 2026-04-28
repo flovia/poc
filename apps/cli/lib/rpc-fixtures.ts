@@ -10,7 +10,7 @@ type JsonRpcResponse<T> = {
   error?: { code: number; message: string };
 };
 
-type FetchLike = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
+export type FetchLike = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
 
 export type RpcTransactionPayload = {
   hash: string;
