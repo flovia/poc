@@ -7,16 +7,34 @@ export const ENDPOINT_MANIFEST_SCHEMA_VERSION = "1";
 export const DiscoveryMethodSchema = z.enum(["catalog", "docs", "llm_candidate", "manual"]);
 export type DiscoveryMethod = z.infer<typeof DiscoveryMethodSchema>;
 
+export const RouteKindSchema = z.enum([
+  "provider_direct_x402",
+  "sponge_wrapper_x402",
+  "locus_wrapper_mpp",
+  "tempo_mpp",
+  "other",
+]);
+export type RouteKind = z.infer<typeof RouteKindSchema>;
+
+export const ProbeReadinessSchema = z.enum([
+  "ready",
+  "needs_request_params",
+  "unsupported_method",
+]);
+export type ProbeReadiness = z.infer<typeof ProbeReadinessSchema>;
+
 export const EndpointCaseSchema = z
   .object({
     caseId: z.string().min(1),
     entityId: z.string().min(1),
     providerName: z.string().min(1),
     serviceName: z.string().min(1),
-    endpointUrl: z.string().url(),
-    resourceUrl: z.string().url(),
+    endpointUrl: z.string().min(1),
+    resourceUrl: z.string().url().optional(),
     requestHost: z.string().min(1),
-    method: z.enum(["GET", "POST"]),
+    method: z.enum(["GET", "POST", "DELETE", "PATCH", "PUT"]),
+    requestParameters: z.unknown().optional(),
+    requestBodySchema: z.unknown().optional(),
     requestBodyTemplate: z.record(z.string(), z.unknown()).optional(),
     requestBodyTemplateHash: z.string().min(1).optional(),
     sourceName: z.string().min(1),
@@ -29,22 +47,35 @@ export const EndpointCaseSchema = z
     sourcePath: z.string().min(1).optional(),
     sourceProtocol: z.string().min(1).optional(),
     sourceNetworks: z.array(z.string().min(1)).optional(),
+    routeKind: RouteKindSchema,
+    probeReadiness: ProbeReadinessSchema.default("ready"),
+    probeBlockedReasons: z.array(z.string().min(1)).optional(),
     discoveryMethod: DiscoveryMethodSchema,
     expectedNetwork: z.string().min(1),
     expectedAsset: z.string().min(1),
   })
   .strict()
   .superRefine((value, context) => {
-    const resourceHost = new URL(value.resourceUrl).host;
-    if (value.requestHost !== resourceHost) {
+    if (value.probeReadiness === "ready" && value.resourceUrl === undefined) {
+      context.addIssue({
+        code: "custom",
+        path: ["resourceUrl"],
+        message: "Ready endpoint cases must include resourceUrl",
+      });
+    }
+
+    const urlForHostCheck = value.resourceUrl ?? value.sourceBaseUrl;
+    const resourceHost = urlForHostCheck ? new URL(urlForHostCheck).host : null;
+    if (resourceHost !== null && value.requestHost !== resourceHost) {
       context.addIssue({
         code: "custom",
         path: ["requestHost"],
-        message: `requestHost must match resourceUrl host: ${resourceHost}`,
+        message: `requestHost must match route host: ${resourceHost}`,
       });
     }
 
     if (
+      value.probeReadiness === "ready" &&
       value.method === "POST" &&
       value.requestBodyTemplate === undefined &&
       value.requestBodyTemplateHash === undefined
@@ -52,7 +83,7 @@ export const EndpointCaseSchema = z
       context.addIssue({
         code: "custom",
         path: ["requestBodyTemplate"],
-        message: "POST endpoint cases must include requestBodyTemplate or requestBodyTemplateHash",
+        message: "Ready POST endpoint cases must include requestBodyTemplate or requestBodyTemplateHash",
       });
     }
 

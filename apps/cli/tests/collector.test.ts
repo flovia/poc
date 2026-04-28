@@ -209,6 +209,7 @@ describe("storage and attribution", () => {
     );
     expect(parsed.cases.every((endpointCase) => endpointCase.expectedAsset.length > 0)).toBe(true);
     expect(parsed.cases.every((endpointCase) => endpointCase.sourceName.length > 0)).toBe(true);
+    expect(parsed.cases.every((endpointCase) => endpointCase.routeKind.length > 0)).toBe(true);
     expect(parsed.cases.map((endpointCase) => endpointCase.discoveryMethod)).not.toContain(
       "prior_fixture",
     );
@@ -245,6 +246,36 @@ describe("storage and attribution", () => {
         cases: [{ ...cases[0], sourceEndpointId: undefined }],
       }),
     ).toThrow("Sponge Catalog endpoint cases must include sourceEndpointId");
+  });
+
+  test("endpoint manifest allows known POST bodies and requires them only when ready", () => {
+    const source = readJson<Record<string, unknown>>("acquisition/endpoint_manifest.json");
+    const cases = source.cases as Array<Record<string, unknown>>;
+    const baseCase = {
+      ...cases[0],
+      caseId: "test-post-body-template",
+      endpointUrl: "https://example.com/search",
+      resourceUrl: "https://example.com/search",
+      requestHost: "example.com",
+      method: "POST",
+      probeReadiness: "ready",
+    };
+
+    expect(() => validateEndpointManifest({ ...source, cases: [baseCase] })).toThrow(
+      "Ready POST endpoint cases must include requestBodyTemplate or requestBodyTemplateHash",
+    );
+
+    const parsed = validateEndpointManifest({
+      ...source,
+      cases: [
+        {
+          ...baseCase,
+          requestBodyTemplate: { query: "x402" },
+        },
+      ],
+    });
+
+    expect(parsed.cases[0]?.requestBodyTemplate).toEqual({ query: "x402" });
   });
 
   test("ingest is idempotent and independent from fingerprint seeds", () => {
