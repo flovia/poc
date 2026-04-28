@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-import { loadEndpointManifestFromFile, type EndpointCase } from "../lib/endpoint-manifest";
+import { loadEndpointManifestFromFile, type EndpointCase } from "../../lib/endpoint-manifest";
 
 const DEFAULT_CONCURRENCY = 6;
 const DEFAULT_TIMEOUT_MS = 20_000;
