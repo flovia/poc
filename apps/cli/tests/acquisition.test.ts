@@ -6,13 +6,17 @@ import {
   validatePaidProbeResults,
   type DryRunProbeResults,
   type EndpointManifest,
+  type LastDryRun,
   type PaidProbeResults,
 } from "../lib/endpoint-manifest";
 import { analyzeX402ProbeArtifacts } from "../scripts/acquisition/analyze-x402-probe-artifacts";
 import {
   resolveOutputPath,
   retryCaseIds,
+  requestBody,
+  targetUrl,
   txHashFromSettlement,
+  x402Command,
 } from "../scripts/acquisition/run-x402-paid-probes";
 
 const baseArtifact = (overrides: Partial<PaidProbeResults> = {}): PaidProbeResults =>
@@ -276,6 +280,74 @@ describe("paid probe runner helpers", () => {
         // Best-effort cleanup for temp artifact.
       }
     }
+  });
+
+  test("prefers GET resourceUrl over dry-run URL and serializes POST body templates", () => {
+    const endpointCase = validateEndpointManifest({
+      schemaVersion: "1",
+      cases: [
+        {
+          caseId: "case-post",
+          entityId: "entity-a",
+          providerName: "Provider A",
+          serviceName: "Search",
+          endpointUrl: "https://example.com/search",
+          resourceUrl: "https://example.com/search?q=resource",
+          requestHost: "example.com",
+          method: "POST",
+          sourceName: "sponge_catalog",
+          sourceUrl: "https://catalog.example.com",
+          sourceObservedDate: "2026-04-28",
+          sourceServiceId: "svc-a",
+          sourceEndpointId: "endp-a",
+          sourceEndpointUpdatedAt: "2026-04-28T00:00:00.000Z",
+          sourceBaseUrl: "https://example.com",
+          sourcePath: "/search",
+          sourceProtocol: "x402",
+          sourceNetworks: ["base"],
+          routeKind: "provider_direct_x402",
+          probeReadiness: "ready",
+          discoveryMethod: "catalog",
+          expectedNetwork: "base",
+          expectedAsset: "USDC",
+          requestBodyTemplate: { query: "x402" },
+        },
+      ],
+    }).cases[0]!;
+    const dryRun = {
+      status: "challenge",
+      attemptedAt: "2026-04-28T00:00:00.000Z",
+      url: "https://example.com/search?q=dry-run",
+      httpStatus: 402,
+      paymentOptions: [
+        {
+          amount: "10000",
+          network: "base",
+          asset: "USDC",
+          payTo: "0x0000000000000000000000000000000000000000",
+        },
+      ],
+    } satisfies LastDryRun;
+    const option = { ...dryRun.paymentOptions[0], index: 0 };
+
+    expect(targetUrl(endpointCase, dryRun)).toBe("https://example.com/search?q=resource");
+    expect(requestBody(endpointCase)).toBe('{"query":"x402"}');
+    expect(
+      x402Command(endpointCase, dryRun, option, {
+        execute: false,
+        outputPath: null,
+        caseIds: null,
+        retryErrorsFrom: null,
+        limit: null,
+        minSpendAtomic: 0n,
+        maxSpendAtomic: 100000n,
+        totalSpendCapAtomic: 1000000n,
+        network: "base",
+        mode: "mainnet",
+        includePost: true,
+        includeNotReady: true,
+      }).slice(-2),
+    ).toEqual(["https://example.com/search?q=resource", '{"query":"x402"}']);
   });
 });
 

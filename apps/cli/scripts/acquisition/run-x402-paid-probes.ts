@@ -107,7 +107,7 @@ const selectedOption = (dryRun: LastDryRun, network: string): SelectedPaymentOpt
     ?.map((option, index) => ({ index, ...option }))
     .find((option) => normalizeNetwork(option.network) === network) ?? null;
 
-const requestBody = (endpointCase: EndpointCase): string | null => {
+export const requestBody = (endpointCase: EndpointCase): string | null => {
   if (
     endpointCase.method !== "POST" &&
     endpointCase.method !== "PUT" &&
@@ -118,10 +118,10 @@ const requestBody = (endpointCase: EndpointCase): string | null => {
   return JSON.stringify(endpointCase.requestBodyTemplate ?? {});
 };
 
-const targetUrl = (endpointCase: EndpointCase, dryRun: LastDryRun): string =>
+export const targetUrl = (endpointCase: EndpointCase, dryRun: LastDryRun): string =>
   endpointCase.resourceUrl ?? dryRun.url;
 
-const x402Command = (
+export const x402Command = (
   endpointCase: EndpointCase,
   dryRun: LastDryRun,
   option: SelectedPaymentOption,
