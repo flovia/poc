@@ -52,17 +52,28 @@ export type FixtureManifest = {
   cases: FixtureCase[];
 };
 
-export type TransferWithAuthorizationArgs = {
+type TransferWithAuthorizationBaseArgs = {
   from: HexAddress;
   to: HexAddress;
   value: bigint;
   validAfter: bigint;
   validBefore: bigint;
   nonce: HexData;
-  v: number;
-  r: HexData;
-  s: HexData;
 };
+
+export type TransferWithAuthorizationArgs = TransferWithAuthorizationBaseArgs &
+  (
+    | {
+        authorizationKind: "vrs";
+        v: number;
+        r: HexData;
+        s: HexData;
+      }
+    | {
+        authorizationKind: "bytes";
+        signature: HexData;
+      }
+  );
 
 export type DecodedMulticallCall = {
   target: HexAddress;
@@ -84,7 +95,7 @@ export type DecodedLogEvent = {
   nonce?: HexData;
 };
 export type SettledEvidence = {
-  type: "authorization" | "transfer" | "multicall" | "fixture";
+  type: "authorization" | "transfer" | "multicall" | "receipt_validation";
   detail: string;
   raw: unknown;
 };
@@ -92,7 +103,6 @@ export type SettledEvidence = {
 export type PaymentObservationInput = {
   chainId: number;
   txHash: HexAddress;
-  txIndex: number;
   blockNumber: number;
   blockTimestamp: number;
   relayer: HexAddress;
@@ -228,7 +238,6 @@ export type SettlementFingerprintPack = {
   entityId?: string | null;
   evidenceClass: "pattern_only" | "host_joined" | "manual";
   baseConfidence: number;
-  namedEntityConfidenceCap: number;
   reasons: string[];
   evidenceRefs: string[];
 };
@@ -496,7 +505,6 @@ export const validateSettlementFingerprintPacksSeed = (
         entityId: optionalString(record.entityId),
         evidenceClass: evidenceClass as SettlementFingerprintPack["evidenceClass"],
         baseConfidence: validateConfidence(record.baseConfidence),
-        namedEntityConfidenceCap: validateConfidence(record.namedEntityConfidenceCap),
         reasons: validateStringArray(
           record.reasons ?? [],
           `settlement fingerprint ${index} reasons`,

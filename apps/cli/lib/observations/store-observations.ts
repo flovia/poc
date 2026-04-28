@@ -35,7 +35,6 @@ export const storePaymentObservations = (
     INSERT INTO payment_observations (
       chain_id,
       tx_hash,
-      tx_index,
       block_number,
       block_timestamp,
       relayer_wallet,
@@ -49,8 +48,8 @@ export const storePaymentObservations = (
       stable_hash,
       created_at,
       updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ON CONFLICT(chain_id, tx_hash, tx_index, stable_hash) DO NOTHING
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(chain_id, tx_hash, stable_hash) DO NOTHING
   `);
 
   const selectObservationId = database.prepare(`
@@ -69,7 +68,6 @@ export const storePaymentObservations = (
       const inserted = insertObservation.run(
         observation.chainId,
         observation.txHash,
-        observation.txIndex,
         observation.blockNumber,
         observation.blockTimestamp,
         observation.relayer,

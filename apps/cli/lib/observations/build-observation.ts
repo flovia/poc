@@ -72,7 +72,6 @@ export const buildPaymentObservations = (
   const logs = decodeReceiptLogsForUsdc(receipt.logs);
 
   const observations: PaymentObservationInput[] = [];
-  const txIndex = 0;
   const blockTimestamp = tx.blockTimestamp;
   const blockNumber = toBlockNumber(tx.blockNumber);
 
@@ -105,7 +104,6 @@ export const buildPaymentObservations = (
     observations.push({
       chainId: tx.chainId,
       txHash: tx.hash,
-      txIndex,
       blockNumber,
       blockTimestamp,
       relayer: tx.from,
@@ -127,7 +125,7 @@ export const buildPaymentObservations = (
           "USDC Transfer log",
           logs.filter((event) => event.kind === "transfer"),
         ),
-        makeEvidence("fixture", "fixture logs matched", {
+        makeEvidence("receipt_validation", "receipt logs matched", {
           totalLogs: logs.length,
           authorizationLogs: logs.filter((event) => event.kind === "authorization").length,
           transferLogs: logs.filter((event) => event.kind === "transfer").length,
@@ -165,7 +163,6 @@ export const buildPaymentObservations = (
       observations.push({
         chainId: tx.chainId,
         txHash: tx.hash,
-        txIndex,
         blockNumber,
         blockTimestamp,
         relayer: tx.from,
@@ -184,7 +181,7 @@ export const buildPaymentObservations = (
             "USDC Transfer log",
             logs.filter((event) => event.kind === "transfer"),
           ),
-          makeEvidence("fixture", "fixture logs matched", {
+          makeEvidence("receipt_validation", "receipt logs matched", {
             totalLogs: logs.length,
             authorizationLogs: logs.filter((event) => event.kind === "authorization").length,
             transferLogs: logs.filter((event) => event.kind === "transfer").length,

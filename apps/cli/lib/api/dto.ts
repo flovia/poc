@@ -10,7 +10,6 @@ export type PaymentObservationDto = {
   observationId: number;
   chainId: number;
   txHash: string;
-  txIndex: number;
   blockNumber: number;
   blockTimestamp: number;
   relayerWallet: string;
@@ -91,7 +90,6 @@ export const toPaymentObservationDto = (row: PaymentObservationRow): PaymentObse
   observationId: row.observation_id,
   chainId: row.chain_id,
   txHash: row.tx_hash,
-  txIndex: row.tx_index,
   blockNumber: row.block_number,
   blockTimestamp: row.block_timestamp,
   relayerWallet: row.relayer_wallet,

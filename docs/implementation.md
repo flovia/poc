@@ -85,11 +85,11 @@ Classifies settlement mechanics such as Direct USDC and Multicall3 helper. It as
 
 ### fingerprint-catalog-collector
 
-Collects known catalog data and seed fingerprints. This is where the current catalog collector fits. It emits `known_fingerprints` and `catalog_entries` for enrichment, not canonical payment facts.
+Collects known catalog data and seed fingerprints. This is where the current catalog collector fits. It emits `known_fingerprints` and provider endpoint claims for enrichment, not canonical payment facts.
 
 ### attribution-engine
 
-Joins payment observations to known fingerprints and catalog entries. It emits provider, middleman, facilitator, payee, and relayer candidates with numeric confidence, reasons, evidence refs, and score version.
+Joins payment observations to known fingerprints, provider endpoint claims, and settlement fingerprint packs. It emits provider, middleman, facilitator, payee, and relayer candidates with numeric confidence, reasons, evidence refs, and score version.
 
 ### aggregator
 
@@ -297,24 +297,27 @@ resource_host
 amount_pattern
 ```
 
-### catalog_entries
+### provider_endpoint_claims
 
-Normalized public catalog facts used for enrichment:
+Normalized provider endpoint claims used for enrichment:
 
 ```text
-catalog_entry_id
-source
-source_url
-fetched_at
+claim_id
+entity_id
+provider_name
+service_name
+endpoint_url
 resource_url
 resource_host
-method
-network_raw
-chain_id_normalized
-asset
+network
+asset_address
 amount_atomic
-pay_to
-provider_claim
+pay_to_wallet
+evidence_class
+roles
+source_name
+evidence_refs
+provenance
 service_claim
 facilitator_claim
 raw_ref
@@ -534,7 +537,7 @@ aggregates can be rebuilt from observations and candidates
 docs/x402-analysis seeds
 public catalog collector
 manual analyst overrides
-=> known_entities, known_fingerprints, catalog_entries
+=> known_entities, known_fingerprints, provider_endpoint_claims
 ```
 
 Catalog refresh does not create payment observations.
@@ -546,7 +549,7 @@ The existing catalog collector should be treated as a supporting subsystem.
 It should produce:
 
 ```text
-catalog_entries
+provider_endpoint_claims
 known_entities
 known_fingerprints
 raw catalog evidence refs

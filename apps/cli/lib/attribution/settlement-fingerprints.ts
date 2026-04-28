@@ -26,12 +26,11 @@ export const seedSettlementFingerprintPacks = (
       entity_id,
       evidence_class,
       base_confidence,
-      named_entity_confidence_cap,
       reasons_json,
       evidence_refs_json,
       created_at,
       updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(fingerprint_id) DO UPDATE SET
       cluster_id = excluded.cluster_id,
       display_name = excluded.display_name,
@@ -42,7 +41,6 @@ export const seedSettlementFingerprintPacks = (
       entity_id = excluded.entity_id,
       evidence_class = excluded.evidence_class,
       base_confidence = excluded.base_confidence,
-      named_entity_confidence_cap = excluded.named_entity_confidence_cap,
       reasons_json = excluded.reasons_json,
       evidence_refs_json = excluded.evidence_refs_json,
       updated_at = excluded.updated_at
@@ -61,7 +59,6 @@ export const seedSettlementFingerprintPacks = (
         fingerprint.entityId ?? null,
         fingerprint.evidenceClass,
         fingerprint.baseConfidence,
-        fingerprint.namedEntityConfidenceCap,
         JSON.stringify(fingerprint.reasons),
         JSON.stringify(fingerprint.evidenceRefs),
         now,
@@ -100,7 +97,6 @@ export const listSettlementFingerprintPacks = (database: AppDatabase = db) =>
         entity_id,
         evidence_class,
         base_confidence,
-        named_entity_confidence_cap,
         reasons_json,
         evidence_refs_json
       FROM settlement_fingerprint_packs
@@ -118,7 +114,6 @@ export const listSettlementFingerprintPacks = (database: AppDatabase = db) =>
     entity_id: string | null;
     evidence_class: SettlementFingerprintPack["evidenceClass"];
     base_confidence: number;
-    named_entity_confidence_cap: number;
     reasons_json: string;
     evidence_refs_json: string;
   }>;

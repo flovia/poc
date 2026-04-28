@@ -35,7 +35,6 @@ export const initDb = (database = db) => {
       observation_id INTEGER PRIMARY KEY AUTOINCREMENT,
       chain_id INTEGER NOT NULL,
       tx_hash TEXT NOT NULL,
-      tx_index INTEGER NOT NULL,
       block_number INTEGER NOT NULL,
       block_timestamp INTEGER NOT NULL,
       relayer_wallet TEXT NOT NULL,
@@ -49,7 +48,7 @@ export const initDb = (database = db) => {
       stable_hash TEXT NOT NULL,
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL,
-      UNIQUE(chain_id, tx_hash, tx_index, stable_hash)
+      UNIQUE(chain_id, tx_hash, stable_hash)
     );
 
     CREATE TABLE IF NOT EXISTS settlement_evidence (
@@ -62,19 +61,6 @@ export const initDb = (database = db) => {
       created_at TEXT NOT NULL,
       UNIQUE(observation_id, evidence_type, source_ref),
       FOREIGN KEY(observation_id) REFERENCES payment_observations(observation_id) ON DELETE CASCADE
-    );
-
-    CREATE TABLE IF NOT EXISTS catalog_entries (
-      catalog_entry_id INTEGER PRIMARY KEY AUTOINCREMENT,
-      case_id TEXT NOT NULL,
-      fingerprint_type TEXT NOT NULL,
-      fingerprint_value TEXT NOT NULL,
-      label TEXT,
-      confidence INTEGER NOT NULL,
-      source_name TEXT,
-      raw_json TEXT,
-      created_at TEXT NOT NULL,
-      UNIQUE(case_id, fingerprint_type, fingerprint_value)
     );
 
     CREATE TABLE IF NOT EXISTS known_fingerprints (
@@ -145,7 +131,6 @@ export const initDb = (database = db) => {
       entity_id TEXT,
       evidence_class TEXT NOT NULL,
       base_confidence INTEGER NOT NULL,
-      named_entity_confidence_cap INTEGER NOT NULL,
       reasons_json TEXT NOT NULL,
       evidence_refs_json TEXT NOT NULL,
       created_at TEXT NOT NULL,

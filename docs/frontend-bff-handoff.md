@@ -140,10 +140,12 @@ observation と settlement evidence を保存します。
 
 特徴:
 
-- `payment_observations` は `UNIQUE(chain_id, tx_hash, tx_index, stable_hash)` で冪等化されています。
+- `payment_observations` は `UNIQUE(chain_id, tx_hash, stable_hash)` で冪等化されています。
 - evidence は observation に紐づく audit trail として保存されます。
 - 同じ transaction を再 ingest しても observation は重複しない設計です。
 - evidence `source_ref` は fixture の `caseId` だけに依存せず、`txHash`、`stableHash`、evidence type、index を含む stable ref です。将来の evidence drill-down UI で参照しやすくなっています。
+- `tx_index` placeholder は削除済みです。現時点では block 内 transaction index を保持していません。
+- receipt/log 検証の evidence type は fixture 専用名ではなく `receipt_validation` です。
 
 ### `apps/cli/lib/attribution/score.ts`
 

@@ -11,9 +11,7 @@ export type TransferWithAuthorizationDecoded = {
   selector:
     | typeof TRANSFER_WITH_AUTHORIZATION_SELECTOR
     | typeof EXECUTE_WITH_AUTHORIZATION_SELECTOR;
-  args: TransferWithAuthorizationArgs & {
-    signature?: HexData;
-  };
+  args: TransferWithAuthorizationArgs;
 };
 
 const functionAbi = USDC_TRANSFER_WITH_AUTHORIZATION_ABI;
@@ -38,12 +36,21 @@ const decodeTransferWithAuthorizationV2 = (calldata: HexData): TransferWithAutho
   };
 
   const [from, to, value, validAfter, validBefore, nonce, v, r, s] = decoded.args;
-  return { from, to, value, validAfter, validBefore, nonce, v: Number(v), r, s };
+  return {
+    authorizationKind: "vrs",
+    from,
+    to,
+    value,
+    validAfter,
+    validBefore,
+    nonce,
+    v: Number(v),
+    r,
+    s,
+  };
 };
 
-const decodeTransferWithAuthorizationV3 = (
-  calldata: HexData,
-): TransferWithAuthorizationArgs & { signature: HexData } => {
+const decodeTransferWithAuthorizationV3 = (calldata: HexData): TransferWithAuthorizationArgs => {
   const decoded = decodeFunctionData({
     abi: [functionAbi[1]],
     data: calldata,
@@ -53,7 +60,7 @@ const decodeTransferWithAuthorizationV3 = (
   };
 
   const [from, to, value, validAfter, validBefore, nonce, signature] = decoded.args;
-  return { from, to, value, validAfter, validBefore, nonce, v: 0, r: "0x", s: "0x", signature };
+  return { authorizationKind: "bytes", from, to, value, validAfter, validBefore, nonce, signature };
 };
 
 export const decodeTransferWithAuthorization = (

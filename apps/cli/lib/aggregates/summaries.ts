@@ -4,7 +4,6 @@ export type PaymentObservationRow = {
   observation_id: number;
   chain_id: number;
   tx_hash: string;
-  tx_index: number;
   block_number: number;
   block_timestamp: number;
   relayer_wallet: string;
@@ -66,7 +65,6 @@ export const listPaymentObservations = (database: AppDatabase = db) =>
       observation_id,
       chain_id,
       tx_hash,
-      tx_index,
       block_number,
       block_timestamp,
       relayer_wallet,
