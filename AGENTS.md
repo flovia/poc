@@ -1,0 +1,47 @@
+# 開発スタイル
+
+TDD で開発する（探索 → Red → Green → Refactoring）。
+KPI やカバレッジ目標が与えられたら、達成するまで試行する。
+不明瞭な指示は質問して明確にする。
+
+# コード設計
+
+- 関心の分離を保つ
+- 状態とロジックを分離する
+- 可読性と保守性を重視する
+- コントラクト層（API/型）を厳密に定義し、実装層は再生成可能に保つ
+- 静的検査可能なルールはプロンプトではなく、その環境の linter か ast-grep で記述する
+
+# ツール
+
+- タスク: bun script
+- Bun
+- Typescript 6
+
+# リポジトリ構成
+
+- Bun workspaces を使う（`apps/*`, `packages/*`）。
+- 現在の主要実装は `apps/cli`。
+
+# セットアップ
+
+- 依存関係の導入: `bun install`
+- `.env` が必要な場合は `apps/cli/.env.example` を参照する。
+
+# 検証
+
+- 変更後は原則としてルートで `bun run verify` を実行する。
+- `verify` は typecheck、test、offline 検証を通すための基準とする。
+- テストは Bun test を使う。
+- TypeScript は strict 前提で扱う。
+
+# 実行ポリシー
+
+- デフォルトの検証は offline を維持する。
+- live RPC や外部サービス依存の検証を通常の `verify` に混ぜない。
+- live 検証が必要な場合は明示的な別コマンドに分離する。
+
+# 生成物・秘匿情報
+
+- `.env`、DB ファイル、report 出力、`dist`、`node_modules` は git に含めない。
+- 生成物を前提にせず、必要なら再生成できる形にする。
