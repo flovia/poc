@@ -1,0 +1,673 @@
+{
+  "generatedFrom": [
+    "/tmp/x402-probes",
+    "/tmp/x402-probes-next",
+    "/tmp/x402-probes-phase2",
+    "/tmp/x402-probes-phase3"
+  ],
+  "count": 23,
+  "probes": [
+    {
+      "name": "blockrun",
+      "artifact": "/tmp/x402-probes/blockrun.json",
+      "request": {
+        "method": "GET",
+        "url": "https://blockrun.ai/api/v1/x/trending"
+      },
+      "response": {
+        "status": 503,
+        "ok": false,
+        "paymentResponseHeader": null,
+        "decodedPaymentResponse": {}
+      },
+      "payment": {
+        "status": "not_required",
+        "x402Version": null,
+        "error": null,
+        "scheme": null,
+        "network": null,
+        "amount": null,
+        "asset": null,
+        "payTo": null,
+        "resource": null
+      }
+    },
+    {
+      "name": "bluepages",
+      "artifact": "/tmp/x402-probes/bluepages.json",
+      "request": {
+        "method": "GET",
+        "url": "https://bluepages.fyi/check?identity=@example_user"
+      },
+      "response": {
+        "status": 200,
+        "ok": true,
+        "paymentResponseHeader": "x-payment-response",
+        "decodedPaymentResponse": {
+          "success": true,
+          "transaction": "0xd0a55aee4127c0fa6344fa0f6d9edf4ca2f062d905d1f2eb2776f17f59f2d477",
+          "network": "base",
+          "payer": "0x62c2d106293398961894bcd4908b06a8620b7351"
+        }
+      },
+      "payment": {
+        "status": "paid",
+        "x402Version": 1,
+        "error": "X-PAYMENT header is required",
+        "scheme": "exact",
+        "network": "base",
+        "amount": "1000",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "payTo": "0xc21bDbba05d3662f0F63AC6d209C6cb17E61aAD3",
+        "resource": "https://bluepages.fyi/check"
+      }
+    },
+    {
+      "name": "coingecko",
+      "artifact": "/tmp/x402-probes/coingecko.json",
+      "request": {
+        "method": "GET",
+        "url": "https://pro-api.coingecko.com/api/v3/x402/onchain/simple/networks/base/token_price/0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+      },
+      "response": {
+        "status": 200,
+        "ok": true,
+        "paymentResponseHeader": "payment-response",
+        "decodedPaymentResponse": {
+          "success": true,
+          "transaction": "0x057991d9f64d1fcbb4bbb782da50e6feb7fd74a956bbcb0af885266b1bec8df6",
+          "network": "eip155:8453",
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "errorReason": null
+        }
+      },
+      "payment": {
+        "status": "paid",
+        "x402Version": 2,
+        "error": null,
+        "scheme": "exact",
+        "network": "eip155:8453",
+        "amount": "10000",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "payTo": "0x110cdBba7FE6434Ec4CE3464CC523942ad6Fb784",
+        "resource": null
+      }
+    },
+    {
+      "name": "orth-andi",
+      "artifact": "/tmp/x402-probes/orth-andi.json",
+      "request": {
+        "method": "GET",
+        "url": "https://x402.orth.sh/andi/v1/search?q=x402"
+      },
+      "response": {
+        "status": 200,
+        "ok": true,
+        "paymentResponseHeader": "x-payment-response",
+        "decodedPaymentResponse": {
+          "network": "base",
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "success": true,
+          "transaction": "0x21abd6b2fa6ffa4698827e6c8266a869855c1685be45496d65f2baa6daf4a285"
+        }
+      },
+      "payment": {
+        "status": "paid",
+        "x402Version": 1,
+        "error": "X-PAYMENT header is required",
+        "scheme": "exact",
+        "network": "base",
+        "amount": "10000",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "payTo": "0x09CBbB451Ca48ed511c7fc07eD921d539CdE1227",
+        "resource": "https://search-api.andisearch.com/api/v1/search"
+      }
+    },
+    {
+      "name": "orth-olostep",
+      "artifact": "/tmp/x402-probes/orth-olostep.json",
+      "request": {
+        "method": "POST",
+        "url": "https://x402.orth.sh/olostep/v1/scrapes"
+      },
+      "response": {
+        "status": 200,
+        "ok": true,
+        "paymentResponseHeader": "x-payment-response",
+        "decodedPaymentResponse": {
+          "network": "base",
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "success": true,
+          "transaction": "0xf3aa6ae6edfa2aa8ae0011cfc320135286104e5107442287c39920664550d541"
+        }
+      },
+      "payment": {
+        "status": "paid",
+        "x402Version": 1,
+        "error": "X-PAYMENT header is required",
+        "scheme": "exact",
+        "network": "base",
+        "amount": "10000",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "payTo": "0x67cD43fcfce8ab2d6477a1f6bf8dFf67aA5E86e1",
+        "resource": "https://api.olostep.com/v1/scrapes"
+      }
+    },
+    {
+      "name": "orth-serper",
+      "artifact": "/tmp/x402-probes/orth-serper.json",
+      "request": {
+        "method": "POST",
+        "url": "https://x402.orth.sh/serper/search"
+      },
+      "response": {
+        "status": 200,
+        "ok": true,
+        "paymentResponseHeader": "x-payment-response",
+        "decodedPaymentResponse": {
+          "network": "base",
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "success": true,
+          "transaction": "0xc191001491d5e931b61bc8823f0c65b143953c17d2435d80f20cbfd9786d3ca1"
+        }
+      },
+      "payment": {
+        "status": "paid",
+        "x402Version": 1,
+        "error": "X-PAYMENT header is required",
+        "scheme": "exact",
+        "network": "base",
+        "amount": "2000",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "payTo": "0x1563CdE0042d17F53b23d91Fd9B73ACE9Da26a09",
+        "resource": "https://google.serper.dev/search"
+      }
+    },
+    {
+      "name": "paysponge-perplexity",
+      "artifact": "/tmp/x402-probes/paysponge-perplexity.json",
+      "request": {
+        "method": "POST",
+        "url": "https://pplx.x402.paysponge.com/search"
+      },
+      "response": {
+        "status": 200,
+        "ok": true,
+        "paymentResponseHeader": "payment-response",
+        "decodedPaymentResponse": {
+          "success": true,
+          "payer": "0x62c2d106293398961894bcd4908b06a8620b7351",
+          "transaction": "0xcb1ed7950b6f43a001623e9cf3a590ffb16971ec9985fb20eb9b22f483a2e447",
+          "network": "base"
+        }
+      },
+      "payment": {
+        "status": "paid",
+        "x402Version": 2,
+        "error": "Payment required",
+        "scheme": "exact",
+        "network": "eip155:8453",
+        "amount": "10000",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "payTo": "0x551C176D17236ee9cE6f450dC02bd5c2767751B9",
+        "resource": null
+      }
+    },
+    {
+      "name": "venice-chat",
+      "artifact": "/tmp/x402-probes/venice-chat.json",
+      "request": {
+        "method": null,
+        "url": null
+      },
+      "response": {
+        "status": null,
+        "ok": null,
+        "paymentResponseHeader": null,
+        "decodedPaymentResponse": {}
+      },
+      "payment": {
+        "status": null,
+        "x402Version": null,
+        "error": {
+          "code": "policy_error",
+          "message": "No supported payment options remain after applying policy",
+          "details": {
+            "allowedNetworks": [
+              "eip155:8453"
+            ],
+            "asset": "USDC",
+            "spendLimit": "0.01"
+          }
+        },
+        "scheme": null,
+        "network": null,
+        "amount": null,
+        "asset": null,
+        "payTo": null,
+        "resource": null
+      }
+    },
+    {
+      "name": "browserbase-dry",
+      "artifact": "/tmp/x402-probes-next/browserbase-dry.json",
+      "request": {
+        "method": "POST",
+        "url": "https://x402.browserbase.com/browser/session/create"
+      },
+      "response": {
+        "status": 402,
+        "ok": false,
+        "paymentResponseHeader": null,
+        "decodedPaymentResponse": {}
+      },
+      "payment": {
+        "status": "dry_run",
+        "x402Version": 1,
+        "error": "X-PAYMENT header is required",
+        "scheme": "exact",
+        "network": "base",
+        "amount": "2000",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "payTo": "0x408afBBfE145925759C52859670a3EE0ee46B7D8",
+        "resource": "https://x402.browserbase.com/browser/session/create"
+      }
+    },
+    {
+      "name": "paysponge-wolfram",
+      "artifact": "/tmp/x402-probes-next/paysponge-wolfram.json",
+      "request": {
+        "method": "GET",
+        "url": "https://wolframalpha.x402.paysponge.com/v1/result?i=2%2B2"
+      },
+      "response": {
+        "status": 200,
+        "ok": true,
+        "paymentResponseHeader": "payment-response",
+        "decodedPaymentResponse": {
+          "success": true,
+          "payer": "0x62c2d106293398961894bcd4908b06a8620b7351",
+          "transaction": "0x9ec434053d4ab739cab7e499038e8af970c7c457b36815c21d047cf9e04cf9fd",
+          "network": "base"
+        }
+      },
+      "payment": {
+        "status": "paid",
+        "x402Version": 2,
+        "error": "Payment required",
+        "scheme": "exact",
+        "network": "eip155:8453",
+        "amount": "10000",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "payTo": "0x551C176D17236ee9cE6f450dC02bd5c2767751B9",
+        "resource": null
+      }
+    },
+    {
+      "name": "quicknode-dry",
+      "artifact": "/tmp/x402-probes-next/quicknode-dry.json",
+      "request": {
+        "method": "POST",
+        "url": "https://x402.quicknode.com/base/mainnet"
+      },
+      "response": {
+        "status": 402,
+        "ok": false,
+        "paymentResponseHeader": null,
+        "decodedPaymentResponse": {}
+      },
+      "payment": {
+        "status": "dry_run",
+        "x402Version": 2,
+        "error": null,
+        "scheme": "exact",
+        "network": "eip155:84532",
+        "amount": "1000000",
+        "asset": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+        "payTo": "0xF46394adDdA95A3d5bCC1124605E3d15D204623C",
+        "resource": null
+      }
+    },
+    {
+      "name": "solana-coinprice",
+      "artifact": "/tmp/x402-probes-next/solana-coinprice.json",
+      "request": {
+        "method": null,
+        "url": null
+      },
+      "response": {
+        "status": null,
+        "ok": null,
+        "paymentResponseHeader": null,
+        "decodedPaymentResponse": {}
+      },
+      "payment": {
+        "status": null,
+        "x402Version": null,
+        "error": {
+          "code": "http_error",
+          "message": "HTTP 402",
+          "details": {
+            "status": 402
+          }
+        },
+        "scheme": null,
+        "network": null,
+        "amount": null,
+        "asset": null,
+        "payTo": null,
+        "resource": null
+      }
+    },
+    {
+      "name": "x402direct-aimo-chat",
+      "artifact": "/tmp/x402-probes-next/x402direct-aimo-chat.json",
+      "request": {
+        "method": null,
+        "url": null
+      },
+      "response": {
+        "status": null,
+        "ok": null,
+        "paymentResponseHeader": null,
+        "decodedPaymentResponse": {}
+      },
+      "payment": {
+        "status": null,
+        "x402Version": null,
+        "error": {
+          "code": "payment_error",
+          "message": "fetch failed",
+          "details": {}
+        },
+        "scheme": null,
+        "network": null,
+        "amount": null,
+        "asset": null,
+        "payTo": null,
+        "resource": null
+      }
+    },
+    {
+      "name": "x402direct-aimo-search",
+      "artifact": "/tmp/x402-probes-next/x402direct-aimo-search.json",
+      "request": {
+        "method": "POST",
+        "url": "https://api.aimo.xyz/api-paid/search-coins"
+      },
+      "response": {
+        "status": 200,
+        "ok": true,
+        "paymentResponseHeader": "x-payment-response",
+        "decodedPaymentResponse": {
+          "success": true,
+          "transaction": "0x49a2be60050764291d7ac550e4ad24649b318ca4ff939c57372a4732d4f27ee7",
+          "network": "base",
+          "payer": "0x62c2d106293398961894bcd4908b06a8620b7351"
+        }
+      },
+      "payment": {
+        "status": "paid",
+        "x402Version": 1,
+        "error": "X-PAYMENT header is required",
+        "scheme": "exact",
+        "network": "base",
+        "amount": "10000",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "payTo": "0x47663506e9016aC3Df59632d30426c563b252DbE",
+        "resource": "http://api.aimo.xyz/api-paid/search-coins"
+      }
+    },
+    {
+      "name": "x402direct-sha3",
+      "artifact": "/tmp/x402-probes-next/x402direct-sha3.json",
+      "request": {
+        "method": null,
+        "url": null
+      },
+      "response": {
+        "status": null,
+        "ok": null,
+        "paymentResponseHeader": null,
+        "decodedPaymentResponse": {}
+      },
+      "payment": {
+        "status": null,
+        "x402Version": null,
+        "error": {
+          "code": "payment_error",
+          "message": "fetch failed",
+          "details": {}
+        },
+        "scheme": null,
+        "network": null,
+        "amount": null,
+        "asset": null,
+        "payTo": null,
+        "resource": null
+      }
+    },
+    {
+      "name": "solana-1777262179782660575",
+      "artifact": "/tmp/x402-probes-phase2/solana-1777262179782660575.json",
+      "request": {
+        "method": "POST",
+        "url": "https://x402factory.ai/solana/coinprice"
+      },
+      "response": {
+        "status": 400,
+        "ok": false,
+        "paymentResponseHeader": null,
+        "decodedPaymentResponse": {}
+      },
+      "payment": {
+        "status": "not_required",
+        "x402Version": null,
+        "error": null,
+        "scheme": null,
+        "network": null,
+        "amount": null,
+        "asset": null,
+        "payTo": null,
+        "resource": null
+      }
+    },
+    {
+      "name": "solana-1777262181120534285",
+      "artifact": "/tmp/x402-probes-phase2/solana-1777262181120534285.json",
+      "request": {
+        "method": "POST",
+        "url": "https://x402factory.ai/solana/coinprice"
+      },
+      "response": {
+        "status": 400,
+        "ok": false,
+        "paymentResponseHeader": null,
+        "decodedPaymentResponse": {}
+      },
+      "payment": {
+        "status": "not_required",
+        "x402Version": null,
+        "error": null,
+        "scheme": null,
+        "network": null,
+        "amount": null,
+        "asset": null,
+        "payTo": null,
+        "resource": null
+      }
+    },
+    {
+      "name": "solana-1777262182493471936",
+      "artifact": "/tmp/x402-probes-phase2/solana-1777262182493471936.json",
+      "request": {
+        "method": null,
+        "url": null
+      },
+      "response": {
+        "status": null,
+        "ok": null,
+        "paymentResponseHeader": null,
+        "decodedPaymentResponse": {}
+      },
+      "payment": {
+        "status": null,
+        "x402Version": null,
+        "error": {
+          "code": "http_error",
+          "message": "HTTP 402",
+          "details": {
+            "status": 402
+          }
+        },
+        "scheme": null,
+        "network": null,
+        "amount": null,
+        "asset": null,
+        "payTo": null,
+        "resource": null
+      }
+    },
+    {
+      "name": "solana-coinprice-correct",
+      "artifact": "/tmp/x402-probes-phase2/solana-coinprice-correct.json",
+      "request": {
+        "method": null,
+        "url": null
+      },
+      "response": {
+        "status": null,
+        "ok": null,
+        "paymentResponseHeader": null,
+        "decodedPaymentResponse": {}
+      },
+      "payment": {
+        "status": null,
+        "x402Version": null,
+        "error": {
+          "code": "http_error",
+          "message": "HTTP 402",
+          "details": {
+            "status": 402
+          }
+        },
+        "scheme": null,
+        "network": null,
+        "amount": null,
+        "asset": null,
+        "payTo": null,
+        "resource": null
+      }
+    },
+    {
+      "name": "coinstats-news-dry",
+      "artifact": "/tmp/x402-probes-phase3/coinstats-news-dry.json",
+      "request": {
+        "method": "GET",
+        "url": "https://x402.coinstats.app/news"
+      },
+      "response": {
+        "status": 402,
+        "ok": false,
+        "paymentResponseHeader": null,
+        "decodedPaymentResponse": {}
+      },
+      "payment": {
+        "status": "dry_run",
+        "x402Version": 2,
+        "error": "Payment required",
+        "scheme": "exact",
+        "network": "eip155:8453",
+        "amount": "1000",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "payTo": "0x0750a9e669C37FE1A1847E4B8f9e16F07c16162f",
+        "resource": null
+      }
+    },
+    {
+      "name": "coinstats-news",
+      "artifact": "/tmp/x402-probes-phase3/coinstats-news.json",
+      "request": {
+        "method": "GET",
+        "url": "https://x402.coinstats.app/news"
+      },
+      "response": {
+        "status": 200,
+        "ok": true,
+        "paymentResponseHeader": "payment-response",
+        "decodedPaymentResponse": {
+          "success": true,
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "transaction": "0x258d0810af7251cf791c90fe873fe55b8b9cab119d438b201287b0b792dac51b",
+          "network": "eip155:8453"
+        }
+      },
+      "payment": {
+        "status": "paid",
+        "x402Version": 2,
+        "error": "Payment required",
+        "scheme": "exact",
+        "network": "eip155:8453",
+        "amount": "1000",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "payTo": "0x0750a9e669C37FE1A1847E4B8f9e16F07c16162f",
+        "resource": null
+      }
+    },
+    {
+      "name": "origindao-quest-dry",
+      "artifact": "/tmp/x402-probes-phase3/origindao-quest-dry.json",
+      "request": {
+        "method": "GET",
+        "url": "https://protocol.origindao.ai/quest/board"
+      },
+      "response": {
+        "status": 402,
+        "ok": false,
+        "paymentResponseHeader": null,
+        "decodedPaymentResponse": {}
+      },
+      "payment": {
+        "status": "dry_run",
+        "x402Version": 2,
+        "error": "Payment required",
+        "scheme": "exact",
+        "network": "eip155:8453",
+        "amount": "1000",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "payTo": "0xb2e03d4AaCa935FE1fA512e483eDbDa012d0dbb0",
+        "resource": null
+      }
+    },
+    {
+      "name": "origindao-quest",
+      "artifact": "/tmp/x402-probes-phase3/origindao-quest.json",
+      "request": {
+        "method": "GET",
+        "url": "https://protocol.origindao.ai/quest/board"
+      },
+      "response": {
+        "status": 200,
+        "ok": true,
+        "paymentResponseHeader": "payment-response",
+        "decodedPaymentResponse": {
+          "success": true,
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "transaction": "0xd00a277b7ff8049985c7b8f17ec484f03a4b5b8dc46325b5361d556177051484",
+          "network": "eip155:8453"
+        }
+      },
+      "payment": {
+        "status": "paid",
+        "x402Version": 2,
+        "error": "Payment required",
+        "scheme": "exact",
+        "network": "eip155:8453",
+        "amount": "1000",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "payTo": "0xb2e03d4AaCa935FE1fA512e483eDbDa012d0dbb0",
+        "resource": null
+      }
+    }
+  ]
+}

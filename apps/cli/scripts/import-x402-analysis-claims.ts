@@ -3,21 +3,12 @@ import path from "node:path";
 import { env, ensureDir } from "../lib/db";
 import { buildProviderClaimsFromNormalizedProbes } from "../lib/attribution/import-x402-analysis";
 
-const defaultCorpusPath = () => {
-  const candidates = [
-    path.resolve(
-      process.cwd(),
-      "../../../foxytanuki/docs/x402-analysis/probes/normalized-probes.json",
-    ),
-    path.resolve(process.cwd(), "../foxytanuki/docs/x402-analysis/probes/normalized-probes.json"),
-  ];
-  return candidates.find((candidate) => fs.existsSync(candidate)) ?? candidates[0]!;
-};
-
 export const runImportX402AnalysisClaims = (
   options: { corpusPath?: string; outputPath?: string } = {},
 ) => {
-  const corpusPath = path.resolve(options.corpusPath ?? defaultCorpusPath());
+  const corpusPath = path.resolve(
+    options.corpusPath ?? path.join(env.fixturesDir, "knowledge", "x402_analysis_normalized_probes.json"),
+  );
   const outputPath = path.resolve(
     options.outputPath ??
       path.join(env.fixturesDir, "knowledge", "provider_endpoint_claims.generated.json"),
