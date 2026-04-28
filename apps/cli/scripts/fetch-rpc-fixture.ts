@@ -1,10 +1,12 @@
 import path from "node:path";
 import { fetchRpcFixture, writeRpcFixtureFiles } from "../lib/rpc-fixtures";
+import { resolveBaseRpcUrl, resolveRpcRequestTimeoutMs } from "../lib/rpc-config";
 
 const usage = () => `Usage: bun scripts/fetch-rpc-fixture.ts --case-id <case-id> --tx-hash <tx-hash> [--out-dir fixtures/raw] [--force]
 
 Environment:
-  BASE_RPC_URL                 Base JSON-RPC endpoint
+  BASE_RPC_URL                 Base JSON-RPC endpoint, preferred when set
+  ALCHEMY_API_KEY              Used to build Base Alchemy endpoint when BASE_RPC_URL is unset
   RPC_REQUEST_TIMEOUT_MS       Optional request timeout in milliseconds
 `;
 
@@ -16,24 +18,18 @@ const readArg = (name: string) => {
 
 const hasArg = (name: string) => process.argv.includes(name);
 
-const readTimeoutMs = () => {
-  const value = Number(process.env.RPC_REQUEST_TIMEOUT_MS ?? 30_000);
-  if (!Number.isSafeInteger(value) || value <= 0) throw new Error("RPC_REQUEST_TIMEOUT_MS must be a positive integer");
-  return value;
-};
-
 export const runFetchRpcFixture = async () => {
   const caseId = readArg("--case-id");
   const txHash = readArg("--tx-hash");
   const outputDir = readArg("--out-dir") ?? path.resolve(process.cwd(), "fixtures", "raw");
-  const rpcUrl = process.env.BASE_RPC_URL;
-  const timeoutMs = readTimeoutMs();
+  const timeoutMs = resolveRpcRequestTimeoutMs();
   const force = hasArg("--force");
 
-  if (!caseId || !txHash || !rpcUrl) {
+  if (!caseId || !txHash) {
     throw new Error(usage());
   }
 
+  const rpcUrl = resolveBaseRpcUrl();
   const fixture = await fetchRpcFixture({ rpcUrl, txHash, timeoutMs });
   const files = writeRpcFixtureFiles(fixture, { caseId, outputDir: path.resolve(process.cwd(), outputDir), force });
 

@@ -2,6 +2,7 @@ import { env, initDb } from "../lib/db";
 import { buildObservationsFromFixture } from "../lib/observations/build-observation";
 import { storePaymentObservations } from "../lib/observations/store-observations";
 import { fetchRpcFixture, type FetchLike } from "../lib/rpc-fixtures";
+import { resolveBaseRpcUrl, resolveRpcRequestTimeoutMs } from "../lib/rpc-config";
 
 type RunRpcTxIngestOptions = {
   rpcUrl: string;
@@ -23,12 +24,6 @@ const readArg = (name: string) => {
   const index = process.argv.indexOf(name);
   if (index === -1) return null;
   return process.argv[index + 1] ?? null;
-};
-
-const readTimeoutMs = () => {
-  const value = Number(process.env.RPC_REQUEST_TIMEOUT_MS ?? 30_000);
-  if (!Number.isSafeInteger(value) || value <= 0) throw new Error("RPC_REQUEST_TIMEOUT_MS must be a positive integer");
-  return value;
 };
 
 export const runRpcTxIngest = async ({
@@ -93,12 +88,11 @@ export const runRpcTxIngest = async ({
 
 export const runRpcTxIngestFromCli = async () => {
   const txHash = readArg("--tx-hash") ?? process.argv[2];
-  const rpcUrl = process.env.BASE_RPC_URL;
-  if (!txHash || !rpcUrl) {
-    throw new Error("Usage: bun scripts/ingest-rpc-tx.ts --tx-hash <tx-hash>\nEnvironment: BASE_RPC_URL, RPC_REQUEST_TIMEOUT_MS");
+  if (!txHash) {
+    throw new Error("Usage: bun scripts/ingest-rpc-tx.ts --tx-hash <tx-hash>\nEnvironment: BASE_RPC_URL or ALCHEMY_API_KEY, RPC_REQUEST_TIMEOUT_MS");
   }
 
-  return runRpcTxIngest({ rpcUrl, txHash, timeoutMs: readTimeoutMs() });
+  return runRpcTxIngest({ rpcUrl: resolveBaseRpcUrl(), txHash, timeoutMs: resolveRpcRequestTimeoutMs() });
 };
 
 if (import.meta.main) {

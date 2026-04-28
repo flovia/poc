@@ -26,6 +26,7 @@ import { buildAttributionCandidates } from "../lib/attribution/score";
 import { listAttributionCandidates, listPaymentObservations } from "../lib/aggregates/summaries";
 import type { FixtureManifest, RawReceipt, RawTransaction } from "../lib/schema";
 import { fetchRpcFixture, normalizeRpcReceipt, normalizeRpcTransaction, type RpcReceiptPayload, type RpcTransactionPayload } from "../lib/rpc-fixtures";
+import { resolveBaseRpcUrl, resolveRpcRequestTimeoutMs } from "../lib/rpc-config";
 
 const fixtureRoot = path.resolve(import.meta.dir, "..", "fixtures");
 
@@ -215,6 +216,21 @@ describe("RPC fixture capture", () => {
     expect(calls).toEqual(["eth_chainId", "eth_getTransactionByHash", "eth_getTransactionReceipt", "eth_getBlockByNumber"]);
     expect(fixture.tx.blockTimestamp).toBe(101);
     expect(String(fixture.receipt.transactionHash)).toBe(rpcTx.hash);
+  });
+});
+
+describe("RPC env config", () => {
+  test("prefers explicit Base RPC URL over Alchemy API key", () => {
+    expect(resolveBaseRpcUrl({ BASE_RPC_URL: "https://rpc.example", ALCHEMY_API_KEY: "secret" })).toBe("https://rpc.example");
+  });
+
+  test("builds Base Alchemy endpoint when only Alchemy API key is present", () => {
+    expect(resolveBaseRpcUrl({ ALCHEMY_API_KEY: "secret" })).toBe("https://base-mainnet.g.alchemy.com/v2/secret");
+  });
+
+  test("validates RPC timeout", () => {
+    expect(resolveRpcRequestTimeoutMs({ RPC_REQUEST_TIMEOUT_MS: "1234" })).toBe(1234);
+    expect(() => resolveRpcRequestTimeoutMs({ RPC_REQUEST_TIMEOUT_MS: "0" })).toThrow("positive integer");
   });
 });
 
