@@ -12,7 +12,7 @@ import { rebuildWalletProfiles } from "../lib/aggregates/wallets";
 import { listAttributionCandidates, listPaymentObservations } from "../lib/aggregates/summaries";
 import { runReport } from "./report";
 import { validateFixtureManifest, type RawReceipt, type RawTransaction } from "../lib/schema";
-import { buildObservationsFromFixture } from "../lib/observations/build-observation";
+import { buildPaymentObservations } from "../lib/observations/build-observation";
 
 const readExpected = <T>(filePath: string): T => {
   const absolutePath = path.isAbsolute(filePath) ? filePath : path.join(process.cwd(), filePath);
@@ -91,7 +91,7 @@ const negativeObservationCount = manifest.cases
   .flatMap((fixtureCase) => {
     const tx = readExpected<RawTransaction>(path.join(env.fixturesDir, fixtureCase.txFile));
     const receipt = readExpected<RawReceipt>(path.join(env.fixturesDir, fixtureCase.receiptFile));
-    return buildObservationsFromFixture(fixtureCase.caseId, tx, receipt);
+    return buildPaymentObservations(fixtureCase.caseId, tx, receipt);
   }).length;
 
 const observedSorted = sortObservations(observed.map(normalize));

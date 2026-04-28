@@ -1,13 +1,9 @@
-import { db, nowIso } from "../db";
+import { db, nowIso, type AppDatabase } from "../db";
 
-export const rebuildWalletProfiles = () => {
+export const rebuildWalletProfiles = (database: AppDatabase = db) => {
   const now = nowIso();
 
-  db.exec("DELETE FROM payer_wallet_profiles;");
-  db.exec("DELETE FROM recipient_summaries;");
-  db.exec("DELETE FROM relayer_summaries;");
-
-  const payerRows = db
+  const payerRows = database
     .prepare(`
       SELECT
         payer_wallet,
@@ -120,7 +116,7 @@ export const rebuildWalletProfiles = () => {
     }
   }
 
-  const insertPayer = db.prepare(`
+  const insertPayer = database.prepare(`
     INSERT INTO payer_wallet_profiles (
       wallet,
       observation_count,
@@ -133,7 +129,7 @@ export const rebuildWalletProfiles = () => {
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
-  const insertRecipient = db.prepare(`
+  const insertRecipient = database.prepare(`
     INSERT INTO recipient_summaries (
       wallet,
       observation_count,
@@ -146,7 +142,7 @@ export const rebuildWalletProfiles = () => {
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
-  const insertRelayer = db.prepare(`
+  const insertRelayer = database.prepare(`
     INSERT INTO relayer_summaries (
       wallet,
       observation_count,
@@ -159,44 +155,51 @@ export const rebuildWalletProfiles = () => {
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
-  for (const [wallet, profile] of payerMap.entries()) {
-    insertPayer.run(
-      wallet,
-      profile.observation_count,
-      profile.total_amount_atomic.toString(),
-      profile.uniqueRecipients.size,
-      profile.uniqueRelayers.size,
-      profile.firstSeenAt,
-      profile.lastSeenAt,
-      now,
-    );
-  }
+  const rebuild = database.transaction(() => {
+    database.exec("DELETE FROM payer_wallet_profiles;");
+    database.exec("DELETE FROM recipient_summaries;");
+    database.exec("DELETE FROM relayer_summaries;");
 
-  for (const [wallet, profile] of recipientMap.entries()) {
-    insertRecipient.run(
-      wallet,
-      profile.observation_count,
-      profile.total_amount_atomic.toString(),
-      profile.uniquePayers.size,
-      profile.uniqueRelayers.size,
-      profile.firstSeenAt,
-      profile.lastSeenAt,
-      now,
-    );
-  }
+    for (const [wallet, profile] of payerMap.entries()) {
+      insertPayer.run(
+        wallet,
+        profile.observation_count,
+        profile.total_amount_atomic.toString(),
+        profile.uniqueRecipients.size,
+        profile.uniqueRelayers.size,
+        profile.firstSeenAt,
+        profile.lastSeenAt,
+        now,
+      );
+    }
 
-  for (const [wallet, profile] of relayerMap.entries()) {
-    insertRelayer.run(
-      wallet,
-      profile.observation_count,
-      profile.total_amount_atomic.toString(),
-      profile.uniquePayers.size,
-      profile.uniqueRecipients.size,
-      profile.firstSeenAt,
-      profile.lastSeenAt,
-      now,
-    );
-  }
+    for (const [wallet, profile] of recipientMap.entries()) {
+      insertRecipient.run(
+        wallet,
+        profile.observation_count,
+        profile.total_amount_atomic.toString(),
+        profile.uniquePayers.size,
+        profile.uniqueRelayers.size,
+        profile.firstSeenAt,
+        profile.lastSeenAt,
+        now,
+      );
+    }
+
+    for (const [wallet, profile] of relayerMap.entries()) {
+      insertRelayer.run(
+        wallet,
+        profile.observation_count,
+        profile.total_amount_atomic.toString(),
+        profile.uniquePayers.size,
+        profile.uniqueRecipients.size,
+        profile.firstSeenAt,
+        profile.lastSeenAt,
+        now,
+      );
+    }
+  });
+  rebuild();
 
   return {
     payerProfiles: payerMap.size,

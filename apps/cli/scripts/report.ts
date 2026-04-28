@@ -10,6 +10,13 @@ import {
   listRelayerSummaries,
 } from "../lib/aggregates/summaries";
 import { buildWalletUsageGraph } from "../lib/attribution/wallet-graph";
+import {
+  toAttributionCandidateDto,
+  toDailyMetricDto,
+  toPaymentObservationDto,
+  toWalletProfileDto,
+  type ReportSummaryDto,
+} from "../lib/api/dto";
 
 const buildMarkdown = (summary: Record<string, unknown>) => {
   const observations = listPaymentObservations();
@@ -106,7 +113,7 @@ ${
 `;
 };
 
-const buildSummary = () => {
+const buildSummary = (): ReportSummaryDto => {
   const observations = listPaymentObservations();
   const candidates = listAttributionCandidates();
   const dailyMetrics = listDailyMetrics();
@@ -127,12 +134,12 @@ const buildSummary = () => {
       walletUsageGraphProviderWallets: walletUsageGraph.providerWallets.length,
     },
     scopeNote: "payer-wallet intelligence only; no human identity enrichment",
-    observations,
-    attributionCandidates: candidates,
-    dailyMetrics,
-    payerWalletProfiles: payerProfiles,
-    recipientSummaries,
-    relayerSummaries,
+    observations: observations.map(toPaymentObservationDto),
+    attributionCandidates: candidates.map(toAttributionCandidateDto),
+    dailyMetrics: dailyMetrics.map(toDailyMetricDto),
+    payerWalletProfiles: payerProfiles.map(toWalletProfileDto),
+    recipientSummaries: recipientSummaries.map(toWalletProfileDto),
+    relayerSummaries: relayerSummaries.map(toWalletProfileDto),
     walletUsageGraph,
   };
 };

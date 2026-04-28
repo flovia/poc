@@ -17,7 +17,7 @@ import type {
   RawReceipt,
   RawTransaction,
 } from "../lib/schema";
-import { buildObservationsFromFixture } from "../lib/observations/build-observation";
+import { buildPaymentObservations } from "../lib/observations/build-observation";
 
 type HexData = `0x${string}`;
 
@@ -445,7 +445,7 @@ const cases = writeFixtures();
 
 const positiveObservations = cases
   .filter((entry) => entry.case.expectedObservation ?? false)
-  .flatMap((entry) => buildObservationsFromFixture(entry.case.caseId, entry.tx, entry.receipt));
+  .flatMap((entry) => buildPaymentObservations(entry.case.caseId, entry.tx, entry.receipt));
 
 const expected = {
   generatedAt: new Date().toISOString(),

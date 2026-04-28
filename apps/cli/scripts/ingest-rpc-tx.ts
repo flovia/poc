@@ -1,5 +1,5 @@
-import { env, initDb } from "../lib/db";
-import { buildObservationsFromFixture } from "../lib/observations/build-observation";
+import { db, env, initDb, type AppDatabase } from "../lib/db";
+import { buildPaymentObservations } from "../lib/observations/build-observation";
 import { storePaymentObservations } from "../lib/observations/store-observations";
 import { fetchRpcFixture, type FetchLike } from "../lib/rpc-fixtures";
 import { resolveBaseRpcUrl, resolveRpcRequestTimeoutMs } from "../lib/rpc-config";
@@ -9,6 +9,7 @@ type RunRpcTxIngestOptions = {
   txHash: string;
   timeoutMs?: number;
   fetchFn?: FetchLike;
+  database?: AppDatabase;
 };
 
 export type RpcTxIngestResult = {
@@ -31,8 +32,9 @@ export const runRpcTxIngest = async ({
   txHash,
   timeoutMs = 30_000,
   fetchFn,
+  database = db,
 }: RunRpcTxIngestOptions): Promise<RpcTxIngestResult> => {
-  initDb();
+  initDb(database);
 
   let fixture: Awaited<ReturnType<typeof fetchRpcFixture>>;
   try {
@@ -63,7 +65,7 @@ export const runRpcTxIngest = async ({
   }
 
   const caseId = `rpc-${fixture.tx.hash.slice(2, 14)}`;
-  const observations = buildObservationsFromFixture(caseId, fixture.tx, fixture.receipt);
+  const observations = buildPaymentObservations(caseId, fixture.tx, fixture.receipt);
 
   if (observations.length === 0) {
     return {
@@ -76,7 +78,7 @@ export const runRpcTxIngest = async ({
     };
   }
 
-  const stored = storePaymentObservations(observations);
+  const stored = storePaymentObservations(observations, database);
   return {
     txHash: fixture.tx.hash,
     observationCount: observations.length,

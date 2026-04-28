@@ -1,11 +1,14 @@
-import { db, nowIso } from "../db";
+import { db, nowIso, type AppDatabase } from "../db";
 import type { AttributionCandidate, AttributionCandidateType, KnownFingerprint } from "../schema";
 import { listProviderEndpointClaims } from "./provider-claims";
 import { listSettlementFingerprintPacks } from "./settlement-fingerprints";
 import { BASE_USDC_ADDRESS, MULTICALL3_ADDRESS } from "../constants";
 
-const listObservations = () =>
-  db
+const BASE_MAINNET_CHAIN_ID = 8453;
+const PAYSPONGE_HOST_SUFFIX = ".x402.paysponge.com";
+
+const listObservations = (database: AppDatabase) =>
+  database
     .prepare(
       `
     SELECT
@@ -51,8 +54,8 @@ type FingerprintRecord = {
   source_name: string | null;
 };
 
-const listFingerprints = () =>
-  db
+const listFingerprints = (database: AppDatabase) =>
+  database
     .prepare(
       `SELECT fingerprint_type, fingerprint_value, confidence, provider_label, middleman_label, source_name FROM known_fingerprints ORDER BY fingerprint_type, fingerprint_value`,
     )
@@ -93,8 +96,8 @@ const roleToCandidateType = (role: string): AttributionCandidateType | null => {
   return null;
 };
 
-const listSettlementEvidence = () =>
-  db
+const listSettlementEvidence = (database: AppDatabase) =>
+  database
     .prepare(
       `SELECT observation_id, evidence_type, raw_json FROM settlement_evidence ORDER BY observation_id, evidence_id`,
     )
@@ -141,24 +144,203 @@ const packMatchesObservation = (
   return true;
 };
 
-export const buildAttributionCandidates = () => {
-  const now = nowIso();
-  db.exec("DELETE FROM attribution_candidates;");
+type ObservationForScoring = ReturnType<typeof listObservations>[number];
+type FingerprintForScoring = ReturnType<typeof normalize>[number];
+type ProviderClaimForScoring = ReturnType<typeof listProviderEndpointClaims>[number] & {
+  roles: string[];
+  evidenceRefs: string[];
+};
+type SettlementPackForScoring = ReturnType<typeof listSettlementFingerprintPacks>[number] & {
+  reasons: string[];
+  evidenceRefs: string[];
+};
 
-  const observations = listObservations();
-  const fingerprints = normalize(listFingerprints());
-  const providerClaims = listProviderEndpointClaims().map((claim) => ({
+type ScoredCandidate = {
+  observationId: number;
+  candidateType: AttributionCandidateType;
+  matchedType: string;
+  matchedValue: string;
+  confidence: number;
+  reasons: string[];
+  evidenceRefs: string[];
+  matchedClaimId?: string | null;
+  matchedSettlementFingerprintId?: string | null;
+  entityId?: string | null;
+  role?: string | null;
+};
+
+export const scoreObservationCandidates = ({
+  observation,
+  recipientFingerprints,
+  relayerFingerprints,
+  providerClaims,
+  settlementPacks,
+  evidenceByObservationId,
+}: {
+  observation: ObservationForScoring;
+  recipientFingerprints: FingerprintForScoring[];
+  relayerFingerprints: FingerprintForScoring[];
+  providerClaims: ProviderClaimForScoring[];
+  settlementPacks: SettlementPackForScoring[];
+  evidenceByObservationId: Map<number, string[]>;
+}): ScoredCandidate[] => {
+  const candidates: ScoredCandidate[] = [];
+  const addCandidate = (candidate: ScoredCandidate) => candidates.push(candidate);
+
+  const recipientMatch = recipientFingerprints.find(
+    (entry) => entry.fingerprintValue.toLowerCase() === observation.recipient_wallet.toLowerCase(),
+  );
+  if (recipientMatch) {
+    addCandidate({
+      observationId: observation.observation_id,
+      candidateType: "recipient_match",
+      matchedType: recipientMatch.fingerprintType,
+      matchedValue: recipientMatch.fingerprintValue,
+      confidence: recipientMatch.confidence,
+      reasons: [
+        "recipient matches known recipient fingerprint",
+        `providerLabel=${recipientMatch.providerLabel ?? "unlabeled"}`,
+        `sourceName=${recipientMatch.sourceName ?? "unknown"}`,
+      ],
+      evidenceRefs: [
+        `receipt:${observation.observation_id}:recipient`,
+        `fingerprint:recipient:${recipientMatch.fingerprintValue.toLowerCase()}`,
+      ],
+    });
+  }
+
+  const relayerMatch = relayerFingerprints.find(
+    (entry) => entry.fingerprintValue.toLowerCase() === observation.relayer_wallet.toLowerCase(),
+  );
+  if (relayerMatch) {
+    addCandidate({
+      observationId: observation.observation_id,
+      candidateType: "relayer_match",
+      matchedType: relayerMatch.fingerprintType,
+      matchedValue: relayerMatch.fingerprintValue,
+      confidence: relayerMatch.confidence,
+      reasons: [
+        "relayer matches known relayer fingerprint",
+        `providerLabel=${relayerMatch.providerLabel ?? "unlabeled"}`,
+        `middlemanLabel=${relayerMatch.middlemanLabel ?? "unlabeled"}`,
+        `sourceName=${relayerMatch.sourceName ?? "unknown"}`,
+      ],
+      evidenceRefs: [
+        `receipt:${observation.observation_id}:relayer`,
+        `fingerprint:relayer:${relayerMatch.fingerprintValue.toLowerCase()}`,
+      ],
+    });
+  }
+
+  const matchedSettlementPacks = settlementPacks.filter((pack) =>
+    packMatchesObservation(pack, observation, evidenceByObservationId),
+  );
+
+  for (const pack of matchedSettlementPacks) {
+    addCandidate({
+      observationId: observation.observation_id,
+      candidateType: "settlement_cluster",
+      matchedType: "settlement_fingerprint",
+      matchedValue: pack.cluster_id,
+      matchedSettlementFingerprintId: pack.fingerprint_id,
+      entityId: pack.entity_id,
+      confidence: pack.base_confidence,
+      reasons: ["settlement evidence matches fingerprint pack", ...pack.reasons],
+      evidenceRefs: [
+        `receipt:${observation.observation_id}:settlement`,
+        `settlement_fingerprint:${pack.fingerprint_id}`,
+        ...pack.evidenceRefs,
+      ],
+    });
+  }
+
+  const matchedClaims = providerClaims.filter((claim) => {
+    if (normalizeAddress(claim.pay_to_wallet) !== normalizeAddress(observation.recipient_wallet))
+      return false;
+    if (claim.tx_hash && normalizeAddress(claim.tx_hash) !== normalizeAddress(observation.tx_hash))
+      return false;
+    if (
+      normalizeNetwork(claim.network) !== "base" ||
+      observation.chain_id !== BASE_MAINNET_CHAIN_ID
+    )
+      return false;
+    if (normalizeAddress(claim.asset_address) !== normalizeAddress(observation.token_address))
+      return false;
+    if (claim.amount_atomic && claim.amount_atomic !== observation.amount_atomic) return false;
+    return true;
+  });
+
+  for (const claim of matchedClaims) {
+    const isPayspongeHostJoined =
+      String(claim.request_host ?? "").endsWith(PAYSPONGE_HOST_SUFFIX) && Boolean(claim.tx_hash);
+    const matchedSettlementPack = matchedSettlementPacks[0];
+    for (const role of claim.roles) {
+      const candidateType = roleToCandidateType(role);
+      if (!candidateType) continue;
+      const needsSettlementJoin =
+        claim.entity_id === "paysponge" &&
+        ["middleman", "market", "facilitator", "settlement_operator"].includes(role);
+      if (needsSettlementJoin && (!isPayspongeHostJoined || !matchedSettlementPack)) continue;
+      const confidence = confidenceForClaim(claim.confidence, claim.evidence_class);
+      const reasons = [
+        `${role} claim matches observation recipient payTo`,
+        `entityId=${claim.entity_id}`,
+        `evidenceClass=${claim.evidence_class}`,
+        `sourceName=${claim.source_name}`,
+      ];
+      if (claim.tx_hash) reasons.push("decoded payment response transaction matches observed tx");
+      if (claim.request_host) reasons.push(`requestHost=${claim.request_host}`);
+      if (needsSettlementJoin)
+        reasons.push(`settlementCluster=${matchedSettlementPack.cluster_id}`);
+      addCandidate({
+        observationId: observation.observation_id,
+        candidateType,
+        matchedType: "provider_endpoint_claim",
+        matchedValue: `${claim.claim_id}:${role}`,
+        matchedClaimId: claim.claim_id,
+        matchedSettlementFingerprintId: needsSettlementJoin
+          ? matchedSettlementPack.fingerprint_id
+          : null,
+        entityId: claim.entity_id,
+        role,
+        confidence,
+        reasons,
+        evidenceRefs: [
+          `receipt:${observation.observation_id}:recipient`,
+          `claim:${claim.claim_id}`,
+          ...(needsSettlementJoin
+            ? [
+                `settlement_fingerprint:${matchedSettlementPack.fingerprint_id}`,
+                `receipt:${observation.observation_id}:settlement`,
+              ]
+            : []),
+          ...claim.evidenceRefs,
+        ],
+      });
+    }
+  }
+
+  return candidates;
+};
+
+export const buildAttributionCandidates = (database: AppDatabase = db) => {
+  const now = nowIso();
+  database.exec("DELETE FROM attribution_candidates;");
+
+  const observations = listObservations(database);
+  const fingerprints = normalize(listFingerprints(database));
+  const providerClaims = listProviderEndpointClaims(database).map((claim) => ({
     ...claim,
     roles: JSON.parse(claim.roles_json) as string[],
     evidenceRefs: JSON.parse(claim.evidence_refs_json) as string[],
   }));
-  const settlementPacks = listSettlementFingerprintPacks().map((pack) => ({
+  const settlementPacks = listSettlementFingerprintPacks(database).map((pack) => ({
     ...pack,
     reasons: JSON.parse(pack.reasons_json) as string[],
     evidenceRefs: JSON.parse(pack.evidence_refs_json) as string[],
   }));
   const evidenceByObservationId = new Map<number, string[]>();
-  for (const evidence of listSettlementEvidence()) {
+  for (const evidence of listSettlementEvidence(database)) {
     evidenceByObservationId.set(evidence.observation_id, [
       ...(evidenceByObservationId.get(evidence.observation_id) ?? []),
       evidence.raw_json,
@@ -168,7 +350,7 @@ export const buildAttributionCandidates = () => {
   const recipientFingerprints = fingerprints.filter((item) => item.fingerprintType === "recipient");
   const relayerFingerprints = fingerprints.filter((item) => item.fingerprintType === "relayer");
 
-  const insertCandidate = db.prepare(`
+  const insertCandidate = database.prepare(`
     INSERT INTO attribution_candidates (
       observation_id,
       candidate_type,
@@ -237,145 +419,15 @@ export const buildAttributionCandidates = () => {
   };
 
   for (const observation of observations) {
-    const recipientMatch = recipientFingerprints.find(
-      (entry) =>
-        entry.fingerprintValue.toLowerCase() === observation.recipient_wallet.toLowerCase(),
-    );
-    if (recipientMatch) {
-      const reasons = [
-        "recipient matches known recipient fingerprint",
-        `providerLabel=${recipientMatch.providerLabel ?? "unlabeled"}`,
-        `sourceName=${recipientMatch.sourceName ?? "unknown"}`,
-      ];
-      const evidenceRefs = [
-        `receipt:${observation.observation_id}:recipient`,
-        `fingerprint:recipient:${recipientMatch.fingerprintValue.toLowerCase()}`,
-      ];
-      const candidateType = "recipient_match" as const;
-
-      writeCandidate({
-        observationId: observation.observation_id,
-        candidateType,
-        matchedType: recipientMatch.fingerprintType,
-        matchedValue: recipientMatch.fingerprintValue,
-        confidence: recipientMatch.confidence,
-        reasons,
-        evidenceRefs,
-      });
-    }
-
-    const relayerMatch = relayerFingerprints.find(
-      (entry) => entry.fingerprintValue.toLowerCase() === observation.relayer_wallet.toLowerCase(),
-    );
-    if (relayerMatch) {
-      const reasons = [
-        "relayer matches known relayer fingerprint",
-        `providerLabel=${relayerMatch.providerLabel ?? "unlabeled"}`,
-        `middlemanLabel=${relayerMatch.middlemanLabel ?? "unlabeled"}`,
-        `sourceName=${relayerMatch.sourceName ?? "unknown"}`,
-      ];
-      const evidenceRefs = [
-        `receipt:${observation.observation_id}:relayer`,
-        `fingerprint:relayer:${relayerMatch.fingerprintValue.toLowerCase()}`,
-      ];
-      const candidateType = "relayer_match" as const;
-
-      writeCandidate({
-        observationId: observation.observation_id,
-        candidateType,
-        matchedType: relayerMatch.fingerprintType,
-        matchedValue: relayerMatch.fingerprintValue,
-        confidence: relayerMatch.confidence,
-        reasons,
-        evidenceRefs,
-      });
-    }
-
-    const matchedSettlementPacks = settlementPacks.filter((pack) =>
-      packMatchesObservation(pack, observation, evidenceByObservationId),
-    );
-
-    for (const pack of matchedSettlementPacks) {
-      writeCandidate({
-        observationId: observation.observation_id,
-        candidateType: "settlement_cluster",
-        matchedType: "settlement_fingerprint",
-        matchedValue: pack.cluster_id,
-        matchedSettlementFingerprintId: pack.fingerprint_id,
-        entityId: pack.entity_id,
-        confidence: pack.base_confidence,
-        reasons: ["settlement evidence matches fingerprint pack", ...pack.reasons],
-        evidenceRefs: [
-          `receipt:${observation.observation_id}:settlement`,
-          `settlement_fingerprint:${pack.fingerprint_id}`,
-          ...pack.evidenceRefs,
-        ],
-      });
-    }
-
-    const matchedClaims = providerClaims.filter((claim) => {
-      if (normalizeAddress(claim.pay_to_wallet) !== normalizeAddress(observation.recipient_wallet))
-        return false;
-      if (
-        claim.tx_hash &&
-        normalizeAddress(claim.tx_hash) !== normalizeAddress(observation.tx_hash)
-      )
-        return false;
-      if (normalizeNetwork(claim.network) !== "base" || observation.chain_id !== 8453) return false;
-      if (normalizeAddress(claim.asset_address) !== normalizeAddress(observation.token_address))
-        return false;
-      if (claim.amount_atomic && claim.amount_atomic !== observation.amount_atomic) return false;
-      return true;
-    });
-
-    for (const claim of matchedClaims) {
-      const isPayspongeHostJoined =
-        String(claim.request_host ?? "").endsWith(".x402.paysponge.com") && Boolean(claim.tx_hash);
-      const matchedSettlementPack = matchedSettlementPacks[0];
-      for (const role of claim.roles) {
-        const candidateType = roleToCandidateType(role);
-        if (!candidateType) continue;
-        const needsSettlementJoin =
-          claim.entity_id === "paysponge" &&
-          ["middleman", "market", "facilitator", "settlement_operator"].includes(role);
-        if (needsSettlementJoin && (!isPayspongeHostJoined || !matchedSettlementPack)) continue;
-        const confidence = confidenceForClaim(claim.confidence, claim.evidence_class);
-        const reasons = [
-          `${role} claim matches observation recipient payTo`,
-          `entityId=${claim.entity_id}`,
-          `evidenceClass=${claim.evidence_class}`,
-          `sourceName=${claim.source_name}`,
-        ];
-        if (claim.tx_hash) reasons.push("decoded payment response transaction matches observed tx");
-        if (claim.request_host) reasons.push(`requestHost=${claim.request_host}`);
-        if (needsSettlementJoin)
-          reasons.push(`settlementCluster=${matchedSettlementPack.cluster_id}`);
-        writeCandidate({
-          observationId: observation.observation_id,
-          candidateType,
-          matchedType: "provider_endpoint_claim",
-          matchedValue: `${claim.claim_id}:${role}`,
-          matchedClaimId: claim.claim_id,
-          matchedSettlementFingerprintId: needsSettlementJoin
-            ? matchedSettlementPack.fingerprint_id
-            : null,
-          entityId: claim.entity_id,
-          role,
-          confidence,
-          reasons,
-          evidenceRefs: [
-            `receipt:${observation.observation_id}:recipient`,
-            `claim:${claim.claim_id}`,
-            ...(needsSettlementJoin
-              ? [
-                  `settlement_fingerprint:${matchedSettlementPack.fingerprint_id}`,
-                  `receipt:${observation.observation_id}:settlement`,
-                ]
-              : []),
-            ...claim.evidenceRefs,
-          ],
-        });
-      }
+    for (const candidate of scoreObservationCandidates({
+      observation,
+      recipientFingerprints,
+      relayerFingerprints,
+      providerClaims,
+      settlementPacks,
+      evidenceByObservationId,
+    })) {
+      writeCandidate(candidate);
     }
   }
 

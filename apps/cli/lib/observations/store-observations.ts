@@ -1,11 +1,20 @@
-import { db, nowIso } from "../db";
+import { db, nowIso, type AppDatabase } from "../db";
 import type { PaymentObservationInput } from "../schema";
 
 const safeStringify = (value: unknown): string =>
   JSON.stringify(value, (_, nested) => (typeof nested === "bigint" ? nested.toString() : nested));
 
-export const storePaymentObservations = (observations: PaymentObservationInput[]) => {
-  const countEvidence = db.prepare(`
+const sourceRefForEvidence = (
+  observation: PaymentObservationInput,
+  item: PaymentObservationInput["evidence"][number],
+  index: number,
+) => `tx:${observation.txHash}:stable:${observation.stableHash}:evidence:${item.type}:${index}`;
+
+export const storePaymentObservations = (
+  observations: PaymentObservationInput[],
+  database: AppDatabase = db,
+) => {
+  const countEvidence = database.prepare(`
     INSERT INTO settlement_evidence (
       observation_id,
       evidence_type,
@@ -22,7 +31,7 @@ export const storePaymentObservations = (observations: PaymentObservationInput[]
        OR settlement_evidence.raw_json != excluded.raw_json
   `);
 
-  const insertObservation = db.prepare(`
+  const insertObservation = database.prepare(`
     INSERT INTO payment_observations (
       chain_id,
       tx_hash,
@@ -44,7 +53,7 @@ export const storePaymentObservations = (observations: PaymentObservationInput[]
     ON CONFLICT(chain_id, tx_hash, tx_index, stable_hash) DO NOTHING
   `);
 
-  const selectObservationId = db.prepare(`
+  const selectObservationId = database.prepare(`
     SELECT observation_id
     FROM payment_observations
     WHERE chain_id = ? AND tx_hash = ? AND stable_hash = ?
@@ -55,7 +64,7 @@ export const storePaymentObservations = (observations: PaymentObservationInput[]
   let insertedObservations = 0;
   let evidenceRowsUpdated = 0;
 
-  const store = db.transaction((items: PaymentObservationInput[]) => {
+  const store = database.transaction((items: PaymentObservationInput[]) => {
     for (const observation of items) {
       const inserted = insertObservation.run(
         observation.chainId,
@@ -90,11 +99,11 @@ export const storePaymentObservations = (observations: PaymentObservationInput[]
       if (observationId == null) continue;
       if (inserted.changes === 1) insertedObservations += 1;
 
-      for (const item of observation.evidence) {
+      for (const [index, item] of observation.evidence.entries()) {
         const insertedEvidence = countEvidence.run(
           observationId,
           item.type,
-          `${observation.caseId}:${item.type}`,
+          sourceRefForEvidence(observation, item, index),
           item.detail,
           safeStringify(item.raw),
           now,

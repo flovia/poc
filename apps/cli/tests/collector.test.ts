@@ -18,12 +18,13 @@ import { extractTopLevelSelector } from "../lib/decoder/selectors";
 import { decodeTransferWithAuthorization } from "../lib/decoder/direct-usdc";
 import { decodeAggregate3, extractUsdcCallsFromMulticall } from "../lib/decoder/multicall3";
 import { decodeReceiptLogsForUsdc } from "../lib/decoder/logs";
-import { buildObservationsFromFixture } from "../lib/observations/build-observation";
-import { db, initDb, resetDb } from "../lib/db";
+import { buildPaymentObservations } from "../lib/observations/build-observation";
+import { createDb, db, initDb, resetDb } from "../lib/db";
+import { storePaymentObservations } from "../lib/observations/store-observations";
 import { runIngest } from "../scripts/ingest-fixtures";
 import { isRpcRangeCandidate, runRpcRangeIngest } from "../scripts/ingest-rpc-range";
 import { runRpcTxIngest } from "../scripts/ingest-rpc-tx";
-import { buildAttributionCandidates } from "../lib/attribution/score";
+import { buildAttributionCandidates, scoreObservationCandidates } from "../lib/attribution/score";
 import {
   seedKnownFingerprints,
   seedKnownFingerprintsFromFile,
@@ -31,7 +32,22 @@ import {
 import { seedProviderEndpointClaimsFromFile } from "../lib/attribution/provider-claims";
 import { seedSettlementFingerprintPacksFromFile } from "../lib/attribution/settlement-fingerprints";
 import { buildWalletUsageGraph } from "../lib/attribution/wallet-graph";
-import { listAttributionCandidates, listPaymentObservations } from "../lib/aggregates/summaries";
+import { buildDailyMetrics } from "../lib/aggregates/daily";
+import { rebuildWalletProfiles } from "../lib/aggregates/wallets";
+import {
+  listAttributionCandidates,
+  listDailyMetrics,
+  listPayerProfiles,
+  listPaymentObservations,
+  listRecipientSummaries,
+  listRelayerSummaries,
+} from "../lib/aggregates/summaries";
+import {
+  toAttributionCandidateDto,
+  toDailyMetricDto,
+  toPaymentObservationDto,
+  toWalletProfileDto,
+} from "../lib/api/dto";
 import {
   validateFixtureManifest,
   type FixtureManifest,
@@ -131,7 +147,7 @@ describe("pure decoders", () => {
 describe("observation builder", () => {
   test("builds direct observations from authorization fields, not transaction envelope", () => {
     const { fixtureCase, tx, receipt } = fixture("orthogonal-olostep");
-    const observations = buildObservationsFromFixture(fixtureCase.caseId, tx, receipt);
+    const observations = buildPaymentObservations(fixtureCase.caseId, tx, receipt);
     expect(observations).toHaveLength(1);
     const observation = observations[0]!;
     expect(observation.relayer).toBe(tx.from);
@@ -143,7 +159,7 @@ describe("observation builder", () => {
   test("builds Multicall3 observations and rejects incomplete or negative fixtures", () => {
     const multicall = fixture("paysponge-perplexity");
     expect(
-      buildObservationsFromFixture(multicall.fixtureCase.caseId, multicall.tx, multicall.receipt),
+      buildPaymentObservations(multicall.fixtureCase.caseId, multicall.tx, multicall.receipt),
     ).toHaveLength(1);
 
     for (const caseId of [
@@ -154,7 +170,7 @@ describe("observation builder", () => {
     ]) {
       const negative = fixture(caseId);
       expect(
-        buildObservationsFromFixture(negative.fixtureCase.caseId, negative.tx, negative.receipt),
+        buildPaymentObservations(negative.fixtureCase.caseId, negative.tx, negative.receipt),
         caseId,
       ).toHaveLength(0);
     }
@@ -197,6 +213,23 @@ describe("storage and attribution", () => {
     runIngest();
     const withFingerprints = listPaymentObservations();
     expect(withFingerprints).toEqual(withoutFingerprints);
+  });
+
+  test("storage and readers can use an isolated explicit database", () => {
+    const isolatedDb = createDb(":memory:");
+    try {
+      initDb(isolatedDb);
+      const { fixtureCase, tx, receipt } = fixture("orthogonal-serper");
+      const observations = buildPaymentObservations(fixtureCase.caseId, tx, receipt);
+
+      const stored = storePaymentObservations(observations, isolatedDb);
+
+      expect(stored.insertedObservations).toBe(1);
+      expect(listPaymentObservations(isolatedDb)).toHaveLength(1);
+      expect(listPaymentObservations()).toHaveLength(0);
+    } finally {
+      isolatedDb.close(false);
+    }
   });
 
   test("known fingerprint seeds do not create observations and negative matches stay ignored", () => {
@@ -337,6 +370,91 @@ describe("storage and attribution", () => {
     }>;
     expect(columns.map((column) => column.name)).not.toContain("provider_label");
     expect(columns.map((column) => column.name)).not.toContain("middleman_label");
+  });
+
+  test("pure attribution scoring can score in-memory observations without persistence", () => {
+    const input: Parameters<typeof scoreObservationCandidates>[0] = {
+      observation: {
+        observation_id: 123,
+        tx_hash: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        chain_id: BASE_CHAIN_ID,
+        payer_wallet: "0x0000000000000000000000000000000000000001",
+        recipient_wallet: "0x0000000000000000000000000000000000000002",
+        relayer_wallet: "0x0000000000000000000000000000000000000003",
+        token_address: BASE_USDC_ADDRESS,
+        amount_atomic: "1000",
+        top_level_selector: TRANSFER_WITH_AUTHORIZATION_SELECTOR,
+        method: "direct",
+        raw_method: "direct_transferWithAuthorization",
+      },
+      recipientFingerprints: [
+        {
+          fingerprintType: "recipient",
+          fingerprintValue: "0x0000000000000000000000000000000000000002",
+          confidence: 91,
+          providerLabel: "example-provider",
+          middlemanLabel: null,
+          sourceName: "test",
+        },
+      ],
+      relayerFingerprints: [],
+      providerClaims: [],
+      settlementPacks: [],
+      evidenceByObservationId: new Map(),
+    };
+
+    const candidates = scoreObservationCandidates(input);
+
+    expect(candidates).toHaveLength(1);
+    expect(candidates[0]?.candidateType).toBe("recipient_match");
+    expect(candidates[0]?.confidence).toBe(91);
+  });
+
+  test("projection DTO mappers produce JSON-safe camelCase shapes", () => {
+    seedKnownFingerprintsFromFile();
+    seedProviderEndpointClaimsFromFile();
+    seedSettlementFingerprintPacksFromFile();
+    runIngest();
+    buildAttributionCandidates();
+    buildDailyMetrics();
+    rebuildWalletProfiles();
+
+    const observation = toPaymentObservationDto(listPaymentObservations()[0]!);
+    const candidate = toAttributionCandidateDto(listAttributionCandidates()[0]!);
+    const dailyMetric = toDailyMetricDto(listDailyMetrics()[0]!);
+    const walletProfile = toWalletProfileDto(listPayerProfiles()[0]!);
+
+    expect(observation.observationId).toBeGreaterThan(0);
+    expect(observation.txHash).toStartWith("0x");
+    expect("tx_hash" in observation).toBe(false);
+    expect(candidate.reasons.length).toBeGreaterThan(0);
+    expect(candidate.evidenceRefs.length).toBeGreaterThan(0);
+    expect("reasons_json" in candidate).toBe(false);
+    expect(dailyMetric.totalAmountAtomic).toMatch(/^\d+$/);
+    expect(walletProfile.wallet).toStartWith("0x");
+    expect(JSON.stringify({ observation, candidate, dailyMetric, walletProfile })).toContain(
+      "observationId",
+    );
+  });
+
+  test("aggregate rebuilds are idempotent and preserve projection counts", () => {
+    seedKnownFingerprintsFromFile();
+    seedProviderEndpointClaimsFromFile();
+    seedSettlementFingerprintPacksFromFile();
+    runIngest();
+    buildAttributionCandidates();
+
+    const firstDaily = buildDailyMetrics();
+    const firstWallets = rebuildWalletProfiles();
+    const secondDaily = buildDailyMetrics();
+    const secondWallets = rebuildWalletProfiles();
+
+    expect(secondDaily).toEqual(firstDaily);
+    expect(secondWallets).toEqual(firstWallets);
+    expect(listDailyMetrics()).toHaveLength(firstDaily.length);
+    expect(listPayerProfiles()).toHaveLength(firstWallets.payerProfiles);
+    expect(listRecipientSummaries()).toHaveLength(firstWallets.recipientProfiles);
+    expect(listRelayerSummaries()).toHaveLength(firstWallets.relayerProfiles);
   });
 });
 
@@ -483,6 +601,14 @@ describe("RPC transaction ingest", () => {
     expect(first.observationCount).toBe(1);
     expect(second.observationCount).toBe(1);
     expect(listPaymentObservations()).toHaveLength(1);
+    const evidenceRefs = db
+      .prepare("SELECT source_ref FROM settlement_evidence ORDER BY evidence_id")
+      .all() as Array<{ source_ref: string }>;
+    expect(evidenceRefs.length).toBeGreaterThan(0);
+    expect(evidenceRefs.every((row) => row.source_ref.startsWith(`tx:${tx.hash}:stable:`))).toBe(
+      true,
+    );
+    expect(evidenceRefs.some((row) => row.source_ref.includes("rpc-"))).toBe(false);
     expect(calls.filter((method) => method === "eth_getTransactionReceipt")).toHaveLength(2);
   });
 

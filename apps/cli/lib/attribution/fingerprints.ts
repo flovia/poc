@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { nowIso, db, env } from "../db";
+import { nowIso, db, env, type AppDatabase } from "../db";
 import {
   validateKnownFingerprintsSeed,
   type KnownFingerprint,
@@ -34,11 +34,11 @@ export const dedupeKnownFingerprintSeeds = (fingerprints: KnownFingerprintSeedEn
   return [...deduped.values()];
 };
 
-export const seedKnownFingerprints = (seed: KnownFingerprintsSeed) => {
+export const seedKnownFingerprints = (seed: KnownFingerprintsSeed, database: AppDatabase = db) => {
   const now = nowIso();
   const fingerprints = dedupeKnownFingerprintSeeds(seed.fingerprints);
 
-  const upsertFingerprint = db.prepare(`
+  const upsertFingerprint = database.prepare(`
     INSERT INTO known_fingerprints (
       fingerprint_type,
       fingerprint_value,
@@ -84,14 +84,15 @@ export const seedKnownFingerprints = (seed: KnownFingerprintsSeed) => {
 
 export const seedKnownFingerprintsFromFile = (
   seedPath = path.join(env.fixturesDir, "knowledge", "known_fingerprints.json"),
+  database: AppDatabase = db,
 ) => {
   const absolutePath = path.isAbsolute(seedPath) ? seedPath : path.resolve(process.cwd(), seedPath);
   const seed = validateKnownFingerprintsSeed(readJson<Record<string, unknown>>(absolutePath));
-  return seedKnownFingerprints(seed);
+  return seedKnownFingerprints(seed, database);
 };
 
-export const listKnownFingerprints = (): KnownFingerprint[] => {
-  const rows = db
+export const listKnownFingerprints = (database: AppDatabase = db): KnownFingerprint[] => {
+  const rows = database
     .prepare(
       `
        SELECT

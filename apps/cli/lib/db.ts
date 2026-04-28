@@ -18,17 +18,19 @@ export const env = {
   manifestPath: resolvePath(process.env.MANIFEST_PATH ?? "./fixtures/manifest.json"),
 };
 
-const openDatabase = () => {
-  const database = new Database(env.databasePath, { create: true });
+export type AppDatabase = Database;
+
+export const createDb = (databasePath = env.databasePath): AppDatabase => {
+  const database = new Database(databasePath, { create: true });
   database.exec("PRAGMA journal_mode = WAL;");
   database.exec("PRAGMA foreign_keys = ON;");
   return database;
 };
 
-export let db = openDatabase();
+export let db = createDb();
 
-export const initDb = () => {
-  db.exec(`
+export const initDb = (database = db) => {
+  database.exec(`
     CREATE TABLE IF NOT EXISTS payment_observations (
       observation_id INTEGER PRIMARY KEY AUTOINCREMENT,
       chain_id INTEGER NOT NULL,
@@ -225,7 +227,7 @@ export const initDb = () => {
     CREATE INDEX IF NOT EXISTS idx_settlement_fingerprint_packs_selector ON settlement_fingerprint_packs(method, top_level_selector);
   `);
 
-  const attributionColumns = db
+  const attributionColumns = database
     .prepare("PRAGMA table_info(attribution_candidates)")
     .all() as Array<{ name: string }>;
   const existing = new Set(attributionColumns.map((column) => column.name));
@@ -238,21 +240,17 @@ export const initDb = () => {
     ["entity_id", "ALTER TABLE attribution_candidates ADD COLUMN entity_id TEXT"],
     ["role", "ALTER TABLE attribution_candidates ADD COLUMN role TEXT"],
   ] as const) {
-    if (!existing.has(name)) db.exec(ddl);
+    if (!existing.has(name)) database.exec(ddl);
   }
 };
 
-export const resetDb = () => {
+export const resetDb = (databasePath = env.databasePath) => {
   db.close(false);
-  const candidate = [
-    env.databasePath,
-    toText(env.databasePath, "-wal"),
-    toText(env.databasePath, "-shm"),
-  ];
+  const candidate = [databasePath, toText(databasePath, "-wal"), toText(databasePath, "-shm")];
   for (const filePath of candidate) {
     if (fs.existsSync(filePath)) fs.rmSync(filePath);
   }
-  db = openDatabase();
+  db = createDb(databasePath);
 };
 
 export const nowIso = () => new Date().toISOString();

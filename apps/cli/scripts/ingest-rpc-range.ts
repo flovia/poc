@@ -5,8 +5,8 @@ import {
   MULTICALL3_AGGREGATE3_SELECTOR,
   TRANSFER_WITH_AUTHORIZATION_SELECTOR,
 } from "../lib/constants";
-import { db, env, initDb, nowIso } from "../lib/db";
-import { buildObservationsFromFixture } from "../lib/observations/build-observation";
+import { db, env, initDb, nowIso, type AppDatabase } from "../lib/db";
+import { buildPaymentObservations } from "../lib/observations/build-observation";
 import { storePaymentObservations } from "../lib/observations/store-observations";
 import { resolveBaseRpcUrl, resolveRpcRequestTimeoutMs } from "../lib/rpc-config";
 import {
@@ -26,6 +26,7 @@ type RunRpcRangeIngestOptions = {
   maxBlocks?: number;
   timeoutMs?: number;
   fetchFn?: FetchLike;
+  database?: AppDatabase;
 };
 
 export type RpcRangeIngestResult = {
@@ -100,9 +101,9 @@ const assertRangeWithinLimit = (fromBlock: number, toBlock: number, maxBlocks: n
   }
 };
 
-const recordIngestionRun = (result: Omit<RpcRangeIngestResult, "runId">) => {
+const recordIngestionRun = (result: Omit<RpcRangeIngestResult, "runId">, database: AppDatabase) => {
   const now = nowIso();
-  const row = db
+  const row = database
     .prepare(
       `INSERT INTO ingestion_runs (
         source, from_block, to_block, scanned_blocks, scanned_transactions,
@@ -138,8 +139,9 @@ export const runRpcRangeIngest = async ({
   maxBlocks = 100,
   timeoutMs = 30_000,
   fetchFn,
+  database = db,
 }: RunRpcRangeIngestOptions): Promise<RpcRangeIngestResult> => {
-  initDb();
+  initDb(database);
   assertRangeWithinLimit(fromBlock, toBlock, maxBlocks);
 
   const blocks = await fetchRpcBlockRange({ rpcUrl, fromBlock, toBlock, timeoutMs, fetchFn });
@@ -183,16 +185,16 @@ export const runRpcRangeIngest = async ({
 
       const tx = normalizeRpcTransaction(rpcTx, block);
       assertRpcFixtureConsistency(tx.hash, tx, receipt);
-      const observations = buildObservationsFromFixture(caseIdForTx(tx.hash), tx, receipt);
+      const observations = buildPaymentObservations(caseIdForTx(tx.hash), tx, receipt);
       result.observationCount += observations.length;
 
-      const stored = storePaymentObservations(observations);
+      const stored = storePaymentObservations(observations, database);
       result.insertedObservations += stored.insertedObservations;
       result.evidenceRowsUpdated += stored.evidenceRowsUpdated;
     }
   }
 
-  return { runId: recordIngestionRun(result), ...result };
+  return { runId: recordIngestionRun(result, database), ...result };
 };
 
 export const runRpcRangeIngestFromCli = async () => {

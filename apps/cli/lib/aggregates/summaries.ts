@@ -1,6 +1,6 @@
-import { db } from "../db";
+import { db, type AppDatabase } from "../db";
 
-type PaymentObservationRow = {
+export type PaymentObservationRow = {
   observation_id: number;
   chain_id: number;
   tx_hash: string;
@@ -18,7 +18,7 @@ type PaymentObservationRow = {
   stable_hash: string;
 };
 
-type AttributionCandidateRow = {
+export type AttributionCandidateRow = {
   candidate_id: number;
   observation_id: number;
   candidate_type: string;
@@ -35,7 +35,7 @@ type AttributionCandidateRow = {
   updated_at: string;
 };
 
-type DailyMetricRow = {
+export type DailyMetricRow = {
   day: string;
   observation_count: number;
   candidate_count: number;
@@ -47,7 +47,7 @@ type DailyMetricRow = {
   updated_at: string;
 };
 
-type WalletProfileRow = {
+export type WalletProfileRow = {
   wallet: string;
   observation_count: number;
   total_amount_atomic: string;
@@ -58,8 +58,8 @@ type WalletProfileRow = {
   unique_payers?: number;
 };
 
-export const listPaymentObservations = () =>
-  db
+export const listPaymentObservations = (database: AppDatabase = db) =>
+  database
     .prepare(
       `
     SELECT
@@ -84,8 +84,8 @@ export const listPaymentObservations = () =>
     )
     .all() as Array<PaymentObservationRow>;
 
-export const listAttributionCandidates = () =>
-  db
+export const listAttributionCandidates = (database: AppDatabase = db) =>
+  database
     .prepare(
       `
     SELECT
@@ -109,8 +109,8 @@ export const listAttributionCandidates = () =>
     )
     .all() as Array<AttributionCandidateRow>;
 
-export const listDailyMetrics = () =>
-  db
+export const listDailyMetrics = (database: AppDatabase = db) =>
+  database
     .prepare(
       `
     SELECT
@@ -129,8 +129,8 @@ export const listDailyMetrics = () =>
     )
     .all() as Array<DailyMetricRow>;
 
-export const listPayerProfiles = () =>
-  db
+export const listPayerProfiles = (database: AppDatabase = db) =>
+  database
     .prepare(
       `
     SELECT
@@ -148,8 +148,8 @@ export const listPayerProfiles = () =>
     )
     .all() as Array<WalletProfileRow>;
 
-export const listRecipientSummaries = () =>
-  db
+export const listRecipientSummaries = (database: AppDatabase = db) =>
+  database
     .prepare(
       `
     SELECT
@@ -167,8 +167,8 @@ export const listRecipientSummaries = () =>
     )
     .all() as Array<WalletProfileRow>;
 
-export const listRelayerSummaries = () =>
-  db
+export const listRelayerSummaries = (database: AppDatabase = db) =>
+  database
     .prepare(
       `
     SELECT

@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { db, env, nowIso } from "../db";
+import { db, env, nowIso, type AppDatabase } from "../db";
 import {
   validateSettlementFingerprintPacksSeed,
   type SettlementFingerprintPack,
@@ -9,9 +9,12 @@ import {
 
 const readJson = <T>(filePath: string): T => JSON.parse(fs.readFileSync(filePath, "utf8")) as T;
 
-export const seedSettlementFingerprintPacks = (seed: SettlementFingerprintPacksSeed) => {
+export const seedSettlementFingerprintPacks = (
+  seed: SettlementFingerprintPacksSeed,
+  database: AppDatabase = db,
+) => {
   const now = nowIso();
-  const upsert = db.prepare(`
+  const upsert = database.prepare(`
     INSERT INTO settlement_fingerprint_packs (
       fingerprint_id,
       cluster_id,
@@ -45,7 +48,7 @@ export const seedSettlementFingerprintPacks = (seed: SettlementFingerprintPacksS
       updated_at = excluded.updated_at
   `);
 
-  const store = db.transaction((fingerprints: SettlementFingerprintPack[]) => {
+  const store = database.transaction((fingerprints: SettlementFingerprintPack[]) => {
     for (const fingerprint of fingerprints) {
       upsert.run(
         fingerprint.fingerprintId,
@@ -73,16 +76,17 @@ export const seedSettlementFingerprintPacks = (seed: SettlementFingerprintPacksS
 
 export const seedSettlementFingerprintPacksFromFile = (
   seedPath = path.join(env.fixturesDir, "knowledge", "settlement_fingerprint_packs.json"),
+  database: AppDatabase = db,
 ) => {
   const absolutePath = path.isAbsolute(seedPath) ? seedPath : path.resolve(process.cwd(), seedPath);
   const seed = validateSettlementFingerprintPacksSeed(
     readJson<Record<string, unknown>>(absolutePath),
   );
-  return seedSettlementFingerprintPacks(seed);
+  return seedSettlementFingerprintPacks(seed, database);
 };
 
-export const listSettlementFingerprintPacks = () =>
-  db
+export const listSettlementFingerprintPacks = (database: AppDatabase = db) =>
+  database
     .prepare(
       `
       SELECT

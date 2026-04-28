@@ -1,4 +1,4 @@
-import { db, nowIso } from "../db";
+import { db, nowIso, type AppDatabase } from "../db";
 
 type DailyMetricRow = {
   day: string;
@@ -13,8 +13,8 @@ type DailyMetricRow = {
 const dayFromTimestamp = (epochSeconds: number) =>
   new Date(epochSeconds * 1000).toISOString().slice(0, 10);
 
-export const buildDailyMetrics = () => {
-  const rows = db
+export const buildDailyMetrics = (database: AppDatabase = db) => {
+  const rows = database
     .prepare(`
     SELECT
       observation_id,
@@ -36,7 +36,7 @@ export const buildDailyMetrics = () => {
   }>;
 
   const candidateCountsByObs = new Map<number, number>();
-  const candidateRows = db
+  const candidateRows = database
     .prepare(
       `SELECT observation_id, COUNT(*) AS count FROM attribution_candidates GROUP BY observation_id`,
     )
@@ -81,9 +81,7 @@ export const buildDailyMetrics = () => {
     grouped.set(day, current);
   }
 
-  db.exec("DELETE FROM daily_metrics;");
-
-  const insert = db.prepare(`
+  const insert = database.prepare(`
     INSERT INTO daily_metrics (
       day,
       observation_count,
@@ -98,19 +96,23 @@ export const buildDailyMetrics = () => {
   `);
 
   const now = nowIso();
-  for (const [day, value] of grouped.entries()) {
-    insert.run(
-      day,
-      value.observation_count,
-      value.candidate_count,
-      value.unique_payers.size,
-      value.unique_recipients.size,
-      value.unique_relayers.size,
-      value.total_amount_atomic.toString(),
-      now,
-      now,
-    );
-  }
+  const rebuild = database.transaction(() => {
+    database.exec("DELETE FROM daily_metrics;");
+    for (const [day, value] of grouped.entries()) {
+      insert.run(
+        day,
+        value.observation_count,
+        value.candidate_count,
+        value.unique_payers.size,
+        value.unique_recipients.size,
+        value.unique_relayers.size,
+        value.total_amount_atomic.toString(),
+        now,
+        now,
+      );
+    }
+  });
+  rebuild();
 
   return [...grouped.entries()].map(([day, value]) => ({
     day,

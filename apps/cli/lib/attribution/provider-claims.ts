@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { db, env, nowIso } from "../db";
+import { db, env, nowIso, type AppDatabase } from "../db";
 import {
   validateProviderEndpointClaimsSeed,
   type ProviderEndpointClaim,
@@ -9,9 +9,12 @@ import {
 
 const readJson = <T>(filePath: string): T => JSON.parse(fs.readFileSync(filePath, "utf8")) as T;
 
-export const seedProviderEndpointClaims = (seed: ProviderEndpointClaimsSeed) => {
+export const seedProviderEndpointClaims = (
+  seed: ProviderEndpointClaimsSeed,
+  database: AppDatabase = db,
+) => {
   const now = nowIso();
-  const upsert = db.prepare(`
+  const upsert = database.prepare(`
     INSERT INTO provider_endpoint_claims (
       claim_id,
       entity_id,
@@ -55,7 +58,7 @@ export const seedProviderEndpointClaims = (seed: ProviderEndpointClaimsSeed) => 
       updated_at = excluded.updated_at
   `);
 
-  const store = db.transaction((claims: ProviderEndpointClaim[]) => {
+  const store = database.transaction((claims: ProviderEndpointClaim[]) => {
     for (const claim of claims) {
       upsert.run(
         claim.claimId,
@@ -88,14 +91,15 @@ export const seedProviderEndpointClaims = (seed: ProviderEndpointClaimsSeed) => 
 
 export const seedProviderEndpointClaimsFromFile = (
   seedPath = path.join(env.fixturesDir, "knowledge", "provider_endpoint_claims.json"),
+  database: AppDatabase = db,
 ) => {
   const absolutePath = path.isAbsolute(seedPath) ? seedPath : path.resolve(process.cwd(), seedPath);
   const seed = validateProviderEndpointClaimsSeed(readJson<Record<string, unknown>>(absolutePath));
-  return seedProviderEndpointClaims(seed);
+  return seedProviderEndpointClaims(seed, database);
 };
 
-export const listProviderEndpointClaims = () =>
-  db
+export const listProviderEndpointClaims = (database: AppDatabase = db) =>
+  database
     .prepare(
       `
       SELECT

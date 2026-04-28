@@ -57,7 +57,7 @@ const makeEvidence = (
   raw: unknown,
 ): SettledEvidence => ({ type, detail, raw });
 
-export const buildObservationsFromFixture = (
+export const buildPaymentObservations = (
   caseId: string,
   tx: RawTransaction,
   receipt: RawReceipt,

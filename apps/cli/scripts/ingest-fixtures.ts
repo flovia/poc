@@ -1,13 +1,13 @@
 import fs from "node:fs";
 import path from "node:path";
-import { env, initDb } from "../lib/db";
+import { db, env, initDb, type AppDatabase } from "../lib/db";
 import {
   validateFixtureManifest,
   type PaymentObservationInput,
   type RawReceipt,
   type RawTransaction,
 } from "../lib/schema";
-import { buildObservationsFromFixture } from "../lib/observations/build-observation";
+import { buildPaymentObservations } from "../lib/observations/build-observation";
 import { storePaymentObservations } from "../lib/observations/store-observations";
 
 const readJson = <T>(filePath: string): T => {
@@ -16,12 +16,15 @@ const readJson = <T>(filePath: string): T => {
   return JSON.parse(raw) as T;
 };
 
-export const runIngest = (manifestPath = process.env.MANIFEST_PATH ?? env.manifestPath) => {
+export const runIngest = (
+  manifestPath = process.env.MANIFEST_PATH ?? env.manifestPath,
+  database: AppDatabase = db,
+) => {
   const fixtureDir = path.dirname(path.resolve(process.cwd(), manifestPath));
   const manifestJson = readJson<Record<string, unknown>>(path.resolve(process.cwd(), manifestPath));
   const manifest = validateFixtureManifest(manifestJson);
 
-  initDb();
+  initDb(database);
 
   const observations: PaymentObservationInput[] = [];
 
@@ -32,10 +35,10 @@ export const runIngest = (manifestPath = process.env.MANIFEST_PATH ?? env.manife
     const tx = readJson<RawTransaction>(txPath);
     const receipt = readJson<RawReceipt>(receiptPath);
 
-    observations.push(...buildObservationsFromFixture(fixtureCase.caseId, tx, receipt));
+    observations.push(...buildPaymentObservations(fixtureCase.caseId, tx, receipt));
   }
 
-  const stored = storePaymentObservations(observations);
+  const stored = storePaymentObservations(observations, database);
 
   return {
     insertedObservations: stored.insertedObservations,
