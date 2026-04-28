@@ -1,0 +1,116 @@
+{
+  "schemaVersion": "1",
+  "chainId": 8453,
+  "collectedAt": "2026-04-28T00:00:00.000Z",
+  "claims": [
+    {
+      "claimId": "paysponge-perplexity-direct-fixture",
+      "entityId": "paysponge",
+      "providerName": "Perplexity",
+      "serviceName": "Paysponge Perplexity Search",
+      "endpointUrl": "https://pplx.x402.paysponge.com/search",
+      "resourceUrl": "https://pplx.x402.paysponge.com/search",
+      "requestHost": "pplx.x402.paysponge.com",
+      "payTo": "0x27599d824bbB4F506F985af865d840F61ba848C8",
+      "network": "base",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "100000",
+      "txHash": "0x400ed0f03248264618e8f1bee1998d1e7877d459d9f713eac868c54e7b84a483",
+      "evidenceClass": "paid_probe",
+      "roles": ["provider", "service", "endpoint", "middleman", "market", "facilitator", "settlement_operator"],
+      "confidence": 90,
+      "sourceName": "poc-fixture",
+      "evidenceRefs": [
+        "fixture:paysponge-perplexity",
+        "poc:apps/cli/fixtures/raw/paysponge-perplexity.transaction.json"
+      ],
+      "provenance": [
+        {
+          "source": "poc-fixture",
+          "caseId": "paysponge-perplexity",
+          "transaction": "0x400ed0f03248264618e8f1bee1998d1e7877d459d9f713eac868c54e7b84a483",
+          "requestUrl": "https://pplx.x402.paysponge.com/search"
+        }
+      ]
+    },
+    {
+      "claimId": "paysponge-wolframalpha-direct-fixture",
+      "entityId": "paysponge",
+      "providerName": "WolframAlpha",
+      "serviceName": "Paysponge WolframAlpha Result",
+      "endpointUrl": "https://wolframalpha.x402.paysponge.com/v1/result",
+      "resourceUrl": "https://wolframalpha.x402.paysponge.com/v1/result?i=2%2B2",
+      "requestHost": "wolframalpha.x402.paysponge.com",
+      "payTo": "0x27599d824bbB4F506F985af865d840F61ba848C8",
+      "network": "base",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "100000",
+      "txHash": "0x17930e698712a9a5371c80bb1c6748e63adbf8cc41c3e5e2d32e1bd92e8f2521",
+      "evidenceClass": "paid_probe",
+      "roles": ["provider", "service", "endpoint", "middleman", "market", "facilitator", "settlement_operator"],
+      "confidence": 90,
+      "sourceName": "poc-fixture",
+      "evidenceRefs": [
+        "fixture:paysponge-wolframalpha",
+        "poc:apps/cli/fixtures/raw/paysponge-wolframalpha.transaction.json"
+      ],
+      "provenance": [
+        {
+          "source": "poc-fixture",
+          "caseId": "paysponge-wolframalpha",
+          "transaction": "0x17930e698712a9a5371c80bb1c6748e63adbf8cc41c3e5e2d32e1bd92e8f2521",
+          "requestUrl": "https://wolframalpha.x402.paysponge.com/v1/result?i=2%2B2"
+        }
+      ]
+    },
+    {
+      "claimId": "paysponge-perplexity-multicall-foxytanuki",
+      "entityId": "paysponge",
+      "providerName": "Perplexity",
+      "serviceName": "Paysponge Perplexity Search",
+      "endpointUrl": "https://pplx.x402.paysponge.com/search",
+      "resourceUrl": "https://pplx.x402.paysponge.com/search",
+      "requestHost": "pplx.x402.paysponge.com",
+      "payTo": "0x551C176D17236ee9cE6f450dC02bd5c2767751B9",
+      "network": "eip155:8453",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "10000",
+      "txHash": "0xcb1ed7950b6f43a001623e9cf3a590ffb16971ec9985fb20eb9b22f483a2e447",
+      "evidenceClass": "paid_probe",
+      "roles": ["provider", "service", "endpoint", "middleman", "market", "facilitator", "settlement_operator"],
+      "confidence": 90,
+      "sourceName": "foxytanuki-x402-analysis",
+      "evidenceRefs": [
+        "../foxytanuki/docs/x402-analysis/endpoint-discovery.md:190",
+        "../foxytanuki/docs/x402-analysis/endpoint-discovery.md:281"
+      ],
+      "provenance": [
+        {
+          "source": "foxytanuki-x402-analysis",
+          "docPath": "../foxytanuki/docs/x402-analysis/endpoint-discovery.md",
+          "transaction": "0xcb1ed7950b6f43a001623e9cf3a590ffb16971ec9985fb20eb9b22f483a2e447",
+          "requestUrl": "https://pplx.x402.paysponge.com/search"
+        }
+      ]
+    },
+    {
+      "claimId": "origindao-catalog-shared-payto",
+      "entityId": "origindao",
+      "providerName": "OriginDAO",
+      "serviceName": "Quest Board",
+      "endpointUrl": "https://protocol.origindao.ai/quest/board",
+      "resourceUrl": "https://protocol.origindao.ai/quest/board",
+      "requestHost": "protocol.origindao.ai",
+      "payTo": "0x27599d824bbB4F506F985af865d840F61ba848C8",
+      "network": "base",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "100000",
+      "evidenceClass": "catalog",
+      "roles": ["provider", "service", "endpoint"],
+      "confidence": 70,
+      "sourceName": "catalog-seed",
+      "evidenceRefs": ["fixture:shared-payto-catalog-claim"],
+      "provenance": [{ "source": "catalog-seed", "sourceId": "shared-payto" }]
+    }
+  ]
+}

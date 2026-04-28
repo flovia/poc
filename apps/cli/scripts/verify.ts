@@ -4,6 +4,9 @@ import { db, initDb, resetDb, env } from "../lib/db";
 import { runIngest } from "./ingest-fixtures";
 import { buildAttributionCandidates } from "../lib/attribution/score";
 import { seedKnownFingerprintsFromFile } from "../lib/attribution/fingerprints";
+import { seedProviderEndpointClaimsFromFile } from "../lib/attribution/provider-claims";
+import { seedSettlementFingerprintPacksFromFile } from "../lib/attribution/settlement-fingerprints";
+import { buildWalletUsageGraph } from "../lib/attribution/wallet-graph";
 import { buildDailyMetrics } from "../lib/aggregates/daily";
 import { rebuildWalletProfiles } from "../lib/aggregates/wallets";
 import { listAttributionCandidates, listPaymentObservations } from "../lib/aggregates/summaries";
@@ -31,7 +34,8 @@ const sortCandidates = (candidates: Array<Record<string, unknown>>) =>
       (left, right) =>
         String(left.case_id).localeCompare(String(right.case_id)) ||
         String(left.candidate_type).localeCompare(String(right.candidate_type)) ||
-        String(left.matched_fingerprint_value).localeCompare(String(right.matched_fingerprint_value)),
+        String(left.matched_fingerprint_value).localeCompare(String(right.matched_fingerprint_value)) ||
+        String(left.role ?? "").localeCompare(String(right.role ?? "")),
     );
 
 const normalize = (observation: Record<string, unknown>) => {
@@ -43,6 +47,8 @@ resetDb();
 initDb();
 
 seedKnownFingerprintsFromFile();
+seedProviderEndpointClaimsFromFile();
+seedSettlementFingerprintPacksFromFile();
 runIngest();
 buildAttributionCandidates();
 buildDailyMetrics();
@@ -68,6 +74,9 @@ const expected = readExpected<{ observations: Array<Record<string, unknown>> }>(
 );
 const expectedCandidates = readExpected<{ candidates: Array<Record<string, unknown>> }>(
   path.join(env.fixturesDir, "expected", "attribution_candidates.json"),
+);
+const expectedWalletGraph = readExpected<{ graph: Record<string, unknown> }>(
+  path.join(env.fixturesDir, "expected", "wallet_usage_graph.json"),
 );
 
 const manifest = validateFixtureManifest(readExpected<Record<string, unknown>>(env.manifestPath));
@@ -127,6 +136,10 @@ const observedCandidates = candidateRows.map((row) => {
     candidate_type: row.candidate_type,
     matched_fingerprint_type: row.matched_fingerprint_type,
     matched_fingerprint_value: row.matched_fingerprint_value,
+    matched_claim_id: row.matched_claim_id,
+    matched_settlement_fingerprint_id: row.matched_settlement_fingerprint_id,
+    entity_id: row.entity_id,
+    role: row.role,
     confidence: row.confidence,
     reasons: JSON.parse(row.reasons_json) as string[],
     evidence_refs: JSON.parse(row.evidence_refs_json) as string[],
@@ -143,6 +156,12 @@ if (JSON.stringify(observedCandidatesSorted) !== JSON.stringify(expectedCandidat
   process.exit(1);
 }
 
+const observedWalletGraph = buildWalletUsageGraph();
+if (JSON.stringify(observedWalletGraph) !== JSON.stringify(expectedWalletGraph.graph)) {
+  console.error("Observed wallet usage graph does not match expected/wallet_usage_graph.json");
+  process.exit(1);
+}
+
 await runReport();
 
-console.log(JSON.stringify({ status: "ok", observationCount: observedSorted.length, attributionCandidateCount: observedCandidatesSorted.length }, null, 2));
+console.log(JSON.stringify({ status: "ok", observationCount: observedSorted.length, attributionCandidateCount: observedCandidatesSorted.length, walletGraphProviderWallets: observedWalletGraph.providerWallets.length }, null, 2));

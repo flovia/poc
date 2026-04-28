@@ -25,6 +25,9 @@ import { isRpcRangeCandidate, runRpcRangeIngest } from "../scripts/ingest-rpc-ra
 import { runRpcTxIngest } from "../scripts/ingest-rpc-tx";
 import { buildAttributionCandidates } from "../lib/attribution/score";
 import { seedKnownFingerprints, seedKnownFingerprintsFromFile } from "../lib/attribution/fingerprints";
+import { seedProviderEndpointClaimsFromFile } from "../lib/attribution/provider-claims";
+import { seedSettlementFingerprintPacksFromFile } from "../lib/attribution/settlement-fingerprints";
+import { buildWalletUsageGraph } from "../lib/attribution/wallet-graph";
 import { listAttributionCandidates, listPaymentObservations } from "../lib/aggregates/summaries";
 import { validateFixtureManifest, type FixtureManifest, type KnownFingerprintsSeed, type RawReceipt, type RawTransaction } from "../lib/schema";
 import { fetchRpcFixture, normalizeRpcReceipt, normalizeRpcTransaction, type RpcReceiptPayload, type RpcTransactionPayload } from "../lib/rpc-fixtures";
@@ -184,6 +187,58 @@ describe("storage and attribution", () => {
     expect(listPaymentObservations().map((row) => row.case_id)).not.toContain("normal-erc20-transfer");
   });
 
+  test("provider endpoint claims and settlement packs do not create observations", () => {
+    expect(seedProviderEndpointClaimsFromFile()).toBeGreaterThan(0);
+    expect(seedSettlementFingerprintPacksFromFile()).toBeGreaterThan(0);
+    expect(listPaymentObservations()).toHaveLength(0);
+  });
+
+  test("wallet usage graph uses payer wallets and excludes human identity fields", () => {
+    seedProviderEndpointClaimsFromFile();
+    seedSettlementFingerprintPacksFromFile();
+    runIngest();
+    buildAttributionCandidates();
+    const graph = buildWalletUsageGraph();
+    expect(graph.payerWalletLanguage).toBe(true);
+    expect(graph.identityFieldsExcluded).toEqual(["human_user", "ens", "social", "kyc", "email", "ip_address"]);
+    expect(JSON.stringify(graph)).not.toContain("humanUser");
+    expect(graph.providerWallets.length).toBeGreaterThan(0);
+    expect(graph.providerWallets.flatMap((item) => item.payerWallets).every((item) => item.wallet.startsWith("0x"))).toBe(true);
+  });
+
+  test("catalog-only provider candidates are confidence capped", () => {
+    seedProviderEndpointClaimsFromFile();
+    runIngest();
+    buildAttributionCandidates();
+    const catalogCandidates = listAttributionCandidates().filter((candidate) => candidate.matched_claim_id === "origindao-catalog-shared-payto");
+    expect(catalogCandidates.length).toBeGreaterThan(0);
+    expect(catalogCandidates.every((candidate) => candidate.confidence <= 70)).toBe(true);
+  });
+
+  test("pattern-only Multicall3 matches do not create high-confidence named Paysponge facilitator candidates", () => {
+    seedSettlementFingerprintPacksFromFile();
+    runIngest();
+    buildAttributionCandidates();
+    const namedPaysponge = listAttributionCandidates().filter(
+      (candidate) => candidate.candidate_type === "facilitator_candidate" && candidate.entity_id === "paysponge",
+    );
+    expect(namedPaysponge).toHaveLength(0);
+  });
+
+  test("Paysponge host-joined paid transactions create multi-role Paysponge candidates", () => {
+    seedProviderEndpointClaimsFromFile();
+    seedSettlementFingerprintPacksFromFile();
+    runIngest();
+    buildAttributionCandidates();
+    const paysponge = listAttributionCandidates().filter((candidate) => candidate.entity_id === "paysponge");
+    expect(new Set(paysponge.map((candidate) => candidate.candidate_type))).toEqual(
+      new Set(["provider_candidate", "service_candidate", "endpoint_candidate", "middleman_candidate", "market_candidate", "facilitator_candidate", "settlement_operator_candidate"]),
+    );
+    const internalRoles = paysponge.filter((candidate) => ["middleman", "market", "facilitator", "settlement_operator"].includes(candidate.role ?? ""));
+    expect(internalRoles.length).toBeGreaterThanOrEqual(8);
+    expect(internalRoles.every((candidate) => candidate.confidence >= 80)).toBe(true);
+  });
+
   test("observation code does not depend on attribution loaders", () => {
     const observationFiles = listFiles(path.resolve(import.meta.dir, "..", "lib", "observations")).filter((filePath) => filePath.endsWith(".ts"));
     for (const filePath of observationFiles) {
@@ -193,16 +248,17 @@ describe("storage and attribution", () => {
 
   test("attribution candidates include confidence, reasons, evidence refs, and observations have no final labels", () => {
     seedKnownFingerprintsFromFile();
+    seedProviderEndpointClaimsFromFile();
+    seedSettlementFingerprintPacksFromFile();
     runIngest();
     const result = buildAttributionCandidates();
     expect(result.observationCount).toBe(10);
-    expect(result.candidateCount).toBe(20);
+    expect(result.candidateCount).toBeGreaterThan(20);
 
     const candidates = listAttributionCandidates();
     expect(candidates.length).toBeGreaterThan(0);
     for (const candidate of candidates) {
-      expect(candidate.matched_fingerprint_type).toMatch(/recipient|relayer/);
-      expect(candidate.matched_fingerprint_value).toMatch(/^0x/);
+      expect(candidate.matched_fingerprint_type).toMatch(/recipient|relayer|provider_endpoint_claim|settlement_fingerprint/);
       expect(candidate.confidence).toBeGreaterThan(0);
       expect(JSON.parse(candidate.reasons_json).length).toBeGreaterThan(0);
       expect(JSON.parse(candidate.evidence_refs_json).length).toBeGreaterThan(0);

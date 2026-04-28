@@ -154,14 +154,82 @@ export type KnownFingerprint = {
   provenance?: FingerprintProvenance[];
 };
 
+export type AttributionCandidateType =
+  | "recipient_match"
+  | "relayer_match"
+  | "provider_candidate"
+  | "service_candidate"
+  | "endpoint_candidate"
+  | "middleman_candidate"
+  | "market_candidate"
+  | "facilitator_candidate"
+  | "settlement_operator_candidate"
+  | "settlement_cluster";
+
 export type AttributionCandidate = {
-  candidateType: "recipient_match" | "relayer_match";
+  candidateType: AttributionCandidateType;
   observationId: number;
-  matchedFingerprintType: FingerprintType;
-  matchedValue: HexAddress;
+  matchedFingerprintType: string;
+  matchedValue: string;
   confidence: number;
   reasons: string[];
   evidenceRefs: string[];
+};
+
+export type ProviderClaimEvidence = FingerprintProvenance & {
+  transaction?: string | null;
+  host?: string | null;
+};
+
+export type ProviderEndpointClaim = {
+  claimId: string;
+  entityId: string;
+  providerName?: string | null;
+  serviceName?: string | null;
+  endpointUrl?: string | null;
+  resourceUrl?: string | null;
+  requestHost?: string | null;
+  payTo: HexAddress;
+  network: string;
+  asset: HexAddress;
+  amountAtomic?: string | null;
+  txHash?: HexData | null;
+  evidenceClass: "paid_probe" | "catalog" | "manual";
+  roles: Array<"provider" | "service" | "endpoint" | "middleman" | "market" | "facilitator" | "settlement_operator">;
+  confidence: number;
+  sourceName: string;
+  evidenceRefs: string[];
+  provenance: ProviderClaimEvidence[];
+};
+
+export type ProviderEndpointClaimsSeed = {
+  schemaVersion: string;
+  chainId: number;
+  collectedAt: string;
+  claims: ProviderEndpointClaim[];
+};
+
+export type SettlementFingerprintPack = {
+  fingerprintId: string;
+  clusterId: string;
+  displayName: string;
+  method?: PaymentObservationInput["method"] | null;
+  topLevelTo?: HexAddress | null;
+  topLevelSelector: string;
+  innerSelector?: string | null;
+  entityId?: string | null;
+  evidenceClass: "pattern_only" | "host_joined" | "manual";
+  baseConfidence: number;
+  namedEntityConfidenceCap: number;
+  reasons: string[];
+  evidenceRefs: string[];
+};
+
+export type SettlementFingerprintPacksSeed = {
+  schemaVersion: string;
+  chainId: number;
+  collectedAt: string;
+  fingerprints: SettlementFingerprintPack[];
 };
 
 export const assertPositiveInt = (value: number | null): value is number => value !== null && Number.isInteger(value) && value >= 0;
@@ -224,6 +292,11 @@ const validateHexAddress = (value: unknown, label: string): HexAddress => {
   throw new Error(`Invalid ${label}: ${String(value)}`);
 };
 
+const validateHexData = (value: unknown, label: string): HexData => {
+  if (typeof value === "string" && isHex(value) && value.length >= 2) return value as HexData;
+  throw new Error(`Invalid ${label}: ${String(value)}`);
+};
+
 const optionalString = (value: unknown): string | null => (typeof value === "string" && value.length > 0 ? value : null);
 
 const validateConfidence = (value: unknown): number => {
@@ -232,6 +305,14 @@ const validateConfidence = (value: unknown): number => {
     throw new Error(`Fingerprint confidence must be an integer from 1 to 100, got ${String(value)}`);
   }
   return confidence;
+};
+
+const validateStringArray = (value: unknown, label: string): string[] => {
+  if (!Array.isArray(value)) throw new Error(`${label} must be an array`);
+  return value.map((entry, index) => {
+    if (typeof entry !== "string" || entry.length < 1) throw new Error(`${label} ${index} must be a non-empty string`);
+    return entry;
+  });
 };
 
 const validateProvenance = (value: unknown): FingerprintProvenance[] => {
@@ -282,6 +363,84 @@ export const validateKnownFingerprintsSeed = (value: unknown): KnownFingerprints
         confidence: validateConfidence(record.confidence),
         sourceName: optionalString(record.sourceName),
         provenance: validateProvenance(record.provenance),
+      };
+    }),
+  };
+};
+
+export const validateProviderEndpointClaimsSeed = (value: unknown): ProviderEndpointClaimsSeed => {
+  if (typeof value !== "object" || value === null) throw new Error("Provider endpoint claims seed must be an object");
+  const candidate = value as Record<string, unknown>;
+  const chainId = Number(candidate.chainId);
+  if (chainId !== BASE_CHAIN_ID) throw new Error(`Provider endpoint claims chainId mismatch: expected ${BASE_CHAIN_ID}, got ${chainId}`);
+  if (!Array.isArray(candidate.claims)) throw new Error("Provider endpoint claims seed must include claims");
+
+  return {
+    schemaVersion: String(candidate.schemaVersion ?? "1"),
+    chainId,
+    collectedAt: String(candidate.collectedAt ?? ""),
+    claims: candidate.claims.map((entry, index) => {
+      if (typeof entry !== "object" || entry === null) throw new Error(`Provider endpoint claim ${index} is invalid`);
+      const record = entry as Record<string, unknown>;
+      const evidenceClass = String(record.evidenceClass ?? "manual");
+      if (!["paid_probe", "catalog", "manual"].includes(evidenceClass)) throw new Error(`Invalid provider endpoint evidenceClass: ${evidenceClass}`);
+      return {
+        claimId: String(record.claimId ?? ""),
+        entityId: String(record.entityId ?? ""),
+        providerName: optionalString(record.providerName),
+        serviceName: optionalString(record.serviceName),
+        endpointUrl: optionalString(record.endpointUrl),
+        resourceUrl: optionalString(record.resourceUrl),
+        requestHost: optionalString(record.requestHost),
+        payTo: validateHexAddress(record.payTo, `provider endpoint claim ${index} payTo`),
+        network: String(record.network ?? "base"),
+        asset: validateHexAddress(record.asset, `provider endpoint claim ${index} asset`),
+        amountAtomic: optionalString(record.amountAtomic),
+        txHash: record.txHash == null ? null : validateHexData(record.txHash, `provider endpoint claim ${index} txHash`),
+        evidenceClass: evidenceClass as ProviderEndpointClaim["evidenceClass"],
+        roles: validateStringArray(record.roles, `provider endpoint claim ${index} roles`) as ProviderEndpointClaim["roles"],
+        confidence: validateConfidence(record.confidence),
+        sourceName: String(record.sourceName ?? "unknown"),
+        evidenceRefs: validateStringArray(record.evidenceRefs ?? [], `provider endpoint claim ${index} evidenceRefs`),
+        provenance: validateProvenance(record.provenance),
+      };
+    }),
+  };
+};
+
+export const validateSettlementFingerprintPacksSeed = (value: unknown): SettlementFingerprintPacksSeed => {
+  if (typeof value !== "object" || value === null) throw new Error("Settlement fingerprint packs seed must be an object");
+  const candidate = value as Record<string, unknown>;
+  const chainId = Number(candidate.chainId);
+  if (chainId !== BASE_CHAIN_ID) throw new Error(`Settlement fingerprint packs chainId mismatch: expected ${BASE_CHAIN_ID}, got ${chainId}`);
+  if (!Array.isArray(candidate.fingerprints)) throw new Error("Settlement fingerprint packs seed must include fingerprints");
+  return {
+    schemaVersion: String(candidate.schemaVersion ?? "1"),
+    chainId,
+    collectedAt: String(candidate.collectedAt ?? ""),
+    fingerprints: candidate.fingerprints.map((entry, index) => {
+      if (typeof entry !== "object" || entry === null) throw new Error(`Settlement fingerprint ${index} is invalid`);
+      const record = entry as Record<string, unknown>;
+      const evidenceClass = String(record.evidenceClass ?? "pattern_only");
+      if (!["pattern_only", "host_joined", "manual"].includes(evidenceClass)) throw new Error(`Invalid settlement evidenceClass: ${evidenceClass}`);
+      const method = optionalString(record.method);
+      if (method !== null && method !== "direct_transferWithAuthorization" && method !== "multicall3_aggregate3") {
+        throw new Error(`Invalid settlement method: ${method}`);
+      }
+      return {
+        fingerprintId: String(record.fingerprintId ?? ""),
+        clusterId: String(record.clusterId ?? ""),
+        displayName: String(record.displayName ?? ""),
+        method,
+        topLevelTo: record.topLevelTo == null ? null : validateHexAddress(record.topLevelTo, `settlement fingerprint ${index} topLevelTo`),
+        topLevelSelector: String(record.topLevelSelector ?? ""),
+        innerSelector: optionalString(record.innerSelector),
+        entityId: optionalString(record.entityId),
+        evidenceClass: evidenceClass as SettlementFingerprintPack["evidenceClass"],
+        baseConfidence: validateConfidence(record.baseConfidence),
+        namedEntityConfidenceCap: validateConfidence(record.namedEntityConfidenceCap),
+        reasons: validateStringArray(record.reasons ?? [], `settlement fingerprint ${index} reasons`),
+        evidenceRefs: validateStringArray(record.evidenceRefs ?? [], `settlement fingerprint ${index} evidenceRefs`),
       };
     }),
   };

@@ -18,6 +18,7 @@
     "score": "dotenvx run --ignore=MISSING_ENV_FILE -f ../../.env -f .env -- bun scripts/score.ts",
     "aggregate": "dotenvx run --ignore=MISSING_ENV_FILE -f ../../.env -f .env -- bun scripts/aggregate.ts",
     "report": "dotenvx run --ignore=MISSING_ENV_FILE -f ../../.env -f .env -- bun scripts/report.ts",
+    "import:x402-analysis-claims": "dotenvx run --ignore=MISSING_ENV_FILE -f ../../.env -f .env -- bun scripts/import-x402-analysis-claims.ts",
     "verify:offline": "dotenvx run --ignore=MISSING_ENV_FILE -f ../../.env -f .env -- bun scripts/verify.ts",
     "verify:live": "dotenvx run -- bun scripts/verify-live.ts",
     "verify": "bun run typecheck && bun test && bun run verify:offline"

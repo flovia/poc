@@ -1,5 +1,8 @@
 import { db, nowIso } from "../db";
-import type { AttributionCandidate, KnownFingerprint } from "../schema";
+import type { AttributionCandidate, AttributionCandidateType, KnownFingerprint } from "../schema";
+import { listProviderEndpointClaims } from "./provider-claims";
+import { listSettlementFingerprintPacks } from "./settlement-fingerprints";
+import { BASE_USDC_ADDRESS, MULTICALL3_ADDRESS } from "../constants";
 
 const listObservations = () =>
   db
@@ -7,19 +10,37 @@ const listObservations = () =>
       `
     SELECT
       observation_id,
+      tx_hash,
+      chain_id,
       payer_wallet,
       recipient_wallet,
       relayer_wallet,
+      token_address,
+      amount_atomic,
+      top_level_selector,
       CASE
         WHEN method = 'direct_transferWithAuthorization' THEN 'direct'
         WHEN method = 'multicall3_aggregate3' THEN 'multicall'
         ELSE method
       END AS method
+      , method AS raw_method
     FROM payment_observations
     ORDER BY observation_id
   `,
     )
-    .all() as Array<{ observation_id: number; payer_wallet: string; recipient_wallet: string; relayer_wallet: string; method: string }>;
+    .all() as Array<{
+    observation_id: number;
+    tx_hash: string;
+    chain_id: number;
+    payer_wallet: string;
+    recipient_wallet: string;
+    relayer_wallet: string;
+    token_address: string;
+    amount_atomic: string;
+    top_level_selector: string;
+    method: string;
+    raw_method: string;
+  }>;
 
 type FingerprintRecord = {
   fingerprint_type: string;
@@ -45,12 +66,74 @@ const normalize = (rows: Array<Record<string, unknown>>) =>
     sourceName: row.source_name as string | null,
   }));
 
+const normalizeAddress = (value: string | null | undefined) => String(value ?? "").toLowerCase();
+const normalizeNetwork = (value: string | null | undefined) => {
+  const normalized = String(value ?? "").toLowerCase();
+  if (normalized === "base" || normalized === "base-mainnet" || normalized === "eip155:8453") return "base";
+  return normalized;
+};
+
+const confidenceForClaim = (confidence: number, evidenceClass: string) => {
+  if (evidenceClass === "catalog") return Math.min(confidence, 70);
+  if (evidenceClass === "paid_probe") return Math.min(confidence, 95);
+  return Math.min(confidence, 85);
+};
+
+const roleToCandidateType = (role: string): AttributionCandidateType | null => {
+  if (role === "provider") return "provider_candidate";
+  if (role === "service") return "service_candidate";
+  if (role === "endpoint") return "endpoint_candidate";
+  if (role === "middleman") return "middleman_candidate";
+  if (role === "market") return "market_candidate";
+  if (role === "facilitator") return "facilitator_candidate";
+  if (role === "settlement_operator") return "settlement_operator_candidate";
+  return null;
+};
+
+const listSettlementEvidence = () =>
+  db
+    .prepare(`SELECT observation_id, evidence_type, raw_json FROM settlement_evidence ORDER BY observation_id, evidence_id`)
+    .all() as Array<{ observation_id: number; evidence_type: string; raw_json: string }>;
+
+const evidenceTextFor = (evidenceByObservationId: Map<number, string[]>, observationId: number) =>
+  (evidenceByObservationId.get(observationId) ?? []).join("\n").toLowerCase();
+
+const packMatchesObservation = (
+  pack: { method: string | null; top_level_to: string | null; top_level_selector: string; inner_selector: string | null },
+  observation: { raw_method: string; top_level_selector: string; observation_id: number },
+  evidenceByObservationId: Map<number, string[]>,
+) => {
+  if (pack.method && pack.method !== observation.raw_method) return false;
+  if (String(pack.top_level_selector).toLowerCase() !== observation.top_level_selector.toLowerCase()) return false;
+  if (pack.top_level_to) {
+    const normalizedTopLevelTo = pack.top_level_to.toLowerCase();
+    if (observation.raw_method === "direct_transferWithAuthorization" && normalizedTopLevelTo !== BASE_USDC_ADDRESS.toLowerCase()) return false;
+    if (observation.raw_method === "multicall3_aggregate3" && normalizedTopLevelTo !== MULTICALL3_ADDRESS.toLowerCase()) return false;
+  }
+  if (pack.inner_selector && !evidenceTextFor(evidenceByObservationId, observation.observation_id).includes(pack.inner_selector.toLowerCase())) return false;
+  return true;
+};
+
 export const buildAttributionCandidates = () => {
   const now = nowIso();
   db.exec("DELETE FROM attribution_candidates;");
 
   const observations = listObservations();
   const fingerprints = normalize(listFingerprints());
+  const providerClaims = listProviderEndpointClaims().map((claim) => ({
+    ...claim,
+    roles: JSON.parse(claim.roles_json) as string[],
+    evidenceRefs: JSON.parse(claim.evidence_refs_json) as string[],
+  }));
+  const settlementPacks = listSettlementFingerprintPacks().map((pack) => ({
+    ...pack,
+    reasons: JSON.parse(pack.reasons_json) as string[],
+    evidenceRefs: JSON.parse(pack.evidence_refs_json) as string[],
+  }));
+  const evidenceByObservationId = new Map<number, string[]>();
+  for (const evidence of listSettlementEvidence()) {
+    evidenceByObservationId.set(evidence.observation_id, [...(evidenceByObservationId.get(evidence.observation_id) ?? []), evidence.raw_json]);
+  }
 
   const recipientFingerprints = fingerprints.filter((item) => item.fingerprintType === "recipient");
   const relayerFingerprints = fingerprints.filter((item) => item.fingerprintType === "relayer");
@@ -64,17 +147,64 @@ export const buildAttributionCandidates = () => {
       confidence,
       reasons_json,
       evidence_refs_json,
+      matched_claim_id,
+      matched_settlement_fingerprint_id,
+      entity_id,
+      role,
       created_at,
       updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(observation_id, candidate_type, matched_fingerprint_value) DO UPDATE SET
       confidence = excluded.confidence,
       reasons_json = excluded.reasons_json,
       evidence_refs_json = excluded.evidence_refs_json,
+      matched_claim_id = excluded.matched_claim_id,
+      matched_settlement_fingerprint_id = excluded.matched_settlement_fingerprint_id,
+      entity_id = excluded.entity_id,
+      role = excluded.role,
       updated_at = excluded.updated_at
   `);
 
   const upserted = [] as AttributionCandidate[];
+
+  const writeCandidate = (input: {
+    observationId: number;
+    candidateType: AttributionCandidateType;
+    matchedType: string;
+    matchedValue: string;
+    confidence: number;
+    reasons: string[];
+    evidenceRefs: string[];
+    matchedClaimId?: string | null;
+    matchedSettlementFingerprintId?: string | null;
+    entityId?: string | null;
+    role?: string | null;
+  }) => {
+    insertCandidate.run(
+      input.observationId,
+      input.candidateType,
+      input.matchedType,
+      input.matchedValue,
+      Math.min(100, input.confidence),
+      JSON.stringify(input.reasons),
+      JSON.stringify(input.evidenceRefs),
+      input.matchedClaimId ?? null,
+      input.matchedSettlementFingerprintId ?? null,
+      input.entityId ?? null,
+      input.role ?? null,
+      now,
+      now,
+    );
+    upserted.push({
+      candidateType: input.candidateType,
+      observationId: input.observationId,
+      matchedFingerprintType: input.matchedType,
+      matchedValue: input.matchedValue,
+      confidence: Math.min(100, input.confidence),
+      reasons: input.reasons,
+      evidenceRefs: input.evidenceRefs,
+    });
+  };
 
   for (const observation of observations) {
     const recipientMatch = recipientFingerprints.find((entry) => entry.fingerprintValue.toLowerCase() === observation.recipient_wallet.toLowerCase());
@@ -87,24 +217,12 @@ export const buildAttributionCandidates = () => {
       const evidenceRefs = [`receipt:${observation.observation_id}:recipient`, `fingerprint:recipient:${recipientMatch.fingerprintValue.toLowerCase()}`];
       const candidateType = "recipient_match" as const;
 
-      insertCandidate.run(
-        observation.observation_id,
-        candidateType,
-        recipientMatch.fingerprintType,
-        recipientMatch.fingerprintValue,
-        Math.min(100, recipientMatch.confidence),
-        JSON.stringify(reasons),
-        JSON.stringify(evidenceRefs),
-        now,
-        now,
-      );
-
-      upserted.push({
-        candidateType,
+      writeCandidate({
         observationId: observation.observation_id,
-        matchedFingerprintType: recipientMatch.fingerprintType,
+        candidateType,
+        matchedType: recipientMatch.fingerprintType,
         matchedValue: recipientMatch.fingerprintValue,
-        confidence: Math.min(100, recipientMatch.confidence),
+        confidence: recipientMatch.confidence,
         reasons,
         evidenceRefs,
       });
@@ -121,27 +239,79 @@ export const buildAttributionCandidates = () => {
       const evidenceRefs = [`receipt:${observation.observation_id}:relayer`, `fingerprint:relayer:${relayerMatch.fingerprintValue.toLowerCase()}`];
       const candidateType = "relayer_match" as const;
 
-      insertCandidate.run(
-        observation.observation_id,
-        candidateType,
-        relayerMatch.fingerprintType,
-        relayerMatch.fingerprintValue,
-        Math.min(100, relayerMatch.confidence),
-        JSON.stringify(reasons),
-        JSON.stringify(evidenceRefs),
-        now,
-        now,
-      );
-
-      upserted.push({
-        candidateType,
+      writeCandidate({
         observationId: observation.observation_id,
-        matchedFingerprintType: relayerMatch.fingerprintType,
+        candidateType,
+        matchedType: relayerMatch.fingerprintType,
         matchedValue: relayerMatch.fingerprintValue,
-        confidence: Math.min(100, relayerMatch.confidence),
+        confidence: relayerMatch.confidence,
         reasons,
         evidenceRefs,
       });
+    }
+
+    const matchedSettlementPacks = settlementPacks.filter((pack) => packMatchesObservation(pack, observation, evidenceByObservationId));
+
+    for (const pack of matchedSettlementPacks) {
+      writeCandidate({
+        observationId: observation.observation_id,
+        candidateType: "settlement_cluster",
+        matchedType: "settlement_fingerprint",
+        matchedValue: pack.cluster_id,
+        matchedSettlementFingerprintId: pack.fingerprint_id,
+        entityId: pack.entity_id,
+        confidence: pack.base_confidence,
+        reasons: ["settlement evidence matches fingerprint pack", ...pack.reasons],
+        evidenceRefs: [`receipt:${observation.observation_id}:settlement`, `settlement_fingerprint:${pack.fingerprint_id}`, ...pack.evidenceRefs],
+      });
+    }
+
+    const matchedClaims = providerClaims.filter((claim) => {
+      if (normalizeAddress(claim.pay_to_wallet) !== normalizeAddress(observation.recipient_wallet)) return false;
+      if (claim.tx_hash && normalizeAddress(claim.tx_hash) !== normalizeAddress(observation.tx_hash)) return false;
+      if (normalizeNetwork(claim.network) !== "base" || observation.chain_id !== 8453) return false;
+      if (normalizeAddress(claim.asset_address) !== normalizeAddress(observation.token_address)) return false;
+      if (claim.amount_atomic && claim.amount_atomic !== observation.amount_atomic) return false;
+      return true;
+    });
+
+    for (const claim of matchedClaims) {
+      const isPayspongeHostJoined = String(claim.request_host ?? "").endsWith(".x402.paysponge.com") && Boolean(claim.tx_hash);
+      const matchedSettlementPack = matchedSettlementPacks[0];
+      for (const role of claim.roles) {
+        const candidateType = roleToCandidateType(role);
+        if (!candidateType) continue;
+        const needsSettlementJoin = claim.entity_id === "paysponge" && ["middleman", "market", "facilitator", "settlement_operator"].includes(role);
+        if (needsSettlementJoin && (!isPayspongeHostJoined || !matchedSettlementPack)) continue;
+        const confidence = confidenceForClaim(claim.confidence, claim.evidence_class);
+        const reasons = [
+          `${role} claim matches observation recipient payTo`,
+          `entityId=${claim.entity_id}`,
+          `evidenceClass=${claim.evidence_class}`,
+          `sourceName=${claim.source_name}`,
+        ];
+        if (claim.tx_hash) reasons.push("decoded payment response transaction matches observed tx");
+        if (claim.request_host) reasons.push(`requestHost=${claim.request_host}`);
+        if (needsSettlementJoin) reasons.push(`settlementCluster=${matchedSettlementPack.cluster_id}`);
+        writeCandidate({
+          observationId: observation.observation_id,
+          candidateType,
+          matchedType: "provider_endpoint_claim",
+          matchedValue: `${claim.claim_id}:${role}`,
+          matchedClaimId: claim.claim_id,
+          matchedSettlementFingerprintId: needsSettlementJoin ? matchedSettlementPack.fingerprint_id : null,
+          entityId: claim.entity_id,
+          role,
+          confidence,
+          reasons,
+          evidenceRefs: [
+            `receipt:${observation.observation_id}:recipient`,
+            `claim:${claim.claim_id}`,
+            ...(needsSettlementJoin ? [`settlement_fingerprint:${matchedSettlementPack.fingerprint_id}`, `receipt:${observation.observation_id}:settlement`] : []),
+            ...claim.evidenceRefs,
+          ],
+        });
+      }
     }
   }
 

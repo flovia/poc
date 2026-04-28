@@ -24,6 +24,10 @@ type AttributionCandidateRow = {
   candidate_type: string;
   matched_fingerprint_type: string;
   matched_fingerprint_value: string;
+  matched_claim_id: string | null;
+  matched_settlement_fingerprint_id: string | null;
+  entity_id: string | null;
+  role: string | null;
   confidence: number;
   reasons_json: string;
   evidence_refs_json: string;
@@ -90,6 +94,10 @@ export const listAttributionCandidates = () =>
       candidate_type,
       matched_fingerprint_type,
       matched_fingerprint_value,
+      matched_claim_id,
+      matched_settlement_fingerprint_id,
+      entity_id,
+      role,
       confidence,
       reasons_json,
       evidence_refs_json,

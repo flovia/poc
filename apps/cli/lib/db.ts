@@ -95,6 +95,10 @@ export const initDb = () => {
       candidate_type TEXT NOT NULL,
       matched_fingerprint_type TEXT NOT NULL,
       matched_fingerprint_value TEXT NOT NULL,
+      matched_claim_id TEXT,
+      matched_settlement_fingerprint_id TEXT,
+      entity_id TEXT,
+      role TEXT,
       confidence INTEGER NOT NULL,
       reasons_json TEXT NOT NULL,
       evidence_refs_json TEXT NOT NULL,
@@ -102,6 +106,47 @@ export const initDb = () => {
       updated_at TEXT NOT NULL,
       UNIQUE(observation_id, candidate_type, matched_fingerprint_value),
       FOREIGN KEY(observation_id) REFERENCES payment_observations(observation_id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE IF NOT EXISTS provider_endpoint_claims (
+      claim_id TEXT PRIMARY KEY,
+      entity_id TEXT NOT NULL,
+      provider_name TEXT,
+      service_name TEXT,
+      endpoint_url TEXT,
+      resource_url TEXT,
+      request_host TEXT,
+      pay_to_wallet TEXT NOT NULL,
+      network TEXT NOT NULL,
+      asset_address TEXT NOT NULL,
+      amount_atomic TEXT,
+      tx_hash TEXT,
+      evidence_class TEXT NOT NULL,
+      roles_json TEXT NOT NULL,
+      confidence INTEGER NOT NULL,
+      source_name TEXT NOT NULL,
+      evidence_refs_json TEXT NOT NULL,
+      provenance_json TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS settlement_fingerprint_packs (
+      fingerprint_id TEXT PRIMARY KEY,
+      cluster_id TEXT NOT NULL,
+      display_name TEXT NOT NULL,
+      method TEXT,
+      top_level_to TEXT,
+      top_level_selector TEXT NOT NULL,
+      inner_selector TEXT,
+      entity_id TEXT,
+      evidence_class TEXT NOT NULL,
+      base_confidence INTEGER NOT NULL,
+      named_entity_confidence_cap INTEGER NOT NULL,
+      reasons_json TEXT NOT NULL,
+      evidence_refs_json TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
     );
 
     CREATE TABLE IF NOT EXISTS ingestion_runs (
@@ -174,7 +219,21 @@ export const initDb = () => {
     CREATE INDEX IF NOT EXISTS idx_attribution_candidates_observation ON attribution_candidates(observation_id);
     CREATE INDEX IF NOT EXISTS idx_ingestion_runs_source_blocks ON ingestion_runs(source, from_block, to_block);
     CREATE INDEX IF NOT EXISTS idx_known_fingerprints_type_value ON known_fingerprints(fingerprint_type, fingerprint_value);
+    CREATE INDEX IF NOT EXISTS idx_provider_endpoint_claims_pay_to ON provider_endpoint_claims(pay_to_wallet);
+    CREATE INDEX IF NOT EXISTS idx_provider_endpoint_claims_tx ON provider_endpoint_claims(tx_hash);
+    CREATE INDEX IF NOT EXISTS idx_settlement_fingerprint_packs_selector ON settlement_fingerprint_packs(method, top_level_selector);
   `);
+
+  const attributionColumns = db.prepare("PRAGMA table_info(attribution_candidates)").all() as Array<{ name: string }>;
+  const existing = new Set(attributionColumns.map((column) => column.name));
+  for (const [name, ddl] of [
+    ["matched_claim_id", "ALTER TABLE attribution_candidates ADD COLUMN matched_claim_id TEXT"],
+    ["matched_settlement_fingerprint_id", "ALTER TABLE attribution_candidates ADD COLUMN matched_settlement_fingerprint_id TEXT"],
+    ["entity_id", "ALTER TABLE attribution_candidates ADD COLUMN entity_id TEXT"],
+    ["role", "ALTER TABLE attribution_candidates ADD COLUMN role TEXT"],
+  ] as const) {
+    if (!existing.has(name)) db.exec(ddl);
+  }
 };
 
 export const resetDb = () => {

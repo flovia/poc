@@ -1,11 +1,61 @@
 {
-  "generatedAt": "2026-04-28T03:39:54.093Z",
+  "generatedAt": "2026-04-28T00:00:00.000Z",
   "candidates": [
+    {
+      "case_id": "aimo-search",
+      "candidate_type": "endpoint_candidate",
+      "matched_fingerprint_type": "provider_endpoint_claim",
+      "matched_fingerprint_value": "origindao-catalog-shared-payto:endpoint",
+      "matched_claim_id": "origindao-catalog-shared-payto",
+      "matched_settlement_fingerprint_id": null,
+      "entity_id": "origindao",
+      "role": "endpoint",
+      "confidence": 70,
+      "reasons": [
+        "endpoint claim matches observation recipient payTo",
+        "entityId=origindao",
+        "evidenceClass=catalog",
+        "sourceName=catalog-seed",
+        "requestHost=protocol.origindao.ai"
+      ],
+      "evidence_refs": [
+        "receipt:10:recipient",
+        "claim:origindao-catalog-shared-payto",
+        "fixture:shared-payto-catalog-claim"
+      ]
+    },
+    {
+      "case_id": "aimo-search",
+      "candidate_type": "provider_candidate",
+      "matched_fingerprint_type": "provider_endpoint_claim",
+      "matched_fingerprint_value": "origindao-catalog-shared-payto:provider",
+      "matched_claim_id": "origindao-catalog-shared-payto",
+      "matched_settlement_fingerprint_id": null,
+      "entity_id": "origindao",
+      "role": "provider",
+      "confidence": 70,
+      "reasons": [
+        "provider claim matches observation recipient payTo",
+        "entityId=origindao",
+        "evidenceClass=catalog",
+        "sourceName=catalog-seed",
+        "requestHost=protocol.origindao.ai"
+      ],
+      "evidence_refs": [
+        "receipt:10:recipient",
+        "claim:origindao-catalog-shared-payto",
+        "fixture:shared-payto-catalog-claim"
+      ]
+    },
     {
       "case_id": "aimo-search",
       "candidate_type": "recipient_match",
       "matched_fingerprint_type": "recipient",
       "matched_fingerprint_value": "0x27599d824bbB4F506F985af865d840F61ba848C8",
+      "matched_claim_id": null,
+      "matched_settlement_fingerprint_id": null,
+      "entity_id": null,
+      "role": null,
       "confidence": 95,
       "reasons": [
         "recipient matches known recipient fingerprint",
@@ -22,6 +72,10 @@
       "candidate_type": "relayer_match",
       "matched_fingerprint_type": "relayer",
       "matched_fingerprint_value": "0x7f6d822467df2a85f792d4508c5722ade96be056",
+      "matched_claim_id": null,
+      "matched_settlement_fingerprint_id": null,
+      "entity_id": null,
+      "role": null,
       "confidence": 95,
       "reasons": [
         "relayer matches known relayer fingerprint",
@@ -35,10 +89,103 @@
       ]
     },
     {
+      "case_id": "aimo-search",
+      "candidate_type": "service_candidate",
+      "matched_fingerprint_type": "provider_endpoint_claim",
+      "matched_fingerprint_value": "origindao-catalog-shared-payto:service",
+      "matched_claim_id": "origindao-catalog-shared-payto",
+      "matched_settlement_fingerprint_id": null,
+      "entity_id": "origindao",
+      "role": "service",
+      "confidence": 70,
+      "reasons": [
+        "service claim matches observation recipient payTo",
+        "entityId=origindao",
+        "evidenceClass=catalog",
+        "sourceName=catalog-seed",
+        "requestHost=protocol.origindao.ai"
+      ],
+      "evidence_refs": [
+        "receipt:10:recipient",
+        "claim:origindao-catalog-shared-payto",
+        "fixture:shared-payto-catalog-claim"
+      ]
+    },
+    {
+      "case_id": "aimo-search",
+      "candidate_type": "settlement_cluster",
+      "matched_fingerprint_type": "settlement_fingerprint",
+      "matched_fingerprint_value": "direct_usdc_bytes_signature_transfer_with_authorization",
+      "matched_claim_id": null,
+      "matched_settlement_fingerprint_id": "direct-usdc-bytes-signature",
+      "entity_id": null,
+      "role": null,
+      "confidence": 95,
+      "reasons": [
+        "settlement evidence matches fingerprint pack",
+        "top-level Base USDC bytes-signature authorization transfer"
+      ],
+      "evidence_refs": [
+        "receipt:10:settlement",
+        "settlement_fingerprint:direct-usdc-bytes-signature",
+        "constants:EXECUTE_WITH_AUTHORIZATION_SELECTOR"
+      ]
+    },
+    {
+      "case_id": "bluepages",
+      "candidate_type": "endpoint_candidate",
+      "matched_fingerprint_type": "provider_endpoint_claim",
+      "matched_fingerprint_value": "origindao-catalog-shared-payto:endpoint",
+      "matched_claim_id": "origindao-catalog-shared-payto",
+      "matched_settlement_fingerprint_id": null,
+      "entity_id": "origindao",
+      "role": "endpoint",
+      "confidence": 70,
+      "reasons": [
+        "endpoint claim matches observation recipient payTo",
+        "entityId=origindao",
+        "evidenceClass=catalog",
+        "sourceName=catalog-seed",
+        "requestHost=protocol.origindao.ai"
+      ],
+      "evidence_refs": [
+        "receipt:7:recipient",
+        "claim:origindao-catalog-shared-payto",
+        "fixture:shared-payto-catalog-claim"
+      ]
+    },
+    {
+      "case_id": "bluepages",
+      "candidate_type": "provider_candidate",
+      "matched_fingerprint_type": "provider_endpoint_claim",
+      "matched_fingerprint_value": "origindao-catalog-shared-payto:provider",
+      "matched_claim_id": "origindao-catalog-shared-payto",
+      "matched_settlement_fingerprint_id": null,
+      "entity_id": "origindao",
+      "role": "provider",
+      "confidence": 70,
+      "reasons": [
+        "provider claim matches observation recipient payTo",
+        "entityId=origindao",
+        "evidenceClass=catalog",
+        "sourceName=catalog-seed",
+        "requestHost=protocol.origindao.ai"
+      ],
+      "evidence_refs": [
+        "receipt:7:recipient",
+        "claim:origindao-catalog-shared-payto",
+        "fixture:shared-payto-catalog-claim"
+      ]
+    },
+    {
       "case_id": "bluepages",
       "candidate_type": "recipient_match",
       "matched_fingerprint_type": "recipient",
       "matched_fingerprint_value": "0x27599d824bbB4F506F985af865d840F61ba848C8",
+      "matched_claim_id": null,
+      "matched_settlement_fingerprint_id": null,
+      "entity_id": null,
+      "role": null,
       "confidence": 95,
       "reasons": [
         "recipient matches known recipient fingerprint",
@@ -55,6 +202,10 @@
       "candidate_type": "relayer_match",
       "matched_fingerprint_type": "relayer",
       "matched_fingerprint_value": "0x7f6d822467df2a85f792d4508c5722ade96be056",
+      "matched_claim_id": null,
+      "matched_settlement_fingerprint_id": null,
+      "entity_id": null,
+      "role": null,
       "confidence": 95,
       "reasons": [
         "relayer matches known relayer fingerprint",
@@ -68,10 +219,57 @@
       ]
     },
     {
+      "case_id": "bluepages",
+      "candidate_type": "service_candidate",
+      "matched_fingerprint_type": "provider_endpoint_claim",
+      "matched_fingerprint_value": "origindao-catalog-shared-payto:service",
+      "matched_claim_id": "origindao-catalog-shared-payto",
+      "matched_settlement_fingerprint_id": null,
+      "entity_id": "origindao",
+      "role": "service",
+      "confidence": 70,
+      "reasons": [
+        "service claim matches observation recipient payTo",
+        "entityId=origindao",
+        "evidenceClass=catalog",
+        "sourceName=catalog-seed",
+        "requestHost=protocol.origindao.ai"
+      ],
+      "evidence_refs": [
+        "receipt:7:recipient",
+        "claim:origindao-catalog-shared-payto",
+        "fixture:shared-payto-catalog-claim"
+      ]
+    },
+    {
+      "case_id": "bluepages",
+      "candidate_type": "settlement_cluster",
+      "matched_fingerprint_type": "settlement_fingerprint",
+      "matched_fingerprint_value": "direct_usdc_bytes_signature_transfer_with_authorization",
+      "matched_claim_id": null,
+      "matched_settlement_fingerprint_id": "direct-usdc-bytes-signature",
+      "entity_id": null,
+      "role": null,
+      "confidence": 95,
+      "reasons": [
+        "settlement evidence matches fingerprint pack",
+        "top-level Base USDC bytes-signature authorization transfer"
+      ],
+      "evidence_refs": [
+        "receipt:7:settlement",
+        "settlement_fingerprint:direct-usdc-bytes-signature",
+        "constants:EXECUTE_WITH_AUTHORIZATION_SELECTOR"
+      ]
+    },
+    {
       "case_id": "coingecko",
       "candidate_type": "recipient_match",
       "matched_fingerprint_type": "recipient",
       "matched_fingerprint_value": "0xe9030014F5DAe217d0A152f02A043567b16c1aBf",
+      "matched_claim_id": null,
+      "matched_settlement_fingerprint_id": null,
+      "entity_id": null,
+      "role": null,
       "confidence": 95,
       "reasons": [
         "recipient matches known recipient fingerprint",
@@ -88,6 +286,10 @@
       "candidate_type": "relayer_match",
       "matched_fingerprint_type": "relayer",
       "matched_fingerprint_value": "0x67b9ce703d9ce658d7c4ac3c289cea112fe662af",
+      "matched_claim_id": null,
+      "matched_settlement_fingerprint_id": null,
+      "entity_id": null,
+      "role": null,
       "confidence": 95,
       "reasons": [
         "relayer matches known relayer fingerprint",
@@ -101,10 +303,34 @@
       ]
     },
     {
+      "case_id": "coingecko",
+      "candidate_type": "settlement_cluster",
+      "matched_fingerprint_type": "settlement_fingerprint",
+      "matched_fingerprint_value": "direct_usdc_vrs_transfer_with_authorization",
+      "matched_claim_id": null,
+      "matched_settlement_fingerprint_id": "direct-usdc-vrs",
+      "entity_id": null,
+      "role": null,
+      "confidence": 95,
+      "reasons": [
+        "settlement evidence matches fingerprint pack",
+        "top-level Base USDC v/r/s authorization transfer"
+      ],
+      "evidence_refs": [
+        "receipt:4:settlement",
+        "settlement_fingerprint:direct-usdc-vrs",
+        "constants:TRANSFER_WITH_AUTHORIZATION_SELECTOR"
+      ]
+    },
+    {
       "case_id": "coinstats-news",
       "candidate_type": "recipient_match",
       "matched_fingerprint_type": "recipient",
       "matched_fingerprint_value": "0xEa8F59B504F18Ac7ed25C735f07864ae2EeFa493",
+      "matched_claim_id": null,
+      "matched_settlement_fingerprint_id": null,
+      "entity_id": null,
+      "role": null,
       "confidence": 95,
       "reasons": [
         "recipient matches known recipient fingerprint",
@@ -121,6 +347,10 @@
       "candidate_type": "relayer_match",
       "matched_fingerprint_type": "relayer",
       "matched_fingerprint_value": "0x67b9ce703d9ce658d7c4ac3c289cea112fe662af",
+      "matched_claim_id": null,
+      "matched_settlement_fingerprint_id": null,
+      "entity_id": null,
+      "role": null,
       "confidence": 95,
       "reasons": [
         "relayer matches known relayer fingerprint",
@@ -134,10 +364,80 @@
       ]
     },
     {
+      "case_id": "coinstats-news",
+      "candidate_type": "settlement_cluster",
+      "matched_fingerprint_type": "settlement_fingerprint",
+      "matched_fingerprint_value": "direct_usdc_vrs_transfer_with_authorization",
+      "matched_claim_id": null,
+      "matched_settlement_fingerprint_id": "direct-usdc-vrs",
+      "entity_id": null,
+      "role": null,
+      "confidence": 95,
+      "reasons": [
+        "settlement evidence matches fingerprint pack",
+        "top-level Base USDC v/r/s authorization transfer"
+      ],
+      "evidence_refs": [
+        "receipt:5:settlement",
+        "settlement_fingerprint:direct-usdc-vrs",
+        "constants:TRANSFER_WITH_AUTHORIZATION_SELECTOR"
+      ]
+    },
+    {
+      "case_id": "origindao-quest-board",
+      "candidate_type": "endpoint_candidate",
+      "matched_fingerprint_type": "provider_endpoint_claim",
+      "matched_fingerprint_value": "origindao-catalog-shared-payto:endpoint",
+      "matched_claim_id": "origindao-catalog-shared-payto",
+      "matched_settlement_fingerprint_id": null,
+      "entity_id": "origindao",
+      "role": "endpoint",
+      "confidence": 70,
+      "reasons": [
+        "endpoint claim matches observation recipient payTo",
+        "entityId=origindao",
+        "evidenceClass=catalog",
+        "sourceName=catalog-seed",
+        "requestHost=protocol.origindao.ai"
+      ],
+      "evidence_refs": [
+        "receipt:6:recipient",
+        "claim:origindao-catalog-shared-payto",
+        "fixture:shared-payto-catalog-claim"
+      ]
+    },
+    {
+      "case_id": "origindao-quest-board",
+      "candidate_type": "provider_candidate",
+      "matched_fingerprint_type": "provider_endpoint_claim",
+      "matched_fingerprint_value": "origindao-catalog-shared-payto:provider",
+      "matched_claim_id": "origindao-catalog-shared-payto",
+      "matched_settlement_fingerprint_id": null,
+      "entity_id": "origindao",
+      "role": "provider",
+      "confidence": 70,
+      "reasons": [
+        "provider claim matches observation recipient payTo",
+        "entityId=origindao",
+        "evidenceClass=catalog",
+        "sourceName=catalog-seed",
+        "requestHost=protocol.origindao.ai"
+      ],
+      "evidence_refs": [
+        "receipt:6:recipient",
+        "claim:origindao-catalog-shared-payto",
+        "fixture:shared-payto-catalog-claim"
+      ]
+    },
+    {
       "case_id": "origindao-quest-board",
       "candidate_type": "recipient_match",
       "matched_fingerprint_type": "recipient",
       "matched_fingerprint_value": "0x27599d824bbB4F506F985af865d840F61ba848C8",
+      "matched_claim_id": null,
+      "matched_settlement_fingerprint_id": null,
+      "entity_id": null,
+      "role": null,
       "confidence": 95,
       "reasons": [
         "recipient matches known recipient fingerprint",
@@ -154,6 +454,10 @@
       "candidate_type": "relayer_match",
       "matched_fingerprint_type": "relayer",
       "matched_fingerprint_value": "0x7f6d822467df2a85f792d4508c5722ade96be056",
+      "matched_claim_id": null,
+      "matched_settlement_fingerprint_id": null,
+      "entity_id": null,
+      "role": null,
       "confidence": 95,
       "reasons": [
         "relayer matches known relayer fingerprint",
@@ -167,10 +471,57 @@
       ]
     },
     {
+      "case_id": "origindao-quest-board",
+      "candidate_type": "service_candidate",
+      "matched_fingerprint_type": "provider_endpoint_claim",
+      "matched_fingerprint_value": "origindao-catalog-shared-payto:service",
+      "matched_claim_id": "origindao-catalog-shared-payto",
+      "matched_settlement_fingerprint_id": null,
+      "entity_id": "origindao",
+      "role": "service",
+      "confidence": 70,
+      "reasons": [
+        "service claim matches observation recipient payTo",
+        "entityId=origindao",
+        "evidenceClass=catalog",
+        "sourceName=catalog-seed",
+        "requestHost=protocol.origindao.ai"
+      ],
+      "evidence_refs": [
+        "receipt:6:recipient",
+        "claim:origindao-catalog-shared-payto",
+        "fixture:shared-payto-catalog-claim"
+      ]
+    },
+    {
+      "case_id": "origindao-quest-board",
+      "candidate_type": "settlement_cluster",
+      "matched_fingerprint_type": "settlement_fingerprint",
+      "matched_fingerprint_value": "direct_usdc_bytes_signature_transfer_with_authorization",
+      "matched_claim_id": null,
+      "matched_settlement_fingerprint_id": "direct-usdc-bytes-signature",
+      "entity_id": null,
+      "role": null,
+      "confidence": 95,
+      "reasons": [
+        "settlement evidence matches fingerprint pack",
+        "top-level Base USDC bytes-signature authorization transfer"
+      ],
+      "evidence_refs": [
+        "receipt:6:settlement",
+        "settlement_fingerprint:direct-usdc-bytes-signature",
+        "constants:EXECUTE_WITH_AUTHORIZATION_SELECTOR"
+      ]
+    },
+    {
       "case_id": "orthogonal-andi",
       "candidate_type": "recipient_match",
       "matched_fingerprint_type": "recipient",
       "matched_fingerprint_value": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+      "matched_claim_id": null,
+      "matched_settlement_fingerprint_id": null,
+      "entity_id": null,
+      "role": null,
       "confidence": 95,
       "reasons": [
         "recipient matches known recipient fingerprint",
@@ -187,6 +538,10 @@
       "candidate_type": "relayer_match",
       "matched_fingerprint_type": "relayer",
       "matched_fingerprint_value": "0x8f5cb67b49555e614892b7233cfddebfb746e531",
+      "matched_claim_id": null,
+      "matched_settlement_fingerprint_id": null,
+      "entity_id": null,
+      "role": null,
       "confidence": 95,
       "reasons": [
         "relayer matches known relayer fingerprint",
@@ -200,10 +555,34 @@
       ]
     },
     {
+      "case_id": "orthogonal-andi",
+      "candidate_type": "settlement_cluster",
+      "matched_fingerprint_type": "settlement_fingerprint",
+      "matched_fingerprint_value": "direct_usdc_vrs_transfer_with_authorization",
+      "matched_claim_id": null,
+      "matched_settlement_fingerprint_id": "direct-usdc-vrs",
+      "entity_id": null,
+      "role": null,
+      "confidence": 95,
+      "reasons": [
+        "settlement evidence matches fingerprint pack",
+        "top-level Base USDC v/r/s authorization transfer"
+      ],
+      "evidence_refs": [
+        "receipt:3:settlement",
+        "settlement_fingerprint:direct-usdc-vrs",
+        "constants:TRANSFER_WITH_AUTHORIZATION_SELECTOR"
+      ]
+    },
+    {
       "case_id": "orthogonal-olostep",
       "candidate_type": "recipient_match",
       "matched_fingerprint_type": "recipient",
       "matched_fingerprint_value": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+      "matched_claim_id": null,
+      "matched_settlement_fingerprint_id": null,
+      "entity_id": null,
+      "role": null,
       "confidence": 95,
       "reasons": [
         "recipient matches known recipient fingerprint",
@@ -220,6 +599,10 @@
       "candidate_type": "relayer_match",
       "matched_fingerprint_type": "relayer",
       "matched_fingerprint_value": "0xa32ccda98ba7529705a059bd2d213da8de10d101",
+      "matched_claim_id": null,
+      "matched_settlement_fingerprint_id": null,
+      "entity_id": null,
+      "role": null,
       "confidence": 95,
       "reasons": [
         "relayer matches known relayer fingerprint",
@@ -233,10 +616,34 @@
       ]
     },
     {
+      "case_id": "orthogonal-olostep",
+      "candidate_type": "settlement_cluster",
+      "matched_fingerprint_type": "settlement_fingerprint",
+      "matched_fingerprint_value": "direct_usdc_vrs_transfer_with_authorization",
+      "matched_claim_id": null,
+      "matched_settlement_fingerprint_id": "direct-usdc-vrs",
+      "entity_id": null,
+      "role": null,
+      "confidence": 95,
+      "reasons": [
+        "settlement evidence matches fingerprint pack",
+        "top-level Base USDC v/r/s authorization transfer"
+      ],
+      "evidence_refs": [
+        "receipt:2:settlement",
+        "settlement_fingerprint:direct-usdc-vrs",
+        "constants:TRANSFER_WITH_AUTHORIZATION_SELECTOR"
+      ]
+    },
+    {
       "case_id": "orthogonal-serper",
       "candidate_type": "recipient_match",
       "matched_fingerprint_type": "recipient",
       "matched_fingerprint_value": "0x5d4f109cABe6792dDf98C7dc9413042Ce31C1785",
+      "matched_claim_id": null,
+      "matched_settlement_fingerprint_id": null,
+      "entity_id": null,
+      "role": null,
       "confidence": 95,
       "reasons": [
         "recipient matches known recipient fingerprint",
@@ -253,6 +660,10 @@
       "candidate_type": "relayer_match",
       "matched_fingerprint_type": "relayer",
       "matched_fingerprint_value": "0x06f0bfd2c8f36674df5cde852c1eed8025c268c9",
+      "matched_claim_id": null,
+      "matched_settlement_fingerprint_id": null,
+      "entity_id": null,
+      "role": null,
       "confidence": 95,
       "reasons": [
         "relayer matches known relayer fingerprint",
@@ -266,10 +677,214 @@
       ]
     },
     {
+      "case_id": "orthogonal-serper",
+      "candidate_type": "settlement_cluster",
+      "matched_fingerprint_type": "settlement_fingerprint",
+      "matched_fingerprint_value": "direct_usdc_vrs_transfer_with_authorization",
+      "matched_claim_id": null,
+      "matched_settlement_fingerprint_id": "direct-usdc-vrs",
+      "entity_id": null,
+      "role": null,
+      "confidence": 95,
+      "reasons": [
+        "settlement evidence matches fingerprint pack",
+        "top-level Base USDC v/r/s authorization transfer"
+      ],
+      "evidence_refs": [
+        "receipt:1:settlement",
+        "settlement_fingerprint:direct-usdc-vrs",
+        "constants:TRANSFER_WITH_AUTHORIZATION_SELECTOR"
+      ]
+    },
+    {
+      "case_id": "paysponge-perplexity",
+      "candidate_type": "endpoint_candidate",
+      "matched_fingerprint_type": "provider_endpoint_claim",
+      "matched_fingerprint_value": "origindao-catalog-shared-payto:endpoint",
+      "matched_claim_id": "origindao-catalog-shared-payto",
+      "matched_settlement_fingerprint_id": null,
+      "entity_id": "origindao",
+      "role": "endpoint",
+      "confidence": 70,
+      "reasons": [
+        "endpoint claim matches observation recipient payTo",
+        "entityId=origindao",
+        "evidenceClass=catalog",
+        "sourceName=catalog-seed",
+        "requestHost=protocol.origindao.ai"
+      ],
+      "evidence_refs": [
+        "receipt:8:recipient",
+        "claim:origindao-catalog-shared-payto",
+        "fixture:shared-payto-catalog-claim"
+      ]
+    },
+    {
+      "case_id": "paysponge-perplexity",
+      "candidate_type": "endpoint_candidate",
+      "matched_fingerprint_type": "provider_endpoint_claim",
+      "matched_fingerprint_value": "paysponge-perplexity-direct-fixture:endpoint",
+      "matched_claim_id": "paysponge-perplexity-direct-fixture",
+      "matched_settlement_fingerprint_id": null,
+      "entity_id": "paysponge",
+      "role": "endpoint",
+      "confidence": 90,
+      "reasons": [
+        "endpoint claim matches observation recipient payTo",
+        "entityId=paysponge",
+        "evidenceClass=paid_probe",
+        "sourceName=poc-fixture",
+        "decoded payment response transaction matches observed tx",
+        "requestHost=pplx.x402.paysponge.com"
+      ],
+      "evidence_refs": [
+        "receipt:8:recipient",
+        "claim:paysponge-perplexity-direct-fixture",
+        "fixture:paysponge-perplexity",
+        "poc:apps/cli/fixtures/raw/paysponge-perplexity.transaction.json"
+      ]
+    },
+    {
+      "case_id": "paysponge-perplexity",
+      "candidate_type": "facilitator_candidate",
+      "matched_fingerprint_type": "provider_endpoint_claim",
+      "matched_fingerprint_value": "paysponge-perplexity-direct-fixture:facilitator",
+      "matched_claim_id": "paysponge-perplexity-direct-fixture",
+      "matched_settlement_fingerprint_id": "direct-usdc-bytes-signature",
+      "entity_id": "paysponge",
+      "role": "facilitator",
+      "confidence": 90,
+      "reasons": [
+        "facilitator claim matches observation recipient payTo",
+        "entityId=paysponge",
+        "evidenceClass=paid_probe",
+        "sourceName=poc-fixture",
+        "decoded payment response transaction matches observed tx",
+        "requestHost=pplx.x402.paysponge.com",
+        "settlementCluster=direct_usdc_bytes_signature_transfer_with_authorization"
+      ],
+      "evidence_refs": [
+        "receipt:8:recipient",
+        "claim:paysponge-perplexity-direct-fixture",
+        "settlement_fingerprint:direct-usdc-bytes-signature",
+        "receipt:8:settlement",
+        "fixture:paysponge-perplexity",
+        "poc:apps/cli/fixtures/raw/paysponge-perplexity.transaction.json"
+      ]
+    },
+    {
+      "case_id": "paysponge-perplexity",
+      "candidate_type": "market_candidate",
+      "matched_fingerprint_type": "provider_endpoint_claim",
+      "matched_fingerprint_value": "paysponge-perplexity-direct-fixture:market",
+      "matched_claim_id": "paysponge-perplexity-direct-fixture",
+      "matched_settlement_fingerprint_id": "direct-usdc-bytes-signature",
+      "entity_id": "paysponge",
+      "role": "market",
+      "confidence": 90,
+      "reasons": [
+        "market claim matches observation recipient payTo",
+        "entityId=paysponge",
+        "evidenceClass=paid_probe",
+        "sourceName=poc-fixture",
+        "decoded payment response transaction matches observed tx",
+        "requestHost=pplx.x402.paysponge.com",
+        "settlementCluster=direct_usdc_bytes_signature_transfer_with_authorization"
+      ],
+      "evidence_refs": [
+        "receipt:8:recipient",
+        "claim:paysponge-perplexity-direct-fixture",
+        "settlement_fingerprint:direct-usdc-bytes-signature",
+        "receipt:8:settlement",
+        "fixture:paysponge-perplexity",
+        "poc:apps/cli/fixtures/raw/paysponge-perplexity.transaction.json"
+      ]
+    },
+    {
+      "case_id": "paysponge-perplexity",
+      "candidate_type": "middleman_candidate",
+      "matched_fingerprint_type": "provider_endpoint_claim",
+      "matched_fingerprint_value": "paysponge-perplexity-direct-fixture:middleman",
+      "matched_claim_id": "paysponge-perplexity-direct-fixture",
+      "matched_settlement_fingerprint_id": "direct-usdc-bytes-signature",
+      "entity_id": "paysponge",
+      "role": "middleman",
+      "confidence": 90,
+      "reasons": [
+        "middleman claim matches observation recipient payTo",
+        "entityId=paysponge",
+        "evidenceClass=paid_probe",
+        "sourceName=poc-fixture",
+        "decoded payment response transaction matches observed tx",
+        "requestHost=pplx.x402.paysponge.com",
+        "settlementCluster=direct_usdc_bytes_signature_transfer_with_authorization"
+      ],
+      "evidence_refs": [
+        "receipt:8:recipient",
+        "claim:paysponge-perplexity-direct-fixture",
+        "settlement_fingerprint:direct-usdc-bytes-signature",
+        "receipt:8:settlement",
+        "fixture:paysponge-perplexity",
+        "poc:apps/cli/fixtures/raw/paysponge-perplexity.transaction.json"
+      ]
+    },
+    {
+      "case_id": "paysponge-perplexity",
+      "candidate_type": "provider_candidate",
+      "matched_fingerprint_type": "provider_endpoint_claim",
+      "matched_fingerprint_value": "origindao-catalog-shared-payto:provider",
+      "matched_claim_id": "origindao-catalog-shared-payto",
+      "matched_settlement_fingerprint_id": null,
+      "entity_id": "origindao",
+      "role": "provider",
+      "confidence": 70,
+      "reasons": [
+        "provider claim matches observation recipient payTo",
+        "entityId=origindao",
+        "evidenceClass=catalog",
+        "sourceName=catalog-seed",
+        "requestHost=protocol.origindao.ai"
+      ],
+      "evidence_refs": [
+        "receipt:8:recipient",
+        "claim:origindao-catalog-shared-payto",
+        "fixture:shared-payto-catalog-claim"
+      ]
+    },
+    {
+      "case_id": "paysponge-perplexity",
+      "candidate_type": "provider_candidate",
+      "matched_fingerprint_type": "provider_endpoint_claim",
+      "matched_fingerprint_value": "paysponge-perplexity-direct-fixture:provider",
+      "matched_claim_id": "paysponge-perplexity-direct-fixture",
+      "matched_settlement_fingerprint_id": null,
+      "entity_id": "paysponge",
+      "role": "provider",
+      "confidence": 90,
+      "reasons": [
+        "provider claim matches observation recipient payTo",
+        "entityId=paysponge",
+        "evidenceClass=paid_probe",
+        "sourceName=poc-fixture",
+        "decoded payment response transaction matches observed tx",
+        "requestHost=pplx.x402.paysponge.com"
+      ],
+      "evidence_refs": [
+        "receipt:8:recipient",
+        "claim:paysponge-perplexity-direct-fixture",
+        "fixture:paysponge-perplexity",
+        "poc:apps/cli/fixtures/raw/paysponge-perplexity.transaction.json"
+      ]
+    },
+    {
       "case_id": "paysponge-perplexity",
       "candidate_type": "recipient_match",
       "matched_fingerprint_type": "recipient",
       "matched_fingerprint_value": "0x27599d824bbB4F506F985af865d840F61ba848C8",
+      "matched_claim_id": null,
+      "matched_settlement_fingerprint_id": null,
+      "entity_id": null,
+      "role": null,
       "confidence": 95,
       "reasons": [
         "recipient matches known recipient fingerprint",
@@ -286,6 +901,10 @@
       "candidate_type": "relayer_match",
       "matched_fingerprint_type": "relayer",
       "matched_fingerprint_value": "0x7f6d822467df2a85f792d4508c5722ade96be056",
+      "matched_claim_id": null,
+      "matched_settlement_fingerprint_id": null,
+      "entity_id": null,
+      "role": null,
       "confidence": 95,
       "reasons": [
         "relayer matches known relayer fingerprint",
@@ -299,10 +918,290 @@
       ]
     },
     {
+      "case_id": "paysponge-perplexity",
+      "candidate_type": "service_candidate",
+      "matched_fingerprint_type": "provider_endpoint_claim",
+      "matched_fingerprint_value": "origindao-catalog-shared-payto:service",
+      "matched_claim_id": "origindao-catalog-shared-payto",
+      "matched_settlement_fingerprint_id": null,
+      "entity_id": "origindao",
+      "role": "service",
+      "confidence": 70,
+      "reasons": [
+        "service claim matches observation recipient payTo",
+        "entityId=origindao",
+        "evidenceClass=catalog",
+        "sourceName=catalog-seed",
+        "requestHost=protocol.origindao.ai"
+      ],
+      "evidence_refs": [
+        "receipt:8:recipient",
+        "claim:origindao-catalog-shared-payto",
+        "fixture:shared-payto-catalog-claim"
+      ]
+    },
+    {
+      "case_id": "paysponge-perplexity",
+      "candidate_type": "service_candidate",
+      "matched_fingerprint_type": "provider_endpoint_claim",
+      "matched_fingerprint_value": "paysponge-perplexity-direct-fixture:service",
+      "matched_claim_id": "paysponge-perplexity-direct-fixture",
+      "matched_settlement_fingerprint_id": null,
+      "entity_id": "paysponge",
+      "role": "service",
+      "confidence": 90,
+      "reasons": [
+        "service claim matches observation recipient payTo",
+        "entityId=paysponge",
+        "evidenceClass=paid_probe",
+        "sourceName=poc-fixture",
+        "decoded payment response transaction matches observed tx",
+        "requestHost=pplx.x402.paysponge.com"
+      ],
+      "evidence_refs": [
+        "receipt:8:recipient",
+        "claim:paysponge-perplexity-direct-fixture",
+        "fixture:paysponge-perplexity",
+        "poc:apps/cli/fixtures/raw/paysponge-perplexity.transaction.json"
+      ]
+    },
+    {
+      "case_id": "paysponge-perplexity",
+      "candidate_type": "settlement_cluster",
+      "matched_fingerprint_type": "settlement_fingerprint",
+      "matched_fingerprint_value": "direct_usdc_bytes_signature_transfer_with_authorization",
+      "matched_claim_id": null,
+      "matched_settlement_fingerprint_id": "direct-usdc-bytes-signature",
+      "entity_id": null,
+      "role": null,
+      "confidence": 95,
+      "reasons": [
+        "settlement evidence matches fingerprint pack",
+        "top-level Base USDC bytes-signature authorization transfer"
+      ],
+      "evidence_refs": [
+        "receipt:8:settlement",
+        "settlement_fingerprint:direct-usdc-bytes-signature",
+        "constants:EXECUTE_WITH_AUTHORIZATION_SELECTOR"
+      ]
+    },
+    {
+      "case_id": "paysponge-perplexity",
+      "candidate_type": "settlement_operator_candidate",
+      "matched_fingerprint_type": "provider_endpoint_claim",
+      "matched_fingerprint_value": "paysponge-perplexity-direct-fixture:settlement_operator",
+      "matched_claim_id": "paysponge-perplexity-direct-fixture",
+      "matched_settlement_fingerprint_id": "direct-usdc-bytes-signature",
+      "entity_id": "paysponge",
+      "role": "settlement_operator",
+      "confidence": 90,
+      "reasons": [
+        "settlement_operator claim matches observation recipient payTo",
+        "entityId=paysponge",
+        "evidenceClass=paid_probe",
+        "sourceName=poc-fixture",
+        "decoded payment response transaction matches observed tx",
+        "requestHost=pplx.x402.paysponge.com",
+        "settlementCluster=direct_usdc_bytes_signature_transfer_with_authorization"
+      ],
+      "evidence_refs": [
+        "receipt:8:recipient",
+        "claim:paysponge-perplexity-direct-fixture",
+        "settlement_fingerprint:direct-usdc-bytes-signature",
+        "receipt:8:settlement",
+        "fixture:paysponge-perplexity",
+        "poc:apps/cli/fixtures/raw/paysponge-perplexity.transaction.json"
+      ]
+    },
+    {
+      "case_id": "paysponge-wolframalpha",
+      "candidate_type": "endpoint_candidate",
+      "matched_fingerprint_type": "provider_endpoint_claim",
+      "matched_fingerprint_value": "origindao-catalog-shared-payto:endpoint",
+      "matched_claim_id": "origindao-catalog-shared-payto",
+      "matched_settlement_fingerprint_id": null,
+      "entity_id": "origindao",
+      "role": "endpoint",
+      "confidence": 70,
+      "reasons": [
+        "endpoint claim matches observation recipient payTo",
+        "entityId=origindao",
+        "evidenceClass=catalog",
+        "sourceName=catalog-seed",
+        "requestHost=protocol.origindao.ai"
+      ],
+      "evidence_refs": [
+        "receipt:9:recipient",
+        "claim:origindao-catalog-shared-payto",
+        "fixture:shared-payto-catalog-claim"
+      ]
+    },
+    {
+      "case_id": "paysponge-wolframalpha",
+      "candidate_type": "endpoint_candidate",
+      "matched_fingerprint_type": "provider_endpoint_claim",
+      "matched_fingerprint_value": "paysponge-wolframalpha-direct-fixture:endpoint",
+      "matched_claim_id": "paysponge-wolframalpha-direct-fixture",
+      "matched_settlement_fingerprint_id": null,
+      "entity_id": "paysponge",
+      "role": "endpoint",
+      "confidence": 90,
+      "reasons": [
+        "endpoint claim matches observation recipient payTo",
+        "entityId=paysponge",
+        "evidenceClass=paid_probe",
+        "sourceName=poc-fixture",
+        "decoded payment response transaction matches observed tx",
+        "requestHost=wolframalpha.x402.paysponge.com"
+      ],
+      "evidence_refs": [
+        "receipt:9:recipient",
+        "claim:paysponge-wolframalpha-direct-fixture",
+        "fixture:paysponge-wolframalpha",
+        "poc:apps/cli/fixtures/raw/paysponge-wolframalpha.transaction.json"
+      ]
+    },
+    {
+      "case_id": "paysponge-wolframalpha",
+      "candidate_type": "facilitator_candidate",
+      "matched_fingerprint_type": "provider_endpoint_claim",
+      "matched_fingerprint_value": "paysponge-wolframalpha-direct-fixture:facilitator",
+      "matched_claim_id": "paysponge-wolframalpha-direct-fixture",
+      "matched_settlement_fingerprint_id": "direct-usdc-bytes-signature",
+      "entity_id": "paysponge",
+      "role": "facilitator",
+      "confidence": 90,
+      "reasons": [
+        "facilitator claim matches observation recipient payTo",
+        "entityId=paysponge",
+        "evidenceClass=paid_probe",
+        "sourceName=poc-fixture",
+        "decoded payment response transaction matches observed tx",
+        "requestHost=wolframalpha.x402.paysponge.com",
+        "settlementCluster=direct_usdc_bytes_signature_transfer_with_authorization"
+      ],
+      "evidence_refs": [
+        "receipt:9:recipient",
+        "claim:paysponge-wolframalpha-direct-fixture",
+        "settlement_fingerprint:direct-usdc-bytes-signature",
+        "receipt:9:settlement",
+        "fixture:paysponge-wolframalpha",
+        "poc:apps/cli/fixtures/raw/paysponge-wolframalpha.transaction.json"
+      ]
+    },
+    {
+      "case_id": "paysponge-wolframalpha",
+      "candidate_type": "market_candidate",
+      "matched_fingerprint_type": "provider_endpoint_claim",
+      "matched_fingerprint_value": "paysponge-wolframalpha-direct-fixture:market",
+      "matched_claim_id": "paysponge-wolframalpha-direct-fixture",
+      "matched_settlement_fingerprint_id": "direct-usdc-bytes-signature",
+      "entity_id": "paysponge",
+      "role": "market",
+      "confidence": 90,
+      "reasons": [
+        "market claim matches observation recipient payTo",
+        "entityId=paysponge",
+        "evidenceClass=paid_probe",
+        "sourceName=poc-fixture",
+        "decoded payment response transaction matches observed tx",
+        "requestHost=wolframalpha.x402.paysponge.com",
+        "settlementCluster=direct_usdc_bytes_signature_transfer_with_authorization"
+      ],
+      "evidence_refs": [
+        "receipt:9:recipient",
+        "claim:paysponge-wolframalpha-direct-fixture",
+        "settlement_fingerprint:direct-usdc-bytes-signature",
+        "receipt:9:settlement",
+        "fixture:paysponge-wolframalpha",
+        "poc:apps/cli/fixtures/raw/paysponge-wolframalpha.transaction.json"
+      ]
+    },
+    {
+      "case_id": "paysponge-wolframalpha",
+      "candidate_type": "middleman_candidate",
+      "matched_fingerprint_type": "provider_endpoint_claim",
+      "matched_fingerprint_value": "paysponge-wolframalpha-direct-fixture:middleman",
+      "matched_claim_id": "paysponge-wolframalpha-direct-fixture",
+      "matched_settlement_fingerprint_id": "direct-usdc-bytes-signature",
+      "entity_id": "paysponge",
+      "role": "middleman",
+      "confidence": 90,
+      "reasons": [
+        "middleman claim matches observation recipient payTo",
+        "entityId=paysponge",
+        "evidenceClass=paid_probe",
+        "sourceName=poc-fixture",
+        "decoded payment response transaction matches observed tx",
+        "requestHost=wolframalpha.x402.paysponge.com",
+        "settlementCluster=direct_usdc_bytes_signature_transfer_with_authorization"
+      ],
+      "evidence_refs": [
+        "receipt:9:recipient",
+        "claim:paysponge-wolframalpha-direct-fixture",
+        "settlement_fingerprint:direct-usdc-bytes-signature",
+        "receipt:9:settlement",
+        "fixture:paysponge-wolframalpha",
+        "poc:apps/cli/fixtures/raw/paysponge-wolframalpha.transaction.json"
+      ]
+    },
+    {
+      "case_id": "paysponge-wolframalpha",
+      "candidate_type": "provider_candidate",
+      "matched_fingerprint_type": "provider_endpoint_claim",
+      "matched_fingerprint_value": "origindao-catalog-shared-payto:provider",
+      "matched_claim_id": "origindao-catalog-shared-payto",
+      "matched_settlement_fingerprint_id": null,
+      "entity_id": "origindao",
+      "role": "provider",
+      "confidence": 70,
+      "reasons": [
+        "provider claim matches observation recipient payTo",
+        "entityId=origindao",
+        "evidenceClass=catalog",
+        "sourceName=catalog-seed",
+        "requestHost=protocol.origindao.ai"
+      ],
+      "evidence_refs": [
+        "receipt:9:recipient",
+        "claim:origindao-catalog-shared-payto",
+        "fixture:shared-payto-catalog-claim"
+      ]
+    },
+    {
+      "case_id": "paysponge-wolframalpha",
+      "candidate_type": "provider_candidate",
+      "matched_fingerprint_type": "provider_endpoint_claim",
+      "matched_fingerprint_value": "paysponge-wolframalpha-direct-fixture:provider",
+      "matched_claim_id": "paysponge-wolframalpha-direct-fixture",
+      "matched_settlement_fingerprint_id": null,
+      "entity_id": "paysponge",
+      "role": "provider",
+      "confidence": 90,
+      "reasons": [
+        "provider claim matches observation recipient payTo",
+        "entityId=paysponge",
+        "evidenceClass=paid_probe",
+        "sourceName=poc-fixture",
+        "decoded payment response transaction matches observed tx",
+        "requestHost=wolframalpha.x402.paysponge.com"
+      ],
+      "evidence_refs": [
+        "receipt:9:recipient",
+        "claim:paysponge-wolframalpha-direct-fixture",
+        "fixture:paysponge-wolframalpha",
+        "poc:apps/cli/fixtures/raw/paysponge-wolframalpha.transaction.json"
+      ]
+    },
+    {
       "case_id": "paysponge-wolframalpha",
       "candidate_type": "recipient_match",
       "matched_fingerprint_type": "recipient",
       "matched_fingerprint_value": "0x27599d824bbB4F506F985af865d840F61ba848C8",
+      "matched_claim_id": null,
+      "matched_settlement_fingerprint_id": null,
+      "entity_id": null,
+      "role": null,
       "confidence": 95,
       "reasons": [
         "recipient matches known recipient fingerprint",
@@ -319,6 +1218,10 @@
       "candidate_type": "relayer_match",
       "matched_fingerprint_type": "relayer",
       "matched_fingerprint_value": "0x7f6d822467df2a85f792d4508c5722ade96be056",
+      "matched_claim_id": null,
+      "matched_settlement_fingerprint_id": null,
+      "entity_id": null,
+      "role": null,
       "confidence": 95,
       "reasons": [
         "relayer matches known relayer fingerprint",
@@ -329,6 +1232,102 @@
       "evidence_refs": [
         "receipt:9:relayer",
         "fingerprint:relayer:0x7f6d822467df2a85f792d4508c5722ade96be056"
+      ]
+    },
+    {
+      "case_id": "paysponge-wolframalpha",
+      "candidate_type": "service_candidate",
+      "matched_fingerprint_type": "provider_endpoint_claim",
+      "matched_fingerprint_value": "origindao-catalog-shared-payto:service",
+      "matched_claim_id": "origindao-catalog-shared-payto",
+      "matched_settlement_fingerprint_id": null,
+      "entity_id": "origindao",
+      "role": "service",
+      "confidence": 70,
+      "reasons": [
+        "service claim matches observation recipient payTo",
+        "entityId=origindao",
+        "evidenceClass=catalog",
+        "sourceName=catalog-seed",
+        "requestHost=protocol.origindao.ai"
+      ],
+      "evidence_refs": [
+        "receipt:9:recipient",
+        "claim:origindao-catalog-shared-payto",
+        "fixture:shared-payto-catalog-claim"
+      ]
+    },
+    {
+      "case_id": "paysponge-wolframalpha",
+      "candidate_type": "service_candidate",
+      "matched_fingerprint_type": "provider_endpoint_claim",
+      "matched_fingerprint_value": "paysponge-wolframalpha-direct-fixture:service",
+      "matched_claim_id": "paysponge-wolframalpha-direct-fixture",
+      "matched_settlement_fingerprint_id": null,
+      "entity_id": "paysponge",
+      "role": "service",
+      "confidence": 90,
+      "reasons": [
+        "service claim matches observation recipient payTo",
+        "entityId=paysponge",
+        "evidenceClass=paid_probe",
+        "sourceName=poc-fixture",
+        "decoded payment response transaction matches observed tx",
+        "requestHost=wolframalpha.x402.paysponge.com"
+      ],
+      "evidence_refs": [
+        "receipt:9:recipient",
+        "claim:paysponge-wolframalpha-direct-fixture",
+        "fixture:paysponge-wolframalpha",
+        "poc:apps/cli/fixtures/raw/paysponge-wolframalpha.transaction.json"
+      ]
+    },
+    {
+      "case_id": "paysponge-wolframalpha",
+      "candidate_type": "settlement_cluster",
+      "matched_fingerprint_type": "settlement_fingerprint",
+      "matched_fingerprint_value": "direct_usdc_bytes_signature_transfer_with_authorization",
+      "matched_claim_id": null,
+      "matched_settlement_fingerprint_id": "direct-usdc-bytes-signature",
+      "entity_id": null,
+      "role": null,
+      "confidence": 95,
+      "reasons": [
+        "settlement evidence matches fingerprint pack",
+        "top-level Base USDC bytes-signature authorization transfer"
+      ],
+      "evidence_refs": [
+        "receipt:9:settlement",
+        "settlement_fingerprint:direct-usdc-bytes-signature",
+        "constants:EXECUTE_WITH_AUTHORIZATION_SELECTOR"
+      ]
+    },
+    {
+      "case_id": "paysponge-wolframalpha",
+      "candidate_type": "settlement_operator_candidate",
+      "matched_fingerprint_type": "provider_endpoint_claim",
+      "matched_fingerprint_value": "paysponge-wolframalpha-direct-fixture:settlement_operator",
+      "matched_claim_id": "paysponge-wolframalpha-direct-fixture",
+      "matched_settlement_fingerprint_id": "direct-usdc-bytes-signature",
+      "entity_id": "paysponge",
+      "role": "settlement_operator",
+      "confidence": 90,
+      "reasons": [
+        "settlement_operator claim matches observation recipient payTo",
+        "entityId=paysponge",
+        "evidenceClass=paid_probe",
+        "sourceName=poc-fixture",
+        "decoded payment response transaction matches observed tx",
+        "requestHost=wolframalpha.x402.paysponge.com",
+        "settlementCluster=direct_usdc_bytes_signature_transfer_with_authorization"
+      ],
+      "evidence_refs": [
+        "receipt:9:recipient",
+        "claim:paysponge-wolframalpha-direct-fixture",
+        "settlement_fingerprint:direct-usdc-bytes-signature",
+        "receipt:9:settlement",
+        "fixture:paysponge-wolframalpha",
+        "poc:apps/cli/fixtures/raw/paysponge-wolframalpha.transaction.json"
       ]
     }
   ]
