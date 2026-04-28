@@ -20,9 +20,8 @@ apps/*/reports/summary.md
 packages/*/dist/
 packages/*/node_modules/
 
-.opencode
-.claude
-.cursor
-.codex
-openspec
-
+/.opencode/
+/.claude/
+/.cursor/
+/.codex/
+/openspec/
