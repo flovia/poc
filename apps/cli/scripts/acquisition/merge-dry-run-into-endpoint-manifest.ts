@@ -86,8 +86,12 @@ const lastDryRunFromResult = (result: DryRunProbeResult): LastDryRun => {
     attemptedAt: result.attemptedAt,
     url: result.url,
     ...(result.httpStatus === undefined ? {} : { httpStatus: result.httpStatus }),
-    ...(result.noChallengeReason === undefined ? {} : { noChallengeReason: result.noChallengeReason }),
-    ...(result.responseBodySha256 === undefined ? {} : { responseBodySha256: result.responseBodySha256 }),
+    ...(result.noChallengeReason === undefined
+      ? {}
+      : { noChallengeReason: result.noChallengeReason }),
+    ...(result.responseBodySha256 === undefined
+      ? {}
+      : { responseBodySha256: result.responseBodySha256 }),
     ...(paymentOptions.length > 0 ? { paymentOptions } : {}),
     ...(bodyTemplateFromChallenge(challenge) !== null
       ? { requestBodyTemplateSource: "x402_bazaar_challenge" as const }
@@ -117,7 +121,9 @@ export const mergeDryRunIntoEndpointManifest = (
     const shouldMergeBodyTemplate =
       endpointCase.requestBodyTemplate === undefined &&
       bodyTemplate !== null &&
-      (endpointCase.method === "POST" || endpointCase.method === "PATCH" || endpointCase.method === "PUT");
+      (endpointCase.method === "POST" ||
+        endpointCase.method === "PATCH" ||
+        endpointCase.method === "PUT");
     if (shouldMergeBodyTemplate) requestBodyTemplateMergedCount += 1;
 
     return {

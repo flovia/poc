@@ -42,7 +42,8 @@ type PaidProbeCandidate = {
 const defaultOutputPath = () =>
   path.join(process.cwd(), "fixtures", "acquisition", "paid_probe_results.json");
 
-const manifestPath = () => path.join(process.cwd(), "fixtures", "acquisition", "endpoint_manifest.json");
+const manifestPath = () =>
+  path.join(process.cwd(), "fixtures", "acquisition", "endpoint_manifest.json");
 
 const sha256 = (value: string) => crypto.createHash("sha256").update(value).digest("hex");
 
@@ -72,8 +73,7 @@ const parseArgs = (argv: string[]): CliOptions => {
       options.caseIds = caseIds;
     } else if (arg === "--retry-errors-from") {
       options.retryErrorsFrom = String(argv[++index] ?? "");
-    }
-    else if (arg === "--limit") options.limit = Number(argv[++index] ?? "0");
+    } else if (arg === "--limit") options.limit = Number(argv[++index] ?? "0");
     else if (arg === "--include-post") options.includePost = true;
     else if (arg === "--include-not-ready") options.includeNotReady = true;
     else if (arg === "--min-spend-atomic") options.minSpendAtomic = BigInt(argv[++index] ?? "0");
@@ -98,7 +98,11 @@ const selectedOption = (dryRun: LastDryRun, network: string): SelectedPaymentOpt
     .find((option) => normalizeNetwork(option.network) === network) ?? null;
 
 const requestBody = (endpointCase: EndpointCase): string | null => {
-  if (endpointCase.method !== "POST" && endpointCase.method !== "PUT" && endpointCase.method !== "PATCH") {
+  if (
+    endpointCase.method !== "POST" &&
+    endpointCase.method !== "PUT" &&
+    endpointCase.method !== "PATCH"
+  ) {
     return null;
   }
   return JSON.stringify(endpointCase.requestBodyTemplate ?? {});
@@ -162,7 +166,9 @@ const hasUnresolvedParams = (url: string): boolean => /\{[^}]+\}|:[A-Za-z_][A-Za
 
 const retryCaseIds = (filePath: string | null): Set<string> | null => {
   if (filePath === null) return null;
-  const artifact = JSON.parse(fs.readFileSync(filePath, "utf8")) as { results?: Array<Record<string, unknown>> };
+  const artifact = JSON.parse(fs.readFileSync(filePath, "utf8")) as {
+    results?: Array<Record<string, unknown>>;
+  };
   return new Set(
     (artifact.results ?? [])
       .filter((result) => result.status === "error")
@@ -178,7 +184,10 @@ const selectedCaseIds = (options: CliOptions): Set<string> | null => {
   return new Set([...retryIds].filter((caseId) => options.caseIds?.has(caseId)));
 };
 
-const buildCandidates = (manifestCases: EndpointCase[], options: CliOptions): PaidProbeCandidate[] => {
+const buildCandidates = (
+  manifestCases: EndpointCase[],
+  options: CliOptions,
+): PaidProbeCandidate[] => {
   const caseIds = selectedCaseIds(options);
   const selected = manifestCases.flatMap((endpointCase) => {
     if (caseIds !== null && !caseIds.has(endpointCase.caseId)) return [];
@@ -286,7 +295,8 @@ export const runX402PaidProbes = (options = parseArgs(Bun.argv.slice(2))) => {
       response: {
         status: response?.status,
         bodySha256: typeof response?.bodyText === "string" ? sha256(response.bodyText) : null,
-        contentType: (response?.headers as Record<string, string> | undefined)?.["content-type"] ?? null,
+        contentType:
+          (response?.headers as Record<string, string> | undefined)?.["content-type"] ?? null,
       },
       payment: {
         status: payment?.status,

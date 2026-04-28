@@ -47,7 +47,8 @@ const BASE_USDC_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const snapshotPath = () =>
   path.join(process.cwd(), "fixtures", "acquisition", "sponge_catalog_snapshot.json");
 
-const manifestPath = () => path.join(process.cwd(), "fixtures", "acquisition", "endpoint_manifest.json");
+const manifestPath = () =>
+  path.join(process.cwd(), "fixtures", "acquisition", "endpoint_manifest.json");
 
 const readJson = <T>(filePath: string): T => JSON.parse(fs.readFileSync(filePath, "utf8")) as T;
 
@@ -122,7 +123,11 @@ const resolveExampleUrl = (baseUrl: string, examplePath: string | null): string 
 };
 
 const isSupportedMethod = (method: string): method is "GET" | "POST" | "DELETE" | "PATCH" | "PUT" =>
-  method === "GET" || method === "POST" || method === "DELETE" || method === "PATCH" || method === "PUT";
+  method === "GET" ||
+  method === "POST" ||
+  method === "DELETE" ||
+  method === "PATCH" ||
+  method === "PUT";
 
 const probeState = (
   method: string,
@@ -133,7 +138,10 @@ const probeState = (
   const reasons: string[] = [];
 
   if (method !== "GET" && method !== "POST") {
-    return { probeReadiness: "unsupported_method" as const, reasons: [`unsupported method: ${method}`] };
+    return {
+      probeReadiness: "unsupported_method" as const,
+      reasons: [`unsupported method: ${method}`],
+    };
   }
 
   if (hasPathParams(sourcePath) && concreteResourceUrl === null) {
@@ -164,7 +172,8 @@ const buildCatalogCases = (snapshot: Snapshot) => {
     const endpoints = detail.endpoints ?? [];
 
     for (const [routeIndex, route] of routes.entries()) {
-      if (!route.baseUrl || !route.protocol || !route.networks || route.networks.length < 1) continue;
+      if (!route.baseUrl || !route.protocol || !route.networks || route.networks.length < 1)
+        continue;
 
       const requestHost = new URL(route.baseUrl).host;
       for (const endpoint of endpoints) {
@@ -176,9 +185,13 @@ const buildCatalogCases = (snapshot: Snapshot) => {
 
         const requestParameters = parseParameters(endpoint.parameters);
         const endpointUrl = joinUrl(route.baseUrl, sourcePath);
-        const exampleUrl = method === "GET" ? resolveExampleUrl(route.baseUrl, extractExamplePath(endpoint.instructions)) : null;
+        const exampleUrl =
+          method === "GET"
+            ? resolveExampleUrl(route.baseUrl, extractExamplePath(endpoint.instructions))
+            : null;
         const concreteResourceUrl =
-          exampleUrl ?? (!hasPathParams(sourcePath) && !hasQueryParams(requestParameters) ? endpointUrl : null);
+          exampleUrl ??
+          (!hasPathParams(sourcePath) && !hasQueryParams(requestParameters) ? endpointUrl : null);
         const { probeReadiness, reasons } = probeState(
           method,
           sourcePath,
@@ -197,7 +210,9 @@ const buildCatalogCases = (snapshot: Snapshot) => {
           requestHost,
           method,
           ...(requestParameters === undefined ? {} : { requestParameters }),
-          ...(hasRequestBodySchema(requestParameters) ? { requestBodySchema: requestParameters } : {}),
+          ...(hasRequestBodySchema(requestParameters)
+            ? { requestBodySchema: requestParameters }
+            : {}),
           sourceName: "sponge_catalog",
           sourceUrl: service.serviceUrl || SPONGE_CATALOG_SOURCE_URL,
           sourceObservedDate: String(endpoint.updatedAt ?? new Date().toISOString()).slice(0, 10),
@@ -225,7 +240,9 @@ const buildCatalogCases = (snapshot: Snapshot) => {
 const run = () => {
   const snapshot = readJson<Snapshot>(snapshotPath());
   const currentManifest = readJson<{ cases: Array<Record<string, unknown>> }>(manifestPath());
-  const nonSpongeCases = currentManifest.cases.filter((entry) => entry.sourceName !== "sponge_catalog");
+  const nonSpongeCases = currentManifest.cases.filter(
+    (entry) => entry.sourceName !== "sponge_catalog",
+  );
   const spongeCases = buildCatalogCases(snapshot);
   const nextManifest = {
     schemaVersion: "1",

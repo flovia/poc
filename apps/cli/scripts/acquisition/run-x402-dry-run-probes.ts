@@ -55,8 +55,10 @@ const parseArgs = (argv: string[]): CliOptions => {
     const arg = argv[index];
     if (arg === "--output") options.outputPath = String(argv[++index] ?? options.outputPath);
     else if (arg === "--limit") options.limit = Number(argv[++index] ?? "0");
-    else if (arg === "--concurrency") options.concurrency = Number(argv[++index] ?? DEFAULT_CONCURRENCY);
-    else if (arg === "--timeout-ms") options.timeoutMs = Number(argv[++index] ?? DEFAULT_TIMEOUT_MS);
+    else if (arg === "--concurrency")
+      options.concurrency = Number(argv[++index] ?? DEFAULT_CONCURRENCY);
+    else if (arg === "--timeout-ms")
+      options.timeoutMs = Number(argv[++index] ?? DEFAULT_TIMEOUT_MS);
     else if (arg === "--include-non-x402") options.includeNonX402 = true;
   }
 
@@ -67,7 +69,11 @@ const requestUrl = (endpointCase: EndpointCase): string =>
   endpointCase.resourceUrl ?? endpointCase.endpointUrl;
 
 const requestBody = (endpointCase: EndpointCase): string | undefined => {
-  if (endpointCase.method !== "POST" && endpointCase.method !== "PATCH" && endpointCase.method !== "PUT") {
+  if (
+    endpointCase.method !== "POST" &&
+    endpointCase.method !== "PATCH" &&
+    endpointCase.method !== "PUT"
+  ) {
     return undefined;
   }
 
@@ -146,7 +152,9 @@ const probeCase = async (endpointCase: EndpointCase, timeoutMs: number): Promise
       url,
       attemptedAt,
       status,
-      ...(status === "no_challenge" ? { noChallengeReason: noChallengeReason(response.status) } : {}),
+      ...(status === "no_challenge"
+        ? { noChallengeReason: noChallengeReason(response.status) }
+        : {}),
       httpStatus: response.status,
       responseHeaders: Object.fromEntries(response.headers.entries()),
       responseBodySha256: sha256(bodyText),
@@ -197,7 +205,12 @@ const skippedUnsupportedMethodCount = (cases: EndpointCase[], options: CliOption
   ).length;
 
 export const runX402DryRunProbes = async (options = parseArgs(Bun.argv.slice(2))) => {
-  const manifestPath = path.join(process.cwd(), "fixtures", "acquisition", "endpoint_manifest.json");
+  const manifestPath = path.join(
+    process.cwd(),
+    "fixtures",
+    "acquisition",
+    "endpoint_manifest.json",
+  );
   const manifestText = fs.readFileSync(manifestPath, "utf8");
   const manifest = loadEndpointManifestFromFile(manifestPath);
   const cases = candidateCases(manifest.cases, options);

@@ -4,7 +4,8 @@ import { validateEndpointManifest } from "../../lib/endpoint-manifest";
 
 type EndpointCaseRecord = Record<string, unknown>;
 
-const manifestPath = () => path.join(process.cwd(), "fixtures", "acquisition", "endpoint_manifest.json");
+const manifestPath = () =>
+  path.join(process.cwd(), "fixtures", "acquisition", "endpoint_manifest.json");
 
 const bodyTemplates: Record<string, unknown> = {
   "spcat-agentmail-endp_d6krn581b0vmrys94-route-0": {
@@ -21,22 +22,32 @@ const bodyTemplates: Record<string, unknown> = {
     endTime: "2024-01-02T00:00:00Z",
   },
   "spcat-alchemy-endp_d6gf1draejxtpexz8-route-0": {
-    addresses: [{ address: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045", networks: ["eth-mainnet"] }],
+    addresses: [
+      { address: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045", networks: ["eth-mainnet"] },
+    ],
   },
   "spcat-alchemy-endp_d6gf1drfbh3aeeh28-route-0": {
     addresses: [{ network: "eth-mainnet", address: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2" }],
   },
   "spcat-alchemy-endp_d6gf1drmybrj5sgq4-route-0": {
-    addresses: [{ address: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", networks: ["eth-mainnet"] }],
+    addresses: [
+      { address: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", networks: ["eth-mainnet"] },
+    ],
   },
   "spcat-alchemy-endp_d6gf1drrz6y74ec28-route-0": {
-    addresses: [{ address: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045", networks: ["eth-mainnet"] }],
+    addresses: [
+      { address: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045", networks: ["eth-mainnet"] },
+    ],
   },
   "spcat-alchemy-endp_d6gf1drx1f1bbcb7r-route-0": {
-    addresses: [{ address: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045", networks: ["eth-mainnet"] }],
+    addresses: [
+      { address: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045", networks: ["eth-mainnet"] },
+    ],
   },
   "spcat-alchemy-endp_d6gf1drx2q1gbmz10-route-0": {
-    addresses: [{ address: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045", networks: ["eth-mainnet"] }],
+    addresses: [
+      { address: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045", networks: ["eth-mainnet"] },
+    ],
   },
   "spcat-allium-endp_d6dt2501qbef2t8tm-route-0": [
     { address: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045", chain: "ethereum" },
@@ -143,23 +154,39 @@ const bodyTemplates: Record<string, unknown> = {
 };
 
 const resourceUrls: Record<string, string> = {
-  "spcat-alchemy-endp_d6gf1drx65936g4hg-route-0": "https://x402.alchemy.com/prices/v1/tokens/by-symbol?symbols=ETH",
-  "spcat-allium-endp_d6dt250q5zgcm6wfw-route-0": "https://agents.allium.so/api/v1/developer/tokens/search?q=USDC",
-  "spcat-auor-endp_d6dt258ttt4m5s5yc-route-0": "https://api.auor.io/google-maps/v1/search/full?query=coffee%20shops%20in%20New%20York&language=en&region=us",
-  "spcat-auor-endp_d6f8th80539ahj3pr-route-0": "https://api.auor.io/all-rates-today/v1/rates?source=USD&target=EUR",
+  "spcat-alchemy-endp_d6gf1drx65936g4hg-route-0":
+    "https://x402.alchemy.com/prices/v1/tokens/by-symbol?symbols=ETH",
+  "spcat-allium-endp_d6dt250q5zgcm6wfw-route-0":
+    "https://agents.allium.so/api/v1/developer/tokens/search?q=USDC",
+  "spcat-auor-endp_d6dt258ttt4m5s5yc-route-0":
+    "https://api.auor.io/google-maps/v1/search/full?query=coffee%20shops%20in%20New%20York&language=en&region=us",
+  "spcat-auor-endp_d6f8th80539ahj3pr-route-0":
+    "https://api.auor.io/all-rates-today/v1/rates?source=USD&target=EUR",
   "spcat-auor-endp_d6f8th87yjk1xscxc-route-0": "https://api.auor.io/ip-stack/v1/lookup?ip=8.8.8.8",
-  "spcat-auor-endp_d6f8th8jjvxnpfvyc-route-0": "https://api.auor.io/all-rates-today/v1/historical?source=USD&target=EUR&period=7d",
-  "spcat-auor-endp_d6f8th8yc1ebxxadr-route-0": "https://api.auor.io/amadeus/v1/search?origin=NYC&destination=LAX&dateDepart=2026-06-01&travelersAdult=1",
-  "spcat-coinmarketcap-endp_d6k2xqrmfr5r93trg-route-0": "https://pro-api.coinmarketcap.com/x402/v3/cryptocurrency/quotes/latest?symbol=BTC",
-  "spcat-coinmarketcap-endp_d6k2xqrz98g5be828-route-0": "https://pro-api.coinmarketcap.com/x402/v4/dex/pairs/quotes/latest?contract_address=0xB4e16d0168e52d35CaCD2c6185b44281Ec28C9Dc&network_slug=ethereum",
-  "spcat-dome-endp_d6dt25g4h9mp3s87c-route-0": "https://api.paysponge.com/x402/purchase/svc_d5y7k40sm2ntn45xr/polymarket/wallet?address=0x0000000000000000000000000000000000000000",
-  "spcat-dome-endp_d6dt25g66az2rv8r4-route-0": "https://api.paysponge.com/x402/purchase/svc_d5y7k40sm2ntn45xr/matching-markets/sports?sport=soccer",
-  "spcat-dome-endp_d6dt25gnhc2ggf41w-route-0": "https://api.paysponge.com/x402/purchase/svc_d5y7k40sm2ntn45xr/polymarket/activity?limit=10&offset=0",
-  "spcat-dome-endp_d6dt25gr1jmgwkfkm-route-0": "https://api.paysponge.com/x402/purchase/svc_d5y7k40sm2ntn45xr/kalshi/orderbooks?ticker=KXBTCD-26APR28-B76000",
-  "spcat-dome-endp_d6dt25grf89cyanj4-route-0": "https://api.paysponge.com/x402/purchase/svc_d5y7k40sm2ntn45xr/polymarket/orderbooks?token_id=0",
-  "spcat-nyne-endp_d6dt25rj4a8gqh91m-route-0": "https://api.paysponge.com/x402/purchase/svc_d5ymfernpzeh58gb8/person/enrichment?requestId=probe",
-  "spcat-orca-whirlpools-endp_d7emhv0hhef6tb6xw-route-0": "https://api.paysponge.com/x402/purchase/svc_d6y9cggxhd3pcq41m/v1/pools/search?q=SOL-USDC",
-  "spcat-rug-pull-detector-endp_d7ekf7gc4g0v9vnkm-route-0": "https://api.paysponge.com/x402/purchase/svc_d6tc4d89rramggb4m/search?name=USDC&chain=base",
+  "spcat-auor-endp_d6f8th8jjvxnpfvyc-route-0":
+    "https://api.auor.io/all-rates-today/v1/historical?source=USD&target=EUR&period=7d",
+  "spcat-auor-endp_d6f8th8yc1ebxxadr-route-0":
+    "https://api.auor.io/amadeus/v1/search?origin=NYC&destination=LAX&dateDepart=2026-06-01&travelersAdult=1",
+  "spcat-coinmarketcap-endp_d6k2xqrmfr5r93trg-route-0":
+    "https://pro-api.coinmarketcap.com/x402/v3/cryptocurrency/quotes/latest?symbol=BTC",
+  "spcat-coinmarketcap-endp_d6k2xqrz98g5be828-route-0":
+    "https://pro-api.coinmarketcap.com/x402/v4/dex/pairs/quotes/latest?contract_address=0xB4e16d0168e52d35CaCD2c6185b44281Ec28C9Dc&network_slug=ethereum",
+  "spcat-dome-endp_d6dt25g4h9mp3s87c-route-0":
+    "https://api.paysponge.com/x402/purchase/svc_d5y7k40sm2ntn45xr/polymarket/wallet?address=0x0000000000000000000000000000000000000000",
+  "spcat-dome-endp_d6dt25g66az2rv8r4-route-0":
+    "https://api.paysponge.com/x402/purchase/svc_d5y7k40sm2ntn45xr/matching-markets/sports?sport=soccer",
+  "spcat-dome-endp_d6dt25gnhc2ggf41w-route-0":
+    "https://api.paysponge.com/x402/purchase/svc_d5y7k40sm2ntn45xr/polymarket/activity?limit=10&offset=0",
+  "spcat-dome-endp_d6dt25gr1jmgwkfkm-route-0":
+    "https://api.paysponge.com/x402/purchase/svc_d5y7k40sm2ntn45xr/kalshi/orderbooks?ticker=KXBTCD-26APR28-B76000",
+  "spcat-dome-endp_d6dt25grf89cyanj4-route-0":
+    "https://api.paysponge.com/x402/purchase/svc_d5y7k40sm2ntn45xr/polymarket/orderbooks?token_id=0",
+  "spcat-nyne-endp_d6dt25rj4a8gqh91m-route-0":
+    "https://api.paysponge.com/x402/purchase/svc_d5ymfernpzeh58gb8/person/enrichment?requestId=probe",
+  "spcat-orca-whirlpools-endp_d7emhv0hhef6tb6xw-route-0":
+    "https://api.paysponge.com/x402/purchase/svc_d6y9cggxhd3pcq41m/v1/pools/search?q=SOL-USDC",
+  "spcat-rug-pull-detector-endp_d7ekf7gc4g0v9vnkm-route-0":
+    "https://api.paysponge.com/x402/purchase/svc_d6tc4d89rramggb4m/search?name=USDC&chain=base",
 };
 
 const filePath = manifestPath();
