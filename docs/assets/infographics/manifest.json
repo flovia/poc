@@ -5,37 +5,37 @@
     {
       "source": "docs/index.md",
       "slug": "index",
-      "image": "docs/assets/infographics/index.png",
+      "image": "docs/assets/infographics/artifacts/index.png",
       "status": "generated"
     },
     {
       "source": "docs/implementation.md",
       "slug": "implementation",
-      "image": "docs/assets/infographics/implementation.png",
+      "image": "docs/assets/infographics/artifacts/implementation.png",
       "status": "generated"
     },
     {
       "source": "docs/fingerprint-catalog.md",
       "slug": "fingerprint-catalog",
-      "image": "docs/assets/infographics/fingerprint-catalog.png",
+      "image": "docs/assets/infographics/artifacts/fingerprint-catalog.png",
       "status": "generated"
     },
     {
       "source": "docs/frontend-bff-handoff.md",
       "slug": "frontend-bff-handoff",
-      "image": "docs/assets/infographics/frontend-bff-handoff.png",
+      "image": "docs/assets/infographics/artifacts/frontend-bff-handoff.png",
       "status": "generated"
     },
     {
       "source": "docs/paysponge-settlement-patterns.md",
       "slug": "paysponge-settlement-patterns",
-      "image": "docs/assets/infographics/paysponge-settlement-patterns.png",
+      "image": "docs/assets/infographics/artifacts/paysponge-settlement-patterns.png",
       "status": "generated"
     },
     {
       "source": "docs/next-actions.md",
       "slug": "next-actions",
-      "image": "docs/assets/infographics/next-actions.png",
+      "image": "docs/assets/infographics/artifacts/next-actions.png",
       "status": "generated"
     }
   ]

@@ -1,6 +1,6 @@
 # Flovia 260427: x402 Onchain Intelligence
 
-![Flovia 260427 overview infographic](./assets/infographics/index.png)
+![Flovia 260427 overview infographic](./assets/infographics/artifacts/index.png)
 
 > この図は、Flovia 260427 の目的、入力、解析 pipeline、出力、利用者を1枚で把握するための概要図です。画像を更新する場合は [`docs/assets/infographics/common.prompt.md`](./assets/infographics/common.prompt.md) とこの Markdown 本文を使って再生成します。
 
