@@ -1,0 +1,49 @@
+import { decodeFunctionData } from "viem";
+import { MULTICALL3_AGGREGATE3_ABI } from "../constants";
+import type { DecodedMulticall, DecodedMulticallCall } from "../schema";
+import { decodeTransferWithAuthorization } from "./direct-usdc";
+import { isHexData } from "./selectors";
+import { BASE_USDC_ADDRESS, MULTICALL3_AGGREGATE3_SELECTOR } from "../constants";
+import type { HexAddress, HexData } from "../schema";
+
+export type InnerUsdcTransfer = {
+  call: DecodedMulticallCall;
+  args: ReturnType<typeof decodeTransferWithAuthorization>["args"];
+};
+
+export const decodeAggregate3 = (calldata: HexData): DecodedMulticall => {
+  const decoded = decodeFunctionData({
+    abi: MULTICALL3_AGGREGATE3_ABI,
+    data: calldata,
+  }) as {
+    functionName: string;
+    args: [[{ target: HexAddress; allowFailure: boolean; callData: HexData }]];
+  };
+
+  if (decoded.functionName !== "aggregate3") {
+    throw new Error(`Expected aggregate3, got ${decoded.functionName}`);
+  }
+
+  return {
+    calls: decoded.args[0].map((call) => ({
+      target: call.target,
+      allowFailure: call.allowFailure,
+      callData: call.callData,
+    })),
+  };
+};
+
+export const extractUsdcCallsFromMulticall = (calldata: HexData): InnerUsdcTransfer[] => {
+  const aggregate = decodeAggregate3(calldata);
+  return aggregate.calls
+    .filter(
+      (call): call is DecodedMulticallCall & { target: HexAddress } =>
+        isHexData(call.callData) && call.target.toLowerCase() === BASE_USDC_ADDRESS.toLowerCase(),
+    )
+    .map((call) => ({
+      call,
+      args: decodeTransferWithAuthorization(call.callData).args,
+    }));
+};
+
+export const isAggregate3Selector = (selector: string): boolean => selector === MULTICALL3_AGGREGATE3_SELECTOR;

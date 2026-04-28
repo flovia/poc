@@ -1,0 +1,385 @@
+{
+  "generatedAt": "2026-04-27T10:04:48.941Z",
+  "chainId": 8453,
+  "version": "1",
+  "cases": [
+    {
+      "caseId": "orthogonal-serper",
+      "caseType": "positive",
+      "method": "direct",
+      "txFile": "raw/orthogonal-serper.transaction.json",
+      "receiptFile": "raw/orthogonal-serper.receipt.json",
+      "catalogEntries": [
+        {
+          "type": "relayer",
+          "value": "0x0000000000000000000000000000000000001101",
+          "label": "orthogonal-serper relayer",
+          "confidence": 95,
+          "source": "catalog-seed"
+        },
+        {
+          "type": "recipient",
+          "value": "0x0000000000000000000000000000000000003301",
+          "label": "orthogonal-serper recipient",
+          "confidence": 95,
+          "source": "catalog-seed"
+        },
+        {
+          "type": "payer",
+          "value": "0x0000000000000000000000000000000000002201",
+          "label": "orthogonal-serper payer",
+          "confidence": 70,
+          "source": "catalog-seed"
+        }
+      ],
+      "expectedObservation": true
+    },
+    {
+      "caseId": "orthogonal-olostep",
+      "caseType": "positive",
+      "method": "direct",
+      "txFile": "raw/orthogonal-olostep.transaction.json",
+      "receiptFile": "raw/orthogonal-olostep.receipt.json",
+      "catalogEntries": [
+        {
+          "type": "relayer",
+          "value": "0x0000000000000000000000000000000000001102",
+          "label": "orthogonal-olostep relayer",
+          "confidence": 95,
+          "source": "catalog-seed"
+        },
+        {
+          "type": "recipient",
+          "value": "0x0000000000000000000000000000000000003302",
+          "label": "orthogonal-olostep recipient",
+          "confidence": 95,
+          "source": "catalog-seed"
+        },
+        {
+          "type": "payer",
+          "value": "0x0000000000000000000000000000000000002202",
+          "label": "orthogonal-olostep payer",
+          "confidence": 70,
+          "source": "catalog-seed"
+        }
+      ],
+      "expectedObservation": true
+    },
+    {
+      "caseId": "orthogonal-andi",
+      "caseType": "positive",
+      "method": "direct",
+      "txFile": "raw/orthogonal-andi.transaction.json",
+      "receiptFile": "raw/orthogonal-andi.receipt.json",
+      "catalogEntries": [
+        {
+          "type": "relayer",
+          "value": "0x0000000000000000000000000000000000001103",
+          "label": "orthogonal-andi relayer",
+          "confidence": 95,
+          "source": "catalog-seed"
+        },
+        {
+          "type": "recipient",
+          "value": "0x0000000000000000000000000000000000003303",
+          "label": "orthogonal-andi recipient",
+          "confidence": 95,
+          "source": "catalog-seed"
+        },
+        {
+          "type": "payer",
+          "value": "0x0000000000000000000000000000000000002203",
+          "label": "orthogonal-andi payer",
+          "confidence": 70,
+          "source": "catalog-seed"
+        }
+      ],
+      "expectedObservation": true
+    },
+    {
+      "caseId": "coingecko",
+      "caseType": "positive",
+      "method": "direct",
+      "txFile": "raw/coingecko.transaction.json",
+      "receiptFile": "raw/coingecko.receipt.json",
+      "catalogEntries": [
+        {
+          "type": "relayer",
+          "value": "0x0000000000000000000000000000000000001104",
+          "label": "coingecko relayer",
+          "confidence": 95,
+          "source": "catalog-seed"
+        },
+        {
+          "type": "recipient",
+          "value": "0x0000000000000000000000000000000000003304",
+          "label": "coingecko recipient",
+          "confidence": 95,
+          "source": "catalog-seed"
+        },
+        {
+          "type": "payer",
+          "value": "0x0000000000000000000000000000000000002204",
+          "label": "coingecko payer",
+          "confidence": 70,
+          "source": "catalog-seed"
+        }
+      ],
+      "expectedObservation": true
+    },
+    {
+      "caseId": "coinstats-news",
+      "caseType": "positive",
+      "method": "direct",
+      "txFile": "raw/coinstats-news.transaction.json",
+      "receiptFile": "raw/coinstats-news.receipt.json",
+      "catalogEntries": [
+        {
+          "type": "relayer",
+          "value": "0x0000000000000000000000000000000000001105",
+          "label": "coinstats-news relayer",
+          "confidence": 95,
+          "source": "catalog-seed"
+        },
+        {
+          "type": "recipient",
+          "value": "0x0000000000000000000000000000000000003305",
+          "label": "coinstats-news recipient",
+          "confidence": 95,
+          "source": "catalog-seed"
+        },
+        {
+          "type": "payer",
+          "value": "0x0000000000000000000000000000000000002205",
+          "label": "coinstats-news payer",
+          "confidence": 70,
+          "source": "catalog-seed"
+        }
+      ],
+      "expectedObservation": true
+    },
+    {
+      "caseId": "origindao-quest-board",
+      "caseType": "positive",
+      "method": "direct",
+      "txFile": "raw/origindao-quest-board.transaction.json",
+      "receiptFile": "raw/origindao-quest-board.receipt.json",
+      "catalogEntries": [
+        {
+          "type": "relayer",
+          "value": "0x0000000000000000000000000000000000001106",
+          "label": "origindao-quest-board relayer",
+          "confidence": 95,
+          "source": "catalog-seed"
+        },
+        {
+          "type": "recipient",
+          "value": "0x0000000000000000000000000000000000003306",
+          "label": "origindao-quest-board recipient",
+          "confidence": 95,
+          "source": "catalog-seed"
+        },
+        {
+          "type": "payer",
+          "value": "0x0000000000000000000000000000000000002206",
+          "label": "origindao-quest-board payer",
+          "confidence": 70,
+          "source": "catalog-seed"
+        }
+      ],
+      "expectedObservation": true
+    },
+    {
+      "caseId": "bluepages",
+      "caseType": "positive",
+      "method": "multicall3",
+      "txFile": "raw/bluepages.transaction.json",
+      "receiptFile": "raw/bluepages.receipt.json",
+      "catalogEntries": [
+        {
+          "type": "relayer",
+          "value": "0x0000000000000000000000000000000000004401",
+          "label": "bluepages relayer",
+          "confidence": 95,
+          "source": "catalog-seed"
+        },
+        {
+          "type": "recipient",
+          "value": "0x0000000000000000000000000000000000006601",
+          "label": "bluepages recipient",
+          "confidence": 95,
+          "source": "catalog-seed"
+        },
+        {
+          "type": "payer",
+          "value": "0x0000000000000000000000000000000000005501",
+          "label": "bluepages payer",
+          "confidence": 70,
+          "source": "catalog-seed"
+        }
+      ],
+      "expectedObservation": true
+    },
+    {
+      "caseId": "paysponge-perplexity",
+      "caseType": "positive",
+      "method": "multicall3",
+      "txFile": "raw/paysponge-perplexity.transaction.json",
+      "receiptFile": "raw/paysponge-perplexity.receipt.json",
+      "catalogEntries": [
+        {
+          "type": "relayer",
+          "value": "0x0000000000000000000000000000000000004402",
+          "label": "paysponge-perplexity relayer",
+          "confidence": 95,
+          "source": "catalog-seed"
+        },
+        {
+          "type": "recipient",
+          "value": "0x0000000000000000000000000000000000006602",
+          "label": "paysponge-perplexity recipient",
+          "confidence": 95,
+          "source": "catalog-seed"
+        },
+        {
+          "type": "payer",
+          "value": "0x0000000000000000000000000000000000005502",
+          "label": "paysponge-perplexity payer",
+          "confidence": 70,
+          "source": "catalog-seed"
+        }
+      ],
+      "expectedObservation": true
+    },
+    {
+      "caseId": "paysponge-wolframalpha",
+      "caseType": "positive",
+      "method": "multicall3",
+      "txFile": "raw/paysponge-wolframalpha.transaction.json",
+      "receiptFile": "raw/paysponge-wolframalpha.receipt.json",
+      "catalogEntries": [
+        {
+          "type": "relayer",
+          "value": "0x0000000000000000000000000000000000004403",
+          "label": "paysponge-wolframalpha relayer",
+          "confidence": 95,
+          "source": "catalog-seed"
+        },
+        {
+          "type": "recipient",
+          "value": "0x0000000000000000000000000000000000006603",
+          "label": "paysponge-wolframalpha recipient",
+          "confidence": 95,
+          "source": "catalog-seed"
+        },
+        {
+          "type": "payer",
+          "value": "0x0000000000000000000000000000000000005503",
+          "label": "paysponge-wolframalpha payer",
+          "confidence": 70,
+          "source": "catalog-seed"
+        }
+      ],
+      "expectedObservation": true
+    },
+    {
+      "caseId": "aimo-search",
+      "caseType": "positive",
+      "method": "multicall3",
+      "txFile": "raw/aimo-search.transaction.json",
+      "receiptFile": "raw/aimo-search.receipt.json",
+      "catalogEntries": [
+        {
+          "type": "relayer",
+          "value": "0x0000000000000000000000000000000000004404",
+          "label": "aimo-search relayer",
+          "confidence": 95,
+          "source": "catalog-seed"
+        },
+        {
+          "type": "recipient",
+          "value": "0x0000000000000000000000000000000000006604",
+          "label": "aimo-search recipient",
+          "confidence": 95,
+          "source": "catalog-seed"
+        },
+        {
+          "type": "payer",
+          "value": "0x0000000000000000000000000000000000005504",
+          "label": "aimo-search payer",
+          "confidence": 70,
+          "source": "catalog-seed"
+        }
+      ],
+      "expectedObservation": true
+    },
+    {
+      "caseId": "normal-erc20-transfer",
+      "caseType": "negative",
+      "method": "other",
+      "txFile": "raw/normal-erc20-transfer.transaction.json",
+      "receiptFile": "raw/normal-erc20-transfer.receipt.json",
+      "catalogEntries": [
+        {
+          "type": "recipient",
+          "value": "0x0000000000000000000000000000000000009901",
+          "label": "normal-erc20-transfer catalog-only",
+          "confidence": 90,
+          "source": "catalog-seed"
+        }
+      ],
+      "expectedObservation": false
+    },
+    {
+      "caseId": "non-usdc-multicall3",
+      "caseType": "negative",
+      "method": "multicall3",
+      "txFile": "raw/non-usdc-multicall3.transaction.json",
+      "receiptFile": "raw/non-usdc-multicall3.receipt.json",
+      "catalogEntries": [
+        {
+          "type": "recipient",
+          "value": "0x0000000000000000000000000000000000009902",
+          "label": "non-usdc-multicall3 catalog-only",
+          "confidence": 90,
+          "source": "catalog-seed"
+        }
+      ],
+      "expectedObservation": false
+    },
+    {
+      "caseId": "missing-required-logs",
+      "caseType": "negative",
+      "method": "direct",
+      "txFile": "raw/missing-required-logs.transaction.json",
+      "receiptFile": "raw/missing-required-logs.receipt.json",
+      "catalogEntries": [
+        {
+          "type": "recipient",
+          "value": "0x0000000000000000000000000000000000009903",
+          "label": "missing-required-logs catalog-only",
+          "confidence": 90,
+          "source": "catalog-seed"
+        }
+      ],
+      "expectedObservation": false
+    },
+    {
+      "caseId": "unrelated-base-tx",
+      "caseType": "negative",
+      "method": "other",
+      "txFile": "raw/unrelated-base-tx.transaction.json",
+      "receiptFile": "raw/unrelated-base-tx.receipt.json",
+      "catalogEntries": [
+        {
+          "type": "recipient",
+          "value": "0x0000000000000000000000000000000000009904",
+          "label": "unrelated-base-tx catalog-only",
+          "confidence": 90,
+          "source": "catalog-seed"
+        }
+      ],
+      "expectedObservation": false
+    }
+  ]
+}
