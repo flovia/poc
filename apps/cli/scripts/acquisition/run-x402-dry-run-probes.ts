@@ -100,6 +100,20 @@ const parseBody = (bodyText: string): unknown => {
   }
 };
 
+const parsePaymentRequiredHeader = (headers: Headers): unknown => {
+  const encoded = headers.get("payment-required");
+  if (!encoded) return null;
+  try {
+    return JSON.parse(Buffer.from(encoded, "base64url").toString("utf8")) as unknown;
+  } catch {
+    try {
+      return JSON.parse(Buffer.from(encoded, "base64").toString("utf8")) as unknown;
+    } catch {
+      return null;
+    }
+  }
+};
+
 const probeCase = async (endpointCase: EndpointCase, timeoutMs: number): Promise<ProbeResult> => {
   const url = requestUrl(endpointCase);
   const attemptedAt = new Date().toISOString();
@@ -120,6 +134,7 @@ const probeCase = async (endpointCase: EndpointCase, timeoutMs: number): Promise
     });
     const bodyText = await response.text();
     const parsedBody = parseBody(bodyText);
+    const parsedPaymentRequiredHeader = parsePaymentRequiredHeader(response.headers);
     const status = challengeStatus(response.status, parsedBody);
 
     return {
@@ -135,7 +150,8 @@ const probeCase = async (endpointCase: EndpointCase, timeoutMs: number): Promise
       httpStatus: response.status,
       responseHeaders: Object.fromEntries(response.headers.entries()),
       responseBodySha256: sha256(bodyText),
-      parsedChallenge: response.status === 402 ? parsedBody : undefined,
+      parsedChallenge:
+        response.status === 402 ? (parsedPaymentRequiredHeader ?? parsedBody) : undefined,
     };
   } catch (error) {
     return {

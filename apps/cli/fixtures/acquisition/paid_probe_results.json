@@ -1,0 +1,78 @@
+{
+  "schemaVersion": "1",
+  "sourceManifestPath": "/home/foxy/dev/work/flovia/poc/apps/cli/fixtures/acquisition/endpoint_manifest.json",
+  "sourceManifestSha256": "a39a6d2c5dbd4db116c36ffd178fce44b3dcc6a0cfb4cbaed5d6eb03739b3579",
+  "sourceDryRunPath": "/home/foxy/dev/work/flovia/poc/apps/cli/fixtures/acquisition/dry_run_probe_results.json",
+  "sourceDryRunSha256": "083e77b3218308baf704a835400efa73e5ff00a2e242a2665a38b091eb6fc5a3",
+  "collectedAt": "2026-04-28T12:19:07.000Z",
+  "mode": "paid_probe",
+  "selection": {
+    "execute": true,
+    "candidateCount": 1,
+    "limit": 1,
+    "maxSpendAtomic": "10000",
+    "totalSpendCapAtomic": "10000",
+    "network": "base",
+    "includePost": false,
+    "includeNotReady": false
+  },
+  "spend": {
+    "paidAtomic": "10000",
+    "currency": "USDC"
+  },
+  "results": [
+    {
+      "caseId": "spcat-coingecko-endp_d6dt25rhf9jcfp9xm-route-0",
+      "providerName": "CoinGecko",
+      "serviceName": "Get price and market data for CoinGecko-listed coins by ID or symbol.",
+      "routeKind": "provider_direct_x402",
+      "status": "paid_with_tx",
+      "executedAt": "2026-04-28T12:19:07.000Z",
+      "txHash": "0xf533ba8233af79b01ea2c9ebd8a8d9e98aa5af63b772f3a3e290996bad91d2d7",
+      "network": "eip155:8453",
+      "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+      "payTo": "0x110cdBba7FE6434Ec4CE3464CC523942ad6Fb784",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "10000",
+      "request": {
+        "method": "GET",
+        "url": "https://pro-api.coingecko.com/api/v3/x402/simple/price?ids=bitcoin&vs_currencies=usd",
+        "bodySha256": null,
+        "headersRedacted": true
+      },
+      "challenge": {
+        "x402Version": 2,
+        "scheme": "exact",
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "10000",
+        "payTo": "0x110cdBba7FE6434Ec4CE3464CC523942ad6Fb784"
+      },
+      "response": {
+        "status": 200,
+        "bodySha256": "9f26d0e31cbf12ea463b191d591e08671e516d3e8db38d9aa2702438b883d8e6",
+        "contentType": "application/json; charset=utf-8"
+      },
+      "payment": {
+        "status": "paid",
+        "selectedOption": {
+          "index": 0,
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "amount": "10000",
+          "payTo": "0x110cdBba7FE6434Ec4CE3464CC523942ad6Fb784",
+          "timeoutSeconds": 60
+        },
+        "settlement": {
+          "success": true,
+          "transaction": "0xf533ba8233af79b01ea2c9ebd8a8d9e98aa5af63b772f3a3e290996bad91d2d7",
+          "network": "eip155:8453",
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "errorReason": null
+        }
+      },
+      "error": null
+    }
+  ]
+}

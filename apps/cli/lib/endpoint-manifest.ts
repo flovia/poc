@@ -23,6 +23,45 @@ export const ProbeReadinessSchema = z.enum([
 ]);
 export type ProbeReadiness = z.infer<typeof ProbeReadinessSchema>;
 
+export const DryRunProbeStatusSchema = z.enum(["challenge", "no_challenge", "error", "skipped"]);
+export type DryRunProbeStatus = z.infer<typeof DryRunProbeStatusSchema>;
+
+export const NoChallengeReasonSchema = z.enum([
+  "structural_failure",
+  "auth_blocked",
+  "access_blocked",
+  "rate_limited",
+  "server_error",
+  "unexpected_status",
+]);
+export type NoChallengeReason = z.infer<typeof NoChallengeReasonSchema>;
+
+export const X402PaymentOptionSchema = z
+  .object({
+    scheme: z.string().min(1).optional(),
+    network: z.string().min(1),
+    amount: z.string().regex(/^\d+$/),
+    asset: z.string().min(1),
+    payTo: z.string().min(1),
+    maxTimeoutSeconds: z.number().int().positive().optional(),
+  })
+  .strict();
+export type X402PaymentOption = z.infer<typeof X402PaymentOptionSchema>;
+
+export const LastDryRunSchema = z
+  .object({
+    status: DryRunProbeStatusSchema,
+    attemptedAt: z.string().datetime(),
+    url: z.string().min(1),
+    httpStatus: z.number().int().positive().optional(),
+    noChallengeReason: NoChallengeReasonSchema.optional(),
+    responseBodySha256: z.string().min(1).optional(),
+    paymentOptions: z.array(X402PaymentOptionSchema).optional(),
+    requestBodyTemplateSource: z.enum(["x402_bazaar_challenge"]).optional(),
+  })
+  .strict();
+export type LastDryRun = z.infer<typeof LastDryRunSchema>;
+
 export const EndpointCaseSchema = z
   .object({
     caseId: z.string().min(1),
@@ -53,6 +92,7 @@ export const EndpointCaseSchema = z
     discoveryMethod: DiscoveryMethodSchema,
     expectedNetwork: z.string().min(1),
     expectedAsset: z.string().min(1),
+    lastDryRun: LastDryRunSchema.optional(),
   })
   .strict()
   .superRefine((value, context) => {
@@ -133,8 +173,58 @@ export type EndpointManifest = z.infer<typeof EndpointManifestSchema>;
 export const validateEndpointManifest = (value: unknown): EndpointManifest =>
   EndpointManifestSchema.parse(value);
 
+export const DryRunProbeResultSchema = z
+  .object({
+    caseId: z.string().min(1),
+    providerName: z.string().min(1),
+    serviceName: z.string().min(1),
+    routeKind: RouteKindSchema,
+    method: z.string().min(1),
+    url: z.string().min(1),
+    attemptedAt: z.string().datetime(),
+    status: DryRunProbeStatusSchema,
+    noChallengeReason: NoChallengeReasonSchema.optional(),
+    httpStatus: z.number().int().positive().optional(),
+    responseHeaders: z.record(z.string(), z.string()).optional(),
+    responseBodySha256: z.string().min(1).optional(),
+    parsedChallenge: z.unknown().optional(),
+    error: z.string().min(1).optional(),
+  })
+  .strict();
+export type DryRunProbeResult = z.infer<typeof DryRunProbeResultSchema>;
+
+export const DryRunProbeResultsSchema = z
+  .object({
+    schemaVersion: z.literal(ENDPOINT_MANIFEST_SCHEMA_VERSION),
+    sourceManifestPath: z.string().min(1),
+    sourceManifestSha256: z.string().min(1),
+    collectedAt: z.string().datetime(),
+    mode: z.literal("dry_run_no_payment"),
+    selection: z.object({
+      includeNonX402: z.boolean(),
+      limit: z.number().int().nonnegative().nullable(),
+      candidateCount: z.number().int().nonnegative(),
+      unsupportedMethodSkipped: z.number().int().nonnegative(),
+      timeoutMs: z.number().int().positive(),
+      concurrency: z.number().int().positive(),
+    }),
+    counts: z.record(z.string(), z.number().int().nonnegative()),
+    results: z.array(DryRunProbeResultSchema),
+  })
+  .strict();
+export type DryRunProbeResults = z.infer<typeof DryRunProbeResultsSchema>;
+
+export const validateDryRunProbeResults = (value: unknown): DryRunProbeResults =>
+  DryRunProbeResultsSchema.parse(value);
+
 export const defaultEndpointManifestPath = () =>
   path.join(process.cwd(), "fixtures", "acquisition", "endpoint_manifest.json");
 
 export const loadEndpointManifestFromFile = (filePath = defaultEndpointManifestPath()) =>
   validateEndpointManifest(JSON.parse(fs.readFileSync(filePath, "utf8")));
+
+export const defaultDryRunProbeResultsPath = () =>
+  path.join(process.cwd(), "fixtures", "acquisition", "dry_run_probe_results.json");
+
+export const loadDryRunProbeResultsFromFile = (filePath = defaultDryRunProbeResultsPath()) =>
+  validateDryRunProbeResults(JSON.parse(fs.readFileSync(filePath, "utf8")));
