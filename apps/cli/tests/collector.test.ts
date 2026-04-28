@@ -238,6 +238,13 @@ describe("storage and attribution", () => {
         cases: [{ ...cases[0], expectedNetwork: undefined }],
       }),
     ).toThrow();
+
+    expect(() =>
+      validateEndpointManifest({
+        ...source,
+        cases: [{ ...cases[0], sourceEndpointId: undefined }],
+      }),
+    ).toThrow("Sponge Catalog endpoint cases must include sourceEndpointId");
   });
 
   test("ingest is idempotent and independent from fingerprint seeds", () => {

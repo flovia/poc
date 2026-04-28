@@ -22,6 +22,13 @@ export const EndpointCaseSchema = z
     sourceName: z.string().min(1),
     sourceUrl: z.string().min(1),
     sourceObservedDate: z.string().date(),
+    sourceServiceId: z.string().min(1).optional(),
+    sourceEndpointId: z.string().min(1).optional(),
+    sourceEndpointUpdatedAt: z.string().datetime().optional(),
+    sourceBaseUrl: z.string().url().optional(),
+    sourcePath: z.string().min(1).optional(),
+    sourceProtocol: z.string().min(1).optional(),
+    sourceNetworks: z.array(z.string().min(1)).optional(),
     discoveryMethod: DiscoveryMethodSchema,
     expectedNetwork: z.string().min(1),
     expectedAsset: z.string().min(1),
@@ -47,6 +54,26 @@ export const EndpointCaseSchema = z
         path: ["requestBodyTemplate"],
         message: "POST endpoint cases must include requestBodyTemplate or requestBodyTemplateHash",
       });
+    }
+
+    if (value.discoveryMethod === "catalog" && value.sourceName === "sponge_catalog") {
+      for (const key of [
+        "sourceServiceId",
+        "sourceEndpointId",
+        "sourceEndpointUpdatedAt",
+        "sourceBaseUrl",
+        "sourcePath",
+        "sourceProtocol",
+        "sourceNetworks",
+      ] as const) {
+        if (value[key] === undefined) {
+          context.addIssue({
+            code: "custom",
+            path: [key],
+            message: `Sponge Catalog endpoint cases must include ${key}`,
+          });
+        }
+      }
     }
   });
 export type EndpointCase = z.infer<typeof EndpointCaseSchema>;
