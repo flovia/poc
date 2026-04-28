@@ -56,7 +56,16 @@
         },
         "payment": {
           "type": "object",
-          "required": ["status", "x402Version", "scheme", "network", "amount", "asset", "payTo", "resource"],
+          "required": [
+            "status",
+            "x402Version",
+            "scheme",
+            "network",
+            "amount",
+            "asset",
+            "payTo",
+            "resource"
+          ],
           "properties": {
             "status": { "type": ["string", "null"] },
             "x402Version": { "type": ["integer", "null"] },

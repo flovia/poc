@@ -1,6 +1,7 @@
 import path from "node:path";
 import fs from "node:fs";
 import { env, ensureDir } from "../lib/db";
+import { buildReportSummary } from "../lib/api/summary";
 import {
   listAttributionCandidates,
   listDailyMetrics,
@@ -10,13 +11,6 @@ import {
   listRelayerSummaries,
 } from "../lib/aggregates/summaries";
 import { buildWalletUsageGraph } from "../lib/attribution/wallet-graph";
-import {
-  toAttributionCandidateDto,
-  toDailyMetricDto,
-  toPaymentObservationDto,
-  toWalletProfileDto,
-  type ReportSummaryDto,
-} from "../lib/api/dto";
 
 const buildMarkdown = (summary: Record<string, unknown>) => {
   const observations = listPaymentObservations();
@@ -113,40 +107,9 @@ ${
 `;
 };
 
-const buildSummary = (): ReportSummaryDto => {
-  const observations = listPaymentObservations();
-  const candidates = listAttributionCandidates();
-  const dailyMetrics = listDailyMetrics();
-  const payerProfiles = listPayerProfiles();
-  const recipientSummaries = listRecipientSummaries();
-  const relayerSummaries = listRelayerSummaries();
-  const walletUsageGraph = buildWalletUsageGraph();
-
-  return {
-    generatedAt: new Date().toISOString(),
-    counts: {
-      observations: observations.length,
-      attributionCandidates: candidates.length,
-      dailyMetrics: dailyMetrics.length,
-      payerWalletProfiles: payerProfiles.length,
-      recipientSummaries: recipientSummaries.length,
-      relayerSummaries: relayerSummaries.length,
-      walletUsageGraphProviderWallets: walletUsageGraph.providerWallets.length,
-    },
-    scopeNote: "payer-wallet intelligence only; no human identity enrichment",
-    observations: observations.map(toPaymentObservationDto),
-    attributionCandidates: candidates.map(toAttributionCandidateDto),
-    dailyMetrics: dailyMetrics.map(toDailyMetricDto),
-    payerWalletProfiles: payerProfiles.map(toWalletProfileDto),
-    recipientSummaries: recipientSummaries.map(toWalletProfileDto),
-    relayerSummaries: relayerSummaries.map(toWalletProfileDto),
-    walletUsageGraph,
-  };
-};
-
 export const runReport = () => {
   ensureDir(env.reportsDir);
-  const summary = buildSummary();
+  const summary = buildReportSummary();
   const summaryJsonPath = path.join(env.reportsDir, "summary.json");
   const summaryMarkdownPath = path.join(env.reportsDir, "summary.md");
 

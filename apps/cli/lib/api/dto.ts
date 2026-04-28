@@ -59,7 +59,7 @@ export type WalletProfileDto = {
   firstSeenAt: number;
   lastSeenAt: number;
   uniqueRecipients?: number;
-  uniqueRelayers: number;
+  uniqueRelayers?: number;
   uniquePayers?: number;
 };
 

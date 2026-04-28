@@ -10,11 +10,13 @@
   "scripts": {
     "format": "biome format --write .",
     "format:check": "biome format .",
-    "verify": "cd apps/cli && bun run verify",
-    "test": "cd apps/cli && bun test",
-    "typecheck": "cd apps/cli && bun run typecheck"
+    "verify": "cd apps/cli && bun run verify && cd ../bff && bun run verify",
+    "test": "cd apps/cli && bun test && cd ../bff && bun test",
+    "typecheck": "cd apps/cli && bun run typecheck && cd ../bff && bun run typecheck"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.4.13"
+    "@biomejs/biome": "^2.4.13",
+    "@types/bun": "^1.3.13",
+    "typescript": "^6.0.3"
   }
 }

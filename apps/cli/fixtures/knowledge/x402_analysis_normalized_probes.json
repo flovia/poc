@@ -233,9 +233,7 @@
           "code": "policy_error",
           "message": "No supported payment options remain after applying policy",
           "details": {
-            "allowedNetworks": [
-              "eip155:8453"
-            ],
+            "allowedNetworks": ["eip155:8453"],
             "asset": "USDC",
             "spendLimit": "0.01"
           }

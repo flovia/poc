@@ -7,7 +7,8 @@ export const runImportX402AnalysisClaims = (
   options: { corpusPath?: string; outputPath?: string } = {},
 ) => {
   const corpusPath = path.resolve(
-    options.corpusPath ?? path.join(env.fixturesDir, "knowledge", "x402_analysis_normalized_probes.json"),
+    options.corpusPath ??
+      path.join(env.fixturesDir, "knowledge", "x402_analysis_normalized_probes.json"),
   );
   const outputPath = path.resolve(
     options.outputPath ??

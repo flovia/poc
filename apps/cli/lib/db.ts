@@ -27,9 +27,26 @@ export const createDb = (databasePath = env.databasePath): AppDatabase => {
   return database;
 };
 
-export let db = createDb();
+let defaultDb: AppDatabase | undefined;
 
-export const initDb = (database = db) => {
+export const getDefaultDb = (): AppDatabase => {
+  defaultDb ??= createDb();
+  return defaultDb;
+};
+
+export const db: AppDatabase = new Proxy({} as AppDatabase, {
+  get: (_target, prop) => {
+    const database = getDefaultDb();
+    const value = Reflect.get(database, prop);
+    return typeof value === "function" ? value.bind(database) : value;
+  },
+  set: (_target, prop, value) => {
+    Reflect.set(getDefaultDb(), prop, value);
+    return true;
+  },
+});
+
+export const initDb = (database = getDefaultDb()) => {
   database.exec(`
     CREATE TABLE IF NOT EXISTS payment_observations (
       observation_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -230,12 +247,12 @@ export const initDb = (database = db) => {
 };
 
 export const resetDb = (databasePath = env.databasePath) => {
-  db.close(false);
+  defaultDb?.close(false);
   const candidate = [databasePath, toText(databasePath, "-wal"), toText(databasePath, "-shm")];
   for (const filePath of candidate) {
     if (fs.existsSync(filePath)) fs.rmSync(filePath);
   }
-  db = createDb(databasePath);
+  defaultDb = createDb(databasePath);
 };
 
 export const nowIso = () => new Date().toISOString();

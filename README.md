@@ -9,7 +9,7 @@ aggregates, and generates report outputs without requiring live RPC access.
 ## Workspace
 
 - `apps/cli/`: main CLI implementation, scripts, fixtures, tests, and reports
-- `docs/products/flovia260427/`: product direction and implementation notes
+- `docs/`: product direction, implementation notes, and documentation assets
 - `packages/*`: reserved for shared packages as the workspace grows
 
 ## Prerequisites

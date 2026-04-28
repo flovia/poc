@@ -1,4 +1,5 @@
 import { listAttributionCandidates, listPaymentObservations } from "../aggregates/summaries";
+import type { AppDatabase } from "../db";
 import { listProviderEndpointClaims } from "./provider-claims";
 
 export type WalletUsageGraph = {
@@ -25,10 +26,10 @@ export type WalletUsageGraph = {
 
 const parseJsonArray = (value: string): string[] => JSON.parse(value) as string[];
 
-export const buildWalletUsageGraph = (): WalletUsageGraph => {
-  const observations = listPaymentObservations();
-  const claims = listProviderEndpointClaims();
-  const candidates = listAttributionCandidates();
+export const buildWalletUsageGraph = (database?: AppDatabase): WalletUsageGraph => {
+  const observations = listPaymentObservations(database);
+  const claims = listProviderEndpointClaims(database);
+  const candidates = listAttributionCandidates(database);
   const observationsById = new Map(
     observations.map((observation) => [observation.observation_id, observation]),
   );
