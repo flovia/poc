@@ -24,6 +24,7 @@ import { runIngest } from "../scripts/ingest-fixtures";
 import { buildAttributionCandidates } from "../lib/attribution/score";
 import { listAttributionCandidates, listPaymentObservations } from "../lib/aggregates/summaries";
 import type { FixtureManifest, RawReceipt, RawTransaction } from "../lib/schema";
+import { fetchRpcFixture, normalizeRpcReceipt, normalizeRpcTransaction, type RpcReceiptPayload, type RpcTransactionPayload } from "../lib/rpc-fixtures";
 
 const fixtureRoot = path.resolve(import.meta.dir, "..", "fixtures");
 
@@ -138,5 +139,81 @@ describe("storage and attribution", () => {
     const columns = db.prepare("PRAGMA table_info(payment_observations)").all() as Array<{ name: string }>;
     expect(columns.map((column) => column.name)).not.toContain("provider_label");
     expect(columns.map((column) => column.name)).not.toContain("middleman_label");
+  });
+});
+
+describe("RPC fixture capture", () => {
+  const rpcTx: RpcTransactionPayload = {
+    hash: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    chainId: "0x2105",
+    from: "0x0000000000000000000000000000000000000001",
+    to: BASE_USDC_ADDRESS,
+    input: `${TRANSFER_WITH_AUTHORIZATION_SELECTOR}00`,
+    blockNumber: "0x2a",
+    nonce: "0x7",
+  };
+
+  const rpcReceipt: RpcReceiptPayload = {
+    transactionHash: rpcTx.hash,
+    blockHash: "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    blockNumber: "0x2a",
+    status: "0x1",
+    logs: [
+      {
+        address: BASE_USDC_ADDRESS,
+        data: "0x",
+        topics: [EVENT_AUTHORIZATION_USED_TOPIC],
+        blockHash: "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        blockNumber: "0x2a",
+        transactionHash: rpcTx.hash,
+        transactionIndex: "0x0",
+        logIndex: "0x0",
+        removed: false,
+      },
+    ],
+  };
+
+  test("normalizes RPC transaction and receipt payloads into frozen raw fixture shapes", () => {
+    const tx = normalizeRpcTransaction(rpcTx, { timestamp: "0x65" });
+    const receipt = normalizeRpcReceipt(rpcReceipt);
+
+    expect(tx).toEqual({
+      hash: rpcTx.hash as RawTransaction["hash"],
+      chainId: BASE_CHAIN_ID,
+      from: rpcTx.from as RawTransaction["from"],
+      to: BASE_USDC_ADDRESS as RawTransaction["to"],
+      input: rpcTx.input as RawTransaction["input"],
+      blockNumber: "42",
+      blockTimestamp: 101,
+      nonce: "0x7",
+    } satisfies RawTransaction);
+    expect(receipt.blockNumber).toBe("42");
+    expect(receipt.logs[0]?.blockNumber).toBe("42");
+    expect(receipt.logs[0]?.removed).toBe(false);
+  });
+
+  test("fetches tx, receipt, and block timestamp through a mocked JSON-RPC transport", async () => {
+    const calls: string[] = [];
+    const fixture = await fetchRpcFixture({
+      rpcUrl: "https://example.invalid",
+      txHash: rpcTx.hash,
+      fetchFn: async (_url, init) => {
+        const body = JSON.parse(String(init?.body)) as { method: string };
+        calls.push(body.method);
+        const result =
+          body.method === "eth_chainId"
+            ? "0x2105"
+            : body.method === "eth_getTransactionByHash"
+            ? rpcTx
+            : body.method === "eth_getTransactionReceipt"
+              ? rpcReceipt
+              : { timestamp: "0x65" };
+        return new Response(JSON.stringify({ jsonrpc: "2.0", id: 1, result }), { status: 200 });
+      },
+    });
+
+    expect(calls).toEqual(["eth_chainId", "eth_getTransactionByHash", "eth_getTransactionReceipt", "eth_getBlockByNumber"]);
+    expect(fixture.tx.blockTimestamp).toBe(101);
+    expect(String(fixture.receipt.transactionHash)).toBe(rpcTx.hash);
   });
 });

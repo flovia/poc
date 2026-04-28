@@ -11,6 +11,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "bun test",
     "db:reset": "dotenvx run -- bun scripts/reset-db.ts",
+    "fixture:fetch-rpc": "dotenvx run -- bun scripts/fetch-rpc-fixture.ts",
     "ingest:fixtures": "dotenvx run -- bun scripts/ingest-fixtures.ts",
     "score": "dotenvx run -- bun scripts/score.ts",
     "aggregate": "dotenvx run -- bun scripts/aggregate.ts",
