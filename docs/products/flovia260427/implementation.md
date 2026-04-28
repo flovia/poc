@@ -265,6 +265,10 @@ unknown_cluster
 
 Evidence-backed known signals:
 
+Detailed catalog seed format, evidence requirements, confidence buckets, and
+conflict handling are specified in
+`docs/products/flovia260427/fingerprint-catalog.md`.
+
 ```text
 entity_id
 signal_type

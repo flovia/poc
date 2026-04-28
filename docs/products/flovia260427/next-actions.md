@@ -109,6 +109,12 @@ Acceptance:
 
 Goal: improve candidate scoring without weakening the source-of-truth boundary.
 
+Specification: `docs/products/flovia260427/fingerprint-catalog.md`.
+
+Note: Phase 2 RPC transaction ingest remains the next implementation priority;
+the fingerprint catalog spec is recorded now so attribution work can be picked up
+later without mixing it into ingest.
+
 Deliverables:
 
 - Add score versioning.

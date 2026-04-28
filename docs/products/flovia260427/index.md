@@ -199,6 +199,9 @@ evidence_notes
 
 既知の signal を保存する catalog。
 
+正式なフィンガープリントカタログの seed format、evidence、confidence、
+conflict handling は `docs/products/flovia260427/fingerprint-catalog.md` にまとめます。
+
 ```text
 entity_type
 entity_name
