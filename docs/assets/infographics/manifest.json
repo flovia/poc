@@ -27,12 +27,6 @@
       "status": "generated"
     },
     {
-      "source": "docs/paysponge-settlement-patterns.md",
-      "slug": "paysponge-settlement-patterns",
-      "image": "docs/assets/infographics/artifacts/paysponge-settlement-patterns.png",
-      "status": "generated"
-    },
-    {
       "source": "docs/next-actions.md",
       "slug": "next-actions",
       "image": "docs/assets/infographics/artifacts/next-actions.png",
