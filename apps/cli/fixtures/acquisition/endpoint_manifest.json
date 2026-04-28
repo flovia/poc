@@ -2064,8 +2064,8 @@
         }
       },
       "requestBodyTemplate": {
-        "name": "<name>",
-        "client_id": "<client_id>"
+        "name": "flovia-probe-pod",
+        "client_id": "flovia-probe"
       },
       "sourceName": "sponge_catalog",
       "sourceUrl": "https://api.catalog.paysponge.com/api/services/agentmail",
@@ -5175,11 +5175,10 @@
         }
       },
       "requestBodyTemplate": {
-        "url": "<url>",
-        "pod_ids": "<pod_ids>",
-        "client_id": "<client_id>",
-        "inbox_ids": "<inbox_ids>",
-        "event_types": "<event_types>"
+        "url": "https://example.com/webhook",
+        "event_types": [
+          "message.received"
+        ]
       },
       "sourceName": "sponge_catalog",
       "sourceUrl": "https://api.catalog.paysponge.com/api/services/agentmail",
@@ -6714,6 +6713,11 @@
           "withMarketData": "boolean (optional)"
         }
       },
+      "requestBodyTemplate": {
+        "symbol": "ETH",
+        "startTime": "2024-01-01T00:00:00Z",
+        "endTime": "2024-01-02T00:00:00Z"
+      },
       "sourceName": "sponge_catalog",
       "sourceUrl": "https://api.catalog.paysponge.com/api/services/alchemy",
       "sourceObservedDate": "2026-04-27",
@@ -6951,6 +6955,16 @@
           "includeErc20Tokens": "boolean (optional)",
           "pageKey": "string (optional)"
         }
+      },
+      "requestBodyTemplate": {
+        "addresses": [
+          {
+            "address": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+            "networks": [
+              "eth-mainnet"
+            ]
+          }
+        ]
       },
       "sourceName": "sponge_catalog",
       "sourceUrl": "https://api.catalog.paysponge.com/api/services/alchemy",
@@ -7436,6 +7450,14 @@
           ]
         }
       },
+      "requestBodyTemplate": {
+        "addresses": [
+          {
+            "network": "eth-mainnet",
+            "address": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+          }
+        ]
+      },
       "sourceName": "sponge_catalog",
       "sourceUrl": "https://api.catalog.paysponge.com/api/services/alchemy",
       "sourceObservedDate": "2026-04-27",
@@ -7787,6 +7809,16 @@
           "pageKey": "string (optional)"
         }
       },
+      "requestBodyTemplate": {
+        "addresses": [
+          {
+            "address": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+            "networks": [
+              "eth-mainnet"
+            ]
+          }
+        ]
+      },
       "sourceName": "sponge_catalog",
       "sourceUrl": "https://api.catalog.paysponge.com/api/services/alchemy",
       "sourceObservedDate": "2026-04-27",
@@ -7948,6 +7980,16 @@
           "pageSize": "number (optional)"
         }
       },
+      "requestBodyTemplate": {
+        "addresses": [
+          {
+            "address": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+            "networks": [
+              "eth-mainnet"
+            ]
+          }
+        ]
+      },
       "sourceName": "sponge_catalog",
       "sourceUrl": "https://api.catalog.paysponge.com/api/services/alchemy",
       "sourceObservedDate": "2026-04-27",
@@ -8103,6 +8145,16 @@
           "pageSize": "number (optional)"
         }
       },
+      "requestBodyTemplate": {
+        "addresses": [
+          {
+            "address": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+            "networks": [
+              "eth-mainnet"
+            ]
+          }
+        ]
+      },
       "sourceName": "sponge_catalog",
       "sourceUrl": "https://api.catalog.paysponge.com/api/services/alchemy",
       "sourceObservedDate": "2026-04-27",
@@ -8252,6 +8304,16 @@
           "pageSize": "number (optional)"
         }
       },
+      "requestBodyTemplate": {
+        "addresses": [
+          {
+            "address": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+            "networks": [
+              "eth-mainnet"
+            ]
+          }
+        ]
+      },
       "sourceName": "sponge_catalog",
       "sourceUrl": "https://api.catalog.paysponge.com/api/services/alchemy",
       "sourceObservedDate": "2026-04-27",
@@ -8370,6 +8432,7 @@
       "providerName": "Alchemy",
       "serviceName": "Get latest token prices by symbol.",
       "endpointUrl": "https://x402.alchemy.com/prices/v1/tokens/by-symbol",
+      "resourceUrl": "https://x402.alchemy.com/prices/v1/tokens/by-symbol?symbols=ETH",
       "requestHost": "x402.alchemy.com",
       "method": "GET",
       "requestParameters": {
@@ -8486,6 +8549,12 @@
           ]
         }
       },
+      "requestBodyTemplate": [
+        {
+          "address": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+          "chain": "ethereum"
+        }
+      ],
       "sourceName": "sponge_catalog",
       "sourceUrl": "https://api.catalog.paysponge.com/api/services/allium",
       "sourceObservedDate": "2026-04-27",
@@ -9106,6 +9175,12 @@
           ]
         }
       },
+      "requestBodyTemplate": [
+        {
+          "address": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+          "chain": "ethereum"
+        }
+      ],
       "sourceName": "sponge_catalog",
       "sourceUrl": "https://api.catalog.paysponge.com/api/services/allium",
       "sourceObservedDate": "2026-04-27",
@@ -9235,6 +9310,12 @@
           ]
         }
       },
+      "requestBodyTemplate": [
+        {
+          "chain": "ethereum",
+          "token_address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+        }
+      ],
       "sourceName": "sponge_catalog",
       "sourceUrl": "https://api.catalog.paysponge.com/api/services/allium",
       "sourceObservedDate": "2026-04-27",
@@ -9374,6 +9455,12 @@
           ]
         }
       },
+      "requestBodyTemplate": [
+        {
+          "chain": "ethereum",
+          "token_address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+        }
+      ],
       "sourceName": "sponge_catalog",
       "sourceUrl": "https://api.catalog.paysponge.com/api/services/allium",
       "sourceObservedDate": "2026-04-27",
@@ -9482,6 +9569,7 @@
       "providerName": "Allium",
       "serviceName": "Search Tokens",
       "endpointUrl": "https://agents.allium.so/api/v1/developer/tokens/search",
+      "resourceUrl": "https://agents.allium.so/api/v1/developer/tokens/search?q=USDC",
       "requestHost": "agents.allium.so",
       "method": "GET",
       "requestParameters": {
@@ -9734,6 +9822,12 @@
           ]
         }
       },
+      "requestBodyTemplate": [
+        {
+          "chain": "ethereum",
+          "token_address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+        }
+      ],
       "sourceName": "sponge_catalog",
       "sourceUrl": "https://api.catalog.paysponge.com/api/services/allium",
       "sourceObservedDate": "2026-04-27",
@@ -9859,6 +9953,12 @@
           "offset": "number (optional)"
         }
       },
+      "requestBodyTemplate": [
+        {
+          "address": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+          "chain": "ethereum"
+        }
+      ],
       "sourceName": "sponge_catalog",
       "sourceUrl": "https://api.catalog.paysponge.com/api/services/allium",
       "sourceObservedDate": "2026-04-27",
@@ -10114,7 +10214,9 @@
           "per_page": "number (optional)"
         }
       },
-      "requestBodyTemplate": {},
+      "requestBodyTemplate": {
+        "q_organization_name": "Apollo"
+      },
       "sourceName": "sponge_catalog",
       "sourceUrl": "https://api.catalog.paysponge.com/api/services/apollo",
       "sourceObservedDate": "2026-04-27",
@@ -10254,7 +10356,11 @@
           "linkedin_url": "string (optional)"
         }
       },
-      "requestBodyTemplate": {},
+      "requestBodyTemplate": {
+        "first_name": "Tim",
+        "last_name": "Cook",
+        "organization_name": "Apple"
+      },
       "sourceName": "sponge_catalog",
       "sourceUrl": "https://api.catalog.paysponge.com/api/services/apollo",
       "sourceObservedDate": "2026-04-27",
@@ -10388,7 +10494,15 @@
           ]
         }
       },
-      "requestBodyTemplate": {},
+      "requestBodyTemplate": {
+        "details": [
+          {
+            "first_name": "Tim",
+            "last_name": "Cook",
+            "organization_name": "Apple"
+          }
+        ]
+      },
       "sourceName": "sponge_catalog",
       "sourceUrl": "https://api.catalog.paysponge.com/api/services/apollo",
       "sourceObservedDate": "2026-04-27",
@@ -10546,7 +10660,11 @@
           "per_page": "number (optional, max 100)"
         }
       },
-      "requestBodyTemplate": {},
+      "requestBodyTemplate": {
+        "q_keywords": "founder",
+        "page": 1,
+        "per_page": 10
+      },
       "sourceName": "sponge_catalog",
       "sourceUrl": "https://api.catalog.paysponge.com/api/services/apollo",
       "sourceObservedDate": "2026-04-27",
@@ -10675,6 +10793,7 @@
       "providerName": "Auor",
       "serviceName": "Search for places based on a query (full details)",
       "endpointUrl": "https://api.auor.io/google-maps/v1/search/full",
+      "resourceUrl": "https://api.auor.io/google-maps/v1/search/full?query=coffee%20shops%20in%20New%20York&language=en&region=us",
       "requestHost": "api.auor.io",
       "method": "GET",
       "requestParameters": {
@@ -10728,6 +10847,7 @@
       "providerName": "Auor",
       "serviceName": "Retrieve current exchange rates",
       "endpointUrl": "https://api.auor.io/all-rates-today/v1/rates",
+      "resourceUrl": "https://api.auor.io/all-rates-today/v1/rates?source=USD&target=EUR",
       "requestHost": "api.auor.io",
       "method": "GET",
       "requestParameters": {
@@ -10781,6 +10901,7 @@
       "providerName": "Auor",
       "serviceName": "Look up geolocation and metadata for an IP address",
       "endpointUrl": "https://api.auor.io/ip-stack/v1/lookup",
+      "resourceUrl": "https://api.auor.io/ip-stack/v1/lookup?ip=8.8.8.8",
       "requestHost": "api.auor.io",
       "method": "GET",
       "requestParameters": {
@@ -10836,6 +10957,7 @@
       "providerName": "Auor",
       "serviceName": "Retrieve historical exchange rates",
       "endpointUrl": "https://api.auor.io/all-rates-today/v1/historical",
+      "resourceUrl": "https://api.auor.io/all-rates-today/v1/historical?source=USD&target=EUR&period=7d",
       "requestHost": "api.auor.io",
       "method": "GET",
       "requestParameters": {
@@ -10891,6 +11013,7 @@
       "providerName": "Auor",
       "serviceName": "Find flight offers using Amadeus data",
       "endpointUrl": "https://api.auor.io/amadeus/v1/search",
+      "resourceUrl": "https://api.auor.io/amadeus/v1/search?origin=NYC&destination=LAX&dateDepart=2026-06-01&travelersAdult=1",
       "requestHost": "api.auor.io",
       "method": "GET",
       "requestParameters": {
@@ -12891,6 +13014,7 @@
       "providerName": "CoinMarketCap",
       "serviceName": "Get latest market quote data for one or more cryptocurrencies including price, volume, market cap, and percent changes.",
       "endpointUrl": "https://pro-api.coinmarketcap.com/x402/v3/cryptocurrency/quotes/latest",
+      "resourceUrl": "https://pro-api.coinmarketcap.com/x402/v3/cryptocurrency/quotes/latest?symbol=BTC",
       "requestHost": "pro-api.coinmarketcap.com",
       "method": "GET",
       "requestParameters": {
@@ -13055,6 +13179,7 @@
       "providerName": "CoinMarketCap",
       "serviceName": "Get latest market quotes for DEX spot pairs. Query by contract address and network to get real-time pricing data for decentralized exchange trading pairs.",
       "endpointUrl": "https://pro-api.coinmarketcap.com/x402/v4/dex/pairs/quotes/latest",
+      "resourceUrl": "https://pro-api.coinmarketcap.com/x402/v4/dex/pairs/quotes/latest?contract_address=0xB4e16d0168e52d35CaCD2c6185b44281Ec28C9Dc&network_slug=ethereum",
       "requestHost": "pro-api.coinmarketcap.com",
       "method": "GET",
       "requestParameters": {
@@ -13563,6 +13688,7 @@
       "providerName": "Dome",
       "serviceName": "Get Polymarket wallet info.",
       "endpointUrl": "https://api.paysponge.com/x402/purchase/svc_d5y7k40sm2ntn45xr/polymarket/wallet",
+      "resourceUrl": "https://api.paysponge.com/x402/purchase/svc_d5y7k40sm2ntn45xr/polymarket/wallet?address=0x0000000000000000000000000000000000000000",
       "requestHost": "api.paysponge.com",
       "method": "GET",
       "requestParameters": {
@@ -13657,7 +13783,7 @@
       "providerName": "Dome",
       "serviceName": "List available sports for matching markets.",
       "endpointUrl": "https://api.paysponge.com/x402/purchase/svc_d5y7k40sm2ntn45xr/matching-markets/sports",
-      "resourceUrl": "https://api.paysponge.com/x402/purchase/svc_d5y7k40sm2ntn45xr/matching-markets/sports",
+      "resourceUrl": "https://api.paysponge.com/x402/purchase/svc_d5y7k40sm2ntn45xr/matching-markets/sports?sport=soccer",
       "requestHost": "api.paysponge.com",
       "method": "GET",
       "sourceName": "sponge_catalog",
@@ -14129,6 +14255,7 @@
       "providerName": "Dome",
       "serviceName": "Get Polymarket activity feed.",
       "endpointUrl": "https://api.paysponge.com/x402/purchase/svc_d5y7k40sm2ntn45xr/polymarket/activity",
+      "resourceUrl": "https://api.paysponge.com/x402/purchase/svc_d5y7k40sm2ntn45xr/polymarket/activity?limit=10&offset=0",
       "requestHost": "api.paysponge.com",
       "method": "GET",
       "requestParameters": {
@@ -14527,6 +14654,7 @@
       "providerName": "Dome",
       "serviceName": "Get Kalshi orderbook data.",
       "endpointUrl": "https://api.paysponge.com/x402/purchase/svc_d5y7k40sm2ntn45xr/kalshi/orderbooks",
+      "resourceUrl": "https://api.paysponge.com/x402/purchase/svc_d5y7k40sm2ntn45xr/kalshi/orderbooks?ticker=KXBTCD-26APR28-B76000",
       "requestHost": "api.paysponge.com",
       "method": "GET",
       "requestParameters": {
@@ -14621,6 +14749,7 @@
       "providerName": "Dome",
       "serviceName": "Get Polymarket orderbook data.",
       "endpointUrl": "https://api.paysponge.com/x402/purchase/svc_d5y7k40sm2ntn45xr/polymarket/orderbooks",
+      "resourceUrl": "https://api.paysponge.com/x402/purchase/svc_d5y7k40sm2ntn45xr/polymarket/orderbooks?token_id=0",
       "requestHost": "api.paysponge.com",
       "method": "GET",
       "requestParameters": {
@@ -22733,22 +22862,12 @@
       },
       "requestBodyTemplate": {
         "chains": [
-          "ethereum",
-          "solana",
-          "base"
+          "ethereum"
         ],
-        "timeframe": "24h",
-        "date": {
-          "from": "2025-01-01T00:00:00Z",
-          "to": "2025-01-31T23:59:59Z"
-        },
-        "filters": {
-          "only_smart_money": true,
-          "token_age_days": {
-            "max": 365,
-            "min": 1
-          }
-        }
+        "min_market_cap": 1000000,
+        "max_market_cap": 1000000000,
+        "min_volume": 100000,
+        "limit": 10
       },
       "sourceName": "sponge_catalog",
       "sourceUrl": "https://api.catalog.paysponge.com/api/services/nansen",
@@ -22831,7 +22950,9 @@
           "name": "string (optional)"
         }
       },
-      "requestBodyTemplate": {},
+      "requestBodyTemplate": {
+        "email": "satya@microsoft.com"
+      },
       "sourceName": "sponge_catalog",
       "sourceUrl": "https://api.catalog.paysponge.com/api/services/nyne",
       "sourceObservedDate": "2026-04-27",
@@ -22959,7 +23080,13 @@
           "enrich_phones": "boolean (optional)"
         }
       },
-      "requestBodyTemplate": {},
+      "requestBodyTemplate": {
+        "company_name": "Microsoft",
+        "role": "CEO",
+        "person_name": "Satya Nadella",
+        "page": 1,
+        "page_size": 10
+      },
       "sourceName": "sponge_catalog",
       "sourceUrl": "https://api.catalog.paysponge.com/api/services/nyne",
       "sourceObservedDate": "2026-04-27",
@@ -23068,6 +23195,7 @@
       "providerName": "Nyne",
       "serviceName": "Poll async person enrichment results by requestId.",
       "endpointUrl": "https://api.paysponge.com/x402/purchase/svc_d5ymfernpzeh58gb8/person/enrichment",
+      "resourceUrl": "https://api.paysponge.com/x402/purchase/svc_d5ymfernpzeh58gb8/person/enrichment?requestId=probe",
       "requestHost": "api.paysponge.com",
       "method": "GET",
       "requestParameters": {
@@ -24935,7 +25063,15 @@
           "tools": "array (optional, function calling)"
         }
       },
-      "requestBodyTemplate": {},
+      "requestBodyTemplate": {
+        "model": "openai/gpt-4o-mini",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Say hello in one short sentence."
+          }
+        ]
+      },
       "sourceName": "sponge_catalog",
       "sourceUrl": "https://api.catalog.paysponge.com/api/services/openrouter",
       "sourceObservedDate": "2026-04-27",
@@ -25085,7 +25221,16 @@
           "stream": "boolean (optional)"
         }
       },
-      "requestBodyTemplate": {},
+      "requestBodyTemplate": {
+        "model": "openai/gpt-4o-mini",
+        "max_tokens": 16,
+        "messages": [
+          {
+            "role": "user",
+            "content": "Hello"
+          }
+        ]
+      },
       "sourceName": "sponge_catalog",
       "sourceUrl": "https://api.catalog.paysponge.com/api/services/openrouter",
       "sourceObservedDate": "2026-04-27",
@@ -25217,7 +25362,11 @@
           "temperature": "number (optional)"
         }
       },
-      "requestBodyTemplate": {},
+      "requestBodyTemplate": {
+        "model": "openai/gpt-4o-mini",
+        "prompt": "Say hello.",
+        "max_tokens": 16
+      },
       "sourceName": "sponge_catalog",
       "sourceUrl": "https://api.catalog.paysponge.com/api/services/openrouter",
       "sourceObservedDate": "2026-04-27",
@@ -25333,7 +25482,10 @@
           "input": "string | array of strings"
         }
       },
-      "requestBodyTemplate": {},
+      "requestBodyTemplate": {
+        "model": "openai/text-embedding-3-small",
+        "input": "hello world"
+      },
       "sourceName": "sponge_catalog",
       "sourceUrl": "https://api.catalog.paysponge.com/api/services/openrouter",
       "sourceObservedDate": "2026-04-27",
@@ -25451,7 +25603,10 @@
           "max_output_tokens": "number (optional)"
         }
       },
-      "requestBodyTemplate": {},
+      "requestBodyTemplate": {
+        "model": "openai/gpt-4o-mini",
+        "input": "Say hello in one short sentence."
+      },
       "sourceName": "sponge_catalog",
       "sourceUrl": "https://api.catalog.paysponge.com/api/services/openrouter",
       "sourceObservedDate": "2026-04-27",
@@ -25786,11 +25941,10 @@
         }
       },
       "requestBodyTemplate": {
-        "protocol": "<protocol>",
-        "slippage_bps": "<slippage_bps>",
-        "position_mint": "<position_mint>",
-        "wallet_address": "<wallet_address>",
-        "withdraw_percent": "<withdraw_percent>"
+        "position_mint": "11111111111111111111111111111111",
+        "wallet_address": "11111111111111111111111111111111",
+        "withdraw_percent": 1,
+        "slippage_bps": 100
       },
       "sourceName": "sponge_catalog",
       "sourceUrl": "https://api.catalog.paysponge.com/api/services/orca-whirlpools",
@@ -25926,16 +26080,11 @@
         }
       },
       "requestBodyTemplate": {
-        "token_a": "<token_a>",
-        "token_b": "<token_b>",
-        "protocol": "<protocol>",
-        "usd_amount": "<usd_amount>",
-        "pool_address": "<pool_address>",
-        "slippage_bps": "<slippage_bps>",
-        "range_percent": "<range_percent>",
-        "token_a_amount": "<token_a_amount>",
-        "token_b_amount": "<token_b_amount>",
-        "wallet_address": "<wallet_address>"
+        "token_a": "So11111111111111111111111111111111111111112",
+        "token_b": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+        "wallet_address": "11111111111111111111111111111111",
+        "usd_amount": 1,
+        "slippage_bps": 100
       },
       "sourceName": "sponge_catalog",
       "sourceUrl": "https://api.catalog.paysponge.com/api/services/orca-whirlpools",
@@ -26079,15 +26228,12 @@
         }
       },
       "requestBodyTemplate": {
-        "token_a": "<token_a>",
-        "token_b": "<token_b>",
-        "protocol": "<protocol>",
-        "lower_price": "<lower_price>",
-        "upper_price": "<upper_price>",
-        "pool_address": "<pool_address>",
-        "slippage_bps": "<slippage_bps>",
-        "token_a_amount": "<token_a_amount>",
-        "token_b_amount": "<token_b_amount>"
+        "token_a": "So11111111111111111111111111111111111111112",
+        "token_b": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+        "lower_price": 100,
+        "upper_price": 300,
+        "token_a_amount": "0.01",
+        "slippage_bps": 100
       },
       "sourceName": "sponge_catalog",
       "sourceUrl": "https://api.catalog.paysponge.com/api/services/orca-whirlpools",
@@ -26233,17 +26379,12 @@
         }
       },
       "requestBodyTemplate": {
-        "token_a": "<token_a>",
-        "token_b": "<token_b>",
-        "protocol": "<protocol>",
-        "liquidity": "<liquidity>",
-        "lower_tick": "<lower_tick>",
-        "upper_tick": "<upper_tick>",
-        "token_a_max": "<token_a_max>",
-        "token_b_max": "<token_b_max>",
-        "pool_address": "<pool_address>",
-        "position_mint": "<position_mint>",
-        "wallet_address": "<wallet_address>"
+        "wallet_address": "11111111111111111111111111111111",
+        "lower_tick": -100,
+        "upper_tick": 100,
+        "liquidity": "1",
+        "token_a_max": "1",
+        "token_b_max": "1"
       },
       "sourceName": "sponge_catalog",
       "sourceUrl": "https://api.catalog.paysponge.com/api/services/orca-whirlpools",
@@ -26563,6 +26704,7 @@
       "providerName": "Orca Whirlpools",
       "serviceName": "Search for concentrated liquidity pools by token pair, ordered by TVL.",
       "endpointUrl": "https://api.paysponge.com/x402/purchase/svc_d6y9cggxhd3pcq41m/v1/pools/search",
+      "resourceUrl": "https://api.paysponge.com/x402/purchase/svc_d6y9cggxhd3pcq41m/v1/pools/search?q=SOL-USDC",
       "requestHost": "api.paysponge.com",
       "method": "GET",
       "requestParameters": {
@@ -27699,7 +27841,9 @@
           }
         }
       },
-      "requestBodyTemplate": {},
+      "requestBodyTemplate": {
+        "document_url": "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"
+      },
       "sourceName": "sponge_catalog",
       "sourceUrl": "https://api.catalog.paysponge.com/api/services/reducto",
       "sourceObservedDate": "2026-04-27",
@@ -27835,7 +27979,19 @@
           }
         }
       },
-      "requestBodyTemplate": {},
+      "requestBodyTemplate": {
+        "input": "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+        "instructions": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "title": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
       "sourceName": "sponge_catalog",
       "sourceUrl": "https://api.catalog.paysponge.com/api/services/reducto",
       "sourceObservedDate": "2026-04-27",
@@ -28472,6 +28628,7 @@
       "providerName": "Rug Pull Detector",
       "serviceName": "Search for tokens matching a name or symbol and return known contract addresses, sorted by market cap rank.",
       "endpointUrl": "https://api.paysponge.com/x402/purchase/svc_d6tc4d89rramggb4m/search",
+      "resourceUrl": "https://api.paysponge.com/x402/purchase/svc_d6tc4d89rramggb4m/search?name=USDC&chain=base",
       "requestHost": "api.paysponge.com",
       "method": "GET",
       "requestParameters": {

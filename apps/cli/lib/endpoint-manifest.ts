@@ -74,7 +74,7 @@ export const EndpointCaseSchema = z
     method: z.enum(["GET", "POST", "DELETE", "PATCH", "PUT"]),
     requestParameters: z.unknown().optional(),
     requestBodySchema: z.unknown().optional(),
-    requestBodyTemplate: z.record(z.string(), z.unknown()).optional(),
+    requestBodyTemplate: z.unknown().optional(),
     requestBodyTemplateHash: z.string().min(1).optional(),
     sourceName: z.string().min(1),
     sourceUrl: z.string().min(1),
