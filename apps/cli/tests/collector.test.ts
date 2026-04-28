@@ -63,6 +63,7 @@ import {
   type RpcTransactionPayload,
 } from "../lib/rpc-fixtures";
 import { resolveBaseRpcUrl, resolveRpcRequestTimeoutMs } from "../lib/rpc-config";
+import { validateEndpointManifest } from "../lib/endpoint-manifest";
 
 const fixtureRoot = path.resolve(import.meta.dir, "..", "fixtures");
 
@@ -196,6 +197,47 @@ describe("storage and attribution", () => {
         ],
       }),
     ).toThrow("must not include attribution seed field");
+  });
+
+  test("endpoint manifest validates current acquisition targets only", () => {
+    const source = readJson<Record<string, unknown>>("acquisition/endpoint_manifest.json");
+    const parsed = validateEndpointManifest(source);
+
+    expect(parsed.cases.length).toBeGreaterThan(0);
+    expect(parsed.cases.every((endpointCase) => endpointCase.expectedNetwork.length > 0)).toBe(
+      true,
+    );
+    expect(parsed.cases.every((endpointCase) => endpointCase.expectedAsset.length > 0)).toBe(true);
+    expect(parsed.cases.every((endpointCase) => endpointCase.sourceName.length > 0)).toBe(true);
+    expect(parsed.cases.map((endpointCase) => endpointCase.discoveryMethod)).not.toContain(
+      "prior_fixture",
+    );
+  });
+
+  test("endpoint manifest rejects historical and execution policy fields", () => {
+    const source = readJson<Record<string, unknown>>("acquisition/endpoint_manifest.json");
+    const cases = source.cases as Array<Record<string, unknown>>;
+
+    expect(() =>
+      validateEndpointManifest({
+        ...source,
+        cases: [{ ...cases[0], discoveryMethod: "prior_fixture" }],
+      }),
+    ).toThrow();
+
+    expect(() =>
+      validateEndpointManifest({
+        ...source,
+        cases: [{ ...cases[0], paidProbeAllowed: true, spendLimitAtomic: "10000" }],
+      }),
+    ).toThrow();
+
+    expect(() =>
+      validateEndpointManifest({
+        ...source,
+        cases: [{ ...cases[0], expectedNetwork: undefined }],
+      }),
+    ).toThrow();
   });
 
   test("ingest is idempotent and independent from fingerprint seeds", () => {

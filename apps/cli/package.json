@@ -19,13 +19,15 @@
     "aggregate": "dotenvx run --ignore=MISSING_ENV_FILE -f ../../.env -f .env -- bun scripts/aggregate.ts",
     "report": "dotenvx run --ignore=MISSING_ENV_FILE -f ../../.env -f .env -- bun scripts/report.ts",
     "import:x402-analysis-claims": "dotenvx run --ignore=MISSING_ENV_FILE -f ../../.env -f .env -- bun scripts/import-x402-analysis-claims.ts",
+    "validate:endpoint-manifest": "dotenvx run --ignore=MISSING_ENV_FILE -f ../../.env -f .env -- bun scripts/validate-endpoint-manifest.ts",
     "verify:offline": "dotenvx run --ignore=MISSING_ENV_FILE -f ../../.env -f .env -- bun scripts/verify.ts",
     "verify:live": "dotenvx run -- bun scripts/verify-live.ts",
     "verify": "bun run typecheck && bun test && bun run verify:offline"
   },
   "dependencies": {
     "@dotenvx/dotenvx": "^1.64.0",
-    "viem": "^2.48.4"
+    "viem": "^2.48.4",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/bun": "^1.3.13",

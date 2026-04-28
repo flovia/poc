@@ -13,6 +13,7 @@ import { listAttributionCandidates, listPaymentObservations } from "../lib/aggre
 import { runReport } from "./report";
 import { validateFixtureManifest, type RawReceipt, type RawTransaction } from "../lib/schema";
 import { buildPaymentObservations } from "../lib/observations/build-observation";
+import { loadEndpointManifestFromFile } from "../lib/endpoint-manifest";
 
 const readExpected = <T>(filePath: string): T => {
   const absolutePath = path.isAbsolute(filePath) ? filePath : path.join(process.cwd(), filePath);
@@ -89,6 +90,7 @@ const expectedWalletGraph = readExpected<{ graph: Record<string, unknown> }>(
 );
 
 const manifest = validateFixtureManifest(readExpected<Record<string, unknown>>(env.manifestPath));
+const endpointManifest = loadEndpointManifestFromFile();
 const negativeObservationCount = manifest.cases
   .filter((fixtureCase) => fixtureCase.caseType === "negative")
   .flatMap((fixtureCase) => {
@@ -200,6 +202,7 @@ console.log(
       observationCount: observedSorted.length,
       attributionCandidateCount: observedCandidatesSorted.length,
       walletGraphProviderWallets: observedWalletGraph.providerWallets.length,
+      endpointManifestCases: endpointManifest.cases.length,
     },
     null,
     2,
