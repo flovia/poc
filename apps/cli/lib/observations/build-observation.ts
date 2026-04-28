@@ -3,6 +3,7 @@ import {
   BASE_CHAIN_ID,
   BASE_USDC_ADDRESS,
   BASE_USDC_ADDRESS as USDC,
+  EXECUTE_WITH_AUTHORIZATION_SELECTOR,
   MULTICALL3_ADDRESS,
   MULTICALL3_AGGREGATE3_SELECTOR,
   TRANSFER_WITH_AUTHORIZATION_SELECTOR,
@@ -67,7 +68,10 @@ export const buildObservationsFromFixture = (
   const blockTimestamp = tx.blockTimestamp;
   const blockNumber = toBlockNumber(tx.blockNumber);
 
-  if (selector === TRANSFER_WITH_AUTHORIZATION_SELECTOR && toLower(tx.to) === toLower(BASE_USDC_ADDRESS)) {
+  if (
+    (selector === TRANSFER_WITH_AUTHORIZATION_SELECTOR || selector === EXECUTE_WITH_AUTHORIZATION_SELECTOR) &&
+    toLower(tx.to) === toLower(BASE_USDC_ADDRESS)
+  ) {
     const decoded = decodeTransferWithAuthorization(tx.input);
     const logsValidation = hasRequiredUsdcLogs(logs, decoded.args.from, decoded.args.to, decoded.args.value);
     if (!logsValidation.complete) return [];
