@@ -130,6 +130,41 @@ Additional direct-settlement comparison examples recorded during the same resear
 
 Multicall3 is not required for x402/USDC settlement. The recorded CoinGecko and Exa examples settled through direct USDC `transferWithAuthorization` calls.
 
+## Bulk acquisition artifact rounds
+
+The Sponge Catalog acquisition workflow was also run as batched dry-run + paid-probe artifacts. These artifacts are retained for offline analysis and runner regression tests; they should not be regenerated with live paid requests during normal verification.
+
+| artifact | source manifest sha256 prefix | results | status summary |
+| --- | --- | ---: | --- |
+| `dry_run_probe_results.json` | `a39a6d2` | 193 | `139` challenge, `54` no challenge |
+| `paid_probe_results.json` | `b1c965f` | 95 | `16` paid, `28` paid_with_tx, `51` error |
+| `paid_probe_retry_results.json` | `690244f` | 51 | `2` paid, `16` paid_with_tx, `33` error |
+| `paid_probe_retry2_results.json` | `a411454` | 33 | `6` paid, `27` error |
+| `paid_probe_retry3_results.json` | `a411454` | 27 | `27` error |
+
+Offline aggregate from `analyze-x402-probe-artifacts.ts`:
+
+| metric | value |
+| --- | ---: |
+| paid attempts across rounds | 206 |
+| unique paid cases | 95 |
+| dry-run challenges | 139 |
+| manifest join missing | 0 |
+| remaining failures after retry3 | 27 |
+| total paid amount in artifacts | `976000` atomic USDC |
+| tx hash present / missing | 44 / 162 attempts |
+
+Status and response-shape distribution across paid attempts:
+
+| dimension | distribution |
+| --- | --- |
+| paid status | `paid=24`, `paid_with_tx=44`, `error=138` |
+| HTTP status | `200=65`, `202=1`, `400=27`, `401=13`, `402=8`, `404=7`, `422=18`, `429=3`, `500=7`, `502=1`, `unknown=56` |
+| request body source | `none=84`, `manifest_request_body_template=109`, `empty_object_fallback=13` |
+| remaining failure class | `http_4xx_business_request_rejected=19`, `http_401_auth_or_business_rejected=5`, `http_5xx_provider_failure=2`, `x402_client_or_parse_error=1` |
+
+Main interpretation: the dry-run challenge corpus is useful for payment-option discovery, but it overstates business-request readiness. Most remaining failures are provider/business request validation failures after payment rather than missing x402 payment options. Next offline-safe work should focus on idempotent request body/query remediation and manifest validation before any future live paid round.
+
 ## Catalog and docs context
 
 The following non-paid discovery endpoints were also checked:

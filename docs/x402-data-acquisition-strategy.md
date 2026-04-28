@@ -8,7 +8,37 @@
 
 - `docs/research/live-x402-paid-probe-results.md`
 
+同日の Sponge Catalog 起点の acquisition workflow は、offline artifact として以下を残す。
+
+- `apps/cli/fixtures/acquisition/endpoint_manifest.json`
+- `apps/cli/fixtures/acquisition/dry_run_probe_results.json`
+- `apps/cli/fixtures/acquisition/paid_probe_results.json`
+- `apps/cli/fixtures/acquisition/paid_probe_retry_results.json`
+- `apps/cli/fixtures/acquisition/paid_probe_retry2_results.json`
+- `apps/cli/fixtures/acquisition/paid_probe_retry3_results.json`
+
+集計は offline で `bun scripts/acquisition/analyze-x402-probe-artifacts.ts` を使う。live paid request / live RPC / 外部課金を含まない。
+
 この strategy は、live evidence を継続取得・検証・昇格するための運用方針として残す。
+
+## acquisition workflow の重要な解釈
+
+dry-run challenge は **支払い可能性** の evidence であり、business request が provider に受理される evidence ではない。
+
+具体的には、dry-run は `402 Payment Required` と payment option を確認できるが、paid execution 後の provider 側 validation では以下が起こりうる。
+
+- 認証・契約・quota・account 状態で `401` / `403` になる;
+- request body/query が business schema と合わず `400` / `422` になる;
+- wrapped provider や upstream が `404` / `429` / `5xx` を返す;
+- `x402` CLI が payment/response JSON を返しても settlement tx hash が含まれない場合がある。
+
+したがって endpoint を attribution seed に昇格する時は、少なくとも以下を分けて扱う。
+
+- dry-run challenge: `payTo` / asset / amount / network の候補 evidence;
+- paid response: business request が成功したかの evidence;
+- settlement tx / receipt: onchain attribution の immutable evidence。
+
+`sourceManifestSha256` は retry chain の再現性証跡として扱う。同じ retry round でも manifest remediation 後は selection と request body/query が変わりうるため、artifact 間 join では `caseId` と同時に source manifest hash を確認する。
 
 推奨モデルはハイブリッド。
 
