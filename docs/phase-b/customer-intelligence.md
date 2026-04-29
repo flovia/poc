@@ -18,16 +18,16 @@ GET /customers/:address/intelligence
 
 ## 現状
 
-| 領域 | 対応状況 | 備考 |
-| --- | --- | --- |
-| 顧客一覧 | 実装済み | `GET /customers` |
-| 顧客 profile | 実装済み | `GET /customers/:address/profile` |
-| co-usage / wallet usage graph | 実装済み | `GET /wallet-usage-graph` |
-| payer wallet / amount / timestamp / txHash | 実データ | Bitquery 由来の onchain fact fixture |
-| endpoint / workflow / service label | demo / mock | `txHash -> endpointPath` の mock attribution |
-| 他 x402 provider / 他 payTo 探索 | 未実装 | customer address 起点の横断探索はない |
-| DeFi / portfolio / 資産状況 | 未実装 | MCP / Zerion 連携なし |
-| browser / E2E での demo flow 検証 | 未整備 | typecheck / unit test / route test 中心 |
+| 領域　　　　　　　　　　　　　　　　　　　 | 対応状況　　| 備考　　　　　　　　　　　　　　　　　　　　 |
+| --------------------------------------------| -------------| ----------------------------------------------|
+| 顧客一覧　　　　　　　　　　　　　　　　　 | 実装済み　　| `GET /customers`　　　　　　　　　　　　　　 |
+| 顧客 profile　　　　　　　　　　　　　　　 | 実装済み　　| `GET /customers/:address/profile`　　　　　　|
+| co-usage / wallet usage graph　　　　　　　| 実装済み　　| `GET /wallet-usage-graph`　　　　　　　　　　|
+| payer wallet / amount / timestamp / txHash | 実データ　　| Bitquery 由来の onchain fact fixture　　　　 |
+| endpoint / workflow / service label　　　　| demo / mock | `txHash -> endpointPath` の mock attribution |
+| 他 x402 provider / 他 payTo 探索　　　　　 | 未実装　　　| customer address 起点の横断探索はない　　　　|
+| DeFi / portfolio / 資産状況　　　　　　　　| 未実装　　　| MCP / Zerion 連携なし　　　　　　　　　　　　|
+| browser / E2E での demo flow 検証　　　　　| 未整備　　　| typecheck / unit test / route test 中心　　　|
 
 ## `profile` と `intelligence` の責務
 
