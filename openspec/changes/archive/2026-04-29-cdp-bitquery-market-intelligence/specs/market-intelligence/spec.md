@@ -1,73 +1,66 @@
-## ADDED Requirements
+## 追加要件
 
-### Requirement: CDP discovery resources are normalized
-The system SHALL fetch CDP x402 Discovery resources and normalize each resource
-and payment option into repository-owned contract types.
+### 要件: CDP discovery resource を正規化する
 
-#### Scenario: Resource with Base USDC payment option
-- **WHEN** a CDP resource contains a Base USDC payment option with `resource`,
-  `network`, `asset`, `amount`, and `payTo`
-- **THEN** the system records a normalized resource with a normalized payment
-  option containing those fields and source provenance
+システムは CDP x402 Discovery resource を取得し、各 resource と payment option をこの repository が所有する contract 型へ正規化する。
 
-#### Scenario: Resource contains unsupported networks
-- **WHEN** a CDP resource contains payment options for networks outside the
-  requested snapshot scope
-- **THEN** the system excludes those payment options from scoped Bitquery
-  aggregation without dropping the normalized resource itself
+#### シナリオ: Base USDC payment option を持つ resource
 
-### Requirement: Bitquery payment activity is aggregated
-The system SHALL query Bitquery GraphQL for payment activity matching normalized
-payment options and SHALL return aggregate transfer metrics for the requested
-time windows.
+- **条件** CDP resource が `resource`、`network`、`asset`、`amount`、`payTo` を持つ Base USDC payment option を含む
+- **結果** システムは、それらの field と source provenance を含む正規化済み payment option を持つ resource を記録する
 
-#### Scenario: Payment option has observed transfers
-- **WHEN** Bitquery returns transfers for a payment option's network, asset, and
-  `payTo`
-- **THEN** the system reports transaction count, unique sender count, payment
-  volume, and latest observed transfer metadata for that payment option
+#### シナリオ: resource が未対応 network を含む
 
-#### Scenario: Payment option has no observed transfers
-- **WHEN** Bitquery returns no matching transfers for a payment option
-- **THEN** the system reports zero activity metrics for that payment option
-  rather than failing the snapshot build
+- **条件** CDP resource が要求された snapshot scope 外の network 向け payment option を含む
+- **結果** システムは、正規化済み resource 自体は落とさず、その payment option を scoped Bitquery aggregation から除外する
 
-### Requirement: Market snapshot joins metadata and activity
-The system SHALL build a market snapshot that joins CDP resource metadata with
-Bitquery transfer aggregates by normalized payment option identity.
+### 要件: Bitquery payment activity を集計する
 
-#### Scenario: CDP payment option matches Bitquery aggregate
-- **WHEN** a normalized payment option and Bitquery aggregate share the same
-  network, asset, and `payTo`
-- **THEN** the snapshot includes the resource, payment option, source quality
-  fields, and activity metrics in one market resource entry
+システムは、正規化済み payment option に一致する payment activity を Bitquery GraphQL に問い合わせ、要求された time window の aggregate transfer metrics を返す。
 
-#### Scenario: CDP and Bitquery metrics disagree
-- **WHEN** CDP quality metrics and Bitquery activity metrics differ materially
-- **THEN** the snapshot preserves both values and marks the resource with a
-  discrepancy indicator instead of overwriting either source
+#### シナリオ: payment option に観測済み transfer がある
 
-### Requirement: CLI generates market reports
-The system SHALL provide a CLI command that generates JSON and Markdown market
-snapshot reports from CDP and Bitquery data.
+- **条件** Bitquery が payment option の `network`、`asset`、`payTo` に対する transfer を返す
+- **結果** システムは、その payment option の transaction count、unique sender count、payment volume、latest observed transfer metadata を報告する
 
-#### Scenario: Snapshot command succeeds
-- **WHEN** the operator runs the market snapshot command with valid Bitquery
-  credentials
-- **THEN** the system writes a JSON snapshot report and a Markdown summary report
-  to the configured output paths
+#### シナリオ: payment option に観測済み transfer がない
 
-#### Scenario: Bitquery credentials are missing
-- **WHEN** the operator runs a snapshot requiring Bitquery data without a
-  `BITQUERY_TOKEN`
-- **THEN** the system fails with a clear configuration error and does not write a
-  misleading partial activity report
+- **条件** Bitquery が payment option に一致する transfer を返さない
+- **結果** システムは snapshot build を失敗させず、その payment option の activity metrics を zero として報告する
 
-### Requirement: BFF does not call external sources per request
-The initial market intelligence design SHALL NOT require BFF request handlers to
-call CDP or Bitquery directly for product reads.
+### 要件: market snapshot は metadata と activity を結合する
 
-#### Scenario: Product read path is added later
-- **WHEN** a BFF market intelligence endpoint is implemented after this change
-- **THEN** it reads a generated snapshot, projection, or stored data rather than
-  issuing live Bitquery GraphQL calls per user request
+システムは、正規化済み payment option identity によって CDP resource metadata と Bitquery transfer aggregate を結合した market snapshot を構築する。
+
+#### シナリオ: CDP payment option が Bitquery aggregate に一致する
+
+- **条件** 正規化済み payment option と Bitquery aggregate が同じ `network`、`asset`、`payTo` を共有する
+- **結果** snapshot は resource、payment option、source quality field、activity metrics を1つの market resource entry に含める
+
+#### シナリオ: CDP と Bitquery の metrics が一致しない
+
+- **条件** CDP quality metrics と Bitquery activity metrics が大きく異なる
+- **結果** snapshot はどちらかの source を上書きせず、両方の値を保持し、resource に discrepancy indicator を付ける
+
+### 要件: CLI が market report を生成する
+
+システムは、CDP と Bitquery data から JSON / Markdown market snapshot report を生成する CLI command を提供する。
+
+#### シナリオ: snapshot command が成功する
+
+- **条件** operator が有効な Bitquery credential で market snapshot command を実行する
+- **結果** システムは JSON snapshot report と Markdown summary report を設定済み output path に書き出す
+
+#### シナリオ: Bitquery credential がない
+
+- **条件** operator が Bitquery data を必要とする snapshot を `BITQUERY_TOKEN` なしで実行する
+- **結果** システムは明確な configuration error で失敗し、誤解を招く partial activity report を書き出さない
+
+### 要件: BFF は request ごとに外部 source を呼ばない
+
+初期 market intelligence design では、BFF request handler が product read のために CDP や Bitquery を直接呼ぶことを要求しない。
+
+#### シナリオ: product read path を後から追加する
+
+- **条件** この change の後に BFF market intelligence endpoint を実装する
+- **結果** endpoint は user request ごとに live Bitquery GraphQL call を発行せず、生成済み snapshot、projection、または保存済み data を読む

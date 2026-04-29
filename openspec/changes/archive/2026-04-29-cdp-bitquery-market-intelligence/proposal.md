@@ -1,44 +1,31 @@
-## Why
+## なぜやるか
 
-The current PoC is centered on self-implemented x402 discovery, probing, and
-onchain collection, but CDP x402 Discovery and Bitquery already provide broad
-resource metadata and payment activity coverage. Pivoting to those sources lets
-the project validate x402 market intelligence faster while preserving the prior
-self-implemented pipeline on the `v0-self-implemented-x402` branch.
+現在の PoC は self-implemented な x402 discovery、probe、onchain collection を中心にしていたが、CDP x402 Discovery と Bitquery はすでに広い resource metadata と payment activity coverage を提供している。
+これらの source に軸足を移すことで、既存の self-implemented pipeline を `v0-self-implemented-x402` branch に保存しつつ、x402 market intelligence の検証をより速く進められる。
 
-## What Changes
+## 変更内容
 
-- Introduce a CDP + Bitquery based market intelligence pipeline as the default
-  direction for new work.
-- Add package-based core logic so CLI and BFF remain thin application entrypoints.
-- Generate a market snapshot from CDP resource/payment-option metadata joined
-  with Bitquery transfer activity.
-- Produce JSON and Markdown reports before adding DB persistence or BFF read
-  endpoints.
-- Treat the old dry-run probe, paid probe, onchain scanner, and fingerprint
-  decoder workflows as legacy/optional rather than the main path for this change.
-- Avoid live CDP or Bitquery calls from BFF request handlers in the initial
-  implementation.
+- 新規作業の default direction として、CDP + Bitquery based market intelligence pipeline を導入する。
+- CLI と BFF を薄い application entrypoint に保つため、core logic を package 化する。
+- CDP resource / payment-option metadata と Bitquery transfer activity を結合して market snapshot を生成する。
+- DB persistence や BFF read endpoint を追加する前に、JSON / Markdown report を生成する。
+- 旧 dry-run probe、paid probe、onchain scanner、fingerprint decoder workflow は、この change の main path ではなく legacy / optional として扱う。
+- 初期実装では、BFF request handler から live CDP / Bitquery call を発行しない。
 
-## Capabilities
+## Capability
 
-### New Capabilities
+### 新しい Capability
 
-- `market-intelligence`: Build normalized x402 market snapshots from CDP
-  Discovery resources and Bitquery payment activity.
+- `market-intelligence`: CDP Discovery resource と Bitquery payment activity から、正規化済み x402 market snapshot を構築する。
 
-### Modified Capabilities
+### 変更される Capability
 
-None.
+なし。
 
-## Impact
+## 影響
 
-- Adds new shared packages under `packages/` for contracts, source clients, and
-  market intelligence logic.
-- Adds or updates CLI commands in `apps/cli` to generate x402 market snapshots.
-- Keeps `apps/bff` as the eventual product API boundary, but does not require a
-  BFF rewrite in the first implementation step.
-- Uses `BITQUERY_TOKEN` from environment configuration for Bitquery GraphQL
-  requests.
-- Preserves existing Docker, Bun workspace, TypeScript, Biome, and verification
-  foundations where practical.
+- contract、source client、market intelligence logic のために `packages/` 配下に shared package を追加する。
+- x402 market snapshot を生成するため、`apps/cli` に CLI command を追加または更新する。
+- `apps/bff` は将来的な product API 境界として残すが、最初の実装 step では BFF rewrite を要求しない。
+- Bitquery GraphQL request には環境変数 `BITQUERY_TOKEN` を使う。
+- 可能な範囲で既存の Docker、Bun workspace、TypeScript、Biome、verification foundation を維持する。

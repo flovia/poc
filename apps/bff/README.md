@@ -1,13 +1,11 @@
 # Flovia BFF
 
-The BFF is kept as the future product API boundary for the CDP + Bitquery market
-intelligence product.
+BFF は、CDP + Bitquery market intelligence product の将来的な product API 境界として残しています。
 
-This branch intentionally removed the previous SQLite/CLI-coupled read model.
-That implementation is preserved on `v0-self-implemented-x402`. The current BFF
-is a minimal independent HTTP app so it does not import from `apps/cli`.
+この branch では、以前の SQLite / CLI 結合 read model を意図的に削除しています。
+その実装は `v0-self-implemented-x402` に保存済みです。現在の BFF は、`apps/cli` に依存しない最小の独立 HTTP app です。
 
-## Commands
+## コマンド
 
 ```bash
 bun install
@@ -16,11 +14,10 @@ bun run start
 bun run verify
 ```
 
-## Endpoints
+## エンドポイント
 
 - `GET /` -> `{ status: "ok", service: "flovia-bff" }`
 - `GET /health` -> `{ status: "ok", service: "flovia-bff" }`
 
-Future market intelligence endpoints should read generated snapshots,
-projections, or stored data. They should not issue live CDP or Bitquery calls per
-user request.
+将来 market intelligence endpoint を追加する場合は、生成済み snapshot、projection、または保存済みデータを読みます。
+ユーザーリクエストごとに live CDP / Bitquery call を発行しない方針です。
