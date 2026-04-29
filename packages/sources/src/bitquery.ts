@@ -234,7 +234,7 @@ query BaseUsdcTransfersByPayTo($payTo: String!, $limit: Int!, $offset: Int!) {
     ) {
       Transfer { Sender Receiver Amount }
       Block { Time Number }
-      Transaction { Hash }
+      Transaction { Hash From }
     }
   }
 }`;

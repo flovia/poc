@@ -197,7 +197,9 @@ describe("BFF routes", () => {
   test("builds projections that validate against Phase B schemas", () => {
     const projections = buildPhaseBProjections(transactionFixture, attributionFixture);
 
-    expect(validatePhaseBCustomerListResponse(projections.customerList).customerCount).toBeGreaterThan(100);
+    expect(
+      validatePhaseBCustomerListResponse(projections.customerList).customerCount,
+    ).toBeGreaterThan(100);
     for (const profile of Object.values(projections.profilesByAddress)) {
       expect(
         validatePhaseBCustomerProfileResponse(profile).profile.metrics.reasons?.length,

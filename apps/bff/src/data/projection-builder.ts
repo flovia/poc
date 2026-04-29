@@ -94,7 +94,9 @@ const sumAmounts = (records: JoinedProjectionRecord[]) =>
 const byPayer = (records: JoinedProjectionRecord[]) => {
   const grouped = new Map<string, JoinedProjectionRecord[]>();
   for (const record of records) {
-    grouped.set(record.payerWallet, [...(grouped.get(record.payerWallet) ?? []), record]);
+    const existing = grouped.get(record.payerWallet);
+    if (existing) existing.push(record);
+    else grouped.set(record.payerWallet, [record]);
   }
   return [...grouped.entries()].map(([payerWallet, payerRecords]) => ({
     payerWallet,
@@ -103,6 +105,9 @@ const byPayer = (records: JoinedProjectionRecord[]) => {
 };
 
 const unique = <T>(items: T[]) => [...new Set(items)];
+
+const uniqueEndpointCount = (records: JoinedProjectionRecord[]) =>
+  unique(records.map((record) => record.endpointPath)).length;
 
 export const buildPhaseBProjections = (
   transactionFixture: unknown,
@@ -128,7 +133,7 @@ export const buildPhaseBProjections = (
       label: index === 0 ? "Observed CoinGecko payer" : null,
       observationCount: records.length,
       spendAtomic: sumAmounts(records),
-      providerCount: unique(records.map((record) => record.endpointPath)).length,
+      providerCount: uniqueEndpointCount(records),
       lastSeenAt: records[0]?.timestamp,
       activityGrowth: Number((0.12 + index * 0.04).toFixed(2)),
       upsellOpportunity: records.length > 1 ? "high" : "medium",
@@ -190,7 +195,7 @@ export const buildPhaseBProjections = (
             upsellOpportunity: records.length > 1 ? "high" : "medium",
             totalSpendAtomic: spendAtomic,
             txCount: records.length,
-            uniqueProviderCount: unique(records.map((record) => record.endpointPath)).length,
+            uniqueProviderCount: uniqueEndpointCount(records),
             averageSpendAtomic: (BigInt(spendAtomic) / BigInt(records.length)).toString(),
             firstSeenAt: first.timestamp,
             lastSeenAt: latest.timestamp,
