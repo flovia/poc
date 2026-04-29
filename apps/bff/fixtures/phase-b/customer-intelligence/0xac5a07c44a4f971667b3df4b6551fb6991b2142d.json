@@ -1,0 +1,150 @@
+{
+  "generatedAt": "2026-04-29T00:00:00Z",
+  "generatedFrom": "customer-intelligence-fixture",
+  "customerAddress": "0xac5a07c44a4f971667b3df4b6551fb6991b2142d",
+  "scope": {
+    "address": "0xac5a07c44a4f971667b3df4b6551fb6991b2142d",
+    "network": "base",
+    "asset": "USDC",
+    "timeWindow": {
+      "from": "2026-01-01T00:00:00Z",
+      "to": "2026-04-29T23:59:59Z"
+    }
+  },
+  "x402Services": [
+    {
+      "candidateId": "base::USDC::0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
+      "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
+      "providerName": "CoinGecko",
+      "serviceName": "CoinGecko x402",
+      "resource": "https://api.coingecko.com/api/v3/x402/simple/price",
+      "network": "base",
+      "asset": "USDC",
+      "transactionCount": 1,
+      "totalAmountAtomic": "10000",
+      "confidence": 0.85,
+      "provenance": "derived_insight",
+      "provenanceByField": {
+        "payTo": "onchain_fact",
+        "transactionCount": "onchain_fact",
+        "totalAmountAtomic": "onchain_fact",
+        "providerName": "derived_insight",
+        "serviceName": "derived_insight"
+      },
+      "evidence": [
+        {
+          "provenance": "onchain_fact",
+          "label": "customer outgoing transfer",
+          "txHashes": ["0x6248880ec36541e6783ab756afdb427939f6209551b751cec5a2c97f71176d94"]
+        }
+      ],
+      "reasons": [
+        {
+          "provenance": "derived_insight",
+          "label": "payTo matched CDP payment option"
+        }
+      ]
+    }
+  ],
+  "payToActivities": [
+    {
+      "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
+      "network": "base",
+      "asset": "USDC",
+      "transactionCount": 1,
+      "totalAmountAtomic": "10000",
+      "latestTimestamp": "2026-04-29T04:11:53Z",
+      "txHashes": ["0x6248880ec36541e6783ab756afdb427939f6209551b751cec5a2c97f71176d94"],
+      "provenance": "onchain_fact",
+      "provenanceByField": {
+        "payTo": "onchain_fact",
+        "network": "onchain_fact",
+        "asset": "onchain_fact",
+        "transactionCount": "onchain_fact",
+        "totalAmountAtomic": "onchain_fact"
+      },
+      "evidence": [
+        {
+          "provenance": "onchain_fact",
+          "label": "Bitquery outgoing transfer",
+          "txHashes": ["0x6248880ec36541e6783ab756afdb427939f6209551b751cec5a2c97f71176d94"]
+        }
+      ]
+    }
+  ],
+  "portfolioSummary": {
+    "totalValueUsd": null,
+    "tokenCount": 0,
+    "sourceCoverage": {
+      "source": "portfolio",
+      "status": "unavailable",
+      "unavailableReason": "portfolio source not captured in Phase B fixture"
+    },
+    "provenance": "derived_insight",
+    "provenanceByField": {
+      "sourceCoverage": "derived_insight"
+    },
+    "reasons": [
+      {
+        "provenance": "derived_insight",
+        "label": "portfolio source unavailable"
+      }
+    ]
+  },
+  "defiPositions": [],
+  "insights": [
+    {
+      "key": "external-x402-activity",
+      "title": "External x402 activity candidate",
+      "summary": "Observed outgoing payment matched an x402 payment option.",
+      "classification": "partnership",
+      "confidence": 0.75,
+      "provenance": "derived_insight",
+      "provenanceByField": {
+        "summary": "derived_insight"
+      },
+      "reasons": [
+        {
+          "provenance": "onchain_fact",
+          "label": "customer outgoing transfer facts"
+        }
+      ]
+    }
+  ],
+  "sourceCoverage": [
+    {
+      "source": "bitquery",
+      "status": "available"
+    },
+    {
+      "source": "cdp_discovery",
+      "status": "available"
+    },
+    {
+      "source": "portfolio",
+      "status": "unavailable",
+      "unavailableReason": "portfolio source not captured in Phase B fixture"
+    }
+  ],
+  "provenance": "derived_insight",
+  "provenanceByField": {
+    "customerAddress": "onchain_fact",
+    "payToActivities": "onchain_fact",
+    "x402Services": "derived_insight",
+    "portfolioSummary": "derived_insight",
+    "insights": "derived_insight"
+  },
+  "evidence": [
+    {
+      "provenance": "onchain_fact",
+      "label": "customer outgoing transfer",
+      "txHashes": ["0x6248880ec36541e6783ab756afdb427939f6209551b751cec5a2c97f71176d94"]
+    }
+  ],
+  "reasons": [
+    {
+      "provenance": "onchain_fact",
+      "label": "customer outgoing transfer facts"
+    }
+  ]
+}

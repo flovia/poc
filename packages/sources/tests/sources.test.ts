@@ -1,12 +1,16 @@
 import { describe, expect, test } from "bun:test";
+import { validateCdpResource } from "contracts";
 import fs from "node:fs";
 import path from "node:path";
 import {
   cdpDiscoveryPageFingerprint,
   fetchCdpDiscoveryResources,
   fetchBitqueryBaseUsdcAggregates,
+  fetchOutgoingTransfersByCustomer,
   fetchPaymentTransfersByPayTo,
+  findCdpResourcesByPaymentOption,
   makeCdpDiscoveryBody,
+  unavailablePortfolioSource,
 } from "../src/index";
 
 const readFixture = <T>(name: string): T => {
@@ -140,7 +144,9 @@ describe("bitquery source client", () => {
       transactionCount: 12,
       uniqueSenderCount: 3,
       totalVolumeAtomic: "120000",
-      latestTransfer: { txHash: "0xtx123" },
+      latestTransfer: {
+        txHash: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      },
     });
 
     expect(result[1]).toMatchObject({
@@ -246,5 +252,103 @@ describe("bitquery source client", () => {
     });
 
     expect(calls[0]).toMatchObject({ limit: 1500, offset: 0 });
+  });
+
+  test("parses paginated outgoing transfers by customer", async () => {
+    const pages = [
+      readFixture<unknown>("bitquery-transfers-page-1.json"),
+      readFixture<unknown>("bitquery-transfers-page-2.json"),
+    ];
+    const calls: Array<Record<string, unknown>> = [];
+
+    const result = await fetchOutgoingTransfersByCustomer({
+      network: "base",
+      asset: "USDC",
+      customerAddress: "0xac5a07c44a4f971667b3df4b6551fb6991b2142d",
+      token: "test-token",
+      limit: 3,
+      pageSize: 2,
+      timeWindow: { from: "2026-04-01T00:00:00Z", to: "2026-04-29T23:59:59Z" },
+      fetchFn: async (_url, init) => {
+        const body = JSON.parse(String(init?.body)) as { variables: Record<string, unknown> };
+        calls.push(body.variables);
+        const page = pages[calls.length - 1] ?? { data: { EVM: { transfers: [] } } };
+        return new Response(JSON.stringify(page), { status: 200 });
+      },
+    });
+
+    expect(result).toHaveLength(3);
+    expect(result[0]).toMatchObject({
+      customerAddress: "0xac5a07c44a4f971667b3df4b6551fb6991b2142d",
+      payTo: "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
+      network: "base",
+      asset: "USDC",
+      amountAtomic: "10000",
+      provenance: "onchain_fact",
+    });
+    expect(calls).toEqual([
+      expect.objectContaining({
+        customerAddress: "0xac5a07c44a4f971667b3df4b6551fb6991b2142d",
+        limit: 2,
+        offset: 0,
+      }),
+      expect.objectContaining({
+        customerAddress: "0xac5a07c44a4f971667b3df4b6551fb6991b2142d",
+        limit: 1,
+        offset: 2,
+      }),
+    ]);
+  });
+
+  test("rejects outgoing transfer rows whose sender does not match requested customer", async () => {
+    const fixture = readFixture<Record<string, unknown>>("bitquery-transfers-page-1.json");
+    const transfer = (
+      ((fixture.data as Record<string, unknown>).EVM as Record<string, unknown>).transfers as Array<
+        Record<string, unknown>
+      >
+    )[0];
+    const transferFields = transfer.Transfer as Record<string, unknown>;
+    transferFields.Sender = "0x9999999999999999999999999999999999999999";
+
+    await expect(
+      fetchOutgoingTransfersByCustomer({
+        network: "base",
+        asset: "USDC",
+        customerAddress: "0xac5a07c44a4f971667b3df4b6551fb6991b2142d",
+        token: "test-token",
+        limit: 1,
+        fetchFn: async () => new Response(JSON.stringify(fixture), { status: 200 }),
+      }),
+    ).rejects.toThrow("sender does not match");
+  });
+
+  test("looks up CDP resources by payment option and represents unavailable portfolio source", () => {
+    const resource = validateCdpResource({
+      resourceId: "resource-1",
+      resource: "https://example.com/x402",
+      paymentOptions: [
+        {
+          network: "base",
+          asset: "USDC",
+          amount: "1000",
+          payTo: "0x1111111111111111111111111111111111111111",
+          provenance: { sourceKind: "cdp_discovery", sourceName: "fixture" },
+        },
+      ],
+      provenance: { sourceKind: "cdp_discovery", sourceName: "fixture" },
+    });
+
+    const matches = findCdpResourcesByPaymentOption([resource], {
+      network: "eip155:8453",
+      asset: "0x833589fcD6edb6e08f4c7c32d4f71b54bda02913",
+      payTo: "0x1111111111111111111111111111111111111111",
+    });
+
+    expect(matches).toHaveLength(1);
+    expect(unavailablePortfolioSource("no MCP configured").sourceCoverage).toMatchObject({
+      source: "portfolio",
+      status: "unavailable",
+      unavailableReason: "no MCP configured",
+    });
   });
 });

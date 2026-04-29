@@ -14,7 +14,7 @@ GET /customers/:address/intelligence
 
 `profile` は Wallet 360° の基本表示、`intelligence` は外部サービス利用・x402 横断 activity・portfolio / DeFi context・insight を返す分析 endpoint として分ける。
 
-現時点では `GET /customers/:address/intelligence` は **計画中の未実装 endpoint** であり、既存の canonical Demo Read API には含めない。
+`add-customer-intelligence` change では、`GET /customers/:address/intelligence` を prepared read model から返す read-only endpoint として追加した。BFF request path では live source を呼ばず、CLI / offline capture で生成した customer intelligence fixture を読む。
 
 ## 現状
 
@@ -25,8 +25,8 @@ GET /customers/:address/intelligence
 | co-usage / wallet usage graph　　　　　　　| 実装済み　　| `GET /wallet-usage-graph`　　　　　　　　　　|
 | payer wallet / amount / timestamp / txHash | 実データ　　| Bitquery 由来の onchain fact fixture　　　　 |
 | endpoint / workflow / service label　　　　| demo / mock | `txHash -> endpointPath` の mock attribution |
-| 他 x402 provider / 他 payTo 探索　　　　　 | 未実装　　　| customer address 起点の横断探索はない　　　　|
-| DeFi / portfolio / 資産状況　　　　　　　　| 未実装　　　| MCP / Zerion 連携なし　　　　　　　　　　　　|
+| 他 x402 provider / 他 payTo 探索　　　　　 | 部分実装　　| CLI capture で customer address 起点の outgoing transfer と CDP payment option を join する |
+| DeFi / portfolio / 資産状況　　　　　　　　| placeholder | MCP / Zerion 連携は未接続。未取得時は `unavailableReason` で表現 |
 | browser / E2E での demo flow 検証　　　　　| 未整備　　　| typecheck / unit test / route test 中心　　　|
 
 ## `profile` と `intelligence` の責務
@@ -45,7 +45,7 @@ Wallet 360° の基本表示に必要な profile projection を返す。
 
 ### `GET /customers/:address/intelligence`
 
-未実装。追加する場合は、customer を起点にした分析結果を返す。
+prepared read model から、customer を起点にした分析結果を返す。
 
 - 他 x402 service candidates
 - payTo activity
@@ -59,6 +59,22 @@ Wallet 360° の基本表示に必要な profile projection を返す。
 `profile` に intelligence を全部詰め込むのではなく、重い探索・外部 API 由来・更新頻度が違う情報は `intelligence` に分離する。
 
 `profile.insights` は現在の Wallet 360° 表示に必要な短い利用仮説に限定する。`intelligence.insights` は、外部 x402 service、portfolio / DeFi context、cross-provider affinity など、複数 source を組み合わせた分析結果を扱う。
+
+### `GET /customers/:address/intelligence/research`
+
+`research` は `intelligence` の派生サブリソースとして扱う。base intelligence は deterministic analysis / scoring / evidence を返し、research はその結果を LLM で人間向け narrative に変換した report を返す。
+
+```text
+GET /customers/:address/intelligence
+  -> deterministic source of truth
+
+GET /customers/:address/intelligence/research
+  -> LLM-generated report derived from intelligence
+```
+
+依存方向は `research -> intelligence` とし、`intelligence -> research` にはしない。`GET /customers/:address/intelligence` の MVP に LLM report を必須 field として混ぜると、実装中の deterministic intelligence が LLM provider、prompt version、generated fixture に依存してしまうため避ける。
+
+`intelligence/research` は、LLM report が未生成でも base intelligence を表示できるように分離する。BFF request path で LLM を実行せず、CLI / offline job で生成済みの validated report を BFF が read-only に返す。
 
 ## 今分かること
 
@@ -135,6 +151,11 @@ apps/cli
 apps/bff
   GET /customers/:address/intelligence
     -> 保存済み read model を読む
+    -> packages/contracts で validation
+    -> read-only response を返す
+
+  GET /customers/:address/intelligence/research
+    -> 保存済み LLM research report を読む
     -> packages/contracts で validation
     -> read-only response を返す
 ```
@@ -234,6 +255,7 @@ packages/contracts
 - `packages/contracts`
   - response / fixture / projection schema
   - provenance / evidence contract
+  - intelligence research report schema
 
 切り出さないもの:
 
@@ -293,7 +315,7 @@ SDK telemetry または provider-side instrumentation が必要な値。
 
 ## API 設計候補
 
-現行 Phase B では新 endpoint は未実装。追加する場合は contract-first で進める。
+現行 Phase B では `GET /customers/:address/intelligence` を contract-first で追加済み。live source capture は CLI 側に分離し、BFF は保存済み read model を返す。
 
 ### 第一候補: customer intelligence
 
@@ -341,6 +363,26 @@ GET /customers/:address/portfolio
 - `portfolio`: Zerion / MCP 由来の資産状況、token balance、DeFi position、protocol exposure を返す。
 
 まずは `intelligence` にまとめ、payload が肥大化したり更新頻度が分かれたりした時点で分割する。
+
+### 派生候補: intelligence research
+
+```text
+GET /customers/:address/intelligence/research
+```
+
+用途:
+
+- `intelligence` の deterministic evidence を人間向けに要約する
+- finding / risk note / opportunity を LLM report として表示する
+- evidence id、confidence、provenance、prompt version、input digest を UI に渡す
+
+制約:
+
+- base intelligence の実装・検証は research の有無に依存しない
+- BFF request 中に LLM を呼ばない
+- research report は CLI / offline job で生成する
+- LLM claim は evidence id と confidence を必須にする
+- onchain fact と demo label を混同しない
 
 ## 実装ステップ案
 

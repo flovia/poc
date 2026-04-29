@@ -1,4 +1,5 @@
 import {
+  getPhaseBCustomerIntelligenceByAddress,
   getPhaseBCustomerProfileByAddress,
   phaseBCustomerListResponse,
   phaseBWalletUsageGraphResponse,
@@ -22,6 +23,11 @@ const toProfileAddress = (path: string) => {
   return match?.[1] ?? null;
 };
 
+const toIntelligenceAddress = (path: string) => {
+  const match = path.match(/^\/customers\/([^/]+)\/intelligence$/);
+  return match?.[1] ?? null;
+};
+
 const methodNotAllowed = () =>
   json(
     {
@@ -36,7 +42,11 @@ export const createBffHandler = () => (request: Request) => {
   const path = url.pathname.replace(/\/$/, "") || "/";
 
   if (request.method !== "GET") {
-    if (readonlyRoutes.has(path) || toProfileAddress(path) !== null) {
+    if (
+      readonlyRoutes.has(path) ||
+      toProfileAddress(path) !== null ||
+      toIntelligenceAddress(path) !== null
+    ) {
       return methodNotAllowed();
     }
 
@@ -66,6 +76,18 @@ export const createBffHandler = () => (request: Request) => {
     }
 
     return json(profile);
+  }
+
+  const intelligenceAddress = toIntelligenceAddress(path);
+  if (intelligenceAddress !== null) {
+    const normalizedAddress = intelligenceAddress.toLowerCase();
+    const intelligence = getPhaseBCustomerIntelligenceByAddress(normalizedAddress);
+
+    if (!intelligence) {
+      return notFound(path);
+    }
+
+    return json(intelligence);
   }
 
   return notFound(path);

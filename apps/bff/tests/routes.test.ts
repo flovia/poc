@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { createBffHandler } from "../src/http";
 import {
   joinedPhaseBProjectionRecords,
+  knownCustomerIntelligenceAddress,
   knownCustomerProfileAddress,
   phaseBCustomerListResponse,
 } from "../src/data/phase-b-demo";
@@ -13,6 +14,7 @@ import {
   validatePhaseBCustomerProfileResponse,
   validatePhaseBWalletUsageGraphResponse,
   validateMockEndpointAttributionFixture,
+  validateCustomerIntelligenceResponse,
   validateRealTransactionFixture,
 } from "contracts";
 
@@ -90,6 +92,33 @@ describe("BFF routes", () => {
     expect(body.error).toBe("not_found");
   });
 
+  test("returns validated customer intelligence for a known customer wallet", async () => {
+    const handler = createBffHandler();
+
+    const response = handler(
+      request(`/customers/${knownCustomerIntelligenceAddress.toUpperCase()}/intelligence`),
+    );
+    const body = await response.json();
+    const parsed = validateCustomerIntelligenceResponse(body);
+
+    expect(response.status).toBe(200);
+    expect(parsed.customerAddress).toBe(knownCustomerIntelligenceAddress);
+    expect(parsed.payToActivities.length).toBeGreaterThan(0);
+    expect(parsed.x402Services[0]?.reasons.length).toBeGreaterThan(0);
+  });
+
+  test("returns not found for unknown customer intelligence", async () => {
+    const handler = createBffHandler();
+
+    const response = handler(
+      request("/customers/0x9999999999999999999999999999999999999999/intelligence"),
+    );
+    const body = (await response.json()) as { error: string };
+
+    expect(response.status).toBe(404);
+    expect(body.error).toBe("not_found");
+  });
+
   test("serves wallet usage graph with schema validation", async () => {
     const handler = createBffHandler();
 
@@ -119,6 +148,7 @@ describe("BFF routes", () => {
     const paths = [
       "/customers",
       `/customers/${knownCustomerProfileAddress}/profile`,
+      `/customers/${knownCustomerIntelligenceAddress}/intelligence`,
       "/wallet-usage-graph",
     ] as const;
 
@@ -216,6 +246,26 @@ describe("BFF routes", () => {
       true,
     );
     expect(record?.reasons.length).toBeGreaterThan(0);
+  });
+
+  test("customer intelligence uses prepared fixture provenance without live source calls", async () => {
+    const handler = createBffHandler();
+    const response = handler(
+      request(`/customers/${knownCustomerIntelligenceAddress}/intelligence`),
+    );
+    const parsed = validateCustomerIntelligenceResponse(await response.json());
+
+    expect(parsed.sourceCoverage).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ source: "bitquery", status: "available" }),
+        expect.objectContaining({ source: "cdp_discovery", status: "available" }),
+        expect.objectContaining({ source: "portfolio", status: "unavailable" }),
+      ]),
+    );
+    expect(parsed.provenanceByField).toMatchObject({
+      payToActivities: "onchain_fact",
+      x402Services: "derived_insight",
+    });
   });
 
   test("builds projections that validate against Phase B schemas", () => {

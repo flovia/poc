@@ -4,6 +4,7 @@ import path from "node:path";
 import {
   validateBitqueryAggregate,
   validateCdpResource,
+  validateCustomerIntelligenceResponse,
   validateMarketSnapshot,
   validateMockEndpointAttributionFixture,
   validatePhaseBCustomerListResponse,
@@ -12,6 +13,99 @@ import {
   validateRealTransactionFixture,
 } from "../src/index";
 
+const validCustomerIntelligence = () => ({
+  generatedAt: "2026-04-29T00:00:00Z",
+  generatedFrom: "customer-intelligence-capture",
+  customerAddress: "0xAC5A07C44A4F971667B3DF4B6551FB6991B2142D",
+  scope: {
+    address: "0xAC5A07C44A4F971667B3DF4B6551FB6991B2142D",
+    network: "eip155:8453",
+    asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    timeWindow: { from: "2026-01-01T00:00:00Z", to: "2026-04-29T23:59:59Z" },
+  },
+  x402Services: [
+    {
+      candidateId: "base:usdc:0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
+      payTo: "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
+      providerName: "CoinGecko",
+      serviceName: "CoinGecko x402",
+      resource: "https://api.coingecko.com/api/v3/x402/simple/price",
+      network: "base",
+      asset: "USDC",
+      transactionCount: 1,
+      totalAmountAtomic: "10000",
+      confidence: 0.9,
+      provenance: "derived_insight",
+      provenanceByField: { payTo: "onchain_fact", serviceName: "derived_insight" },
+      evidence: [
+        {
+          provenance: "onchain_fact",
+          label: "customer outgoing payment",
+          txHashes: ["0x6248880ec36541e6783ab756afdb427939f6209551b751cec5a2c97f71176d94"],
+        },
+      ],
+      reasons: [{ provenance: "onchain_fact", label: "payTo matched CDP payment option" }],
+    },
+  ],
+  payToActivities: [
+    {
+      payTo: "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
+      network: "base",
+      asset: "USDC",
+      transactionCount: 1,
+      totalAmountAtomic: "10000",
+      latestTimestamp: "2026-04-29T04:11:53Z",
+      txHashes: ["0x6248880ec36541e6783ab756afdb427939f6209551b751cec5a2c97f71176d94"],
+      provenance: "onchain_fact",
+      provenanceByField: { payTo: "onchain_fact", totalAmountAtomic: "onchain_fact" },
+      evidence: [
+        {
+          provenance: "onchain_fact",
+          label: "Bitquery outgoing transfer",
+          txHashes: ["0x6248880ec36541e6783ab756afdb427939f6209551b751cec5a2c97f71176d94"],
+        },
+      ],
+    },
+  ],
+  portfolioSummary: {
+    totalValueUsd: null,
+    tokenCount: 0,
+    sourceCoverage: {
+      source: "portfolio",
+      status: "unavailable",
+      unavailableReason: "portfolio source not captured in Phase B fixture",
+    },
+    provenance: "derived_insight",
+    provenanceByField: { sourceCoverage: "derived_insight" },
+    reasons: [{ provenance: "derived_insight", label: "portfolio source unavailable" }],
+  },
+  defiPositions: [],
+  insights: [
+    {
+      key: "external-x402-activity",
+      title: "External x402 activity candidate",
+      summary: "Observed outgoing payment matched an x402 payment option.",
+      classification: "partnership",
+      confidence: 0.8,
+      provenance: "derived_insight",
+      provenanceByField: { summary: "derived_insight" },
+      reasons: [{ provenance: "onchain_fact", label: "matched payment activity" }],
+    },
+  ],
+  sourceCoverage: [
+    { source: "bitquery", status: "available" },
+    { source: "cdp_discovery", status: "available" },
+    {
+      source: "portfolio",
+      status: "unavailable",
+      unavailableReason: "portfolio source not captured in Phase B fixture",
+    },
+  ],
+  provenance: "derived_insight",
+  provenanceByField: { customerAddress: "onchain_fact", x402Services: "derived_insight" },
+  reasons: [{ provenance: "onchain_fact", label: "customer outgoing transfer facts" }],
+});
+
 const readFixture = <T>(name: string): T => {
   const fixtureRoot = path.resolve(import.meta.dir, "fixtures");
   const raw = fs.readFileSync(path.join(fixtureRoot, name), "utf8");
@@ -19,6 +113,47 @@ const readFixture = <T>(name: string): T => {
 };
 
 describe("contracts schema validation", () => {
+  test("accepts a valid customer intelligence response and normalizes scope", () => {
+    const parsed = validateCustomerIntelligenceResponse(validCustomerIntelligence());
+
+    expect(parsed.customerAddress).toBe("0xac5a07c44a4f971667b3df4b6551fb6991b2142d");
+    expect(parsed.scope).toMatchObject({
+      address: "0xac5a07c44a4f971667b3df4b6551fb6991b2142d",
+      network: "base",
+      asset: "USDC",
+    });
+    expect(parsed.x402Services[0]?.reasons.length).toBeGreaterThan(0);
+  });
+
+  test("rejects malformed customer intelligence provenance and scope", () => {
+    expect(() =>
+      validateCustomerIntelligenceResponse({
+        ...validCustomerIntelligence(),
+        customerAddress: "0x1111111111111111111111111111111111111111",
+      }),
+    ).toThrow();
+
+    expect(() =>
+      validateCustomerIntelligenceResponse({
+        ...validCustomerIntelligence(),
+        x402Services: [
+          {
+            ...validCustomerIntelligence().x402Services[0],
+            provenance: "derived_insight",
+            reasons: [],
+          },
+        ],
+      }),
+    ).toThrow();
+
+    expect(() =>
+      validateCustomerIntelligenceResponse({
+        ...validCustomerIntelligence(),
+        sourceCoverage: [{ source: "portfolio", status: "unavailable" }],
+      }),
+    ).toThrow();
+  });
+
   test("accepts a valid normalized CDP resource", () => {
     const fixture = readFixture<unknown>("cdp-resource-valid.json");
     const parsed = validateCdpResource(fixture);

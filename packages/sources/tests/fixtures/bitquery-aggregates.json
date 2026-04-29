@@ -9,7 +9,7 @@
         "senderCount": "3",
         "volume": "0.12",
         "latest": {
-          "txHash": "0xtx123",
+          "txHash": "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
           "sender": "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
           "recipient": "0x1111111111111111111111111111111111111111",
           "amountAtomic": "0.012"
@@ -23,7 +23,7 @@
         "senderCount": 2,
         "volume": 0.007,
         "latest": {
-          "txHash": "0xtx456",
+          "txHash": "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
           "sender": "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
           "recipient": "0x2222222222222222222222222222222222222222",
           "amountAtomic": 0.007

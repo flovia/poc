@@ -15,6 +15,12 @@
   - `apps/bff/fixtures/phase-a/coingecko-transactions.json` を生成する
   - 全 `txHash` に deterministic mock endpoint attribution を割り当て、`apps/bff/fixtures/phase-b/mock-attribution.json` を生成する
   - 生成前後に `packages/contracts` の fixture schema で検証する
+- `analytics/customer-intelligence.ts`
+  - customer address 起点で Base USDC outgoing transfer を Bitquery から取得する
+  - CDP Discovery resource / payment option と `payTo` を照合する
+  - `packages/intelligence` で payTo activity / x402 service candidate / provenance 付き insight を生成する
+  - `apps/bff/fixtures/phase-b/customer-intelligence/*.json` 相当の read model を書き出す
+  - portfolio / DeFi source が未設定の場合は `unavailableReason` として表現し、BFF request path では live source を呼ばない
 
 旧 self-implemented acquisition / probe / onchain pipeline は
 `v0-self-implemented-x402` branch に保存済みです。この branch には意図的に含めていません。
@@ -48,6 +54,20 @@ bun --cwd apps/cli coingecko:transactions -- \
 ```
 
 この script は `../../.env` と `apps/cli/.env` を dotenvx 経由で読み込みます。live Bitquery を使うため、通常の `bun run verify` には含めません。
+
+customer intelligence read model を生成する場合は次を実行します。
+
+```sh
+bun --cwd apps/cli customer:intelligence -- \
+  --address 0xac5a07c44a4f971667b3df4b6551fb6991b2142d \
+  --network base \
+  --asset USDC \
+  --from 2026-01-01T00:00:00Z \
+  --to 2026-04-29T23:59:59Z \
+  --out ../bff/fixtures/phase-b/customer-intelligence/0xac5a07c44a4f971667b3df4b6551fb6991b2142d.json
+```
+
+この command も live Bitquery / CDP Discovery を使うため、通常の `bun run verify` には含めません。出力 JSON は `CustomerIntelligenceFixture` schema で検証され、BFF は保存済み read model のみを返します。
 
 ## アーキテクチャ
 

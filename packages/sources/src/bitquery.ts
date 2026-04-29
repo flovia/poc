@@ -5,12 +5,15 @@ import {
   BitqueryTransferFactSchema,
   type BitqueryTransferFact,
   type CdpPaymentOption,
+  CustomerOutgoingTransferFactSchema,
+  type CustomerOutgoingTransferFact,
   SourceKind,
   SourceProvenanceSchema,
   normalizeAsset,
   normalizeNetwork,
   normalizePayTo,
   paymentIdentityKey,
+  validateBitqueryAggregate,
   zeroBitqueryAggregate,
 } from "contracts";
 import { z } from "zod";
@@ -126,7 +129,7 @@ const normalizeAggregate = (row: {
     sourceId: `bitquery:${normalizeNetwork(row.network)}:${normalizeAsset(row.asset)}:${normalizePayTo(row.payTo)}`,
     fetchedAt: new Date().toISOString(),
   });
-  return {
+  return validateBitqueryAggregate({
     network: normalizeNetwork(row.network),
     asset: normalizeAsset(row.asset),
     payTo: normalizePayTo(row.payTo),
@@ -144,7 +147,7 @@ const normalizeAggregate = (row: {
           blockNumber: row.latest.blockNumber,
         }
       : undefined,
-  };
+  });
 };
 
 export type BitqueryFetchOptions = {
@@ -165,6 +168,21 @@ export type BitqueryTransferListOptions = {
   network: string;
   asset: string;
   payTo: string;
+  token: string;
+  endpoint?: string;
+  fetchFn?: FetchLike;
+  limit?: number;
+  pageSize?: number;
+  timeWindow?: {
+    from?: string;
+    to?: string;
+  };
+};
+
+export type BitqueryCustomerTransferOptions = {
+  network: string;
+  asset: string;
+  customerAddress: string;
   token: string;
   endpoint?: string;
   fetchFn?: FetchLike;
@@ -229,6 +247,28 @@ query BaseUsdcTransfersByPayTo($payTo: String!, $limit: Int!, $offset: Int!) {
   EVM(dataset: combined, network: base) {
     transfers: Transfers(
       where: {${filterPrefix}Transfer: {Receiver: {is: $payTo}, Currency: {SmartContract: {is: "${BASE_USDC_CONTRACT}"}}}}
+      orderBy: {descending: Block_Time}
+      limit: {count: $limit, offset: $offset}
+    ) {
+      Transfer { Sender Receiver Amount }
+      Block { Time Number }
+      Transaction { Hash From }
+    }
+  }
+}`;
+};
+
+export const buildOutgoingTransfersByCustomerQuery = (timeWindow?: {
+  from?: string;
+  to?: string;
+}) => {
+  const timeFilter = buildTimeFilter(timeWindow);
+  const filterPrefix = timeFilter ? `${timeFilter}, ` : "";
+  return `
+query BaseUsdcOutgoingTransfersByCustomer($customerAddress: String!, $limit: Int!, $offset: Int!) {
+  EVM(dataset: combined, network: base) {
+    transfers: Transfers(
+      where: {${filterPrefix}Transfer: {Sender: {is: $customerAddress}, Currency: {SmartContract: {is: "${BASE_USDC_CONTRACT}"}}}}
       orderBy: {descending: Block_Time}
       limit: {count: $limit, offset: $offset}
     ) {
@@ -480,6 +520,82 @@ export const fetchPaymentTransfersByPayTo = async (
         return [];
       }
     });
+    transfers.push(...page);
+    if (rows.length < requestLimit) break;
+    offset += rows.length;
+  }
+
+  return transfers.slice(0, limit);
+};
+
+const toCustomerOutgoingTransfer = (
+  fact: BitqueryTransferFact,
+  options: Pick<BitqueryCustomerTransferOptions, "network" | "asset" | "customerAddress">,
+): CustomerOutgoingTransferFact => {
+  if (normalizePayTo(fact.sender) !== normalizePayTo(options.customerAddress)) {
+    throw new Error("Bitquery outgoing transfer sender does not match requested customer address");
+  }
+
+  return CustomerOutgoingTransferFactSchema.parse({
+    txHash: fact.txHash,
+    customerAddress: options.customerAddress,
+    payTo: fact.recipient,
+    amountAtomic: fact.amountAtomic,
+    network: options.network,
+    asset: options.asset,
+    timestamp: fact.blockTimestamp,
+    blockNumber: fact.blockNumber,
+    provenance: "onchain_fact",
+  });
+};
+
+export const fetchOutgoingTransfersByCustomer = async (
+  options: BitqueryCustomerTransferOptions,
+): Promise<CustomerOutgoingTransferFact[]> => {
+  if (
+    normalizeNetwork(options.network) !== "base" ||
+    normalizeAsset(options.asset) !== BASE_USDC_ASSET
+  ) {
+    throw new Error("Bitquery customer transfer fetching currently supports only Base USDC");
+  }
+
+  const token = resolveToken(options);
+  const endpoint = options.endpoint ?? DEFAULT_BITQUERY_ENDPOINT;
+  const fetchFn: FetchLike = options.fetchFn ?? ((input, init) => fetch(input, init));
+  const limit = resolveTransferLimit(options.limit);
+  const pageSize = resolveTransferPageSize(options.pageSize, limit);
+  const transfers: CustomerOutgoingTransferFact[] = [];
+  let offset = 0;
+
+  while (transfers.length < limit) {
+    const remaining = limit - transfers.length;
+    const requestLimit = Math.min(pageSize, remaining);
+    const response = await fetchFn(endpoint, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        query: buildOutgoingTransfersByCustomerQuery(options.timeWindow),
+        variables: {
+          customerAddress: normalizePayTo(options.customerAddress),
+          limit: requestLimit,
+          offset,
+        },
+      }),
+    });
+
+    if (!response.ok) throw new Error(`Bitquery request failed: ${response.status}`);
+    const payload = BitqueryTransferResponseSchema.parse(await response.json());
+    const rows = normalizeTransferRows(payload);
+    const page = rows.map((row) =>
+      toCustomerOutgoingTransfer(normalizeTransfer(row), {
+        network: options.network,
+        asset: options.asset,
+        customerAddress: options.customerAddress,
+      }),
+    );
     transfers.push(...page);
     if (rows.length < requestLimit) break;
     offset += rows.length;

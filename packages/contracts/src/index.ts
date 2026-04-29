@@ -752,6 +752,225 @@ export const WalletUsageGraphResponseSchema = withDerivedInsightReasons(
 
 export type WalletUsageGraphResponse = z.infer<typeof WalletUsageGraphResponseSchema>;
 
+export const CustomerIntelligenceTimeWindowSchema = z
+  .object({ from: z.string().datetime(), to: z.string().datetime() })
+  .strict()
+  .superRefine((value, ctx) => {
+    if (Date.parse(value.from) > Date.parse(value.to)) {
+      ctx.addIssue({
+        code: "custom",
+        message: "timeWindow.from must be before or equal to timeWindow.to",
+        path: ["from"],
+      });
+    }
+  });
+export type CustomerIntelligenceTimeWindow = z.infer<typeof CustomerIntelligenceTimeWindowSchema>;
+
+export const CustomerIntelligenceScopeSchema = z
+  .object({
+    address: EvmAddressSchema,
+    network: z.preprocess(
+      (value) => (typeof value === "string" ? normalizeNetwork(value) : value),
+      z.string().min(1),
+    ),
+    asset: z.preprocess(
+      (value) => (typeof value === "string" ? normalizeAsset(value) : value),
+      z.string().min(1),
+    ),
+    timeWindow: CustomerIntelligenceTimeWindowSchema,
+  })
+  .strict();
+export type CustomerIntelligenceScope = z.infer<typeof CustomerIntelligenceScopeSchema>;
+
+export const CustomerOutgoingTransferFactSchema = z
+  .object({
+    txHash: TransactionHashSchema,
+    customerAddress: EvmAddressSchema,
+    payTo: EvmAddressSchema,
+    amountAtomic: AtomicAmountSchema,
+    network: z.preprocess(
+      (value) => (typeof value === "string" ? normalizeNetwork(value) : value),
+      z.string().min(1),
+    ),
+    asset: z.preprocess(
+      (value) => (typeof value === "string" ? normalizeAsset(value) : value),
+      z.string().min(1),
+    ),
+    timestamp: z.string().datetime(),
+    blockNumber: z.string().regex(/^\d+$/).optional(),
+    provenance: z.literal("onchain_fact"),
+  })
+  .strict();
+export type CustomerOutgoingTransferFact = z.infer<typeof CustomerOutgoingTransferFactSchema>;
+
+export const SourceCoverageSchema = z
+  .object({
+    source: z.enum(["bitquery", "cdp_discovery", "portfolio"]),
+    status: z.enum(["available", "partial", "unavailable"]),
+    unavailableReason: z.string().min(1).optional(),
+    provenance: SourceProvenanceSchema.optional(),
+  })
+  .strict()
+  .superRefine((value, ctx) => {
+    if (value.status === "unavailable" && !value.unavailableReason) {
+      ctx.addIssue({
+        code: "custom",
+        message: "unavailable source coverage must include unavailableReason",
+        path: ["unavailableReason"],
+      });
+    }
+  });
+export type SourceCoverage = z.infer<typeof SourceCoverageSchema>;
+
+export const CustomerIntelligenceEvidenceSchema = z
+  .object({
+    provenance: DataProvenanceSchema,
+    label: z.string().min(1),
+    txHashes: z.array(TransactionHashSchema).optional(),
+    sourceFields: z.array(z.string().min(1)).optional(),
+    description: z.string().optional(),
+  })
+  .strict();
+export type CustomerIntelligenceEvidence = z.infer<typeof CustomerIntelligenceEvidenceSchema>;
+
+export const PayToActivitySchema = withDerivedInsightReasons(
+  z
+    .object({
+      payTo: EvmAddressSchema,
+      network: z.string().min(1),
+      asset: z.string().min(1),
+      transactionCount: z.number().int().nonnegative(),
+      totalAmountAtomic: AtomicAmountSchema,
+      latestTimestamp: z.string().datetime().optional(),
+      txHashes: z.array(TransactionHashSchema).min(1),
+      provenance: DataProvenanceSchema,
+      provenanceByField: ProvenanceByFieldSchema,
+      evidence: z.array(CustomerIntelligenceEvidenceSchema).min(1),
+      reasons: z.array(EvidenceLabelSchema).optional(),
+    })
+    .strict()
+    .superRefine((value, ctx) => {
+      if (value.transactionCount !== value.txHashes.length) {
+        ctx.addIssue({
+          code: "custom",
+          message: "transactionCount must equal txHashes.length",
+          path: ["transactionCount"],
+        });
+      }
+    }),
+);
+export type PayToActivity = z.infer<typeof PayToActivitySchema>;
+
+export const X402ServiceCandidateSchema = withDerivedInsightReasons(
+  z
+    .object({
+      candidateId: z.string().min(1),
+      payTo: EvmAddressSchema,
+      providerName: z.string().min(1).nullable(),
+      serviceName: z.string().min(1).nullable(),
+      resource: z.string().min(1).nullable(),
+      network: z.string().min(1),
+      asset: z.string().min(1),
+      transactionCount: z.number().int().nonnegative(),
+      totalAmountAtomic: AtomicAmountSchema,
+      confidence: z.number().min(0).max(1),
+      provenance: DataProvenanceSchema,
+      provenanceByField: ProvenanceByFieldSchema,
+      evidence: z.array(CustomerIntelligenceEvidenceSchema).min(1),
+      reasons: z.array(EvidenceLabelSchema).min(1),
+    })
+    .strict(),
+);
+export type X402ServiceCandidate = z.infer<typeof X402ServiceCandidateSchema>;
+
+export const PortfolioSummarySchema = withDerivedInsightReasons(
+  z
+    .object({
+      totalValueUsd: z
+        .string()
+        .regex(/^\d+(\.\d+)?$/)
+        .nullable(),
+      tokenCount: z.number().int().nonnegative(),
+      sourceCoverage: SourceCoverageSchema,
+      provenance: DataProvenanceSchema,
+      provenanceByField: ProvenanceByFieldSchema,
+      evidence: z.array(CustomerIntelligenceEvidenceSchema).optional(),
+      reasons: z.array(EvidenceLabelSchema).optional(),
+    })
+    .strict(),
+);
+export type PortfolioSummary = z.infer<typeof PortfolioSummarySchema>;
+
+export const DeFiPositionSchema = withDerivedInsightReasons(
+  z
+    .object({
+      protocol: z.string().min(1),
+      positionType: z.enum(["lending", "lp", "staking", "other"]),
+      valueUsd: z
+        .string()
+        .regex(/^\d+(\.\d+)?$/)
+        .nullable(),
+      network: z.string().min(1),
+      provenance: DataProvenanceSchema,
+      provenanceByField: ProvenanceByFieldSchema,
+      evidence: z.array(CustomerIntelligenceEvidenceSchema).optional(),
+      reasons: z.array(EvidenceLabelSchema).optional(),
+    })
+    .strict(),
+);
+export type DeFiPosition = z.infer<typeof DeFiPositionSchema>;
+
+export const CustomerIntelligenceInsightSchema = withDerivedInsightReasons(
+  z
+    .object({
+      key: z.string().min(1),
+      title: z.string().min(1),
+      summary: z.string().min(1),
+      classification: z.enum(["retention", "upsell", "partnership", "defi_activity"]),
+      confidence: z.number().min(0).max(1),
+      provenance: DataProvenanceSchema,
+      provenanceByField: ProvenanceByFieldSchema,
+      evidence: z.array(CustomerIntelligenceEvidenceSchema).optional(),
+      reasons: z.array(EvidenceLabelSchema).min(1),
+    })
+    .strict(),
+);
+export type CustomerIntelligenceInsight = z.infer<typeof CustomerIntelligenceInsightSchema>;
+
+export const CustomerIntelligenceResponseSchema = withDerivedInsightReasons(
+  z
+    .object({
+      generatedAt: z.string().datetime(),
+      generatedFrom: z.string().min(1),
+      customerAddress: EvmAddressSchema,
+      scope: CustomerIntelligenceScopeSchema,
+      x402Services: z.array(X402ServiceCandidateSchema).min(0),
+      payToActivities: z.array(PayToActivitySchema).min(0),
+      portfolioSummary: PortfolioSummarySchema,
+      defiPositions: z.array(DeFiPositionSchema).min(0),
+      insights: z.array(CustomerIntelligenceInsightSchema).min(0),
+      sourceCoverage: z.array(SourceCoverageSchema).min(1),
+      provenance: DataProvenanceSchema,
+      provenanceByField: ProvenanceByFieldSchema,
+      evidence: z.array(CustomerIntelligenceEvidenceSchema).optional(),
+      reasons: z.array(EvidenceLabelSchema).min(1),
+    })
+    .strict()
+    .superRefine((value, ctx) => {
+      if (value.customerAddress !== value.scope.address) {
+        ctx.addIssue({
+          code: "custom",
+          message: "customerAddress must equal scope.address",
+          path: ["customerAddress"],
+        });
+      }
+    }),
+);
+export type CustomerIntelligenceResponse = z.infer<typeof CustomerIntelligenceResponseSchema>;
+
+export const CustomerIntelligenceFixtureSchema = CustomerIntelligenceResponseSchema;
+export type CustomerIntelligenceFixture = z.infer<typeof CustomerIntelligenceFixtureSchema>;
+
 export const validateCdpPaymentOption = (value: unknown): CdpPaymentOption =>
   CdpPaymentOptionSchema.parse(value);
 
@@ -785,6 +1004,13 @@ export const validatePhaseBCustomerProfileResponse = (
 
 export const validatePhaseBWalletUsageGraphResponse = (value: unknown): WalletUsageGraphResponse =>
   WalletUsageGraphResponseSchema.parse(value);
+
+export const validateCustomerIntelligenceResponse = (
+  value: unknown,
+): CustomerIntelligenceResponse => CustomerIntelligenceResponseSchema.parse(value);
+
+export const validateCustomerIntelligenceFixture = (value: unknown): CustomerIntelligenceFixture =>
+  CustomerIntelligenceFixtureSchema.parse(value);
 
 export const zeroBitqueryAggregate = (identity: {
   network: string;
