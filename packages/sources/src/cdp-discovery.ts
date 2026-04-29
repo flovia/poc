@@ -10,7 +10,7 @@ import {
   validateCdpPaymentOption,
   validateCdpResource,
 } from "contracts";
-import type { FetchLike } from "./index";
+import type { FetchLike } from "./transport";
 
 const DEFAULT_CDP_ENDPOINT = "https://api.cdp.coinbase.com/platform/v2/x402/discovery/resources";
 const DEFAULT_PAGE_SIZE = 50;
@@ -89,12 +89,16 @@ const toPaymentOption = (raw: unknown, endpoint: string): CdpPaymentOption => {
 
   const paymentOption = validateCdpPaymentOption({
     scheme: asStringOrUndefined(parsed.scheme),
-    network: normalizeNetwork(toRequiredString(parsed.network ?? parsed.chain, "paymentOption.network")),
+    network: normalizeNetwork(
+      toRequiredString(parsed.network ?? parsed.chain, "paymentOption.network"),
+    ),
     asset: normalizeAsset(
       toRequiredString(parsed.asset ?? parsed.currency ?? parsed.token, "paymentOption.asset"),
     ),
     amount: toRequiredString(parsed.amount ?? parsed.maxAmountRequired, "paymentOption.amount"),
-    payTo: normalizePayTo(toRequiredString(parsed.payTo ?? parsed.recipient, "paymentOption.payTo")),
+    payTo: normalizePayTo(
+      toRequiredString(parsed.payTo ?? parsed.recipient, "paymentOption.payTo"),
+    ),
     provenance: buildProvenance("cdp", endpoint),
     quality: normalizeQuality(parsed.quality),
     metadata: asRecordOrUndefined(parsed.metadata),

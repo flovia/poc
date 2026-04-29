@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { parseArgs, runMarketSnapshot } from "../scripts/analytics/market-snapshot";
+import { renderMarketSnapshotMarkdown } from "../scripts/analytics/report";
 
 const withFixtureTempDir = async (label: string, fn: (dir: string) => Promise<void> | void) => {
   const directory = path.join(process.cwd(), "tmp", `market-snapshot-${label}-${randomUUID()}`);
@@ -148,6 +149,7 @@ describe("market snapshot cli script", () => {
         expect(snapshot.resources[0].paymentOptions[0].bitqueryAggregate.transactionCount).toBe(7);
         expect(summaryText).toContain("# x402 market snapshot");
         expect(summaryText).toContain(`- payment options: ${snapshot.summary.totalPaymentOptions}`);
+        expect(renderMarketSnapshotMarkdown(result.snapshot)).toBe(summaryText);
       } finally {
         if (originalToken === undefined) {
           delete process.env.BITQUERY_TOKEN;

@@ -159,11 +159,34 @@ describe("bitquery source client", () => {
         fetchBitqueryBaseUsdcAggregates({
           network: "base",
           asset: "USDC",
+          token: "",
           paymentOptions: [],
         }),
       ).rejects.toThrow("BITQUERY_TOKEN is required");
     } finally {
       if (old !== undefined) process.env.BITQUERY_TOKEN = old;
+    }
+  });
+
+  test("requires an explicit Bitquery token instead of reading process env", async () => {
+    const old = process.env.BITQUERY_TOKEN;
+    process.env.BITQUERY_TOKEN = "env-token";
+
+    try {
+      await expect(
+        fetchBitqueryBaseUsdcAggregates({
+          network: "base",
+          asset: "USDC",
+          token: "",
+          paymentOptions: [],
+        }),
+      ).rejects.toThrow("BITQUERY_TOKEN is required");
+    } finally {
+      if (old === undefined) {
+        delete process.env.BITQUERY_TOKEN;
+      } else {
+        process.env.BITQUERY_TOKEN = old;
+      }
     }
   });
 });

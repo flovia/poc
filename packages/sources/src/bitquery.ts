@@ -12,7 +12,7 @@ import {
   zeroBitqueryAggregate,
 } from "contracts";
 import { z } from "zod";
-import type { FetchLike } from "./index";
+import type { FetchLike } from "./transport";
 
 const DEFAULT_BITQUERY_ENDPOINT = "https://streaming.bitquery.io/graphql";
 const TOKEN_DECIMALS = 6;
@@ -129,7 +129,7 @@ export type BitqueryFetchOptions = {
   network: string;
   asset: string;
   paymentOptions: CdpPaymentOption[];
-  token?: string;
+  token: string;
   endpoint?: string;
   fetchFn?: FetchLike;
   chunkSize?: number;
@@ -139,8 +139,8 @@ export type BitqueryFetchOptions = {
   };
 };
 
-const resolveToken = (options: { token?: string }) => {
-  const token = options.token ?? process.env.BITQUERY_TOKEN;
+const resolveToken = (options: { token: string }) => {
+  const token = options.token;
   if (!token || token.trim().length === 0) {
     throw new Error("BITQUERY_TOKEN is required for Bitquery snapshots");
   }
@@ -243,7 +243,10 @@ const toChunk = <T>(items: T[], chunkSize: number): T[][] => {
 export const fetchBitqueryBaseUsdcAggregates = async (
   options: BitqueryFetchOptions,
 ): Promise<BitqueryAggregate[]> => {
-  if (normalizeNetwork(options.network) !== "base" || normalizeAsset(options.asset) !== BASE_USDC_ASSET) {
+  if (
+    normalizeNetwork(options.network) !== "base" ||
+    normalizeAsset(options.asset) !== BASE_USDC_ASSET
+  ) {
     throw new Error("Bitquery aggregate fetching currently supports only Base USDC");
   }
   const token = resolveToken(options);
@@ -288,11 +291,11 @@ export const fetchBitqueryBaseUsdcAggregates = async (
             network: aggregate.network,
             asset: aggregate.asset,
             payTo: aggregate.payTo,
-          txCount: aggregate.txCount,
-          senderCount: aggregate.senderCount,
-          volume: aggregate.volume,
-          latest: aggregate.latest,
-          provenanceSourceName: "bitquery-graphql",
+            txCount: aggregate.txCount,
+            senderCount: aggregate.senderCount,
+            volume: aggregate.volume,
+            latest: aggregate.latest,
+            provenanceSourceName: "bitquery-graphql",
           }),
           timeWindow: options.timeWindow,
         },

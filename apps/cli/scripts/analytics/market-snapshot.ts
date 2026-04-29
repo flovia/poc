@@ -1,10 +1,11 @@
-import fs from "node:fs";
 import path from "node:path";
 import { buildMarketSnapshot, filterPaymentOptionsByScope } from "intelligence";
 import { fetchBitqueryBaseUsdcAggregates, fetchCdpDiscoveryResources } from "sources";
 import type { FetchLike } from "sources";
 import { normalizeAsset, normalizeNetwork, paymentIdentityKey } from "contracts";
 import type { CdpPaymentOption, MarketSnapshot } from "contracts";
+import { writeAtomically } from "./io";
+import { renderMarketSnapshotMarkdown } from "./report";
 
 const DEFAULT_REPORT_JSON = path.join(process.cwd(), "reports", "x402-market-snapshot.json");
 const DEFAULT_REPORT_MARKDOWN = path.join(process.cwd(), "reports", "x402-market-summary.md");
@@ -33,6 +34,7 @@ type CliOptions = {
   markdownOutputPath: string;
   cdpFetch?: FetchLike;
   bitqueryFetch?: FetchLike;
+  bitqueryToken?: string;
   cdpEndpoint?: string;
   bitqueryEndpoint?: string;
   bitqueryChunkSize?: number;
@@ -71,6 +73,7 @@ export const parseArgs = (argv: string[]): CliOptions => {
     asset: "USDC",
     jsonOutputPath: process.env.X402_MARKET_JSON_OUTPUT_PATH ?? DEFAULT_REPORT_JSON,
     markdownOutputPath: process.env.X402_MARKET_MARKDOWN_OUTPUT_PATH ?? DEFAULT_REPORT_MARKDOWN,
+    bitqueryToken: process.env.BITQUERY_TOKEN,
     timeWindow: {
       from: new Date(Date.now() - DEFAULT_SINCE_DAYS * 24 * 60 * 60 * 1000).toISOString(),
     },
@@ -102,7 +105,8 @@ export const parseArgs = (argv: string[]): CliOptions => {
       };
     } else if (arg === "--from") {
       const from = parseArg(index++, argv);
-      if (!from || Number.isNaN(Date.parse(from))) throw new Error("--from must be an ISO datetime");
+      if (!from || Number.isNaN(Date.parse(from)))
+        throw new Error("--from must be an ISO datetime");
       options.timeWindow = { ...options.timeWindow, from: new Date(from).toISOString() };
     } else if (arg === "--to") {
       const to = parseArg(index++, argv);
@@ -114,79 +118,15 @@ export const parseArgs = (argv: string[]): CliOptions => {
   return options;
 };
 
-const buildMarkdownReport = (snapshot: MarketSnapshot): string => {
-  const topResources = snapshot.summary.topResources
-    .map(
-      (resource) =>
-        `- ${resource.resourceId}: tx=${resource.totalTransactionCount} rank=${resource.activityRank}`,
-    )
-    .join("\n");
-
-  const discrepancyRows = snapshot.resources.flatMap((resource) =>
-    resource.paymentOptions
-      .filter((row) => row.discrepancies.length > 0)
-      .map(
-        (row) =>
-          `${resource.resourceId} ${row.cdpPaymentOption.network}/${row.cdpPaymentOption.asset} ${row.cdpPaymentOption.payTo} -> ${row.discrepancies.length} discrepancy(s)`,
-      ),
-  );
-
-  const scopedRows = snapshot.resources
-    .flatMap((resource) =>
-      resource.paymentOptions
-        .filter((row) => row.inScope)
-        .map(
-          (row) =>
-            `- ${resource.resourceId}/${row.cdpPaymentOption.payTo} tx=${row.bitqueryAggregate.transactionCount} active=${row.isActive}`,
-        ),
-    )
-    .join("\n");
-
-  return `# x402 market snapshot
-
-Generated: ${snapshot.generatedAt}
-
-## Scope
-
-${snapshot.scope.network ? `- network: ${snapshot.scope.network}` : ""}
-${snapshot.scope.asset ? `- asset: ${snapshot.scope.asset}` : ""}
-
-## Summary
-
-- resources: ${snapshot.summary.totalResources}
-- scoped resources: ${snapshot.summary.scopedResources}
-- payment options: ${snapshot.summary.totalPaymentOptions}
-- scoped payment options: ${snapshot.summary.scopedPaymentOptions}
-- active resources: ${snapshot.summary.activeResources}
-- active payment options: ${snapshot.summary.activePaymentOptions}
-- discrepancies: ${snapshot.summary.discrepancyCount}
-- transactions (scoped): ${snapshot.summary.totalTransactions}
-- unique senders (scoped): ${snapshot.summary.totalUniqueSenders}
-
-## Top resources
-
-${topResources || "No scoped resources"}
-
-## Scoped payment options
-
-${scopedRows || "No scoped payment options"}
-
-## Discrepancy notes
-
-${discrepancyRows.length > 0 ? discrepancyRows.join("\n") : "No discrepancies"}
-`;
-};
-
-const writeAtomically = (outputPath: string, payload: string) => {
-  const directory = path.dirname(outputPath);
-  fs.mkdirSync(directory, { recursive: true });
-  const tempPath = `${outputPath}.tmp-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-  fs.writeFileSync(tempPath, payload);
-  fs.renameSync(tempPath, outputPath);
-};
-
 const buildBitqueryTargets = (rows: Array<{ option: CdpPaymentOption }>) =>
   dedupeByPayTo(rows.map((row) => row.option));
+
+const resolveBitqueryToken = (token: string | undefined) => {
+  if (!token || token.trim().length === 0) {
+    throw new Error("BITQUERY_TOKEN is required for Bitquery snapshots");
+  }
+  return token;
+};
 
 export const runMarketSnapshot = async (options: Partial<CliOptions> = {}): Promise<RunResult> => {
   const parsed = {
@@ -220,7 +160,7 @@ export const runMarketSnapshot = async (options: Partial<CliOptions> = {}): Prom
           paymentOptions: bitqueryPaymentOptions,
           fetchFn: parsed.bitqueryFetch,
           endpoint: parsed.bitqueryEndpoint,
-          token: process.env.BITQUERY_TOKEN,
+          token: resolveBitqueryToken(parsed.bitqueryToken),
           chunkSize: parsed.bitqueryChunkSize,
           timeWindow: parsed.timeWindow,
         });
@@ -241,7 +181,7 @@ export const runMarketSnapshot = async (options: Partial<CliOptions> = {}): Prom
   });
 
   const snapshotText = `${JSON.stringify(snapshot, null, 2)}\n`;
-  const reportText = buildMarkdownReport(snapshot);
+  const reportText = renderMarketSnapshotMarkdown(snapshot);
 
   writeAtomically(parsed.jsonOutputPath, snapshotText);
   writeAtomically(parsed.markdownOutputPath, reportText);
