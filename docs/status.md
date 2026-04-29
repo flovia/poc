@@ -102,6 +102,61 @@ GET /patterns
 
 これらは現時点では実データではなく、`demo label` または `future SDK telemetry field` として扱う。
 
+### Phase B data classification
+
+Phase B の BFF response では、実データ由来の値と demo / 将来 telemetry 由来の値を混ぜず、各 field の由来を明示する。
+
+#### Phase A に依存する実データ
+
+Phase A の data foundation から得られる、または Phase A snapshot / projection から再生成できる値。
+
+- `pay_to` / recipient
+- payer wallet / customer wallet
+- network / asset
+- payment activity / payment frequency
+- active wallet 判定
+- customer ranking / payer quality
+- CDP resource / payment option
+- Bitquery payTo aggregate
+- market snapshot
+- customer wallet projection
+- wallet profile projection
+- co-usage graph projection
+- product / resource candidate cluster
+- confidence / evidence のうち onchain facts に基づく部分
+
+Phase B ではこれらを request path で live source から取りに行かず、prepared demo dataset、fixture、または Phase A snapshot 相当の read model として BFF から返す。
+
+#### 現時点では実データではない値
+
+Phase A の onchain-first data foundation だけでは確定できないため、Phase B では `demo label` または `future SDK telemetry field` として扱う値。
+
+- source / medium candidate
+- referrer-like label
+- campaign-like label
+- workflow / use case candidate
+- endpoint candidate
+- endpoint usage frequency
+- endpoint attribution
+- workflow sequence
+- agent type inference
+- provider-specific funnel
+- plan / monetization context
+- retention / upsell / partnership insight の演出・仮説部分
+
+これらを実データ化するには、将来の SDK middleware、provider attribution data、request path、resource、request context、provider-side event、endpoint-level request telemetry が必要。
+
+#### API response 上の扱い
+
+各 response field には、少なくとも次のいずれかの分類を持たせる。
+
+- `onchain_fact`: Phase A の source facts / snapshot / projection から説明できる値
+- `demo_label`: frontend demo の意思決定体験を見せるために用意した fixture 値
+- `future_sdk_field`: SDK telemetry 統合後に実データ化する想定の値
+- `derived_insight`: `onchain_fact` と `demo_label` から作る insight / hypothesis
+
+`derived_insight` は、根拠に `demo_label` や `future_sdk_field` が含まれる場合、実データとして扱わない。
+
 ## Not now
 
 - BFF request path で live CDP / Bitquery / RPC を呼ぶこと

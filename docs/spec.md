@@ -252,6 +252,49 @@ payer
 - provider-specific funnel
 - plan / monetization context
 
+### 5.3 Phase B data provenance
+
+Phase B の product API shapes は、data provenance を明示して扱います。特に frontend demo では、実データに見える値と demo / future field が混ざりやすいため、BFF response では field の由来を区別します。
+
+| Provenance         | 意味　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　| 例　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　| Phase B での扱い　　　　　　　　　　　　　　　　　　　　　　　|
+| --------------------| -------------------------------------------------------------------------------------------| ---------------------------------------------------------------------------------------------------------| ---------------------------------------------------------------|
+| `onchain_fact`     | Phase A の source facts / normalized contracts / intelligence projection から説明できる値 | `pay_to`, payer wallet, network, asset, payment frequency, active 判定, co-usage　　　　　　　　　　　　| 実データ由来として扱う　　　　　　　　　　　　　　　　　　　　|
+| `demo_label`       | partner demo の意思決定体験を表現するために fixture として用意する値　　　　　　　　　　　| source / medium candidate, referrer-like label, campaign-like label, workflow / use case candidate　　　| 実データではなく demo data と明示する　　　　　　　　　　　　 |
+| `future_sdk_field` | SDK telemetry 統合後に実データ化する想定の値　　　　　　　　　　　　　　　　　　　　　　　| endpoint candidate, endpoint usage frequency, request path, workflow sequence, provider-specific funnel | 現時点では実データではない　　　　　　　　　　　　　　　　　　|
+| `derived_insight`  | 複数の値から作る insight / hypothesis　　　　　　　　　　　　　　　　　　　　　　　　　　 | retention / upsell / partnership insight, GTM double-down hypothesis　　　　　　　　　　　　　　　　　　| 根拠に demo / future field が含まれる場合は実データ扱いしない |
+
+Phase A に依存する実データは次です。
+
+- CDP resource / payment option
+- Bitquery payTo aggregate
+- network / asset / `pay_to`
+- payer wallet / customer wallet
+- payment activity / payment frequency
+- active wallet 判定
+- market snapshot
+- customer wallet projection
+- wallet profile projection
+- co-usage graph projection
+- product / resource candidate cluster
+- confidence / evidence のうち onchain facts に基づく部分
+
+Phase A だけでは実データ化できない値は次です。
+
+- source / medium candidate
+- referrer-like label
+- campaign-like label
+- workflow / use case candidate
+- endpoint candidate
+- endpoint usage frequency
+- endpoint attribution
+- workflow sequence
+- agent type inference
+- activation / retention loop の provider-specific な解釈
+- provider-specific funnel
+- plan / monetization context
+
+Phase B の BFF は、request path で live CDP / Bitquery / RPC を呼びません。実データ由来の値も、prepared demo dataset、fixture、または Phase A snapshot 相当の read model として返します。
+
 ## 6. Repository のあるべき姿
 
 ### 6.1 原則
