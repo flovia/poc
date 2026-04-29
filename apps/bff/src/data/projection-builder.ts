@@ -60,17 +60,47 @@ const joinValidatedTransactionAttribution = (
   transactions: RealTransactionFixture,
   attribution: MockEndpointAttributionFixture,
 ): JoinedProjectionRecord[] => {
-  const factsByHash = new Map(transactions.facts.map((fact) => [fact.txHash, fact]));
-  const attributionHashes = new Set(attribution.items.map((item) => item.txHash));
-  const missingAttribution = transactions.facts.find((fact) => !attributionHashes.has(fact.txHash));
-  if (missingAttribution) {
-    throw new Error(`transaction fact missing mock attribution: ${missingAttribution.txHash}`);
+  const factsByHash = new Map<string, RealTransactionFact[]>();
+  const attributionByHash = new Map<
+    string,
+    MockEndpointAttributionFixture["items"]
+  >();
+
+  for (const fact of transactions.facts) {
+    const facts = factsByHash.get(fact.txHash) ?? [];
+    facts.push(fact);
+    factsByHash.set(fact.txHash, facts);
   }
-  return attribution.items.map((item) => {
-    const fact = factsByHash.get(item.txHash);
-    if (!fact) {
+
+  for (const item of attribution.items) {
+    if (!factsByHash.has(item.txHash)) {
       throw new Error(`mock attribution references unknown txHash: ${item.txHash}`);
     }
+
+    const items = attributionByHash.get(item.txHash) ?? [];
+    items.push(item);
+    attributionByHash.set(item.txHash, items);
+  }
+
+  for (const [txHash, facts] of factsByHash) {
+    const itemCount = attributionByHash.get(txHash)?.length ?? 0;
+    if (itemCount !== facts.length) {
+      throw new Error(
+        `mock attribution count mismatch for txHash: ${txHash} (${itemCount} attribution items for ${facts.length} transaction facts)`,
+      );
+    }
+  }
+
+  const attributionQueues = new Map(
+    [...attributionByHash.entries()].map(([txHash, items]) => [txHash, [...items]]),
+  );
+
+  return transactions.facts.map((fact) => {
+    const item = attributionQueues.get(fact.txHash)?.shift();
+    if (!item) {
+      throw new Error(`mock attribution missing txHash: ${fact.txHash}`);
+    }
+
     return {
       ...fact,
       endpointPath: item.endpointPath,

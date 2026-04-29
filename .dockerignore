@@ -2,6 +2,8 @@
 .gitignore
 node_modules
 **/node_modules
+**/.next
+**/tsconfig.tsbuildinfo
 **/dist
 **/reports
 **/*.db

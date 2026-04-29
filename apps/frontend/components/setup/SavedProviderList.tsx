@@ -1,0 +1,103 @@
+"use client";
+
+import Link from "next/link";
+import { useProviders } from "@/app/providers";
+import { Icon } from "@/components/ui/Icon";
+import { classNames } from "@/lib/format";
+import { getDisplayPayTo, getPathCount } from "@/lib/providers";
+
+function daysAgo(ts: number): number {
+  return Math.max(0, Math.round((Date.now() - ts) / 86_400_000));
+}
+
+export function SavedProviderList() {
+  const { stored, hydrated, removeProvider } = useProviders();
+
+  return (
+    <div style={{ marginTop: 36 }}>
+      <div className="section-title">
+        <h2>Saved providers</h2>
+        <span style={{ fontSize: 12, color: "var(--text-3)" }}>
+          {hydrated ? `${stored.length} pay_to · localStorage` : "loading…"}
+        </span>
+      </div>
+      <div className="card" style={{ padding: 6 }}>
+        {!hydrated ? (
+          <>
+            <div className="sk" style={{ height: 44, margin: 8 }} />
+            <div className="sk" style={{ height: 44, margin: 8 }} />
+            <div className="sk" style={{ height: 44, margin: 8 }} />
+          </>
+        ) : stored.length === 0 ? (
+          <div style={{ padding: 18, color: "var(--text-3)", fontSize: 13 }}>
+            No providers saved yet. Add one above to get started.
+          </div>
+        ) : (
+          stored.map((p, i) => (
+            <div
+              key={p.providerId}
+              style={{
+                display: "grid",
+                gridTemplateColumns: "minmax(0,1fr) 220px 100px 110px",
+                alignItems: "center",
+                padding: "12px 14px",
+                gap: 12,
+                borderBottom: i < stored.length - 1 ? "1px solid var(--line)" : "none",
+                borderRadius: 10,
+                transition: "background 120ms ease",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(148,163,184,0.04)")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <span
+                  style={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: "50%",
+                    background: "var(--text-mute)",
+                    boxShadow: "none",
+                  }}
+                />
+                <div>
+                  <div style={{ fontSize: 13.5, fontWeight: 500 }}>{p.name}</div>
+                  <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2 }}>
+                    {p.mode} · {getPathCount(p)} {getPathCount(p) === 1 ? "path" : "paths"} · added{" "}
+                    {daysAgo(p.createdAt)}d ago
+                  </div>
+                </div>
+              </div>
+              <div className="mono" style={{ fontSize: 12, color: "var(--text-2)" }}>
+                {getDisplayPayTo(p)}
+              </div>
+              <span className={classNames("chip")}>{p.mode}</span>
+              <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
+                <Link
+                  className="btn ghost"
+                  style={{ padding: "5px 10px", fontSize: 12 }}
+                  href={`/providers/${p.providerId}/customers`}
+                >
+                  Open
+                </Link>
+                <button
+                  type="button"
+                  className="btn ghost"
+                  style={{ padding: "5px 8px", color: "var(--text-3)" }}
+                  title="Remove"
+                  aria-label={`Remove ${p.name}`}
+                  onClick={() => {
+                    if (window.confirm(`Remove ${p.name} from this browser?`)) {
+                      removeProvider(p.providerId);
+                    }
+                  }}
+                >
+                  <Icon.x width="12" height="12" />
+                </button>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}

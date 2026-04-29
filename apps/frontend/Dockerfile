@@ -12,19 +12,15 @@ COPY packages/sources/package.json packages/sources/package.json
 
 RUN bun install --frozen-lockfile
 
-COPY apps/cli ./apps/cli
-COPY packages ./packages
+COPY apps/frontend ./apps/frontend
+COPY packages/contracts ./packages/contracts
 
-WORKDIR /app/apps/cli
+WORKDIR /app/apps/frontend
 
-ENV DATABASE_URL=/data/flovia.db \
-    REPORTS_DIR=/data/reports \
-    FIXTURES_DIR=/app/apps/cli/fixtures \
-    MANIFEST_PATH=/app/apps/cli/fixtures/manifest.json \
-    RPC_REQUEST_TIMEOUT_MS=30000
+ENV BFF_URL=http://bff:3001 \
+    NEXT_PUBLIC_BFF_URL=/api \
+    NEXT_TELEMETRY_DISABLED=1
 
-RUN mkdir -p /data /data/reports
+EXPOSE 3000
 
-VOLUME ["/data"]
-
-CMD ["bun", "run", "verify"]
+CMD ["bun", "run", "dev", "--", "--hostname", "0.0.0.0"]

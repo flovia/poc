@@ -184,13 +184,22 @@ describe("BFF routes", () => {
     ).toThrow("unknown txHash");
   });
 
-  test("rejects transaction facts without matching mock attribution", () => {
+  test("rejects mock attribution that is missing a transaction fact", () => {
     expect(() =>
       joinTransactionAttribution(transactionFixture, {
         ...attributionFixture,
         items: attributionFixture.items.slice(1),
       }),
-    ).toThrow("missing mock attribution");
+    ).toThrow("count mismatch");
+  });
+
+  test("rejects duplicate mock attribution txHash entries", () => {
+    expect(() =>
+      joinTransactionAttribution(transactionFixture, {
+        ...attributionFixture,
+        items: [...attributionFixture.items, attributionFixture.items[0]],
+      }),
+    ).toThrow("attribution txHash values must be unique");
   });
 
   test("keeps onchain facts and demo attribution provenance separated", () => {

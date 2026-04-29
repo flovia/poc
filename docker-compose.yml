@@ -17,9 +17,6 @@ services:
     build:
       context: .
       dockerfile: apps/bff/Dockerfile
-    depends_on:
-      cli:
-        condition: service_completed_successfully
     environment:
       DATABASE_URL: /data/flovia.db
       PORT: 3001
@@ -27,4 +24,24 @@ services:
       - ./docker-data:/data
     ports:
       - "3001:3001"
+    healthcheck:
+      test: ["CMD", "bun", "-e", "const r = await fetch('http://localhost:3001/health'); process.exit(r.ok ? 0 : 1)"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: apps/frontend/Dockerfile
+    depends_on:
+      bff:
+        condition: service_healthy
+    environment:
+      BFF_URL: http://bff:3001
+      NEXT_PUBLIC_BFF_URL: /api
+      NEXT_TELEMETRY_DISABLED: 1
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
     restart: unless-stopped

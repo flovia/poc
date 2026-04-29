@@ -2,13 +2,14 @@ import fs from "node:fs";
 import path from "node:path";
 
 const root = path.resolve(import.meta.dir, "..");
-const workspaceNames = new Set(["contracts", "sources", "intelligence", "cli", "bff"]);
+const workspaceNames = new Set(["contracts", "sources", "intelligence", "cli", "bff", "frontend"]);
 const workspaceRoots = [
   { kind: "package", name: "contracts", root: path.join(root, "packages", "contracts") },
   { kind: "package", name: "sources", root: path.join(root, "packages", "sources") },
   { kind: "package", name: "intelligence", root: path.join(root, "packages", "intelligence") },
   { kind: "app", name: "cli", root: path.join(root, "apps", "cli") },
   { kind: "app", name: "bff", root: path.join(root, "apps", "bff") },
+  { kind: "app", name: "frontend", root: path.join(root, "apps", "frontend") },
 ] as const;
 
 type Workspace = (typeof workspaceRoots)[number];
@@ -28,7 +29,7 @@ const listTypeScriptFiles = (directory: string): string[] => {
     const fullPath = path.join(directory, entry.name);
     if (entry.isDirectory()) {
       files.push(...listTypeScriptFiles(fullPath));
-    } else if (entry.isFile() && fullPath.endsWith(".ts")) {
+    } else if (entry.isFile() && /\.tsx?$/.test(fullPath)) {
       files.push(fullPath);
     }
   }
@@ -93,6 +94,15 @@ for (const workspace of workspaceRoots) {
       if (workspace.name === "bff" && targetWorkspace === "cli") {
         violations.push(
           `${path.relative(root, file)} imports ${specifier}; apps/bff may not depend on apps/cli`,
+        );
+      }
+
+      if (
+        workspace.name === "frontend" &&
+        !new Set(["contracts"]).has(targetWorkspace)
+      ) {
+        violations.push(
+          `${path.relative(root, file)} imports ${specifier}; apps/frontend may only depend on packages/contracts`,
         );
       }
     }
