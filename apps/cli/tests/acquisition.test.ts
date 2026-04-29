@@ -22,6 +22,15 @@ import {
   txHashFromSettlement,
   x402Command,
 } from "../scripts/acquisition/run-x402-paid-probes";
+import {
+  buildKnownFingerprintSeedFromPaidProbeObservations,
+  buildPaidProbeFingerprintArtifact,
+  buildSettlementFingerprintPacksFromPaidProbeObservations,
+  matchingChallengeObservations,
+  paidProbeFingerprintCandidates,
+} from "../scripts/acquisition/run-x402-paid-probe-fingerprints";
+import { buildProviderEndpointClaimsFromPaidProbeFingerprints } from "../scripts/acquisition/generate-provider-endpoint-claims-from-paid-probe-fingerprints";
+import type { PaymentObservationInput, RawReceipt, RawTransaction } from "../lib/schema";
 
 const baseArtifact = (overrides: Partial<PaidProbeResults> = {}): PaidProbeResults =>
   validatePaidProbeResults({
@@ -531,5 +540,236 @@ describe("x402 artifact analyzer", () => {
     expect(report.byTxHash.present).toBe(1);
     expect(report.byBodySource.manifest_request_body_template).toBe(1);
     expect(report.remainingFailures.byClassification.http_401_auth_or_business_rejected).toBe(1);
+  });
+});
+
+describe("paid probe fingerprint enrichment", () => {
+  const paidInput = (artifact = baseArtifact()) => [{ path: "paid_probe_results.json", artifact }];
+
+  const observation = (
+    overrides: Partial<PaymentObservationInput> = {},
+  ): PaymentObservationInput => ({
+    chainId: 8453,
+    txHash: "0x1111111111111111111111111111111111111111111111111111111111111111",
+    blockNumber: 100,
+    blockTimestamp: 1_776_000_000,
+    relayer: "0x2222222222222222222222222222222222222222",
+    payer: "0x3333333333333333333333333333333333333333",
+    recipient: "0x4444444444444444444444444444444444444444",
+    amountAtomic: "10000",
+    tokenAddress: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    method: "direct_transferWithAuthorization",
+    topLevelSelector: "0xe3ee160e",
+    caseId: "case-a",
+    stableHash: "stable-a",
+    evidence: [],
+    ...overrides,
+  });
+
+  test("selects the latest paid_with_tx result per case", () => {
+    const first = baseArtifact({
+      collectedAt: "2026-04-28T00:00:00.000Z",
+      results: [{ ...baseArtifact().results[0]!, txHash: "0xfirst" }],
+    });
+    const retry = baseArtifact({
+      collectedAt: "2026-04-28T01:00:00.000Z",
+      results: [{ ...baseArtifact().results[0]!, txHash: "0xretry" }],
+    });
+
+    expect(paidProbeFingerprintCandidates(paidInput(first).concat(paidInput(retry)))).toMatchObject(
+      [{ result: { caseId: "case-a", txHash: "0xretry" } }],
+    );
+    expect(paidProbeFingerprintCandidates(paidInput(retry).concat(paidInput(first)))).toMatchObject(
+      [{ result: { caseId: "case-a", txHash: "0xretry" } }],
+    );
+  });
+
+  test("builds known and settlement fingerprint seeds from enriched observations", () => {
+    const result = {
+      caseId: "case-a",
+      providerName: "Provider A",
+      serviceName: "Search",
+      routeKind: "provider_direct_x402" as const,
+      sourcePath: "paid_probe_results.json",
+      txHash: observation().txHash,
+      status: "fingerprinted" as const,
+      observationCount: 1,
+      insertedObservations: 0,
+      evidenceRowsUpdated: 0,
+      observations: [
+        {
+          ...observation(),
+          topLevelTo: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" as const,
+          innerSelector: null,
+        },
+      ],
+    };
+
+    const known = buildKnownFingerprintSeedFromPaidProbeObservations(
+      [result],
+      "2026-04-29T00:00:00.000Z",
+    );
+    const settlement = buildSettlementFingerprintPacksFromPaidProbeObservations(
+      [result],
+      "2026-04-29T00:00:00.000Z",
+    );
+
+    expect(known.fingerprints.map((entry) => entry.type)).toEqual(["recipient"]);
+    expect(known.fingerprints.find((entry) => entry.type === "recipient")?.providerLabel).toBe(
+      "Provider A recipient",
+    );
+    expect(settlement.fingerprints).toHaveLength(1);
+    expect(settlement.fingerprints[0]).toMatchObject({
+      method: "direct_transferWithAuthorization",
+      topLevelSelector: "0xe3ee160e",
+      topLevelTo: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      evidenceClass: "host_joined",
+    });
+  });
+
+  test("filters decoded observations to the paid challenge recipient asset and amount", () => {
+    const paid = baseArtifact().results[0]!;
+    const matching = observation({
+      recipient: paid.challenge!.payTo as `0x${string}`,
+      tokenAddress: paid.challenge!.asset as `0x${string}`,
+      amountAtomic: paid.challenge!.amountAtomic,
+    });
+    const wrongRecipient = observation({
+      recipient: "0x9999999999999999999999999999999999999999",
+      tokenAddress: paid.challenge!.asset as `0x${string}`,
+      amountAtomic: paid.challenge!.amountAtomic,
+    });
+
+    expect(matchingChallengeObservations(paid, [wrongRecipient, matching])).toEqual([matching]);
+  });
+
+  test("builds provider endpoint claims from paid probe fingerprints and endpoint manifest", () => {
+    const directory = `/tmp/flovia-paid-claims-${crypto.randomUUID()}`;
+    fs.mkdirSync(directory, { recursive: true });
+    const manifestPath = `${directory}/endpoint_manifest.json`;
+    const fingerprintPath = `${directory}/paid_probe_fingerprints.json`;
+    const txHash = "0x1111111111111111111111111111111111111111111111111111111111111111";
+
+    try {
+      fs.writeFileSync(
+        manifestPath,
+        JSON.stringify(
+          validateEndpointManifest({
+            schemaVersion: "1",
+            cases: [
+              {
+                caseId: "case-a",
+                entityId: "provider-a",
+                providerName: "Provider A",
+                serviceName: "Search",
+                endpointUrl: "https://example.com/search",
+                resourceUrl: "https://example.com/search?q=x402",
+                requestHost: "example.com",
+                method: "GET",
+                sourceName: "sponge_catalog",
+                sourceUrl: "https://catalog.example.com",
+                sourceObservedDate: "2026-04-28",
+                sourceServiceId: "svc-a",
+                sourceEndpointId: "endp-a",
+                sourceEndpointUpdatedAt: "2026-04-28T00:00:00.000Z",
+                sourceBaseUrl: "https://example.com",
+                sourcePath: "/search",
+                sourceProtocol: "x402",
+                sourceNetworks: ["base"],
+                routeKind: "provider_direct_x402",
+                probeReadiness: "ready",
+                discoveryMethod: "catalog",
+                expectedNetwork: "base",
+                expectedAsset: "USDC",
+              },
+            ],
+          }),
+        ),
+      );
+      fs.writeFileSync(
+        fingerprintPath,
+        JSON.stringify({
+          schemaVersion: "1",
+          generatedAt: "2026-04-29T00:00:00.000Z",
+          results: [
+            {
+              caseId: "case-a",
+              providerName: "Provider A",
+              serviceName: "Search",
+              routeKind: "provider_direct_x402",
+              sourcePath: "fixtures/acquisition/paid_probe_results.json",
+              txHash,
+              status: "fingerprinted",
+              observations: [
+                {
+                  txHash,
+                  recipient: "0x4444444444444444444444444444444444444444",
+                  amountAtomic: "10000",
+                  tokenAddress: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+                  method: "direct_transferWithAuthorization",
+                  topLevelSelector: "0xe3ee160e",
+                },
+              ],
+            },
+          ],
+        }),
+      );
+
+      const seed = buildProviderEndpointClaimsFromPaidProbeFingerprints({
+        fingerprintPath,
+        manifestPath,
+      });
+
+      expect(seed.claims).toHaveLength(1);
+      expect(seed.claims[0]).toMatchObject({
+        entityId: "provider-a",
+        providerName: "Provider A",
+        serviceName: "Search",
+        endpointUrl: "https://example.com/search",
+        resourceUrl: "https://example.com/search?q=x402",
+        payTo: "0x4444444444444444444444444444444444444444",
+        amountAtomic: "10000",
+        txHash,
+        evidenceClass: "paid_probe",
+        confidence: 85,
+        roles: ["provider", "service", "endpoint"],
+      });
+    } finally {
+      fs.rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
+  test("skips paid tx hashes that fetch but do not decode into observations", async () => {
+    const tx: RawTransaction = {
+      hash: "0x1111111111111111111111111111111111111111111111111111111111111111",
+      chainId: 8453,
+      from: "0x2222222222222222222222222222222222222222",
+      to: "0x5555555555555555555555555555555555555555",
+      input: "0x12345678",
+      blockNumber: "100",
+      blockTimestamp: 1_776_000_000,
+    };
+    const receipt: RawReceipt = {
+      transactionHash: tx.hash,
+      blockHash: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      blockNumber: "100",
+      logs: [],
+      status: "0x1",
+    };
+
+    const artifact = await buildPaidProbeFingerprintArtifact({
+      inputs: paidInput(
+        baseArtifact({ results: [{ ...baseArtifact().results[0]!, txHash: tx.hash }] }),
+      ),
+      rpcUrl: "https://rpc.example",
+      fetchFixtureFn: async () => ({ tx, receipt }),
+    });
+
+    expect(artifact.totals).toMatchObject({ candidates: 1, fingerprinted: 0, skipped: 1 });
+    expect(artifact.results[0]).toMatchObject({
+      caseId: "case-a",
+      status: "skipped",
+      skippedReason: "no_observations",
+    });
   });
 });
