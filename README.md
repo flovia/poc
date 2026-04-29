@@ -1,62 +1,63 @@
 # Flovia POC
 
-Bun workspace for Flovia 260427 on-chain intelligence experiments.
+Flovia 260427 の x402 マーケットインテリジェンス実験用 Bun ワークスペースです。
 
-The current implementation is an offline-first CLI that ingests Base USDC
-fixtures, decodes payment activity, builds attribution candidates, computes
-aggregates, and generates report outputs without requiring live RPC access.
+現在の主経路は、パッケージ化された CDP x402 Discovery + Bitquery パイプラインです。 リソースメタデータを正規化し、Base USDC の支払いアクティビティと結合して、 CLI からマーケットスナップショットレポートを生成します。
 
-## Workspace
+## ワークスペース
 
-- `apps/cli/`: main CLI implementation, scripts, fixtures, tests, and reports
-- `docs/`: product direction, implementation notes, and documentation assets
-- `packages/*`: reserved for shared packages as the workspace grows
+- `apps/cli/`: CLI エントリポイント、マーケットスナップショット生成、テスト、レポート
+- `apps/bff/`: 将来のプロダクト API 境界。現時点では最小 health API のみ
+- `packages/contracts/`: Zod スキーマと共有マーケットインテリジェンス契約
+- `packages/sources/`: CDP Discovery / Bitquery のソースクライアントと正規化処理
+- `packages/intelligence/`: マーケットスナップショットの結合、ランキング、集計
 
-## Prerequisites
+## 前提条件
 
 - Bun `>=1.3.13`
 
-## Setup
+## セットアップ
 
 ```sh
 bun install
-cp -n apps/cli/.env.example apps/cli/.env
+cp -n .env.example .env
 ```
 
-The default `.env.example` values run against local fixtures and `demo.db`.
-Live RPC settings are optional and are not required for the default verification
-pipeline.
+環境変数は基本的にリポジトリルートの `.env` に置きます。ルートの `.env.example` を雛形として使ってください。Bitquery を使う live snapshot には `BITQUERY_TOKEN` が必要です。
 
-## Common commands
+## よく使うコマンド
 
-Run from the repository root unless noted otherwise.
+特に指定がない限り、リポジトリルートから実行します。
 
 ```sh
-bun run verify        # typecheck, tests, and offline verification
-bun run test          # CLI test suite
+bun run verify        # typecheck、テスト
+bun run test          # テストスイート
 bun run typecheck     # TypeScript strict typecheck
-bun run format        # format TypeScript and JSON with Biome
-bun run format:check  # check formatting
+bun run format        # Biome で TypeScript / JSON をフォーマット
+bun run format:check  # フォーマット確認
 ```
 
-CLI pipeline commands are available from `apps/cli`:
+CLI パイプラインのコマンドは `apps/cli` から利用できます。
 
 ```sh
-bun run db:reset
-bun run ingest:fixtures
-bun run score
-bun run aggregate
-bun run report
+bun run market:snapshot -- --limit 100 --network base --asset USDC
+bun run market:snapshot -- --all
 ```
 
-## Verification policy
+`market:snapshot` はスコープ対象の支払いオプションに Bitquery アクティビティを要する場合、
+`BITQUERY_TOKEN` を要求します。デフォルトでは次のファイルを書き出します。
 
-`bun run verify` is intentionally offline-only. It should pass without wallet
-access, paid APIs, or live RPC calls. Live checks, when needed, are kept behind
-separate commands such as `verify:live`.
+- `apps/cli/reports/x402-market-snapshot.json`
+- `apps/cli/reports/x402-market-summary.md`
 
-## Generated and local files
+`--all` を付けない場合は、`X402_MARKET_FETCH_LIMIT`（デフォルト: 100）で上限制御します。デフォルト値は安全側に収めるため、必要なら `--all` を明示してください。
 
-Local environment files, databases, build outputs, dependencies, and generated
-reports are ignored by git. Keep generated outputs reproducible from fixtures
-and scripts rather than committing them.
+旧 self-implemented discovery/probe/onchain attribution 基盤は `v0-self-implemented-x402` branch に保存済みです。この branch には意図的に含めません。
+
+## 検証ポリシー
+
+`bun run verify` は意図的に offline-only です。ウォレットアクセス、有料 API、 live RPC 呼び出しなしで成功する必要があります。Live 検証が必要な場合は、 `market:snapshot` のような明示的なコマンドとして実行します。
+
+## 生成物とローカルファイル
+
+ローカル環境ファイル、データベース、ビルド出力、依存関係、生成レポートは git の 管理対象外です。生成物はコミットせず、フィクスチャとスクリプトから再生成できる 状態を保ちます。

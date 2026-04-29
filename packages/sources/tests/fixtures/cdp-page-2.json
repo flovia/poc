@@ -1,0 +1,24 @@
+{
+  "data": {
+    "items": [
+      {
+        "resourceId": "resource-2",
+        "resource": "https://paysponge.example/search",
+        "provider": "Paysponge",
+        "service": "Search",
+        "paymentOptions": [
+          {
+            "network": "base",
+            "asset": "USDC",
+            "amount": "2000",
+            "payTo": "0x2222222222222222222222222222222222222222"
+          }
+        ]
+      }
+    ],
+    "pageInfo": {
+      "hasNextPage": false,
+      "endCursor": null
+    }
+  }
+}

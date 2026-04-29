@@ -1,0 +1,33 @@
+{
+  "generatedAt": "2026-04-29T00:00:00.000Z",
+  "scope": {
+    "network": "base"
+  },
+  "source": {
+    "generatedBy": "x402-market-snapshot",
+    "cdp": {
+      "sourceKind": "cdp_discovery",
+      "sourceName": "cdp-discovery",
+      "fetchLimit": 10,
+      "fetchCount": 2
+    },
+    "bitquery": {
+      "sourceKind": "bitquery",
+      "sourceName": "bitquery-graphql",
+      "queriedPairs": 1
+    }
+  },
+  "summary": {
+    "totalResources": 1,
+    "scopedResources": 1,
+    "totalPaymentOptions": 1,
+    "scopedPaymentOptions": 1,
+    "activeResources": 1,
+    "activePaymentOptions": 1,
+    "discrepancyCount": 0,
+    "topResources": [],
+    "totalTransactions": -1,
+    "totalUniqueSenders": 1
+  },
+  "resources": []
+}

@@ -10,31 +10,14 @@
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "bun test",
-    "db:reset": "dotenvx run --ignore=MISSING_ENV_FILE -f ../../.env -f .env -- bun scripts/maintenance/reset-db.ts",
-    "fixture:fetch-rpc": "dotenvx run --ignore=MISSING_ENV_FILE -f ../../.env -f .env -- bun scripts/ingest/fetch-rpc-fixture.ts",
-    "ingest:fixtures": "dotenvx run --ignore=MISSING_ENV_FILE -f ../../.env -f .env -- bun scripts/ingest/ingest-fixtures.ts",
-    "ingest:rpc-tx": "dotenvx run --ignore=MISSING_ENV_FILE -f ../../.env -f .env -- bun scripts/ingest/ingest-rpc-tx.ts",
-    "ingest:rpc-range": "dotenvx run --ignore=MISSING_ENV_FILE -f ../../.env -f .env -- bun scripts/ingest/ingest-rpc-range.ts",
-    "score": "dotenvx run --ignore=MISSING_ENV_FILE -f ../../.env -f .env -- bun scripts/analytics/score.ts",
-    "aggregate": "dotenvx run --ignore=MISSING_ENV_FILE -f ../../.env -f .env -- bun scripts/analytics/aggregate.ts",
-    "report": "dotenvx run --ignore=MISSING_ENV_FILE -f ../../.env -f .env -- bun scripts/analytics/report.ts",
-    "fetch:sponge-catalog": "dotenvx run --ignore=MISSING_ENV_FILE -f ../../.env -f .env -- bun scripts/acquisition/fetch-sponge-catalog.ts",
-    "generate:endpoint-manifest:sponge": "dotenvx run --ignore=MISSING_ENV_FILE -f ../../.env -f .env -- bun scripts/acquisition/generate-endpoint-manifest-from-sponge-catalog.ts",
-    "probe:x402:dry-run": "dotenvx run --ignore=MISSING_ENV_FILE -f ../../.env -f .env -- bun scripts/acquisition/run-x402-dry-run-probes.ts",
-    "merge:endpoint-manifest:dry-run": "dotenvx run --ignore=MISSING_ENV_FILE -f ../../.env -f .env -- bun scripts/acquisition/merge-dry-run-into-endpoint-manifest.ts",
-    "probe:x402:paid": "dotenvx run --ignore=MISSING_ENV_FILE -f ../../.env -f .env -- bun scripts/acquisition/run-x402-paid-probes.ts",
-    "probe:x402:fingerprints": "dotenvx run --ignore=MISSING_ENV_FILE -f ../../.env -f .env -- bun scripts/acquisition/run-x402-paid-probe-fingerprints.ts",
-    "generate:x402:provider-claims": "dotenvx run --ignore=MISSING_ENV_FILE -f ../../.env -f .env -- bun scripts/acquisition/generate-provider-endpoint-claims-from-paid-probe-fingerprints.ts",
-    "analyze:x402:probes": "bun scripts/acquisition/analyze-x402-probe-artifacts.ts",
-    "validate:endpoint-manifest": "dotenvx run --ignore=MISSING_ENV_FILE -f ../../.env -f .env -- bun scripts/maintenance/validate-endpoint-manifest.ts",
-    "verify:offline": "dotenvx run --ignore=MISSING_ENV_FILE -f ../../.env -f .env -- bun scripts/maintenance/verify.ts",
-    "verify:live": "dotenvx run -- bun scripts/maintenance/verify-live.ts",
-    "verify": "bun run typecheck && bun test && bun run verify:offline"
+    "market:snapshot": "dotenvx run --ignore=MISSING_ENV_FILE -f ../../.env -f .env -- bun scripts/analytics/market-snapshot.ts",
+    "verify": "bun run typecheck && bun test"
   },
   "dependencies": {
     "@dotenvx/dotenvx": "^1.64.0",
-    "viem": "^2.48.4",
-    "zod": "^4.3.6"
+    "contracts": "workspace:*",
+    "intelligence": "workspace:*",
+    "sources": "workspace:*"
   },
   "devDependencies": {
     "@types/bun": "^1.3.13",
