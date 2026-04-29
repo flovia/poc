@@ -13,7 +13,7 @@ name: deploy-lightsail
 on:
   push:
     branches:
-      - Kourin1996/deploy-test
+      - main
   workflow_dispatch:
 
 concurrency:
