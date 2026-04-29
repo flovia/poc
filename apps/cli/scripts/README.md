@@ -10,6 +10,11 @@
   - scope 対象の `payTo` を Bitquery に問い合わせる
   - CDP metadata と Bitquery payment activity を結合する
   - JSON / Markdown の market snapshot report を書き出す
+- `analytics/capture-coingecko-transactions.ts`
+  - CoinGecko Base USDC `payTo` の Bitquery transfer list を live capture する
+  - `apps/bff/fixtures/phase-a/coingecko-transactions.json` を生成する
+  - 全 `txHash` に deterministic mock endpoint attribution を割り当て、`apps/bff/fixtures/phase-b/mock-attribution.json` を生成する
+  - 生成前後に `packages/contracts` の fixture schema で検証する
 
 旧 self-implemented acquisition / probe / onchain pipeline は
 `v0-self-implemented-x402` branch に保存済みです。この branch には意図的に含めていません。
@@ -31,6 +36,18 @@ bun --cwd apps/cli market:snapshot -- --limit 50 --network base --asset usdc
 ```
 
 Bitquery を使うため、通常は `BITQUERY_TOKEN` が必要です。
+
+CoinGecko transaction facts と Phase B mock attribution fixture を再生成する場合は次を実行します。
+
+```sh
+bun --cwd apps/cli coingecko:transactions -- \
+  --from 2026-01-01T00:00:00Z \
+  --to 2026-04-29T23:59:59Z \
+  --limit 5000 \
+  --page-size 100
+```
+
+この script は `../../.env` と `apps/cli/.env` を dotenvx 経由で読み込みます。live Bitquery を使うため、通常の `bun run verify` には含めません。
 
 ## アーキテクチャ
 
@@ -91,6 +108,11 @@ flowchart TD
 - `apps/cli/reports/x402-market-summary.md`
 
 `reports/` は生成物なので、必要に応じて再生成します。
+
+`coingecko:transactions` のデフォルト出力は次の通りです。
+
+- `apps/bff/fixtures/phase-a/coingecko-transactions.json`
+- `apps/bff/fixtures/phase-b/mock-attribution.json`
 
 ## 取得方法
 

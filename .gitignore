@@ -13,6 +13,8 @@ apps/*/demo.db
 apps/*/demo.db-shm
 apps/*/demo.db-wal
 apps/*/dist/
+apps/*/.next/
+apps/*/tsconfig.tsbuildinfo
 apps/*/node_modules/
 apps/*/reports/x402-market-snapshot.json
 apps/*/reports/x402-market-summary.md

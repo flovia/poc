@@ -2,6 +2,8 @@ import {
   BASE_USDC_ASSET,
   BASE_USDC_CONTRACT,
   type BitqueryAggregate,
+  BitqueryTransferFactSchema,
+  type BitqueryTransferFact,
   type CdpPaymentOption,
   SourceKind,
   SourceProvenanceSchema,
@@ -16,6 +18,8 @@ import type { FetchLike } from "./transport";
 
 const DEFAULT_BITQUERY_ENDPOINT = "https://streaming.bitquery.io/graphql";
 const TOKEN_DECIMALS = 6;
+const DEFAULT_TRANSFER_LIMIT = 1000;
+const DEFAULT_TRANSFER_PAGE_SIZE = 100;
 
 const BitqueryResponseSchema = z
   .object({
@@ -50,6 +54,24 @@ const BitqueryResponseSchema = z
           .object({
             byRecipient: z.array(z.unknown()).default([]),
             latestByRecipient: z.array(z.unknown()).default([]),
+          })
+          .passthrough()
+          .optional(),
+      })
+      .passthrough()
+      .optional(),
+  })
+  .passthrough();
+
+const BitqueryTransferResponseSchema = z
+  .object({
+    errors: z.array(z.object({ message: z.string().optional() }).passthrough()).optional(),
+    data: z
+      .object({
+        transfers: z.array(z.unknown()).default([]),
+        EVM: z
+          .object({
+            transfers: z.array(z.unknown()).default([]),
           })
           .passthrough()
           .optional(),
@@ -139,6 +161,21 @@ export type BitqueryFetchOptions = {
   };
 };
 
+export type BitqueryTransferListOptions = {
+  network: string;
+  asset: string;
+  payTo: string;
+  token: string;
+  endpoint?: string;
+  fetchFn?: FetchLike;
+  limit?: number;
+  pageSize?: number;
+  timeWindow?: {
+    from?: string;
+    to?: string;
+  };
+};
+
 const resolveToken = (options: { token: string }) => {
   const token = options.token;
   if (!token || token.trim().length === 0) {
@@ -178,7 +215,26 @@ query BaseUsdcTransfersByPayTo($payTos: [String!]) {
     ) {
       Transfer { Receiver Sender Amount }
       Block { Time Number }
-      Transaction { Hash }
+      Transaction { Hash From }
+    }
+  }
+}`;
+};
+
+export const buildPaymentTransfersByPayToQuery = (timeWindow?: { from?: string; to?: string }) => {
+  const timeFilter = buildTimeFilter(timeWindow);
+  const filterPrefix = timeFilter ? `${timeFilter}, ` : "";
+  return `
+query BaseUsdcTransfersByPayTo($payTo: String!, $limit: Int!, $offset: Int!) {
+  EVM(dataset: combined, network: base) {
+    transfers: Transfers(
+      where: {${filterPrefix}Transfer: {Receiver: {is: $payTo}, Currency: {SmartContract: {is: "${BASE_USDC_CONTRACT}"}}}}
+      orderBy: {descending: Block_Time}
+      limit: {count: $limit, offset: $offset}
+    ) {
+      Transfer { Sender Receiver Amount }
+      Block { Time Number }
+      Transaction { Hash From }
     }
   }
 }`;
@@ -238,6 +294,58 @@ const toChunk = <T>(items: T[], chunkSize: number): T[][] => {
     chunks.push(items.slice(start, start + chunkSize));
   }
   return chunks;
+};
+
+const normalizeTransferRows = (payload: z.infer<typeof BitqueryTransferResponseSchema>) => {
+  if (payload.errors?.length) {
+    const message = payload.errors.map((error) => error.message ?? "unknown error").join("; ");
+    throw new Error(`Bitquery GraphQL error: ${message}`);
+  }
+  if (!payload.data) throw new Error("Bitquery response missing data");
+  return payload.data.transfers.length > 0
+    ? payload.data.transfers
+    : (payload.data.EVM?.transfers ?? []);
+};
+
+const normalizeTransfer = (row: unknown): BitqueryTransferFact => {
+  const txHash = readPath(row, ["Transaction", "Hash"]);
+  const transferSender = readPath(row, ["Transfer", "Sender"]);
+  const transactionFrom = readPath(row, ["Transaction", "From"]);
+  const recipient = readPath(row, ["Transfer", "Receiver"]);
+  const amount = readPath(row, ["Transfer", "Amount"]);
+  const blockTimestamp = readPath(row, ["Block", "Time"]);
+  const blockNumber = readPath(row, ["Block", "Number"]);
+
+  if (typeof txHash !== "string") throw new Error("Bitquery transfer missing transaction hash");
+  const sender = [transferSender, transactionFrom].find(
+    (value): value is string => typeof value === "string" && /^0x[a-f0-9]{40}$/i.test(value),
+  );
+  if (typeof sender !== "string") throw new Error("Bitquery transfer missing valid sender address");
+  if (typeof recipient !== "string") throw new Error("Bitquery transfer missing receiver");
+  if (typeof blockTimestamp !== "string") throw new Error("Bitquery transfer missing block time");
+
+  return BitqueryTransferFactSchema.parse({
+    txHash,
+    sender,
+    recipient,
+    amountAtomic: decimalToAtomic(amount as string | number | undefined, TOKEN_DECIMALS),
+    blockTimestamp,
+    blockNumber: blockNumber == null ? undefined : String(blockNumber),
+  });
+};
+
+const resolveTransferLimit = (limit?: number) => {
+  if (limit == null) return DEFAULT_TRANSFER_LIMIT;
+  if (!Number.isInteger(limit) || limit <= 0)
+    throw new Error("Bitquery transfer limit must be a positive integer");
+  return limit;
+};
+
+const resolveTransferPageSize = (pageSize: number | undefined, limit: number) => {
+  if (pageSize == null) return Math.min(DEFAULT_TRANSFER_PAGE_SIZE, limit);
+  if (!Number.isInteger(pageSize) || pageSize <= 0)
+    throw new Error("Bitquery transfer pageSize must be a positive integer");
+  return Math.min(pageSize, limit);
 };
 
 export const fetchBitqueryBaseUsdcAggregates = async (
@@ -323,4 +431,59 @@ export const fetchBitqueryBaseUsdcAggregates = async (
   });
 
   return requested;
+};
+
+export const fetchPaymentTransfersByPayTo = async (
+  options: BitqueryTransferListOptions,
+): Promise<BitqueryTransferFact[]> => {
+  if (
+    normalizeNetwork(options.network) !== "base" ||
+    normalizeAsset(options.asset) !== BASE_USDC_ASSET
+  ) {
+    throw new Error("Bitquery transfer fetching currently supports only Base USDC");
+  }
+
+  const token = resolveToken(options);
+  const endpoint = options.endpoint ?? DEFAULT_BITQUERY_ENDPOINT;
+  const fetchFn: FetchLike = options.fetchFn ?? ((input, init) => fetch(input, init));
+  const limit = resolveTransferLimit(options.limit);
+  const pageSize = resolveTransferPageSize(options.pageSize, limit);
+  const transfers: BitqueryTransferFact[] = [];
+  let offset = 0;
+
+  while (transfers.length < limit) {
+    const remaining = limit - transfers.length;
+    const requestLimit = Math.min(pageSize, remaining);
+    const response = await fetchFn(endpoint, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        query: buildPaymentTransfersByPayToQuery(options.timeWindow),
+        variables: {
+          payTo: normalizePayTo(options.payTo),
+          limit: requestLimit,
+          offset,
+        },
+      }),
+    });
+
+    if (!response.ok) throw new Error(`Bitquery request failed: ${response.status}`);
+    const payload = BitqueryTransferResponseSchema.parse(await response.json());
+    const rows = normalizeTransferRows(payload);
+    const page = rows.flatMap((row) => {
+      try {
+        return [normalizeTransfer(row)];
+      } catch {
+        return [];
+      }
+    });
+    transfers.push(...page);
+    if (rows.length < requestLimit) break;
+    offset += rows.length;
+  }
+
+  return transfers.slice(0, limit);
 };

@@ -4,7 +4,7 @@
 
 システムは CoinGecko の `payTo` に紐づく transaction を取得した場合、Phase B projection 生成に再利用できる transaction fact として保存することを MUST とする。
 
-初期対象として、CDP Discovery snapshot で観測済みの Base USDC `payTo` `0x110cdbba7fe6434ec4ce3464cc523942ad6fb784` を扱う。初期 capture は最大 1000 transfers を要求し、取得できた件数を metadata として保存する。
+初期対象として、CDP Discovery snapshot で観測済みの Base USDC `payTo` `0x110cdbba7fe6434ec4ce3464cc523942ad6fb784` を扱う。capture は default 1000 transfers を要求し、明示 limit で 1000 件超も取得できる。取得できた件数を metadata として保存する。
 
 #### Scenario: transaction fact を保存する
 
@@ -31,7 +31,7 @@
 
 - **WHEN** caller が `network`、`asset`、`payTo`、time window、limit を指定して transfer list を要求する
 - **THEN** source adapter は `txHash`、`sender`、`recipient`、`amountAtomic`、`blockNumber`、`blockTimestamp` を含む transfer facts を返す
-- **THEN** 初期実装では `limit` の default / max は 1000 とする
+- **THEN** 初期実装では `limit` の default は 1000 とし、明示 limit で 1000 件超も取得できる
 - **THEN** 返された transfer facts は projection generation の `onchain_fact` として扱える
 
 #### Scenario: source pagination を扱う

@@ -23,9 +23,8 @@ latestBlockTimestamp: 2026-04-29T04:11:53Z
 初期 capture policy は次の通り。
 
 ```text
-requestedLimit: 1000
-maxLimit: 1000
-timeWindow: snapshot generation と同等の window から開始する
+requestedLimit: 1000 default（明示 limit で 1000 件超も可）
+timeWindow: snapshot generation と同等の window から開始し、必要に応じて拡張する
 goal: selected time window 内の observed transfers を可能な限り全件取得する
 ```
 
@@ -108,7 +107,7 @@ blockNumber
 blockTimestamp
 ```
 
-初期実装では `limit` の default / max を 1000 とし、Bitquery 側の上限に応じて pagination する。取得結果が 1000 件未満の場合も有効な capture とし、fixture metadata の `capturedCount` で実取得件数を明示する。
+初期実装では `limit` の default を 1000 とし、明示 limit で 1000 件超も許可する。Bitquery 側の上限に応じて pagination する。取得結果が requested limit 未満の場合も有効な capture とし、fixture metadata の `capturedCount` で実取得件数を明示する。
 
 理由:
 

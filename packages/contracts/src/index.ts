@@ -15,7 +15,10 @@ export const normalizeNetwork = (network: string): string => {
 
 export const normalizeAsset = (asset: string): string => {
   const value = asset.trim();
-  if (value.toUpperCase() === BASE_USDC_ASSET || value.toLowerCase() === BASE_USDC_CONTRACT.toLowerCase()) {
+  if (
+    value.toUpperCase() === BASE_USDC_ASSET ||
+    value.toLowerCase() === BASE_USDC_CONTRACT.toLowerCase()
+  ) {
     return BASE_USDC_ASSET;
   }
   return value;
@@ -96,7 +99,9 @@ export const EvidenceLabelSchema = z
 
 export type EvidenceLabel = z.infer<typeof EvidenceLabelSchema>;
 
-const withDerivedInsightReasons = <T extends { provenance: DataProvenance; reasons?: EvidenceLabel[] }>(
+const withDerivedInsightReasons = <
+  T extends { provenance: DataProvenance; reasons?: EvidenceLabel[] },
+>(
   schema: z.ZodType<T>,
 ) =>
   schema.superRefine((value, ctx) => {
@@ -169,6 +174,19 @@ export const BitqueryLatestTransferSchema = z
   .strict();
 
 export type BitqueryLatestTransfer = z.infer<typeof BitqueryLatestTransferSchema>;
+
+export const BitqueryTransferFactSchema = z
+  .object({
+    txHash: z.string().min(1),
+    sender: EvmAddressSchema,
+    recipient: EvmAddressSchema,
+    amountAtomic: AtomicAmountSchema,
+    blockNumber: z.string().regex(/^\d+$/).optional(),
+    blockTimestamp: z.string().datetime(),
+  })
+  .strict();
+
+export type BitqueryTransferFact = z.infer<typeof BitqueryTransferFactSchema>;
 
 export const BitqueryAggregateSchema = z
   .object({
@@ -293,6 +311,90 @@ export const MarketSnapshotSchema = z
   .strict();
 
 export type MarketSnapshot = z.infer<typeof MarketSnapshotSchema>;
+
+export const PhaseATimeWindowSchema = z
+  .object({
+    from: z.string().datetime().optional(),
+    to: z.string().datetime().optional(),
+  })
+  .strict();
+
+export type PhaseATimeWindow = z.infer<typeof PhaseATimeWindowSchema>;
+
+export const RealTransactionFactSchema = z
+  .object({
+    txHash: z.string().min(1),
+    payerWallet: EvmAddressSchema,
+    payTo: EvmAddressSchema,
+    amount: AtomicAmountSchema,
+    asset: z.string().min(1),
+    network: z.string().min(1),
+    timestamp: z.string().datetime(),
+    blockNumber: z.string().regex(/^\d+$/).optional(),
+    provenance: z.literal("onchain_fact"),
+  })
+  .strict();
+
+export type RealTransactionFact = z.infer<typeof RealTransactionFactSchema>;
+
+export const RealTransactionFixtureSchema = z
+  .object({
+    generatedAt: z.string().datetime(),
+    providerId: z.string().min(1),
+    resource: z.string().min(1).optional(),
+    metadata: z
+      .object({
+        requestedLimit: z.number().int().positive(),
+        capturedCount: z.number().int().nonnegative(),
+        timeWindow: PhaseATimeWindowSchema,
+        source: SourceProvenanceSchema,
+      })
+      .strict(),
+    facts: z.array(RealTransactionFactSchema).min(1),
+  })
+  .strict()
+  .superRefine((value, ctx) => {
+    if (value.metadata.capturedCount !== value.facts.length) {
+      ctx.addIssue({
+        code: "custom",
+        message: "capturedCount must equal facts.length",
+        path: ["metadata", "capturedCount"],
+      });
+    }
+  });
+
+export type RealTransactionFixture = z.infer<typeof RealTransactionFixtureSchema>;
+
+export const MockEndpointAttributionItemSchema = z
+  .object({
+    txHash: z.string().min(1),
+    endpointPath: z.string().min(1),
+    endpointName: z.string().min(1),
+    workflowLabel: z.string().min(1),
+    requestMethod: z.enum(["GET", "POST", "PUT", "PATCH", "DELETE"]),
+    provenance: z
+      .object({
+        endpointPath: z.enum(["demo_label", "future_sdk_field"]),
+        endpointName: z.enum(["demo_label", "future_sdk_field"]),
+        workflowLabel: z.enum(["demo_label", "future_sdk_field"]),
+        requestMethod: z.enum(["demo_label", "future_sdk_field"]),
+      })
+      .strict(),
+    reasons: z.array(EvidenceLabelSchema).min(1),
+  })
+  .strict();
+
+export type MockEndpointAttributionItem = z.infer<typeof MockEndpointAttributionItemSchema>;
+
+export const MockEndpointAttributionFixtureSchema = z
+  .object({
+    generatedAt: z.string().datetime(),
+    source: SourceProvenanceSchema.extend({ sourceKind: z.literal("derived") }),
+    items: z.array(MockEndpointAttributionItemSchema).min(1),
+  })
+  .strict();
+
+export type MockEndpointAttributionFixture = z.infer<typeof MockEndpointAttributionFixtureSchema>;
 
 export const PhaseBResponseScopeSchema = z
   .object({
@@ -512,7 +614,9 @@ export const PhaseBWalletUsageGraphObservationSchema = withDerivedInsightReasons
     .strict(),
 );
 
-export type PhaseBWalletUsageGraphObservation = z.infer<typeof PhaseBWalletUsageGraphObservationSchema>;
+export type PhaseBWalletUsageGraphObservation = z.infer<
+  typeof PhaseBWalletUsageGraphObservationSchema
+>;
 
 export const PhaseBWalletUsageGraphOtherServiceCandidateSchema = withDerivedInsightReasons(
   z
@@ -531,7 +635,9 @@ export const PhaseBWalletUsageGraphOtherServiceCandidateSchema = withDerivedInsi
     .strict(),
 );
 
-export type PhaseBWalletUsageGraphOtherServiceCandidate = z.infer<typeof PhaseBWalletUsageGraphOtherServiceCandidateSchema>;
+export type PhaseBWalletUsageGraphOtherServiceCandidate = z.infer<
+  typeof PhaseBWalletUsageGraphOtherServiceCandidateSchema
+>;
 
 export const PhaseBWalletUsageGraphPayerWalletSchema = withDerivedInsightReasons(
   z
@@ -554,7 +660,9 @@ export const PhaseBWalletUsageGraphPayerWalletSchema = withDerivedInsightReasons
     .strict(),
 );
 
-export type PhaseBWalletUsageGraphPayerWallet = z.infer<typeof PhaseBWalletUsageGraphPayerWalletSchema>;
+export type PhaseBWalletUsageGraphPayerWallet = z.infer<
+  typeof PhaseBWalletUsageGraphPayerWalletSchema
+>;
 
 export const PhaseBWalletUsageGraphProviderWalletSchema = withDerivedInsightReasons(
   z
@@ -575,7 +683,9 @@ export const PhaseBWalletUsageGraphProviderWalletSchema = withDerivedInsightReas
     .strict(),
 );
 
-export type PhaseBWalletUsageGraphProviderWallet = z.infer<typeof PhaseBWalletUsageGraphProviderWalletSchema>;
+export type PhaseBWalletUsageGraphProviderWallet = z.infer<
+  typeof PhaseBWalletUsageGraphProviderWalletSchema
+>;
 
 export const PhaseBWalletUsageGraphSchema = withDerivedInsightReasons(
   z
@@ -626,13 +736,22 @@ export const validateMarketPaymentOption = (value: unknown): MarketPaymentOption
 export const validateMarketResourceSnapshot = (value: unknown): MarketResourceSnapshot =>
   MarketResourceSnapshotSchema.parse(value);
 
-export const validateMarketSnapshot = (value: unknown): MarketSnapshot => MarketSnapshotSchema.parse(value);
+export const validateMarketSnapshot = (value: unknown): MarketSnapshot =>
+  MarketSnapshotSchema.parse(value);
+
+export const validateRealTransactionFixture = (value: unknown): RealTransactionFixture =>
+  RealTransactionFixtureSchema.parse(value);
+
+export const validateMockEndpointAttributionFixture = (
+  value: unknown,
+): MockEndpointAttributionFixture => MockEndpointAttributionFixtureSchema.parse(value);
 
 export const validatePhaseBCustomerListResponse = (value: unknown): PhaseBCustomerListResponse =>
   PhaseBCustomerListResponseSchema.parse(value);
 
-export const validatePhaseBCustomerProfileResponse = (value: unknown): PhaseBCustomerProfileResponse =>
-  PhaseBCustomerProfileResponseSchema.parse(value);
+export const validatePhaseBCustomerProfileResponse = (
+  value: unknown,
+): PhaseBCustomerProfileResponse => PhaseBCustomerProfileResponseSchema.parse(value);
 
 export const validatePhaseBWalletUsageGraphResponse = (value: unknown): WalletUsageGraphResponse =>
   WalletUsageGraphResponseSchema.parse(value);
