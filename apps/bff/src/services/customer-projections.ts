@@ -1,7 +1,7 @@
 import {
   listAttributionCandidates,
-  listPaymentObservations,
   listPayerProfiles,
+  listPaymentObservations,
 } from "../../../cli/lib/aggregates/summaries";
 import type { AppDatabase } from "../../../cli/lib/db";
 import type {

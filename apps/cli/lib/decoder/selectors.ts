@@ -1,9 +1,9 @@
+import type { KnownMethodSelector } from "../constants";
 import {
   EXECUTE_WITH_AUTHORIZATION_SELECTOR,
   MULTICALL3_AGGREGATE3_SELECTOR,
   TRANSFER_WITH_AUTHORIZATION_SELECTOR,
 } from "../constants";
-import type { KnownMethodSelector } from "../constants";
 
 export const isHexData = (value: string): value is `0x${string}` => /^0x[0-9a-fA-F]*$/.test(value);
 

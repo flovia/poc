@@ -10,14 +10,14 @@ import {
   MULTICALL3_AGGREGATE3_ABI,
   USDC_TRANSFER_WITH_AUTHORIZATION_ABI,
 } from "../../lib/constants";
+import { buildPaymentObservations } from "../../lib/observations/build-observation";
 import type {
-  FixtureManifest,
   FixtureCase,
+  FixtureManifest,
   KnownFingerprintsSeed,
   RawReceipt,
   RawTransaction,
 } from "../../lib/schema";
-import { buildPaymentObservations } from "../../lib/observations/build-observation";
 
 type HexData = `0x${string}`;
 

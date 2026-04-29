@@ -1,8 +1,8 @@
 import {
   listAttributionCandidates,
   listDailyMetrics,
-  listPaymentObservations,
   listPayerProfiles,
+  listPaymentObservations,
   listRecipientSummaries,
   listRelayerSummaries,
 } from "../../../cli/lib/aggregates/summaries";

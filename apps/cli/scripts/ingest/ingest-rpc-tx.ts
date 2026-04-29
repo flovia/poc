@@ -1,8 +1,8 @@
-import { db, env, initDb, type AppDatabase } from "../../lib/db";
+import { type AppDatabase, db, env, initDb } from "../../lib/db";
 import { buildPaymentObservations } from "../../lib/observations/build-observation";
 import { storePaymentObservations } from "../../lib/observations/store-observations";
-import { fetchRpcFixture, type FetchLike } from "../../lib/rpc-fixtures";
 import { resolveBaseRpcUrl, resolveRpcRequestTimeoutMs } from "../../lib/rpc-config";
+import { type FetchLike, fetchRpcFixture } from "../../lib/rpc-fixtures";
 
 type RunRpcTxIngestOptions = {
   rpcUrl: string;

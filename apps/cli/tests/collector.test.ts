@@ -1,7 +1,31 @@
+import { beforeEach, describe, expect, test } from "bun:test";
 import fs from "node:fs";
 import path from "node:path";
-import { beforeEach, describe, expect, test } from "bun:test";
 import { encodeFunctionData, toEventSelector, toFunctionSelector } from "viem";
+import { buildDailyMetrics } from "../lib/aggregates/daily";
+import {
+  listAttributionCandidates,
+  listDailyMetrics,
+  listPayerProfiles,
+  listPaymentObservations,
+  listRecipientSummaries,
+  listRelayerSummaries,
+} from "../lib/aggregates/summaries";
+import { rebuildWalletProfiles } from "../lib/aggregates/wallets";
+import {
+  toAttributionCandidateDto,
+  toDailyMetricDto,
+  toPaymentObservationDto,
+  toWalletProfileDto,
+} from "../lib/api/dto";
+import {
+  seedKnownFingerprints,
+  seedKnownFingerprintsFromFile,
+} from "../lib/attribution/fingerprints";
+import { seedProviderEndpointClaimsFromFile } from "../lib/attribution/provider-claims";
+import { buildAttributionCandidates, scoreObservationCandidates } from "../lib/attribution/score";
+import { seedSettlementFingerprintPacksFromFile } from "../lib/attribution/settlement-fingerprints";
+import { buildWalletUsageGraph } from "../lib/attribution/wallet-graph";
 import {
   BASE_CHAIN_ID,
   BASE_USDC_ADDRESS,
@@ -14,47 +38,15 @@ import {
   TRANSFER_WITH_AUTHORIZATION_SELECTOR,
   USDC_TRANSFER_WITH_AUTHORIZATION_ABI,
 } from "../lib/constants";
-import { extractTopLevelSelector } from "../lib/decoder/selectors";
-import { decodeTransferWithAuthorization } from "../lib/decoder/direct-usdc";
-import { decodeAggregate3, extractUsdcCallsFromMulticall } from "../lib/decoder/multicall3";
-import { decodeReceiptLogsForUsdc } from "../lib/decoder/logs";
-import { buildPaymentObservations } from "../lib/observations/build-observation";
 import { createDb, db, initDb, resetDb } from "../lib/db";
+import { decodeTransferWithAuthorization } from "../lib/decoder/direct-usdc";
+import { decodeReceiptLogsForUsdc } from "../lib/decoder/logs";
+import { decodeAggregate3, extractUsdcCallsFromMulticall } from "../lib/decoder/multicall3";
+import { extractTopLevelSelector } from "../lib/decoder/selectors";
+import { validateEndpointManifest } from "../lib/endpoint-manifest";
+import { buildPaymentObservations } from "../lib/observations/build-observation";
 import { storePaymentObservations } from "../lib/observations/store-observations";
-import { runIngest } from "../scripts/ingest/ingest-fixtures";
-import { isRpcRangeCandidate, runRpcRangeIngest } from "../scripts/ingest/ingest-rpc-range";
-import { runRpcTxIngest } from "../scripts/ingest/ingest-rpc-tx";
-import { buildAttributionCandidates, scoreObservationCandidates } from "../lib/attribution/score";
-import {
-  seedKnownFingerprints,
-  seedKnownFingerprintsFromFile,
-} from "../lib/attribution/fingerprints";
-import { seedProviderEndpointClaimsFromFile } from "../lib/attribution/provider-claims";
-import { seedSettlementFingerprintPacksFromFile } from "../lib/attribution/settlement-fingerprints";
-import { buildWalletUsageGraph } from "../lib/attribution/wallet-graph";
-import { buildDailyMetrics } from "../lib/aggregates/daily";
-import { rebuildWalletProfiles } from "../lib/aggregates/wallets";
-import {
-  listAttributionCandidates,
-  listDailyMetrics,
-  listPayerProfiles,
-  listPaymentObservations,
-  listRecipientSummaries,
-  listRelayerSummaries,
-} from "../lib/aggregates/summaries";
-import {
-  toAttributionCandidateDto,
-  toDailyMetricDto,
-  toPaymentObservationDto,
-  toWalletProfileDto,
-} from "../lib/api/dto";
-import {
-  validateFixtureManifest,
-  type FixtureManifest,
-  type KnownFingerprintsSeed,
-  type RawReceipt,
-  type RawTransaction,
-} from "../lib/schema";
+import { resolveBaseRpcUrl, resolveRpcRequestTimeoutMs } from "../lib/rpc-config";
 import {
   fetchRpcFixture,
   normalizeRpcReceipt,
@@ -62,8 +54,16 @@ import {
   type RpcReceiptPayload,
   type RpcTransactionPayload,
 } from "../lib/rpc-fixtures";
-import { resolveBaseRpcUrl, resolveRpcRequestTimeoutMs } from "../lib/rpc-config";
-import { validateEndpointManifest } from "../lib/endpoint-manifest";
+import {
+  type FixtureManifest,
+  type KnownFingerprintsSeed,
+  type RawReceipt,
+  type RawTransaction,
+  validateFixtureManifest,
+} from "../lib/schema";
+import { runIngest } from "../scripts/ingest/ingest-fixtures";
+import { isRpcRangeCandidate, runRpcRangeIngest } from "../scripts/ingest/ingest-rpc-range";
+import { runRpcTxIngest } from "../scripts/ingest/ingest-rpc-tx";
 
 const fixtureRoot = path.resolve(import.meta.dir, "..", "fixtures");
 

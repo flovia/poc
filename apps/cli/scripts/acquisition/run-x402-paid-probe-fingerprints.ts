@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { BASE_CHAIN_ID } from "../../lib/constants";
-import { env, initDb, db, type AppDatabase } from "../../lib/db";
+import { type AppDatabase, db, env, initDb } from "../../lib/db";
 import {
   loadPaidProbeResultsFromFile,
   type PaidProbeResult,
@@ -9,11 +9,9 @@ import {
 } from "../../lib/endpoint-manifest";
 import { buildPaymentObservations } from "../../lib/observations/build-observation";
 import { storePaymentObservations } from "../../lib/observations/store-observations";
-import { fetchRpcFixture } from "../../lib/rpc-fixtures";
 import { resolveBaseRpcUrl, resolveRpcRequestTimeoutMs } from "../../lib/rpc-config";
+import { fetchRpcFixture } from "../../lib/rpc-fixtures";
 import {
-  validateKnownFingerprintsSeed,
-  validateSettlementFingerprintPacksSeed,
   type HexAddress,
   type KnownFingerprintSeedEntry,
   type KnownFingerprintsSeed,
@@ -22,6 +20,8 @@ import {
   type RawTransaction,
   type SettlementFingerprintPack,
   type SettlementFingerprintPacksSeed,
+  validateKnownFingerprintsSeed,
+  validateSettlementFingerprintPacksSeed,
 } from "../../lib/schema";
 
 type PaidArtifactInput = {

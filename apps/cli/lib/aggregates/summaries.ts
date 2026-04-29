@@ -1,4 +1,4 @@
-import { db, type AppDatabase } from "../db";
+import { type AppDatabase, db } from "../db";
 
 export type PaymentObservationRow = {
   observation_id: number;

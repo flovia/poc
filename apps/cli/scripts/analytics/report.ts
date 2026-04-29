@@ -1,16 +1,16 @@
-import path from "node:path";
 import fs from "node:fs";
-import { env, ensureDir } from "../../lib/db";
-import { buildReportSummary } from "../../lib/api/summary";
+import path from "node:path";
 import {
   listAttributionCandidates,
   listDailyMetrics,
-  listPaymentObservations,
   listPayerProfiles,
+  listPaymentObservations,
   listRecipientSummaries,
   listRelayerSummaries,
 } from "../../lib/aggregates/summaries";
+import { buildReportSummary } from "../../lib/api/summary";
 import { buildWalletUsageGraph } from "../../lib/attribution/wallet-graph";
+import { ensureDir, env } from "../../lib/db";
 
 const buildMarkdown = (summary: Record<string, unknown>) => {
   const observations = listPaymentObservations();

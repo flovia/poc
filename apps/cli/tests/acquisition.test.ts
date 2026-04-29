@@ -1,27 +1,20 @@
+import { describe, expect, test } from "bun:test";
 import crypto from "node:crypto";
 import fs from "node:fs";
-import { describe, expect, test } from "bun:test";
 import {
-  validateEndpointManifest,
-  validatePaidProbeResults,
   type DryRunProbeResults,
   type EndpointManifest,
   type LastDryRun,
   type PaidProbeResults,
+  validateEndpointManifest,
+  validatePaidProbeResults,
 } from "../lib/endpoint-manifest";
+import type { PaymentObservationInput, RawReceipt, RawTransaction } from "../lib/schema";
 import {
   analyzeX402ProbeArtifacts,
   buildRetryChainReport,
 } from "../scripts/acquisition/analyze-x402-probe-artifacts";
-import {
-  paidProbeStatusFromPayment,
-  resolveOutputPath,
-  retryCaseIds,
-  requestBody,
-  targetUrl,
-  txHashFromSettlement,
-  x402Command,
-} from "../scripts/acquisition/run-x402-paid-probes";
+import { buildProviderEndpointClaimsFromPaidProbeFingerprints } from "../scripts/acquisition/generate-provider-endpoint-claims-from-paid-probe-fingerprints";
 import {
   buildKnownFingerprintSeedFromPaidProbeObservations,
   buildPaidProbeFingerprintArtifact,
@@ -29,8 +22,15 @@ import {
   matchingChallengeObservations,
   paidProbeFingerprintCandidates,
 } from "../scripts/acquisition/run-x402-paid-probe-fingerprints";
-import { buildProviderEndpointClaimsFromPaidProbeFingerprints } from "../scripts/acquisition/generate-provider-endpoint-claims-from-paid-probe-fingerprints";
-import type { PaymentObservationInput, RawReceipt, RawTransaction } from "../lib/schema";
+import {
+  paidProbeStatusFromPayment,
+  requestBody,
+  resolveOutputPath,
+  retryCaseIds,
+  targetUrl,
+  txHashFromSettlement,
+  x402Command,
+} from "../scripts/acquisition/run-x402-paid-probes";
 
 const baseArtifact = (overrides: Partial<PaidProbeResults> = {}): PaidProbeResults =>
   validatePaidProbeResults({

@@ -1,10 +1,10 @@
 import fs from "node:fs";
 import path from "node:path";
 import { BASE_CHAIN_ID } from "../../lib/constants";
-import { loadEndpointManifestFromFile, type EndpointCase } from "../../lib/endpoint-manifest";
+import { type EndpointCase, loadEndpointManifestFromFile } from "../../lib/endpoint-manifest";
 import {
-  validateProviderEndpointClaimsSeed,
   type ProviderEndpointClaimsSeed,
+  validateProviderEndpointClaimsSeed,
 } from "../../lib/schema";
 
 type CliOptions = {

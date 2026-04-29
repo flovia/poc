@@ -1,4 +1,4 @@
-import { db, nowIso, type AppDatabase } from "../db";
+import { type AppDatabase, db, nowIso } from "../db";
 
 type DailyMetricRow = {
   day: string;
