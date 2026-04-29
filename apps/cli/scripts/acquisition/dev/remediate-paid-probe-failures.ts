@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { validateEndpointManifest } from "../../lib/endpoint-manifest";
+import { validateEndpointManifest } from "../../../lib/endpoint-manifest";
 
 type EndpointCaseRecord = Record<string, unknown>;
 

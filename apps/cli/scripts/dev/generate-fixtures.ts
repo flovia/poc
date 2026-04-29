@@ -9,15 +9,15 @@ import {
   MULTICALL3_ADDRESS,
   MULTICALL3_AGGREGATE3_ABI,
   USDC_TRANSFER_WITH_AUTHORIZATION_ABI,
-} from "../lib/constants";
+} from "../../lib/constants";
 import type {
   FixtureManifest,
   FixtureCase,
   KnownFingerprintsSeed,
   RawReceipt,
   RawTransaction,
-} from "../lib/schema";
-import { buildPaymentObservations } from "../lib/observations/build-observation";
+} from "../../lib/schema";
+import { buildPaymentObservations } from "../../lib/observations/build-observation";
 
 type HexData = `0x${string}`;
 

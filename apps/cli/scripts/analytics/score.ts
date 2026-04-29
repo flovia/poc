@@ -1,4 +1,4 @@
-import { buildAttributionCandidates } from "../lib/attribution/score";
+import { buildAttributionCandidates } from "../../lib/attribution/score";
 
 const result = buildAttributionCandidates();
 

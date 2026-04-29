@@ -1,19 +1,19 @@
 import path from "node:path";
 import fs from "node:fs";
-import { db, initDb, resetDb, env } from "../lib/db";
-import { runIngest } from "./ingest-fixtures";
-import { buildAttributionCandidates } from "../lib/attribution/score";
-import { seedKnownFingerprintsFromFile } from "../lib/attribution/fingerprints";
-import { seedProviderEndpointClaimsFromFile } from "../lib/attribution/provider-claims";
-import { seedSettlementFingerprintPacksFromFile } from "../lib/attribution/settlement-fingerprints";
-import { buildWalletUsageGraph } from "../lib/attribution/wallet-graph";
-import { buildDailyMetrics } from "../lib/aggregates/daily";
-import { rebuildWalletProfiles } from "../lib/aggregates/wallets";
-import { listAttributionCandidates, listPaymentObservations } from "../lib/aggregates/summaries";
-import { runReport } from "./report";
-import { validateFixtureManifest, type RawReceipt, type RawTransaction } from "../lib/schema";
-import { buildPaymentObservations } from "../lib/observations/build-observation";
-import { loadEndpointManifestFromFile } from "../lib/endpoint-manifest";
+import { db, initDb, resetDb, env } from "../../lib/db";
+import { runIngest } from "../ingest/ingest-fixtures";
+import { buildAttributionCandidates } from "../../lib/attribution/score";
+import { seedKnownFingerprintsFromFile } from "../../lib/attribution/fingerprints";
+import { seedProviderEndpointClaimsFromFile } from "../../lib/attribution/provider-claims";
+import { seedSettlementFingerprintPacksFromFile } from "../../lib/attribution/settlement-fingerprints";
+import { buildWalletUsageGraph } from "../../lib/attribution/wallet-graph";
+import { buildDailyMetrics } from "../../lib/aggregates/daily";
+import { rebuildWalletProfiles } from "../../lib/aggregates/wallets";
+import { listAttributionCandidates, listPaymentObservations } from "../../lib/aggregates/summaries";
+import { runReport } from "../analytics/report";
+import { validateFixtureManifest, type RawReceipt, type RawTransaction } from "../../lib/schema";
+import { buildPaymentObservations } from "../../lib/observations/build-observation";
+import { loadEndpointManifestFromFile } from "../../lib/endpoint-manifest";
 
 const readExpected = <T>(filePath: string): T => {
   const absolutePath = path.isAbsolute(filePath) ? filePath : path.join(process.cwd(), filePath);

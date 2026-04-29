@@ -21,9 +21,9 @@ import { decodeReceiptLogsForUsdc } from "../lib/decoder/logs";
 import { buildPaymentObservations } from "../lib/observations/build-observation";
 import { createDb, db, initDb, resetDb } from "../lib/db";
 import { storePaymentObservations } from "../lib/observations/store-observations";
-import { runIngest } from "../scripts/ingest-fixtures";
-import { isRpcRangeCandidate, runRpcRangeIngest } from "../scripts/ingest-rpc-range";
-import { runRpcTxIngest } from "../scripts/ingest-rpc-tx";
+import { runIngest } from "../scripts/ingest/ingest-fixtures";
+import { isRpcRangeCandidate, runRpcRangeIngest } from "../scripts/ingest/ingest-rpc-range";
+import { runRpcTxIngest } from "../scripts/ingest/ingest-rpc-tx";
 import { buildAttributionCandidates, scoreObservationCandidates } from "../lib/attribution/score";
 import {
   seedKnownFingerprints,

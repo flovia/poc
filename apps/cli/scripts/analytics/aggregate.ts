@@ -1,5 +1,5 @@
-import { rebuildWalletProfiles } from "../lib/aggregates/wallets";
-import { buildDailyMetrics } from "../lib/aggregates/daily";
+import { rebuildWalletProfiles } from "../../lib/aggregates/wallets";
+import { buildDailyMetrics } from "../../lib/aggregates/daily";
 
 const dailyMetrics = buildDailyMetrics();
 const wallets = rebuildWalletProfiles();

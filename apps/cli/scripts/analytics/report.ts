@@ -1,7 +1,7 @@
 import path from "node:path";
 import fs from "node:fs";
-import { env, ensureDir } from "../lib/db";
-import { buildReportSummary } from "../lib/api/summary";
+import { env, ensureDir } from "../../lib/db";
+import { buildReportSummary } from "../../lib/api/summary";
 import {
   listAttributionCandidates,
   listDailyMetrics,
@@ -9,8 +9,8 @@ import {
   listPayerProfiles,
   listRecipientSummaries,
   listRelayerSummaries,
-} from "../lib/aggregates/summaries";
-import { buildWalletUsageGraph } from "../lib/attribution/wallet-graph";
+} from "../../lib/aggregates/summaries";
+import { buildWalletUsageGraph } from "../../lib/attribution/wallet-graph";
 
 const buildMarkdown = (summary: Record<string, unknown>) => {
   const observations = listPaymentObservations();

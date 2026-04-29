@@ -4,11 +4,11 @@ import {
   MULTICALL3_ADDRESS,
   MULTICALL3_AGGREGATE3_SELECTOR,
   TRANSFER_WITH_AUTHORIZATION_SELECTOR,
-} from "../lib/constants";
-import { db, env, initDb, nowIso, type AppDatabase } from "../lib/db";
-import { buildPaymentObservations } from "../lib/observations/build-observation";
-import { storePaymentObservations } from "../lib/observations/store-observations";
-import { resolveBaseRpcUrl, resolveRpcRequestTimeoutMs } from "../lib/rpc-config";
+} from "../../lib/constants";
+import { db, env, initDb, nowIso, type AppDatabase } from "../../lib/db";
+import { buildPaymentObservations } from "../../lib/observations/build-observation";
+import { storePaymentObservations } from "../../lib/observations/store-observations";
+import { resolveBaseRpcUrl, resolveRpcRequestTimeoutMs } from "../../lib/rpc-config";
 import {
   assertRpcFixtureConsistency,
   fetchRpcBlockRange,
@@ -17,7 +17,7 @@ import {
   type FetchLike,
   type RpcBlockWithTransactionsPayload,
   type RpcTransactionPayload,
-} from "../lib/rpc-fixtures";
+} from "../../lib/rpc-fixtures";
 
 type RunRpcRangeIngestOptions = {
   rpcUrl: string;
