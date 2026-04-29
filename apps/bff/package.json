@@ -9,6 +9,7 @@
   },
   "scripts": {
     "start": "bun src/server.ts",
+    "seed:demo": "bun ./scripts/seed-demo.ts",
     "test": "bun test",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "verify:e2e": "bun ./scripts/verify-e2e.ts",
