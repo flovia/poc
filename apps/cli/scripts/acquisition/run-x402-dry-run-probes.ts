@@ -77,7 +77,13 @@ const requestBody = (endpointCase: EndpointCase): string | undefined => {
     return undefined;
   }
 
-  return JSON.stringify(endpointCase.requestBodyTemplate ?? {});
+  if (endpointCase.requestBodyTemplate === undefined) {
+    throw new Error(
+      `${endpointCase.caseId} requires requestBodyTemplate; requestBodyTemplateHash is not executable`,
+    );
+  }
+
+  return JSON.stringify(endpointCase.requestBodyTemplate);
 };
 
 const challengeStatus = (httpStatus: number, parsedBody: unknown): ProbeResult["status"] => {

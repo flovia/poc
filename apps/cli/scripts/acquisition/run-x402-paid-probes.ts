@@ -115,7 +115,26 @@ export const requestBody = (endpointCase: EndpointCase): string | null => {
   ) {
     return null;
   }
-  return JSON.stringify(endpointCase.requestBodyTemplate ?? {});
+
+  if (endpointCase.requestBodyTemplate === undefined) {
+    throw new Error(
+      `${endpointCase.caseId} requires requestBodyTemplate; requestBodyTemplateHash is not executable`,
+    );
+  }
+
+  return JSON.stringify(endpointCase.requestBodyTemplate);
+};
+
+export const requestBodySource = (endpointCase: EndpointCase) => {
+  if (
+    endpointCase.method !== "POST" &&
+    endpointCase.method !== "PUT" &&
+    endpointCase.method !== "PATCH"
+  ) {
+    return null;
+  }
+
+  return "manifest_request_body_template";
 };
 
 export const targetUrl = (endpointCase: EndpointCase, dryRun: LastDryRun): string =>
@@ -232,6 +251,21 @@ export const txHashFromSettlement = (settlement: Record<string, unknown> | null)
   return null;
 };
 
+export const paidProbeStatusFromPayment = (
+  exitCode: number,
+  payment: Record<string, unknown> | null,
+  settlement: Record<string, unknown> | null,
+): "paid" | "paid_with_tx" | "error" => {
+  if (txHashFromSettlement(settlement) !== null) return "paid_with_tx";
+
+  const paymentStatus = typeof payment?.status === "string" ? payment.status.toLowerCase() : "";
+  const hasPaymentEvidence =
+    settlement !== null || ["paid", "settled", "succeeded", "success"].includes(paymentStatus);
+  if (exitCode === 0 || hasPaymentEvidence) return "paid";
+
+  return "error";
+};
+
 const errorDiagnostic = (execution: { stdout: string; stderr: string }): string | null =>
   execution.stderr.length > 0 ? execution.stderr : preview(execution.stdout);
 
@@ -273,19 +307,20 @@ export const runX402PaidProbes = (options = parseArgs(Bun.argv.slice(2))) => {
 
     const executedAt = new Date().toISOString();
     const execution = runX402(args);
-    if (execution.exitCode === 0) spent += candidate.amount;
     const parsed = recordFrom(execution.parsed);
     const payment = recordFrom(parsed?.payment);
     const settlement = recordFrom(payment?.settlement);
     const response = recordFrom(parsed?.response);
     const txHash = txHashFromSettlement(settlement);
-    const error = execution.exitCode === 0 ? null : errorDiagnostic(execution);
+    const status = paidProbeStatusFromPayment(execution.exitCode, payment, settlement);
+    if (status === "paid" || status === "paid_with_tx") spent += candidate.amount;
+    const error = status === "error" ? errorDiagnostic(execution) : null;
     results.push({
       caseId: candidate.endpointCase.caseId,
       providerName: candidate.endpointCase.providerName,
       serviceName: candidate.endpointCase.serviceName,
       routeKind: candidate.endpointCase.routeKind,
-      status: execution.exitCode === 0 ? (txHash ? "paid_with_tx" : "paid") : "error",
+      status,
       executedAt,
       txHash,
       network: candidate.option.network,
@@ -297,12 +332,7 @@ export const runX402PaidProbes = (options = parseArgs(Bun.argv.slice(2))) => {
         method: candidate.endpointCase.method,
         url: targetUrl(candidate.endpointCase, candidate.dryRun),
         bodySha256: body === null ? null : sha256(body),
-        bodySource:
-          candidate.endpointCase.method === "GET"
-            ? null
-            : candidate.endpointCase.requestBodyTemplate === undefined
-              ? "empty_object_fallback"
-              : "manifest_request_body_template",
+        bodySource: requestBodySource(candidate.endpointCase),
       },
       challenge: {
         network: candidate.option.network,

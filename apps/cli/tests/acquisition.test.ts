@@ -14,6 +14,7 @@ import {
   buildRetryChainReport,
 } from "../scripts/acquisition/analyze-x402-probe-artifacts";
 import {
+  paidProbeStatusFromPayment,
   resolveOutputPath,
   retryCaseIds,
   requestBody,
@@ -351,6 +352,59 @@ describe("paid probe runner helpers", () => {
         includeNotReady: true,
       }).slice(-2),
     ).toEqual(["https://example.com/search?q=resource", '{"query":"x402"}']);
+  });
+
+  test("rejects executable POST bodies that only have a template hash", () => {
+    const endpointCase = validateEndpointManifest({
+      schemaVersion: "1",
+      cases: [
+        {
+          caseId: "case-post-hash-only",
+          entityId: "entity-a",
+          providerName: "Provider A",
+          serviceName: "Search",
+          endpointUrl: "https://example.com/search",
+          resourceUrl: "https://example.com/search?q=resource",
+          requestHost: "example.com",
+          method: "POST",
+          sourceName: "sponge_catalog",
+          sourceUrl: "https://catalog.example.com",
+          sourceObservedDate: "2026-04-28",
+          sourceServiceId: "svc-a",
+          sourceEndpointId: "endp-a",
+          sourceEndpointUpdatedAt: "2026-04-28T00:00:00.000Z",
+          sourceBaseUrl: "https://example.com",
+          sourcePath: "/search",
+          sourceProtocol: "x402",
+          sourceNetworks: ["base"],
+          routeKind: "provider_direct_x402",
+          probeReadiness: "ready",
+          discoveryMethod: "catalog",
+          expectedNetwork: "base",
+          expectedAsset: "USDC",
+          requestBodyTemplateHash: crypto
+            .createHash("sha256")
+            .update('{"query":"x402"}')
+            .digest("hex"),
+        },
+      ],
+    }).cases[0]!;
+
+    expect(() => requestBody(endpointCase)).toThrow(
+      "requires requestBodyTemplate; requestBodyTemplateHash is not executable",
+    );
+  });
+
+  test("classifies paid evidence independently from process exit code", () => {
+    expect(
+      paidProbeStatusFromPayment(
+        2,
+        { settlement: { transaction: "0xtx" } },
+        { transaction: "0xtx" },
+      ),
+    ).toBe("paid_with_tx");
+    expect(paidProbeStatusFromPayment(2, { status: "settled" }, null)).toBe("paid");
+    expect(paidProbeStatusFromPayment(2, { status: "failed" }, null)).toBe("error");
   });
 });
 
