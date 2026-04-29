@@ -278,6 +278,74 @@ describe("storage and attribution", () => {
     expect(parsed.cases[0]?.requestBodyTemplate).toEqual({ query: "x402" });
   });
 
+  test("endpoint manifest accepts optional lastDryRun challenge summary payload", () => {
+    const source = readJson<Record<string, unknown>>("acquisition/endpoint_manifest.json");
+    const cases = source.cases as Array<Record<string, unknown>>;
+
+    const parsed = validateEndpointManifest({
+      ...source,
+      cases: [
+        {
+          ...cases[0],
+          caseId: "test-endpoint-manifest-last-dry-run",
+          endpointUrl: "https://example.com/search",
+          resourceUrl: "https://example.com/search",
+          requestHost: "example.com",
+          lastDryRun: {
+            status: "challenge",
+            attemptedAt: "2026-04-27T21:33:48.974Z",
+            url: "https://example.com/search",
+            httpStatus: 402,
+            paymentOptions: [
+              {
+                amount: "42",
+                network: "base",
+                asset: "USDC",
+                payTo: "0x0000000000000000000000000000000000000000",
+              },
+            ],
+          },
+        },
+      ],
+    });
+
+    expect(parsed.cases[0]).toHaveProperty("lastDryRun.status", "challenge");
+  });
+
+  test("endpoint manifest rejects invalid lastDryRun status", () => {
+    const source = readJson<Record<string, unknown>>("acquisition/endpoint_manifest.json");
+    const cases = source.cases as Array<Record<string, unknown>>;
+
+    expect(() =>
+      validateEndpointManifest({
+        ...source,
+        cases: [
+          {
+            ...cases[0],
+            caseId: "test-endpoint-manifest-last-dry-run-invalid",
+            endpointUrl: "https://example.com/search",
+            resourceUrl: "https://example.com/search",
+            requestHost: "example.com",
+            lastDryRun: {
+              status: "invalid-status",
+              attemptedAt: "2026-04-27T21:33:48.974Z",
+              url: "https://example.com/search",
+              httpStatus: 402,
+              paymentOptions: [
+                {
+                  amount: "42",
+                  network: "base",
+                  asset: "USDC",
+                  payTo: "0x0000000000000000000000000000000000000000",
+                },
+              ],
+            },
+          },
+        ],
+      }),
+    ).toThrow();
+  });
+
   test("ingest is idempotent and independent from fingerprint seeds", () => {
     const first = runIngest();
     const second = runIngest();

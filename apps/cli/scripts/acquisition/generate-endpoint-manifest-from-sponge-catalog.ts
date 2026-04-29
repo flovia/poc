@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { validateEndpointManifest, type RouteKind } from "../lib/endpoint-manifest";
+import { validateEndpointManifest, type RouteKind } from "../../lib/endpoint-manifest";
 
 type Snapshot = {
   services: ServiceSnapshotRecord[];
@@ -47,7 +47,8 @@ const BASE_USDC_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const snapshotPath = () =>
   path.join(process.cwd(), "fixtures", "acquisition", "sponge_catalog_snapshot.json");
 
-const manifestPath = () => path.join(process.cwd(), "fixtures", "acquisition", "endpoint_manifest.json");
+const manifestPath = () =>
+  path.join(process.cwd(), "fixtures", "acquisition", "endpoint_manifest.json");
 
 const readJson = <T>(filePath: string): T => JSON.parse(fs.readFileSync(filePath, "utf8")) as T;
 
@@ -97,18 +98,58 @@ const expectedAsset = (endpoint: CatalogEndpoint, route: PaymentRoute): string =
 const joinUrl = (baseUrl: string, endpointPath: string): string =>
   `${baseUrl.replace(/\/$/, "")}/${endpointPath.replace(/^\//, "")}`;
 
-const isSupportedMethod = (method: string): method is "GET" | "POST" | "DELETE" | "PATCH" | "PUT" =>
-  method === "GET" || method === "POST" || method === "DELETE" || method === "PATCH" || method === "PUT";
+const cleanExamplePath = (value: string): string =>
+  value
+    .trim()
+    .replace(/[),.;]+$/, "")
+    .replace(/^`|`$/g, "");
 
-const probeState = (method: string, sourcePath: string, parameters: unknown) => {
+const extractExamplePath = (instructions: string | null | undefined): string | null => {
+  if (!instructions) return null;
+
+  const match = instructions.match(/(?:example|e\.g\.)\s*:?\s*(`?https?:\/\/\S+`?|`?\/\S+`?)/i);
+  if (!match?.[1]) return null;
+
+  const example = cleanExamplePath(match[1]);
+  return example.startsWith("http://") || example.startsWith("https://") || example.startsWith("/")
+    ? example
+    : null;
+};
+
+const resolveExampleUrl = (baseUrl: string, examplePath: string | null): string | null => {
+  if (!examplePath) return null;
+  if (examplePath.startsWith("http://") || examplePath.startsWith("https://")) return examplePath;
+  return joinUrl(baseUrl, examplePath);
+};
+
+const isSupportedMethod = (method: string): method is "GET" | "POST" | "DELETE" | "PATCH" | "PUT" =>
+  method === "GET" ||
+  method === "POST" ||
+  method === "DELETE" ||
+  method === "PATCH" ||
+  method === "PUT";
+
+const probeState = (
+  method: string,
+  sourcePath: string,
+  parameters: unknown,
+  concreteResourceUrl: string | null,
+) => {
   const reasons: string[] = [];
 
   if (method !== "GET" && method !== "POST") {
-    return { probeReadiness: "unsupported_method" as const, reasons: [`unsupported method: ${method}`] };
+    return {
+      probeReadiness: "unsupported_method" as const,
+      reasons: [`unsupported method: ${method}`],
+    };
   }
 
-  if (hasPathParams(sourcePath)) reasons.push("path parameters require examples");
-  if (method === "GET" && hasQueryParams(parameters)) reasons.push("query parameters require examples");
+  if (hasPathParams(sourcePath) && concreteResourceUrl === null) {
+    reasons.push("path parameters require examples");
+  }
+  if (method === "GET" && hasQueryParams(parameters) && concreteResourceUrl === null) {
+    reasons.push("query parameters require examples");
+  }
   if (method === "POST") {
     if (!hasRequestBodySchema(parameters)) reasons.push("request body schema/example missing");
     else reasons.push("request body template requires review");
@@ -131,7 +172,8 @@ const buildCatalogCases = (snapshot: Snapshot) => {
     const endpoints = detail.endpoints ?? [];
 
     for (const [routeIndex, route] of routes.entries()) {
-      if (!route.baseUrl || !route.protocol || !route.networks || route.networks.length < 1) continue;
+      if (!route.baseUrl || !route.protocol || !route.networks || route.networks.length < 1)
+        continue;
 
       const requestHost = new URL(route.baseUrl).host;
       for (const endpoint of endpoints) {
@@ -142,8 +184,20 @@ const buildCatalogCases = (snapshot: Snapshot) => {
         if (sourcePath.length < 1) continue;
 
         const requestParameters = parseParameters(endpoint.parameters);
-        const { probeReadiness, reasons } = probeState(method, sourcePath, requestParameters);
         const endpointUrl = joinUrl(route.baseUrl, sourcePath);
+        const exampleUrl =
+          method === "GET"
+            ? resolveExampleUrl(route.baseUrl, extractExamplePath(endpoint.instructions))
+            : null;
+        const concreteResourceUrl =
+          exampleUrl ??
+          (!hasPathParams(sourcePath) && !hasQueryParams(requestParameters) ? endpointUrl : null);
+        const { probeReadiness, reasons } = probeState(
+          method,
+          sourcePath,
+          requestParameters,
+          concreteResourceUrl,
+        );
         const sourceNetworks = route.networks;
 
         cases.push({
@@ -152,11 +206,13 @@ const buildCatalogCases = (snapshot: Snapshot) => {
           providerName: detail.name ?? service.slug,
           serviceName: endpoint.description ?? detail.name ?? service.slug,
           endpointUrl,
-          ...(probeReadiness === "ready" ? { resourceUrl: endpointUrl } : {}),
+          ...(concreteResourceUrl !== null ? { resourceUrl: concreteResourceUrl } : {}),
           requestHost,
           method,
           ...(requestParameters === undefined ? {} : { requestParameters }),
-          ...(hasRequestBodySchema(requestParameters) ? { requestBodySchema: requestParameters } : {}),
+          ...(hasRequestBodySchema(requestParameters)
+            ? { requestBodySchema: requestParameters }
+            : {}),
           sourceName: "sponge_catalog",
           sourceUrl: service.serviceUrl || SPONGE_CATALOG_SOURCE_URL,
           sourceObservedDate: String(endpoint.updatedAt ?? new Date().toISOString()).slice(0, 10),
@@ -184,7 +240,9 @@ const buildCatalogCases = (snapshot: Snapshot) => {
 const run = () => {
   const snapshot = readJson<Snapshot>(snapshotPath());
   const currentManifest = readJson<{ cases: Array<Record<string, unknown>> }>(manifestPath());
-  const nonSpongeCases = currentManifest.cases.filter((entry) => entry.sourceName !== "sponge_catalog");
+  const nonSpongeCases = currentManifest.cases.filter(
+    (entry) => entry.sourceName !== "sponge_catalog",
+  );
   const spongeCases = buildCatalogCases(snapshot);
   const nextManifest = {
     schemaVersion: "1",

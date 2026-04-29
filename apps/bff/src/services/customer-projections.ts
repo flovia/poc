@@ -264,9 +264,24 @@ const calculateActivityGrowth = (observations: Observation[]): number => {
   const sorted = [...observations].sort(
     (left, right) => left.block_timestamp - right.block_timestamp,
   );
-  const midpoint = Math.ceil(sorted.length / 2);
-  const earlier = sorted.slice(0, midpoint).length;
-  const later = sorted.slice(midpoint).length;
+  const firstTimestamp = sorted[0]?.block_timestamp;
+  const lastTimestamp = sorted.at(-1)?.block_timestamp;
+
+  if (
+    firstTimestamp === undefined ||
+    lastTimestamp === undefined ||
+    firstTimestamp === lastTimestamp
+  ) {
+    return 0;
+  }
+
+  const midpointTimestamp = firstTimestamp + (lastTimestamp - firstTimestamp) / 2;
+  const earlier = sorted.filter((row) => row.block_timestamp <= midpointTimestamp).length;
+  const later = sorted.length - earlier;
+
+  if (earlier === 0) {
+    return 0;
+  }
 
   return roundRatio((later - earlier) / earlier);
 };

@@ -1,0 +1,4067 @@
+{
+  "schemaVersion": "1",
+  "sourceManifestPath": "/home/foxy/dev/work/flovia/poc/apps/cli/fixtures/acquisition/endpoint_manifest.json",
+  "sourceManifestSha256": "b1c965f860aabb70f0fa4af238e74116d6084320e131da8cb39463341c233d14",
+  "collectedAt": "2026-04-28T12:49:22.107Z",
+  "mode": "paid_probe",
+  "selection": {
+    "execute": true,
+    "candidateCount": 95,
+    "limit": null,
+    "minSpendAtomic": "0",
+    "maxSpendAtomic": "100000",
+    "totalSpendCapAtomic": "1000000",
+    "network": "base",
+    "includePost": true,
+    "includeNotReady": true
+  },
+  "spend": {
+    "paidAtomic": "648000",
+    "currency": "USDC"
+  },
+  "results": [
+    {
+      "caseId": "spcat-agentmail-endp_d6krgdrp6r79xv0gg-route-0",
+      "providerName": "AgentMail",
+      "serviceName": "List all inboxes.",
+      "routeKind": "provider_direct_x402",
+      "status": "paid",
+      "executedAt": "2026-04-28T12:42:13.105Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x6e3184C204e596dED89E8A5693B602097F4Ab687",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "0",
+      "request": {
+        "method": "GET",
+        "url": "https://x402.api.agentmail.to/v0/inboxes",
+        "bodySha256": null,
+        "bodySource": null
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "0",
+        "payTo": "0x6e3184C204e596dED89E8A5693B602097F4Ab687"
+      },
+      "response": {
+        "status": 200,
+        "bodySha256": "4c89d16f4896064dc140c27c1e79edc79082783a7e4ae0e47618967b1fc1fd36",
+        "contentType": "application/json"
+      },
+      "payment": {
+        "status": "paid",
+        "selectedOption": {
+          "index": 0,
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "amount": "0",
+          "payTo": "0x6e3184C204e596dED89E8A5693B602097F4Ab687",
+          "timeoutSeconds": 300
+        },
+        "settlement": null
+      },
+      "stdoutSha256": "ad2acdf855038a7c4404545e3baa8ae672f4d26e0ad8c30c58c1787eda9c6fd5",
+      "stderrSha256": null,
+      "error": null
+    },
+    {
+      "caseId": "spcat-agentmail-endp_d6krn581b0vmrys94-route-0",
+      "providerName": "AgentMail",
+      "serviceName": "Create a new pod.",
+      "routeKind": "provider_direct_x402",
+      "status": "error",
+      "executedAt": "2026-04-28T12:42:15.826Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x6e3184C204e596dED89E8A5693B602097F4Ab687",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "10000",
+      "request": {
+        "method": "POST",
+        "url": "https://x402.api.agentmail.to/v0/pods",
+        "bodySha256": "3ce27b1ec5e8306c7e36f48a7fbe6ecbc750971e216bb926e7830ec830782914",
+        "bodySource": "manifest_request_body_template"
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "10000",
+        "payTo": "0x6e3184C204e596dED89E8A5693B602097F4Ab687"
+      },
+      "response": {
+        "bodySha256": null,
+        "contentType": null
+      },
+      "payment": {
+        "settlement": null
+      },
+      "stdoutSha256": "95c9daaf4a37fd38dfdb50af92a235e51177230dc5530059c84175a2b1f1f943",
+      "stderrSha256": null,
+      "error": ""
+    },
+    {
+      "caseId": "spcat-agentmail-endp_d6krn585f8kr8n6z0-route-0",
+      "providerName": "AgentMail",
+      "serviceName": "Get email metrics across all inboxes.",
+      "routeKind": "provider_direct_x402",
+      "status": "paid",
+      "executedAt": "2026-04-28T12:42:20.885Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x6e3184C204e596dED89E8A5693B602097F4Ab687",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "0",
+      "request": {
+        "method": "GET",
+        "url": "https://x402.api.agentmail.to/v0/metrics",
+        "bodySha256": null,
+        "bodySource": null
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "0",
+        "payTo": "0x6e3184C204e596dED89E8A5693B602097F4Ab687"
+      },
+      "response": {
+        "status": 200,
+        "bodySha256": "29c84a57365d4f081826c41b2ffb4df8dfd3f3f2722ea792dc00ac82cde336a3",
+        "contentType": "application/json"
+      },
+      "payment": {
+        "status": "paid",
+        "selectedOption": {
+          "index": 0,
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "amount": "0",
+          "payTo": "0x6e3184C204e596dED89E8A5693B602097F4Ab687",
+          "timeoutSeconds": 300
+        },
+        "settlement": null
+      },
+      "stdoutSha256": "c36a788ce5b72529e538d59d39b780bd48ba616437df79f8286568835fe1d10f",
+      "stderrSha256": null,
+      "error": null
+    },
+    {
+      "caseId": "spcat-agentmail-endp_d6krn585nzj2vvdt8-route-0",
+      "providerName": "AgentMail",
+      "serviceName": "Get current organization details.",
+      "routeKind": "provider_direct_x402",
+      "status": "paid",
+      "executedAt": "2026-04-28T12:42:23.167Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x6e3184C204e596dED89E8A5693B602097F4Ab687",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "0",
+      "request": {
+        "method": "GET",
+        "url": "https://x402.api.agentmail.to/v0/organizations",
+        "bodySha256": null,
+        "bodySource": null
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "0",
+        "payTo": "0x6e3184C204e596dED89E8A5693B602097F4Ab687"
+      },
+      "response": {
+        "status": 200,
+        "bodySha256": "b275363a4f352032e833c63e28b67f1fcf591e142a524011db5b8d0eab644de4",
+        "contentType": "application/json"
+      },
+      "payment": {
+        "status": "paid",
+        "selectedOption": {
+          "index": 0,
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "amount": "0",
+          "payTo": "0x6e3184C204e596dED89E8A5693B602097F4Ab687",
+          "timeoutSeconds": 300
+        },
+        "settlement": null
+      },
+      "stdoutSha256": "6a160841e30907eeb93194cef10e8c8c9abd2146e1e93d40d1a7d2035ffdec0c",
+      "stderrSha256": null,
+      "error": null
+    },
+    {
+      "caseId": "spcat-agentmail-endp_d6krn586gfssr25w0-route-0",
+      "providerName": "AgentMail",
+      "serviceName": "List all drafts across all inboxes.",
+      "routeKind": "provider_direct_x402",
+      "status": "paid",
+      "executedAt": "2026-04-28T12:42:26.249Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x6e3184C204e596dED89E8A5693B602097F4Ab687",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "0",
+      "request": {
+        "method": "GET",
+        "url": "https://x402.api.agentmail.to/v0/drafts",
+        "bodySha256": null,
+        "bodySource": null
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "0",
+        "payTo": "0x6e3184C204e596dED89E8A5693B602097F4Ab687"
+      },
+      "response": {
+        "status": 200,
+        "bodySha256": "eb9ab1d669cb2aaa61e335fe59a8a6d034f84d61cf5e77a57342c1d72b1f5760",
+        "contentType": "application/json"
+      },
+      "payment": {
+        "status": "paid",
+        "selectedOption": {
+          "index": 0,
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "amount": "0",
+          "payTo": "0x6e3184C204e596dED89E8A5693B602097F4Ab687",
+          "timeoutSeconds": 300
+        },
+        "settlement": null
+      },
+      "stdoutSha256": "9e78e4a30d47e3592b0d619673b1735d940f23cfd31a1ac492e71900f4e0292e",
+      "stderrSha256": null,
+      "error": null
+    },
+    {
+      "caseId": "spcat-agentmail-endp_d6krn58j0yk568jz0-route-0",
+      "providerName": "AgentMail",
+      "serviceName": "List all pods.",
+      "routeKind": "provider_direct_x402",
+      "status": "paid",
+      "executedAt": "2026-04-28T12:42:28.751Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x6e3184C204e596dED89E8A5693B602097F4Ab687",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "0",
+      "request": {
+        "method": "GET",
+        "url": "https://x402.api.agentmail.to/v0/pods",
+        "bodySha256": null,
+        "bodySource": null
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "0",
+        "payTo": "0x6e3184C204e596dED89E8A5693B602097F4Ab687"
+      },
+      "response": {
+        "status": 200,
+        "bodySha256": "ecc31c46af7688ea2558d145f9b2055fb0e92161879c809fcfbfa29d5bf0805e",
+        "contentType": "application/json"
+      },
+      "payment": {
+        "status": "paid",
+        "selectedOption": {
+          "index": 0,
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "amount": "0",
+          "payTo": "0x6e3184C204e596dED89E8A5693B602097F4Ab687",
+          "timeoutSeconds": 300
+        },
+        "settlement": null
+      },
+      "stdoutSha256": "12bc426c604137e2f39767f1a771714598e48ea60083e27cbd0e944dedb72f78",
+      "stderrSha256": null,
+      "error": null
+    },
+    {
+      "caseId": "spcat-agentmail-endp_d6krn58j8rd2q9440-route-0",
+      "providerName": "AgentMail",
+      "serviceName": "List all custom domains.",
+      "routeKind": "provider_direct_x402",
+      "status": "paid",
+      "executedAt": "2026-04-28T12:42:32.230Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x6e3184C204e596dED89E8A5693B602097F4Ab687",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "0",
+      "request": {
+        "method": "GET",
+        "url": "https://x402.api.agentmail.to/v0/domains",
+        "bodySha256": null,
+        "bodySource": null
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "0",
+        "payTo": "0x6e3184C204e596dED89E8A5693B602097F4Ab687"
+      },
+      "response": {
+        "status": 200,
+        "bodySha256": "d4a387cd5cc32e213f66c4a9493bef39bdf8f9be0226dec60c534d68f0ee0606",
+        "contentType": "application/json"
+      },
+      "payment": {
+        "status": "paid",
+        "selectedOption": {
+          "index": 0,
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "amount": "0",
+          "payTo": "0x6e3184C204e596dED89E8A5693B602097F4Ab687",
+          "timeoutSeconds": 300
+        },
+        "settlement": null
+      },
+      "stdoutSha256": "7569fdde065263da5804933f12b73e884b294d9f5d4004908beebdcab58750fe",
+      "stderrSha256": null,
+      "error": null
+    },
+    {
+      "caseId": "spcat-agentmail-endp_d6krn58sdbsjt494g-route-0",
+      "providerName": "AgentMail",
+      "serviceName": "Create a webhook for email events.",
+      "routeKind": "provider_direct_x402",
+      "status": "error",
+      "executedAt": "2026-04-28T12:42:34.959Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x6e3184C204e596dED89E8A5693B602097F4Ab687",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "10000",
+      "request": {
+        "method": "POST",
+        "url": "https://x402.api.agentmail.to/v0/webhooks",
+        "bodySha256": "246fa6c0b7f3a9244a3729a5eb9f123f031041df0c4ad1d477670462227abd9e",
+        "bodySource": "manifest_request_body_template"
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "10000",
+        "payTo": "0x6e3184C204e596dED89E8A5693B602097F4Ab687"
+      },
+      "response": {
+        "bodySha256": null,
+        "contentType": null
+      },
+      "payment": {
+        "settlement": null
+      },
+      "stdoutSha256": "95c9daaf4a37fd38dfdb50af92a235e51177230dc5530059c84175a2b1f1f943",
+      "stderrSha256": null,
+      "error": ""
+    },
+    {
+      "caseId": "spcat-agentmail-endp_d6krn58wmh7xgv4wr-route-0",
+      "providerName": "AgentMail",
+      "serviceName": "List all webhooks.",
+      "routeKind": "provider_direct_x402",
+      "status": "paid",
+      "executedAt": "2026-04-28T12:42:39.398Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x6e3184C204e596dED89E8A5693B602097F4Ab687",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "0",
+      "request": {
+        "method": "GET",
+        "url": "https://x402.api.agentmail.to/v0/webhooks",
+        "bodySha256": null,
+        "bodySource": null
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "0",
+        "payTo": "0x6e3184C204e596dED89E8A5693B602097F4Ab687"
+      },
+      "response": {
+        "status": 200,
+        "bodySha256": "e2f5cfaf4f6fb12e19a58b7019537e8a422eb4a4afb0525319510345b17c6e57",
+        "contentType": "application/json"
+      },
+      "payment": {
+        "status": "paid",
+        "selectedOption": {
+          "index": 0,
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "amount": "0",
+          "payTo": "0x6e3184C204e596dED89E8A5693B602097F4Ab687",
+          "timeoutSeconds": 300
+        },
+        "settlement": null
+      },
+      "stdoutSha256": "37d9fdf61d6fcb5aaec78299279bee42defafaca563d8c88139f37edd0188989",
+      "stderrSha256": null,
+      "error": null
+    },
+    {
+      "caseId": "spcat-agentmail-endp_d6krn5gnb3e4afp6g-route-0",
+      "providerName": "AgentMail",
+      "serviceName": "List all threads across all inboxes.",
+      "routeKind": "provider_direct_x402",
+      "status": "paid",
+      "executedAt": "2026-04-28T12:42:41.877Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x6e3184C204e596dED89E8A5693B602097F4Ab687",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "0",
+      "request": {
+        "method": "GET",
+        "url": "https://x402.api.agentmail.to/v0/threads",
+        "bodySha256": null,
+        "bodySource": null
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "0",
+        "payTo": "0x6e3184C204e596dED89E8A5693B602097F4Ab687"
+      },
+      "response": {
+        "status": 200,
+        "bodySha256": "0c86c8f8246d698494e06291a9c641b35d876f93f9463fb0397f99969bb24745",
+        "contentType": "application/json"
+      },
+      "payment": {
+        "status": "paid",
+        "selectedOption": {
+          "index": 0,
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "amount": "0",
+          "payTo": "0x6e3184C204e596dED89E8A5693B602097F4Ab687",
+          "timeoutSeconds": 300
+        },
+        "settlement": null
+      },
+      "stdoutSha256": "2feb941b26075b36a6a39e1a432d9ccb7f9a72f41988cf4275587507f460de28",
+      "stderrSha256": null,
+      "error": null
+    },
+    {
+      "caseId": "spcat-alchemy-endp_d6gf1dr34cyasjf2g-route-0",
+      "providerName": "Alchemy",
+      "serviceName": "Get historical prices by symbol or by network/address.",
+      "routeKind": "provider_direct_x402",
+      "status": "error",
+      "executedAt": "2026-04-28T12:42:44.271Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x0573c4dA7fC31E944e5FF959fEf3b42199C308B2",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "1000",
+      "request": {
+        "method": "POST",
+        "url": "https://x402.alchemy.com/prices/v1/tokens/historical",
+        "bodySha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "bodySource": "empty_object_fallback"
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "1000",
+        "payTo": "0x0573c4dA7fC31E944e5FF959fEf3b42199C308B2"
+      },
+      "response": {
+        "bodySha256": null,
+        "contentType": null
+      },
+      "payment": {
+        "settlement": null
+      },
+      "stdoutSha256": "3749f5e9f19913fea29d8346bd6e544e6098910af2211fc622adc8c497ac2bc8",
+      "stderrSha256": null,
+      "error": ""
+    },
+    {
+      "caseId": "spcat-alchemy-endp_d6gf1draejxtpexz8-route-0",
+      "providerName": "Alchemy",
+      "serviceName": "Get raw token balances (without price and metadata).",
+      "routeKind": "provider_direct_x402",
+      "status": "error",
+      "executedAt": "2026-04-28T12:43:02.198Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x0573c4dA7fC31E944e5FF959fEf3b42199C308B2",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "1000",
+      "request": {
+        "method": "POST",
+        "url": "https://x402.alchemy.com/data/v1/assets/tokens/balances/by-address",
+        "bodySha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "bodySource": "empty_object_fallback"
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "1000",
+        "payTo": "0x0573c4dA7fC31E944e5FF959fEf3b42199C308B2"
+      },
+      "response": {
+        "bodySha256": null,
+        "contentType": null
+      },
+      "payment": {
+        "settlement": null
+      },
+      "stdoutSha256": "3749f5e9f19913fea29d8346bd6e544e6098910af2211fc622adc8c497ac2bc8",
+      "stderrSha256": null,
+      "error": ""
+    },
+    {
+      "caseId": "spcat-alchemy-endp_d6gf1drfbh3aeeh28-route-0",
+      "providerName": "Alchemy",
+      "serviceName": "Get latest token prices by network and contract address.",
+      "routeKind": "provider_direct_x402",
+      "status": "error",
+      "executedAt": "2026-04-28T12:43:20.416Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x0573c4dA7fC31E944e5FF959fEf3b42199C308B2",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "1000",
+      "request": {
+        "method": "POST",
+        "url": "https://x402.alchemy.com/prices/v1/tokens/by-address",
+        "bodySha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "bodySource": "empty_object_fallback"
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "1000",
+        "payTo": "0x0573c4dA7fC31E944e5FF959fEf3b42199C308B2"
+      },
+      "response": {
+        "bodySha256": null,
+        "contentType": null
+      },
+      "payment": {
+        "settlement": null
+      },
+      "stdoutSha256": "3749f5e9f19913fea29d8346bd6e544e6098910af2211fc622adc8c497ac2bc8",
+      "stderrSha256": null,
+      "error": ""
+    },
+    {
+      "caseId": "spcat-alchemy-endp_d6gf1drmybrj5sgq4-route-0",
+      "providerName": "Alchemy",
+      "serviceName": "Get token balances with metadata and prices across chains.",
+      "routeKind": "provider_direct_x402",
+      "status": "error",
+      "executedAt": "2026-04-28T12:43:38.392Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x0573c4dA7fC31E944e5FF959fEf3b42199C308B2",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "1000",
+      "request": {
+        "method": "POST",
+        "url": "https://x402.alchemy.com/data/v1/assets/tokens/by-address",
+        "bodySha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "bodySource": "empty_object_fallback"
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "1000",
+        "payTo": "0x0573c4dA7fC31E944e5FF959fEf3b42199C308B2"
+      },
+      "response": {
+        "bodySha256": null,
+        "contentType": null
+      },
+      "payment": {
+        "settlement": null
+      },
+      "stdoutSha256": "3749f5e9f19913fea29d8346bd6e544e6098910af2211fc622adc8c497ac2bc8",
+      "stderrSha256": null,
+      "error": ""
+    },
+    {
+      "caseId": "spcat-alchemy-endp_d6gf1drrz6y74ec28-route-0",
+      "providerName": "Alchemy",
+      "serviceName": "Get NFTs owned by wallets across one or more networks.",
+      "routeKind": "provider_direct_x402",
+      "status": "error",
+      "executedAt": "2026-04-28T12:43:56.686Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x0573c4dA7fC31E944e5FF959fEf3b42199C308B2",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "1000",
+      "request": {
+        "method": "POST",
+        "url": "https://x402.alchemy.com/data/v1/assets/nfts/by-address",
+        "bodySha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "bodySource": "empty_object_fallback"
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "1000",
+        "payTo": "0x0573c4dA7fC31E944e5FF959fEf3b42199C308B2"
+      },
+      "response": {
+        "bodySha256": null,
+        "contentType": null
+      },
+      "payment": {
+        "settlement": null
+      },
+      "stdoutSha256": "3749f5e9f19913fea29d8346bd6e544e6098910af2211fc622adc8c497ac2bc8",
+      "stderrSha256": null,
+      "error": ""
+    },
+    {
+      "caseId": "spcat-alchemy-endp_d6gf1drx1f1bbcb7r-route-0",
+      "providerName": "Alchemy",
+      "serviceName": "Get NFT contracts held by wallet addresses.",
+      "routeKind": "provider_direct_x402",
+      "status": "error",
+      "executedAt": "2026-04-28T12:44:14.529Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x0573c4dA7fC31E944e5FF959fEf3b42199C308B2",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "1000",
+      "request": {
+        "method": "POST",
+        "url": "https://x402.alchemy.com/data/v1/assets/nfts/contracts/by-address",
+        "bodySha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "bodySource": "empty_object_fallback"
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "1000",
+        "payTo": "0x0573c4dA7fC31E944e5FF959fEf3b42199C308B2"
+      },
+      "response": {
+        "bodySha256": null,
+        "contentType": null
+      },
+      "payment": {
+        "settlement": null
+      },
+      "stdoutSha256": "3749f5e9f19913fea29d8346bd6e544e6098910af2211fc622adc8c497ac2bc8",
+      "stderrSha256": null,
+      "error": ""
+    },
+    {
+      "caseId": "spcat-alchemy-endp_d6gf1drx2q1gbmz10-route-0",
+      "providerName": "Alchemy",
+      "serviceName": "Get transaction history for wallet addresses across networks (beta).",
+      "routeKind": "provider_direct_x402",
+      "status": "error",
+      "executedAt": "2026-04-28T12:44:31.898Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x0573c4dA7fC31E944e5FF959fEf3b42199C308B2",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "1000",
+      "request": {
+        "method": "POST",
+        "url": "https://x402.alchemy.com/data/v1/transactions/history/by-address",
+        "bodySha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "bodySource": "empty_object_fallback"
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "1000",
+        "payTo": "0x0573c4dA7fC31E944e5FF959fEf3b42199C308B2"
+      },
+      "response": {
+        "bodySha256": null,
+        "contentType": null
+      },
+      "payment": {
+        "settlement": null
+      },
+      "stdoutSha256": "3749f5e9f19913fea29d8346bd6e544e6098910af2211fc622adc8c497ac2bc8",
+      "stderrSha256": null,
+      "error": ""
+    },
+    {
+      "caseId": "spcat-alchemy-endp_d6gf1drx65936g4hg-route-0",
+      "providerName": "Alchemy",
+      "serviceName": "Get latest token prices by symbol.",
+      "routeKind": "provider_direct_x402",
+      "status": "error",
+      "executedAt": "2026-04-28T12:44:49.479Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x0573c4dA7fC31E944e5FF959fEf3b42199C308B2",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "1000",
+      "request": {
+        "method": "GET",
+        "url": "https://x402.alchemy.com/prices/v1/tokens/by-symbol",
+        "bodySha256": null,
+        "bodySource": null
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "1000",
+        "payTo": "0x0573c4dA7fC31E944e5FF959fEf3b42199C308B2"
+      },
+      "response": {
+        "bodySha256": null,
+        "contentType": null
+      },
+      "payment": {
+        "settlement": null
+      },
+      "stdoutSha256": "95c9daaf4a37fd38dfdb50af92a235e51177230dc5530059c84175a2b1f1f943",
+      "stderrSha256": null,
+      "error": ""
+    },
+    {
+      "caseId": "spcat-allium-endp_d6dt2501qbef2t8tm-route-0",
+      "providerName": "Allium",
+      "serviceName": "Latest Token Balances",
+      "routeKind": "provider_direct_x402",
+      "status": "error",
+      "executedAt": "2026-04-28T12:44:52.589Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0xca6955093c1c407729d1123a5e3935f55ed5e90c",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "10000",
+      "request": {
+        "method": "POST",
+        "url": "https://agents.allium.so/api/v1/developer/wallet/balances",
+        "bodySha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "bodySource": "empty_object_fallback"
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "10000",
+        "payTo": "0xca6955093c1c407729d1123a5e3935f55ed5e90c"
+      },
+      "response": {
+        "bodySha256": null,
+        "contentType": null
+      },
+      "payment": {
+        "settlement": null
+      },
+      "stdoutSha256": "f85b5ecfe09ec39fe8a2388204999b9bd2adf21cfd50a9bf2873679602fc5b35",
+      "stderrSha256": null,
+      "error": ""
+    },
+    {
+      "caseId": "spcat-allium-endp_d6dt2507xh6fsezpg-route-0",
+      "providerName": "Allium",
+      "serviceName": "Token Price at Timestamp",
+      "routeKind": "provider_direct_x402",
+      "status": "paid",
+      "executedAt": "2026-04-28T12:44:55.793Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x9f136ee2813bc826d699a2b64904f2fcec0dfba0",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "20000",
+      "request": {
+        "method": "POST",
+        "url": "https://agents.allium.so/api/v1/developer/prices/at-timestamp",
+        "bodySha256": "72b8e01d1aaa156001c2b50099886b915ae9cc0969f688504c3dc20df6a136e6",
+        "bodySource": "manifest_request_body_template"
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "20000",
+        "payTo": "0x9f136ee2813bc826d699a2b64904f2fcec0dfba0"
+      },
+      "response": {
+        "status": 200,
+        "bodySha256": "6fbb642870c6436eb9c6ba418890484530166571f79f867d61f45aa46de877be",
+        "contentType": "application/json"
+      },
+      "payment": {
+        "status": "paid",
+        "selectedOption": {
+          "index": 0,
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "amount": "20000",
+          "payTo": "0xcb282ebdf2a63ad8f78f9264d7e3920af2119a17",
+          "timeoutSeconds": 1777380357
+        },
+        "settlement": null
+      },
+      "stdoutSha256": "507d81d34c915e5bfcafc54de204584c8f99921e5002604af172af98d5f13704",
+      "stderrSha256": null,
+      "error": null
+    },
+    {
+      "caseId": "spcat-allium-endp_d6dt2509nypat3j70-route-0",
+      "providerName": "Allium",
+      "serviceName": "List Tokens",
+      "routeKind": "provider_direct_x402",
+      "status": "paid",
+      "executedAt": "2026-04-28T12:45:00.911Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x9a7a2cbe07924d9f1c698209fe425468f0346c8b",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "30000",
+      "request": {
+        "method": "GET",
+        "url": "https://agents.allium.so/api/v1/developer/tokens",
+        "bodySha256": null,
+        "bodySource": null
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "30000",
+        "payTo": "0x9a7a2cbe07924d9f1c698209fe425468f0346c8b"
+      },
+      "response": {
+        "status": 200,
+        "bodySha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "contentType": "application/json"
+      },
+      "payment": {
+        "status": "paid",
+        "selectedOption": {
+          "index": 0,
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "amount": "30000",
+          "payTo": "0x2f33e244789153886f5b494f8ef3fe9e0c39e717",
+          "timeoutSeconds": 1777380363
+        },
+        "settlement": null
+      },
+      "stdoutSha256": "a7a64b820bfa9ae520472dab17be895d58823f8028652f91ae87a707de750ad9",
+      "stderrSha256": null,
+      "error": null
+    },
+    {
+      "caseId": "spcat-allium-endp_d6dt250f12hdy3t6r-route-0",
+      "providerName": "Allium",
+      "serviceName": "Token Price History",
+      "routeKind": "provider_direct_x402",
+      "status": "paid",
+      "executedAt": "2026-04-28T12:45:06.400Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x5f5dcd717ac84bf95d797bcf379e513180649597",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "20000",
+      "request": {
+        "method": "POST",
+        "url": "https://agents.allium.so/api/v1/developer/prices/history",
+        "bodySha256": "e76d2f3b1629cb869431a83add68eff3e7c159e82a763213f4c14402b0ef5917",
+        "bodySource": "manifest_request_body_template"
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "20000",
+        "payTo": "0x5f5dcd717ac84bf95d797bcf379e513180649597"
+      },
+      "response": {
+        "status": 200,
+        "bodySha256": "07b6def2d2e4d4881515ab6d80780e1c771f9108eb50220d6d19753a4708fc2a",
+        "contentType": "application/json"
+      },
+      "payment": {
+        "status": "paid",
+        "selectedOption": {
+          "index": 0,
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "amount": "20000",
+          "payTo": "0xb4cf7071399bb3ca7f28ca9f1e452f50875528c8",
+          "timeoutSeconds": 1777380367
+        },
+        "settlement": null
+      },
+      "stdoutSha256": "4979e205f5dbd1197afd5a020835fa76aae970d7c361aaaa6a4bb300b0e704b9",
+      "stderrSha256": null,
+      "error": null
+    },
+    {
+      "caseId": "spcat-allium-endp_d6dt250hf6pfnn2j0-route-0",
+      "providerName": "Allium",
+      "serviceName": "Browse documentation hierarchy",
+      "routeKind": "provider_direct_x402",
+      "status": "paid",
+      "executedAt": "2026-04-28T12:45:10.824Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0xfcb9b5782bcad73875f8734d2a8b0f33020fc180",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "10000",
+      "request": {
+        "method": "GET",
+        "url": "https://agents.allium.so/api/v1/docs/docs/browse",
+        "bodySha256": null,
+        "bodySource": null
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "10000",
+        "payTo": "0xfcb9b5782bcad73875f8734d2a8b0f33020fc180"
+      },
+      "response": {
+        "status": 200,
+        "bodySha256": "900ba6e5a030469be6ea65c882b79dda5695be2b499d75742dc14751cfb6276d",
+        "contentType": "application/json"
+      },
+      "payment": {
+        "status": "paid",
+        "selectedOption": {
+          "index": 0,
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "amount": "10000",
+          "payTo": "0x5f7067bd46f68b02710bdcadb1d7e6ba78b83ae4",
+          "timeoutSeconds": 1777380372
+        },
+        "settlement": null
+      },
+      "stdoutSha256": "ae0a1de48ed4418179a9183a839c49589400df6818949c0ae4608005168e366f",
+      "stderrSha256": null,
+      "error": null
+    },
+    {
+      "caseId": "spcat-allium-endp_d6dt250hqhgthgry8-route-0",
+      "providerName": "Allium",
+      "serviceName": "Holdings PnL",
+      "routeKind": "provider_direct_x402",
+      "status": "error",
+      "executedAt": "2026-04-28T12:45:15.475Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x10de1303a5869097945ec9b1634bd216b32c0173",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "10000",
+      "request": {
+        "method": "POST",
+        "url": "https://agents.allium.so/api/v1/developer/wallet/pnl",
+        "bodySha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "bodySource": "empty_object_fallback"
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "10000",
+        "payTo": "0x10de1303a5869097945ec9b1634bd216b32c0173"
+      },
+      "response": {
+        "bodySha256": null,
+        "contentType": null
+      },
+      "payment": {
+        "settlement": null
+      },
+      "stdoutSha256": "f85b5ecfe09ec39fe8a2388204999b9bd2adf21cfd50a9bf2873679602fc5b35",
+      "stderrSha256": null,
+      "error": ""
+    },
+    {
+      "caseId": "spcat-allium-endp_d6dt250n5n8rmwrk4-route-0",
+      "providerName": "Allium",
+      "serviceName": "Token Price Stats",
+      "routeKind": "provider_direct_x402",
+      "status": "error",
+      "executedAt": "2026-04-28T12:45:18.793Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0xe782d93c6833529786b3c6c71433af74777b3f4e",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "20000",
+      "request": {
+        "method": "POST",
+        "url": "https://agents.allium.so/api/v1/developer/prices/stats",
+        "bodySha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "bodySource": "empty_object_fallback"
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "20000",
+        "payTo": "0xe782d93c6833529786b3c6c71433af74777b3f4e"
+      },
+      "response": {
+        "bodySha256": null,
+        "contentType": null
+      },
+      "payment": {
+        "settlement": null
+      },
+      "stdoutSha256": "f85b5ecfe09ec39fe8a2388204999b9bd2adf21cfd50a9bf2873679602fc5b35",
+      "stderrSha256": null,
+      "error": ""
+    },
+    {
+      "caseId": "spcat-allium-endp_d6dt250nb7vqf3b2c-route-0",
+      "providerName": "Allium",
+      "serviceName": "Token Latest Price",
+      "routeKind": "provider_direct_x402",
+      "status": "error",
+      "executedAt": "2026-04-28T12:45:21.867Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x87080cd455a7af5673f95c253e1469d6877aa4db",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "20000",
+      "request": {
+        "method": "POST",
+        "url": "https://agents.allium.so/api/v1/developer/prices",
+        "bodySha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "bodySource": "empty_object_fallback"
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "20000",
+        "payTo": "0x87080cd455a7af5673f95c253e1469d6877aa4db"
+      },
+      "response": {
+        "bodySha256": null,
+        "contentType": null
+      },
+      "payment": {
+        "settlement": null
+      },
+      "stdoutSha256": "f85b5ecfe09ec39fe8a2388204999b9bd2adf21cfd50a9bf2873679602fc5b35",
+      "stderrSha256": null,
+      "error": ""
+    },
+    {
+      "caseId": "spcat-allium-endp_d6dt250q5zgcm6wfw-route-0",
+      "providerName": "Allium",
+      "serviceName": "Search Tokens",
+      "routeKind": "provider_direct_x402",
+      "status": "error",
+      "executedAt": "2026-04-28T12:45:26.206Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0xdb6af454ef4dd241c2a4c4ecb9dcd593dcf982aa",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "30000",
+      "request": {
+        "method": "GET",
+        "url": "https://agents.allium.so/api/v1/developer/tokens/search",
+        "bodySha256": null,
+        "bodySource": null
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "30000",
+        "payTo": "0xdb6af454ef4dd241c2a4c4ecb9dcd593dcf982aa"
+      },
+      "response": {
+        "bodySha256": null,
+        "contentType": null
+      },
+      "payment": {
+        "settlement": null
+      },
+      "stdoutSha256": "f85b5ecfe09ec39fe8a2388204999b9bd2adf21cfd50a9bf2873679602fc5b35",
+      "stderrSha256": null,
+      "error": ""
+    },
+    {
+      "caseId": "spcat-allium-endp_d6dt250qq9pmcdpz4-route-0",
+      "providerName": "Allium",
+      "serviceName": "Historical Token Balances",
+      "routeKind": "provider_direct_x402",
+      "status": "paid",
+      "executedAt": "2026-04-28T12:45:29.105Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x99700456df7d78346b4af29d7f226a4e473e0f95",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "10000",
+      "request": {
+        "method": "POST",
+        "url": "https://agents.allium.so/api/v1/developer/wallet/balances/history",
+        "bodySha256": "1685b6a56e48c050df7b53ad8668002f8bc7a18d2411204cff36e5851892719e",
+        "bodySource": "manifest_request_body_template"
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "10000",
+        "payTo": "0x99700456df7d78346b4af29d7f226a4e473e0f95"
+      },
+      "response": {
+        "bodySha256": null,
+        "contentType": null
+      },
+      "payment": {
+        "settlement": null
+      },
+      "stdoutSha256": "203eac0d25e4f36cdf75a2f17de3040fd647370db6e017f9b91f5a1831139a0a",
+      "stderrSha256": null,
+      "error": null
+    },
+    {
+      "caseId": "spcat-allium-endp_d6dt250szcfs7na3r-route-0",
+      "providerName": "Allium",
+      "serviceName": "Get Tokens by Chain Address",
+      "routeKind": "provider_direct_x402",
+      "status": "error",
+      "executedAt": "2026-04-28T12:45:34.357Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x8ad7d1a1e6ebdcc1b99d2e52426a9e3298c8eaaf",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "20000",
+      "request": {
+        "method": "POST",
+        "url": "https://agents.allium.so/api/v1/developer/tokens/chain-address",
+        "bodySha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "bodySource": "empty_object_fallback"
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "20000",
+        "payTo": "0x8ad7d1a1e6ebdcc1b99d2e52426a9e3298c8eaaf"
+      },
+      "response": {
+        "bodySha256": null,
+        "contentType": null
+      },
+      "payment": {
+        "settlement": null
+      },
+      "stdoutSha256": "f85b5ecfe09ec39fe8a2388204999b9bd2adf21cfd50a9bf2873679602fc5b35",
+      "stderrSha256": null,
+      "error": ""
+    },
+    {
+      "caseId": "spcat-allium-endp_d6dt250vaq88fdz6g-route-0",
+      "providerName": "Allium",
+      "serviceName": "Transactions",
+      "routeKind": "provider_direct_x402",
+      "status": "error",
+      "executedAt": "2026-04-28T12:45:38.232Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x06ce84afbf789e5d9c207fe46b3c5effcc183f34",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "30000",
+      "request": {
+        "method": "POST",
+        "url": "https://agents.allium.so/api/v1/developer/wallet/transactions",
+        "bodySha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "bodySource": "empty_object_fallback"
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "30000",
+        "payTo": "0x06ce84afbf789e5d9c207fe46b3c5effcc183f34"
+      },
+      "response": {
+        "bodySha256": null,
+        "contentType": null
+      },
+      "payment": {
+        "settlement": null
+      },
+      "stdoutSha256": "f85b5ecfe09ec39fe8a2388204999b9bd2adf21cfd50a9bf2873679602fc5b35",
+      "stderrSha256": null,
+      "error": ""
+    },
+    {
+      "caseId": "spcat-apollo-endp_d6dt258gv7esnfbdw-route-0",
+      "providerName": "Apollo",
+      "serviceName": "Organization Search",
+      "routeKind": "sponge_wrapper_x402",
+      "status": "error",
+      "executedAt": "2026-04-28T12:45:41.611Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "20000",
+      "request": {
+        "method": "POST",
+        "url": "https://api.paysponge.com/x402/purchase/svc_d6720egbbb4t619h8/api/v1/mixed_companies/search",
+        "bodySha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "bodySource": "manifest_request_body_template"
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "20000",
+        "payTo": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57"
+      },
+      "response": {
+        "bodySha256": null,
+        "contentType": null
+      },
+      "payment": {
+        "settlement": null
+      },
+      "stdoutSha256": "06a6733cfbd3f1b8a43bfbb94b38368e5d017a47a295529bc896eb90e4b85e9e",
+      "stderrSha256": null,
+      "error": ""
+    },
+    {
+      "caseId": "spcat-apollo-endp_d6dt258n5yq2em8w4-route-0",
+      "providerName": "Apollo",
+      "serviceName": "People Enrichment",
+      "routeKind": "sponge_wrapper_x402",
+      "status": "error",
+      "executedAt": "2026-04-28T12:45:46.220Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "30000",
+      "request": {
+        "method": "POST",
+        "url": "https://api.paysponge.com/x402/purchase/svc_d6720egbbb4t619h8/api/v1/people/match",
+        "bodySha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "bodySource": "manifest_request_body_template"
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "30000",
+        "payTo": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57"
+      },
+      "response": {
+        "bodySha256": null,
+        "contentType": null
+      },
+      "payment": {
+        "settlement": null
+      },
+      "stdoutSha256": "06a6733cfbd3f1b8a43bfbb94b38368e5d017a47a295529bc896eb90e4b85e9e",
+      "stderrSha256": null,
+      "error": ""
+    },
+    {
+      "caseId": "spcat-apollo-endp_d6dt258pb4ygf421w-route-0",
+      "providerName": "Apollo",
+      "serviceName": "Bulk People Enrichment",
+      "routeKind": "sponge_wrapper_x402",
+      "status": "error",
+      "executedAt": "2026-04-28T12:45:50.093Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "50000",
+      "request": {
+        "method": "POST",
+        "url": "https://api.paysponge.com/x402/purchase/svc_d6720egbbb4t619h8/api/v1/people/bulk_match",
+        "bodySha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "bodySource": "manifest_request_body_template"
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "50000",
+        "payTo": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57"
+      },
+      "response": {
+        "bodySha256": null,
+        "contentType": null
+      },
+      "payment": {
+        "settlement": null
+      },
+      "stdoutSha256": "06a6733cfbd3f1b8a43bfbb94b38368e5d017a47a295529bc896eb90e4b85e9e",
+      "stderrSha256": null,
+      "error": ""
+    },
+    {
+      "caseId": "spcat-apollo-endp_d6dt258wqhc4m68jm-route-0",
+      "providerName": "Apollo",
+      "serviceName": "People API Search",
+      "routeKind": "sponge_wrapper_x402",
+      "status": "error",
+      "executedAt": "2026-04-28T12:45:52.918Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "20000",
+      "request": {
+        "method": "POST",
+        "url": "https://api.paysponge.com/x402/purchase/svc_d6720egbbb4t619h8/api/v1/mixed_people/api_search",
+        "bodySha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "bodySource": "manifest_request_body_template"
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "20000",
+        "payTo": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57"
+      },
+      "response": {
+        "bodySha256": null,
+        "contentType": null
+      },
+      "payment": {
+        "settlement": null
+      },
+      "stdoutSha256": "06a6733cfbd3f1b8a43bfbb94b38368e5d017a47a295529bc896eb90e4b85e9e",
+      "stderrSha256": null,
+      "error": ""
+    },
+    {
+      "caseId": "spcat-auor-endp_d6dt258ttt4m5s5yc-route-0",
+      "providerName": "Auor",
+      "serviceName": "Search for places based on a query (full details)",
+      "routeKind": "provider_direct_x402",
+      "status": "error",
+      "executedAt": "2026-04-28T12:45:56.318Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x57210b95ECbFD6F2EE74d77830228b48D1878867",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "40000",
+      "request": {
+        "method": "GET",
+        "url": "https://api.auor.io/google-maps/v1/search/full",
+        "bodySha256": null,
+        "bodySource": null
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "40000",
+        "payTo": "0x57210b95ECbFD6F2EE74d77830228b48D1878867"
+      },
+      "response": {
+        "bodySha256": null,
+        "contentType": null
+      },
+      "payment": {
+        "settlement": null
+      },
+      "stdoutSha256": "95c9daaf4a37fd38dfdb50af92a235e51177230dc5530059c84175a2b1f1f943",
+      "stderrSha256": null,
+      "error": ""
+    },
+    {
+      "caseId": "spcat-auor-endp_d6f8th80539ahj3pr-route-0",
+      "providerName": "Auor",
+      "serviceName": "Retrieve current exchange rates",
+      "routeKind": "provider_direct_x402",
+      "status": "error",
+      "executedAt": "2026-04-28T12:45:58.421Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x57210b95ECbFD6F2EE74d77830228b48D1878867",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "1000",
+      "request": {
+        "method": "GET",
+        "url": "https://api.auor.io/all-rates-today/v1/rates",
+        "bodySha256": null,
+        "bodySource": null
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "1000",
+        "payTo": "0x57210b95ECbFD6F2EE74d77830228b48D1878867"
+      },
+      "response": {
+        "bodySha256": null,
+        "contentType": null
+      },
+      "payment": {
+        "settlement": null
+      },
+      "stdoutSha256": "95c9daaf4a37fd38dfdb50af92a235e51177230dc5530059c84175a2b1f1f943",
+      "stderrSha256": null,
+      "error": ""
+    },
+    {
+      "caseId": "spcat-auor-endp_d6f8th87yjk1xscxc-route-0",
+      "providerName": "Auor",
+      "serviceName": "Look up geolocation and metadata for an IP address",
+      "routeKind": "provider_direct_x402",
+      "status": "error",
+      "executedAt": "2026-04-28T12:46:00.359Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x57210b95ECbFD6F2EE74d77830228b48D1878867",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "1000",
+      "request": {
+        "method": "GET",
+        "url": "https://api.auor.io/ip-stack/v1/lookup",
+        "bodySha256": null,
+        "bodySource": null
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "1000",
+        "payTo": "0x57210b95ECbFD6F2EE74d77830228b48D1878867"
+      },
+      "response": {
+        "bodySha256": null,
+        "contentType": null
+      },
+      "payment": {
+        "settlement": null
+      },
+      "stdoutSha256": "95c9daaf4a37fd38dfdb50af92a235e51177230dc5530059c84175a2b1f1f943",
+      "stderrSha256": null,
+      "error": ""
+    },
+    {
+      "caseId": "spcat-auor-endp_d6f8th8jjvxnpfvyc-route-0",
+      "providerName": "Auor",
+      "serviceName": "Retrieve historical exchange rates",
+      "routeKind": "provider_direct_x402",
+      "status": "error",
+      "executedAt": "2026-04-28T12:46:02.305Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x57210b95ECbFD6F2EE74d77830228b48D1878867",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "1000",
+      "request": {
+        "method": "GET",
+        "url": "https://api.auor.io/all-rates-today/v1/historical",
+        "bodySha256": null,
+        "bodySource": null
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "1000",
+        "payTo": "0x57210b95ECbFD6F2EE74d77830228b48D1878867"
+      },
+      "response": {
+        "bodySha256": null,
+        "contentType": null
+      },
+      "payment": {
+        "settlement": null
+      },
+      "stdoutSha256": "95c9daaf4a37fd38dfdb50af92a235e51177230dc5530059c84175a2b1f1f943",
+      "stderrSha256": null,
+      "error": ""
+    },
+    {
+      "caseId": "spcat-auor-endp_d6f8th8yc1ebxxadr-route-0",
+      "providerName": "Auor",
+      "serviceName": "Find flight offers using Amadeus data",
+      "routeKind": "provider_direct_x402",
+      "status": "error",
+      "executedAt": "2026-04-28T12:46:04.238Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x57210b95ECbFD6F2EE74d77830228b48D1878867",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "30000",
+      "request": {
+        "method": "GET",
+        "url": "https://api.auor.io/amadeus/v1/search",
+        "bodySha256": null,
+        "bodySource": null
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "30000",
+        "payTo": "0x57210b95ECbFD6F2EE74d77830228b48D1878867"
+      },
+      "response": {
+        "bodySha256": null,
+        "contentType": null
+      },
+      "payment": {
+        "settlement": null
+      },
+      "stdoutSha256": "95c9daaf4a37fd38dfdb50af92a235e51177230dc5530059c84175a2b1f1f943",
+      "stderrSha256": null,
+      "error": ""
+    },
+    {
+      "caseId": "spcat-coingecko-endp_d6dt25rhf9jcfp9xm-route-0",
+      "providerName": "CoinGecko",
+      "serviceName": "Get price and market data for CoinGecko-listed coins by ID or symbol.",
+      "routeKind": "provider_direct_x402",
+      "status": "paid_with_tx",
+      "executedAt": "2026-04-28T12:46:06.178Z",
+      "txHash": "0xd55144936d08b50a4ae667c08f654666d1129af01ad277ef6c43b69231017e9e",
+      "network": "eip155:8453",
+      "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+      "payTo": "0x110cdBba7FE6434Ec4CE3464CC523942ad6Fb784",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "10000",
+      "request": {
+        "method": "GET",
+        "url": "https://pro-api.coingecko.com/api/v3/x402/simple/price?ids=solana&vs_currencies=usd&include_24hr_change=true",
+        "bodySha256": null,
+        "bodySource": null
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "10000",
+        "payTo": "0x110cdBba7FE6434Ec4CE3464CC523942ad6Fb784"
+      },
+      "response": {
+        "status": 200,
+        "bodySha256": "be74590005f2e9b8db9e05c0888d9f8582df773d2063976bb6aca70887f0dcf3",
+        "contentType": "application/json; charset=utf-8"
+      },
+      "payment": {
+        "status": "paid",
+        "selectedOption": {
+          "index": 0,
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "amount": "10000",
+          "payTo": "0x110cdBba7FE6434Ec4CE3464CC523942ad6Fb784",
+          "timeoutSeconds": 60
+        },
+        "settlement": {
+          "success": true,
+          "transaction": "0xd55144936d08b50a4ae667c08f654666d1129af01ad277ef6c43b69231017e9e",
+          "network": "eip155:8453",
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "errorReason": null
+        }
+      },
+      "stdoutSha256": "d0ac3a10c25e88fc22dc37b3b6ce2a7c7ef0940ce593ff260450bfb52bdb47fd",
+      "stderrSha256": null,
+      "error": null
+    },
+    {
+      "caseId": "spcat-coingecko-endp_d6dt25rjmmfrpmkbr-route-0",
+      "providerName": "CoinGecko",
+      "serviceName": "Get trending liquidity pools on a specific network.",
+      "routeKind": "provider_direct_x402",
+      "status": "paid_with_tx",
+      "executedAt": "2026-04-28T12:46:08.139Z",
+      "txHash": "0x2236d490c0917dbfc5e22b5dc0a92a8c5b66fdd751ded55a2e35c40198a84e17",
+      "network": "eip155:8453",
+      "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+      "payTo": "0x110cdBba7FE6434Ec4CE3464CC523942ad6Fb784",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "10000",
+      "request": {
+        "method": "GET",
+        "url": "https://pro-api.coingecko.com/api/v3/x402/onchain/networks/solana/trending_pools",
+        "bodySha256": null,
+        "bodySource": null
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "10000",
+        "payTo": "0x110cdBba7FE6434Ec4CE3464CC523942ad6Fb784"
+      },
+      "response": {
+        "status": 200,
+        "bodySha256": "6852453ac559f8489d6403de2b96713b0a0c3d9027edf0c5d3eb623b52c1037d",
+        "contentType": "application/json; charset=utf-8"
+      },
+      "payment": {
+        "status": "paid",
+        "selectedOption": {
+          "index": 0,
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "amount": "10000",
+          "payTo": "0x110cdBba7FE6434Ec4CE3464CC523942ad6Fb784",
+          "timeoutSeconds": 60
+        },
+        "settlement": {
+          "success": true,
+          "transaction": "0x2236d490c0917dbfc5e22b5dc0a92a8c5b66fdd751ded55a2e35c40198a84e17",
+          "network": "eip155:8453",
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "errorReason": null
+        }
+      },
+      "stdoutSha256": "51a9ebe03d9daad98f008fc40c779ada62e0a0d061df9683b328aeb17c08ae1d",
+      "stderrSha256": null,
+      "error": null
+    },
+    {
+      "caseId": "spcat-coingecko-endp_d6dt25rmvx3yd7678-route-0",
+      "providerName": "CoinGecko",
+      "serviceName": "Get token price by contract address on a specific network.",
+      "routeKind": "provider_direct_x402",
+      "status": "paid_with_tx",
+      "executedAt": "2026-04-28T12:46:10.784Z",
+      "txHash": "0x569f193a2350aeb5d9a67dbd336a4dc802d22b36dd7578e856ac850ee7df22c6",
+      "network": "eip155:8453",
+      "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+      "payTo": "0x110cdBba7FE6434Ec4CE3464CC523942ad6Fb784",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "10000",
+      "request": {
+        "method": "GET",
+        "url": "https://pro-api.coingecko.com/api/v3/x402/onchain/simple/networks/eth/token_price/0xdac17f958d2ee523a2206206994597c13d831ec7",
+        "bodySha256": null,
+        "bodySource": null
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "10000",
+        "payTo": "0x110cdBba7FE6434Ec4CE3464CC523942ad6Fb784"
+      },
+      "response": {
+        "status": 200,
+        "bodySha256": "e9c45cea96aa5f7855df6820c858228a2e9e2c7507696db09276e0c79ccd3dc8",
+        "contentType": "application/json; charset=utf-8"
+      },
+      "payment": {
+        "status": "paid",
+        "selectedOption": {
+          "index": 0,
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "amount": "10000",
+          "payTo": "0x110cdBba7FE6434Ec4CE3464CC523942ad6Fb784",
+          "timeoutSeconds": 60
+        },
+        "settlement": {
+          "success": true,
+          "transaction": "0x569f193a2350aeb5d9a67dbd336a4dc802d22b36dd7578e856ac850ee7df22c6",
+          "network": "eip155:8453",
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "errorReason": null
+        }
+      },
+      "stdoutSha256": "af2e94d62f5273aaf1e44d0edf6d88aa93f4f0cd6ffd210e183ffdaa446da2e2",
+      "stderrSha256": null,
+      "error": null
+    },
+    {
+      "caseId": "spcat-coingecko-endp_d6dt25rrhyje9v76r-route-0",
+      "providerName": "CoinGecko",
+      "serviceName": "Get price, liquidity, and market data for a token by contract address.",
+      "routeKind": "provider_direct_x402",
+      "status": "paid_with_tx",
+      "executedAt": "2026-04-28T12:46:13.623Z",
+      "txHash": "0x28d7c0504665480d0819561699fd72774ca6119d8f864caf8de730ee7f4f4f26",
+      "network": "eip155:8453",
+      "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+      "payTo": "0x110cdBba7FE6434Ec4CE3464CC523942ad6Fb784",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "10000",
+      "request": {
+        "method": "GET",
+        "url": "https://pro-api.coingecko.com/api/v3/x402/onchain/networks/eth/tokens/0xdac17f958d2ee523a2206206994597c13d831ec7",
+        "bodySha256": null,
+        "bodySource": null
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "10000",
+        "payTo": "0x110cdBba7FE6434Ec4CE3464CC523942ad6Fb784"
+      },
+      "response": {
+        "status": 200,
+        "bodySha256": "2e9c6c6c471b3d467a948c7de0e610ef17504f830d2225cbe0f0f7f2d68907fe",
+        "contentType": "application/json; charset=utf-8"
+      },
+      "payment": {
+        "status": "paid",
+        "selectedOption": {
+          "index": 0,
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "amount": "10000",
+          "payTo": "0x110cdBba7FE6434Ec4CE3464CC523942ad6Fb784",
+          "timeoutSeconds": 60
+        },
+        "settlement": {
+          "success": true,
+          "transaction": "0x28d7c0504665480d0819561699fd72774ca6119d8f864caf8de730ee7f4f4f26",
+          "network": "eip155:8453",
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "errorReason": null
+        }
+      },
+      "stdoutSha256": "7b72fa53196f62e5256807478b272481f14c1954b59c97f2e376242a7765d76d",
+      "stderrSha256": null,
+      "error": null
+    },
+    {
+      "caseId": "spcat-coingecko-endp_d6dt25rxdc8zwkx4r-route-0",
+      "providerName": "CoinGecko",
+      "serviceName": "Search liquidity pools and tokens by contract address, name, or symbol across networks.",
+      "routeKind": "provider_direct_x402",
+      "status": "paid_with_tx",
+      "executedAt": "2026-04-28T12:46:15.543Z",
+      "txHash": "0xe0bb38bc6c4f85a8a5de3672dec11609d580fbca172c39d26922bc2a42a3f909",
+      "network": "eip155:8453",
+      "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+      "payTo": "0x110cdBba7FE6434Ec4CE3464CC523942ad6Fb784",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "10000",
+      "request": {
+        "method": "GET",
+        "url": "https://pro-api.coingecko.com/api/v3/x402/onchain/search/pools?query=USDC",
+        "bodySha256": null,
+        "bodySource": null
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "10000",
+        "payTo": "0x110cdBba7FE6434Ec4CE3464CC523942ad6Fb784"
+      },
+      "response": {
+        "status": 200,
+        "bodySha256": "a681b5595058cbbe531a4ed2b4510a907730b541a1f150f8749bf77723f0f5e3",
+        "contentType": "application/json; charset=utf-8"
+      },
+      "payment": {
+        "status": "paid",
+        "selectedOption": {
+          "index": 0,
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "amount": "10000",
+          "payTo": "0x110cdBba7FE6434Ec4CE3464CC523942ad6Fb784",
+          "timeoutSeconds": 60
+        },
+        "settlement": {
+          "success": true,
+          "transaction": "0xe0bb38bc6c4f85a8a5de3672dec11609d580fbca172c39d26922bc2a42a3f909",
+          "network": "eip155:8453",
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "errorReason": null
+        }
+      },
+      "stdoutSha256": "96c51cb267dda5ab7ab90843267044cadc06704648eeadccf57de4c8679e6ceb",
+      "stderrSha256": null,
+      "error": null
+    },
+    {
+      "caseId": "spcat-coinmarketcap-endp_d6k2xqrmfr5r93trg-route-0",
+      "providerName": "CoinMarketCap",
+      "serviceName": "Get latest market quote data for one or more cryptocurrencies including price, volume, market cap, and percent changes.",
+      "routeKind": "provider_direct_x402",
+      "status": "error",
+      "executedAt": "2026-04-28T12:46:18.424Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x271189c860DB25bC43173B0335784aD68a680908",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "10000",
+      "request": {
+        "method": "GET",
+        "url": "https://pro-api.coinmarketcap.com/x402/v3/cryptocurrency/quotes/latest",
+        "bodySha256": null,
+        "bodySource": null
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "10000",
+        "payTo": "0x271189c860DB25bC43173B0335784aD68a680908"
+      },
+      "response": {
+        "bodySha256": null,
+        "contentType": null
+      },
+      "payment": {
+        "settlement": null
+      },
+      "stdoutSha256": "95c9daaf4a37fd38dfdb50af92a235e51177230dc5530059c84175a2b1f1f943",
+      "stderrSha256": null,
+      "error": ""
+    },
+    {
+      "caseId": "spcat-coinmarketcap-endp_d6k2xqryr37hskzmc-route-0",
+      "providerName": "CoinMarketCap",
+      "serviceName": "Search DEX data by token name, symbol, or contract address across supported networks.",
+      "routeKind": "provider_direct_x402",
+      "status": "paid",
+      "executedAt": "2026-04-28T12:46:20.069Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x271189c860DB25bC43173B0335784aD68a680908",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "10000",
+      "request": {
+        "method": "GET",
+        "url": "https://pro-api.coinmarketcap.com/x402/v1/dex/search",
+        "bodySha256": null,
+        "bodySource": null
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "10000",
+        "payTo": "0x271189c860DB25bC43173B0335784aD68a680908"
+      },
+      "response": {
+        "status": 200,
+        "bodySha256": "f5702bc5cd2ec8d649fa91701ee591c3b8cd41fe6e09c7a1a93bfa31aff39027",
+        "contentType": "application/json"
+      },
+      "payment": {
+        "status": "paid",
+        "selectedOption": {
+          "index": 0,
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "amount": "10000",
+          "payTo": "0x271189c860DB25bC43173B0335784aD68a680908",
+          "timeoutSeconds": 30
+        },
+        "settlement": null
+      },
+      "stdoutSha256": "4115ef67ef8729760b8554ed4e475fe59bc43b543b5c027c7e0fd1e843c94f55",
+      "stderrSha256": null,
+      "error": null
+    },
+    {
+      "caseId": "spcat-coinmarketcap-endp_d6k2xqrz98g5be828-route-0",
+      "providerName": "CoinMarketCap",
+      "serviceName": "Get latest market quotes for DEX spot pairs. Query by contract address and network to get real-time pricing data for decentralized exchange trading pairs.",
+      "routeKind": "provider_direct_x402",
+      "status": "error",
+      "executedAt": "2026-04-28T12:46:22.609Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x271189c860DB25bC43173B0335784aD68a680908",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "10000",
+      "request": {
+        "method": "GET",
+        "url": "https://pro-api.coinmarketcap.com/x402/v4/dex/pairs/quotes/latest",
+        "bodySha256": null,
+        "bodySource": null
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "10000",
+        "payTo": "0x271189c860DB25bC43173B0335784aD68a680908"
+      },
+      "response": {
+        "bodySha256": null,
+        "contentType": null
+      },
+      "payment": {
+        "settlement": null
+      },
+      "stdoutSha256": "95c9daaf4a37fd38dfdb50af92a235e51177230dc5530059c84175a2b1f1f943",
+      "stderrSha256": null,
+      "error": ""
+    },
+    {
+      "caseId": "spcat-dome-endp_d6dt25g4h9mp3s87c-route-0",
+      "providerName": "Dome",
+      "serviceName": "Get Polymarket wallet info.",
+      "routeKind": "sponge_wrapper_x402",
+      "status": "error",
+      "executedAt": "2026-04-28T12:46:23.797Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "10000",
+      "request": {
+        "method": "GET",
+        "url": "https://api.paysponge.com/x402/purchase/svc_d5y7k40sm2ntn45xr/polymarket/wallet",
+        "bodySha256": null,
+        "bodySource": null
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "10000",
+        "payTo": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57"
+      },
+      "response": {
+        "bodySha256": null,
+        "contentType": null
+      },
+      "payment": {
+        "settlement": null
+      },
+      "stdoutSha256": "95c9daaf4a37fd38dfdb50af92a235e51177230dc5530059c84175a2b1f1f943",
+      "stderrSha256": null,
+      "error": ""
+    },
+    {
+      "caseId": "spcat-dome-endp_d6dt25g66az2rv8r4-route-0",
+      "providerName": "Dome",
+      "serviceName": "List available sports for matching markets.",
+      "routeKind": "sponge_wrapper_x402",
+      "status": "error",
+      "executedAt": "2026-04-28T12:46:28.035Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "10000",
+      "request": {
+        "method": "GET",
+        "url": "https://api.paysponge.com/x402/purchase/svc_d5y7k40sm2ntn45xr/matching-markets/sports",
+        "bodySha256": null,
+        "bodySource": null
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "10000",
+        "payTo": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57"
+      },
+      "response": {
+        "bodySha256": null,
+        "contentType": null
+      },
+      "payment": {
+        "settlement": null
+      },
+      "stdoutSha256": "95c9daaf4a37fd38dfdb50af92a235e51177230dc5530059c84175a2b1f1f943",
+      "stderrSha256": null,
+      "error": ""
+    },
+    {
+      "caseId": "spcat-dome-endp_d6dt25gmj8sarre6c-route-0",
+      "providerName": "Dome",
+      "serviceName": "List Kalshi prediction markets.",
+      "routeKind": "sponge_wrapper_x402",
+      "status": "paid_with_tx",
+      "executedAt": "2026-04-28T12:46:32.101Z",
+      "txHash": "0xf28f059ac0f9f3b23b71d914d6b9ace59b62b82621d52d3df45573e1acdefd16",
+      "network": "eip155:8453",
+      "payer": "0x62c2d106293398961894bcd4908b06a8620b7351",
+      "payTo": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "10000",
+      "request": {
+        "method": "GET",
+        "url": "https://api.paysponge.com/x402/purchase/svc_d5y7k40sm2ntn45xr/kalshi/markets",
+        "bodySha256": null,
+        "bodySource": null
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "10000",
+        "payTo": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57"
+      },
+      "response": {
+        "status": 200,
+        "bodySha256": "45bdc44fc68364cc5f8e59fd3ff16627eadf057548b5d3644bde7932c0e1f9e5",
+        "contentType": "application/json"
+      },
+      "payment": {
+        "status": "paid",
+        "selectedOption": {
+          "index": 0,
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "amount": "10000",
+          "payTo": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+          "timeoutSeconds": 300
+        },
+        "settlement": {
+          "success": true,
+          "payer": "0x62c2d106293398961894bcd4908b06a8620b7351",
+          "transaction": "0xf28f059ac0f9f3b23b71d914d6b9ace59b62b82621d52d3df45573e1acdefd16",
+          "network": "base"
+        }
+      },
+      "stdoutSha256": "e80177f1106b255e9e8365c2d4ae23951d3c327d31ad8fc279d5389b8e09a329",
+      "stderrSha256": null,
+      "error": null
+    },
+    {
+      "caseId": "spcat-dome-endp_d6dt25gnhc2ggf41w-route-0",
+      "providerName": "Dome",
+      "serviceName": "Get Polymarket activity feed.",
+      "routeKind": "sponge_wrapper_x402",
+      "status": "error",
+      "executedAt": "2026-04-28T12:46:36.037Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "10000",
+      "request": {
+        "method": "GET",
+        "url": "https://api.paysponge.com/x402/purchase/svc_d5y7k40sm2ntn45xr/polymarket/activity",
+        "bodySha256": null,
+        "bodySource": null
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "10000",
+        "payTo": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57"
+      },
+      "response": {
+        "bodySha256": null,
+        "contentType": null
+      },
+      "payment": {
+        "settlement": null
+      },
+      "stdoutSha256": "e5ae05025dff1c883cf96ea42fb363b1fbcb3d6386a43a615a360c9a673a6c9f",
+      "stderrSha256": null,
+      "error": ""
+    },
+    {
+      "caseId": "spcat-dome-endp_d6dt25gp3e3jntpn4-route-0",
+      "providerName": "Dome",
+      "serviceName": "List Polymarket events.",
+      "routeKind": "sponge_wrapper_x402",
+      "status": "paid_with_tx",
+      "executedAt": "2026-04-28T12:46:46.126Z",
+      "txHash": "0xc105074edc115cdcfd30310f9659ec4673fcbd0dadaa12baa1a03509917a1ae4",
+      "network": "eip155:8453",
+      "payer": "0x62c2d106293398961894bcd4908b06a8620b7351",
+      "payTo": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "10000",
+      "request": {
+        "method": "GET",
+        "url": "https://api.paysponge.com/x402/purchase/svc_d5y7k40sm2ntn45xr/polymarket/events",
+        "bodySha256": null,
+        "bodySource": null
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "10000",
+        "payTo": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57"
+      },
+      "response": {
+        "status": 200,
+        "bodySha256": "d5c7c46cd3552233223def64f80363efa4e39cdf3b09667ced80056870fd5ce4",
+        "contentType": "application/json"
+      },
+      "payment": {
+        "status": "paid",
+        "selectedOption": {
+          "index": 0,
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "amount": "10000",
+          "payTo": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+          "timeoutSeconds": 300
+        },
+        "settlement": {
+          "success": true,
+          "payer": "0x62c2d106293398961894bcd4908b06a8620b7351",
+          "transaction": "0xc105074edc115cdcfd30310f9659ec4673fcbd0dadaa12baa1a03509917a1ae4",
+          "network": "base"
+        }
+      },
+      "stdoutSha256": "70e8e9d7566df447aea166727ed7c5ff827edb8250deae35f5500a5f9d9d80d1",
+      "stderrSha256": null,
+      "error": null
+    },
+    {
+      "caseId": "spcat-dome-endp_d6dt25gp3xja8jg68-route-0",
+      "providerName": "Dome",
+      "serviceName": "Get Polymarket orders.",
+      "routeKind": "sponge_wrapper_x402",
+      "status": "paid_with_tx",
+      "executedAt": "2026-04-28T12:46:52.073Z",
+      "txHash": "0x24aa51560808bdc055a7f10c747bdd46354099d53112e61c87aed7e4726cc392",
+      "network": "eip155:8453",
+      "payer": "0x62c2d106293398961894bcd4908b06a8620b7351",
+      "payTo": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "10000",
+      "request": {
+        "method": "GET",
+        "url": "https://api.paysponge.com/x402/purchase/svc_d5y7k40sm2ntn45xr/polymarket/orders",
+        "bodySha256": null,
+        "bodySource": null
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "10000",
+        "payTo": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57"
+      },
+      "response": {
+        "status": 200,
+        "bodySha256": "af589e4fd8d51c0c9bbdd88e3f6f65f7c481db222c428a84bcdd403537334077",
+        "contentType": "application/json"
+      },
+      "payment": {
+        "status": "paid",
+        "selectedOption": {
+          "index": 0,
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "amount": "10000",
+          "payTo": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+          "timeoutSeconds": 300
+        },
+        "settlement": {
+          "success": true,
+          "payer": "0x62c2d106293398961894bcd4908b06a8620b7351",
+          "transaction": "0x24aa51560808bdc055a7f10c747bdd46354099d53112e61c87aed7e4726cc392",
+          "network": "base"
+        }
+      },
+      "stdoutSha256": "91641e644ac4d716994657065e8449e1f841db0915850abe0500891b42a870db",
+      "stderrSha256": null,
+      "error": null
+    },
+    {
+      "caseId": "spcat-dome-endp_d6dt25gq3wvazgxdr-route-0",
+      "providerName": "Dome",
+      "serviceName": "Search and list Polymarket prediction markets.",
+      "routeKind": "sponge_wrapper_x402",
+      "status": "paid_with_tx",
+      "executedAt": "2026-04-28T12:46:56.589Z",
+      "txHash": "0x2b9b2bd5c10d3d81e3c6b3ec4e550dee0b5ef1edcb6552a7280ac0375a5d406d",
+      "network": "eip155:8453",
+      "payer": "0x62c2d106293398961894bcd4908b06a8620b7351",
+      "payTo": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "10000",
+      "request": {
+        "method": "GET",
+        "url": "https://api.paysponge.com/x402/purchase/svc_d5y7k40sm2ntn45xr/polymarket/markets",
+        "bodySha256": null,
+        "bodySource": null
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "10000",
+        "payTo": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57"
+      },
+      "response": {
+        "status": 200,
+        "bodySha256": "da1a1f2dd2d2bf4149f0ea4d74c0f82ba6302217a76ceb37d3732ac24f4e50c7",
+        "contentType": "application/json"
+      },
+      "payment": {
+        "status": "paid",
+        "selectedOption": {
+          "index": 0,
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "amount": "10000",
+          "payTo": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+          "timeoutSeconds": 300
+        },
+        "settlement": {
+          "success": true,
+          "payer": "0x62c2d106293398961894bcd4908b06a8620b7351",
+          "transaction": "0x2b9b2bd5c10d3d81e3c6b3ec4e550dee0b5ef1edcb6552a7280ac0375a5d406d",
+          "network": "base"
+        }
+      },
+      "stdoutSha256": "e4c5dbbb0267f1d5c831504b8f1a59f22384d5db2ddf94dbf78a4efdfca75cde",
+      "stderrSha256": null,
+      "error": null
+    },
+    {
+      "caseId": "spcat-dome-endp_d6dt25gr1jmgwkfkm-route-0",
+      "providerName": "Dome",
+      "serviceName": "Get Kalshi orderbook data.",
+      "routeKind": "sponge_wrapper_x402",
+      "status": "error",
+      "executedAt": "2026-04-28T12:47:00.050Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "10000",
+      "request": {
+        "method": "GET",
+        "url": "https://api.paysponge.com/x402/purchase/svc_d5y7k40sm2ntn45xr/kalshi/orderbooks",
+        "bodySha256": null,
+        "bodySource": null
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "10000",
+        "payTo": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57"
+      },
+      "response": {
+        "bodySha256": null,
+        "contentType": null
+      },
+      "payment": {
+        "settlement": null
+      },
+      "stdoutSha256": "95c9daaf4a37fd38dfdb50af92a235e51177230dc5530059c84175a2b1f1f943",
+      "stderrSha256": null,
+      "error": ""
+    },
+    {
+      "caseId": "spcat-dome-endp_d6dt25grf89cyanj4-route-0",
+      "providerName": "Dome",
+      "serviceName": "Get Polymarket orderbook data.",
+      "routeKind": "sponge_wrapper_x402",
+      "status": "error",
+      "executedAt": "2026-04-28T12:47:03.738Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "10000",
+      "request": {
+        "method": "GET",
+        "url": "https://api.paysponge.com/x402/purchase/svc_d5y7k40sm2ntn45xr/polymarket/orderbooks",
+        "bodySha256": null,
+        "bodySource": null
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "10000",
+        "payTo": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57"
+      },
+      "response": {
+        "bodySha256": null,
+        "contentType": null
+      },
+      "payment": {
+        "settlement": null
+      },
+      "stdoutSha256": "95c9daaf4a37fd38dfdb50af92a235e51177230dc5530059c84175a2b1f1f943",
+      "stderrSha256": null,
+      "error": ""
+    },
+    {
+      "caseId": "spcat-dome-endp_d6dt25gzfp4w0a98w-route-0",
+      "providerName": "Dome",
+      "serviceName": "Get Kalshi trade history.",
+      "routeKind": "sponge_wrapper_x402",
+      "status": "paid_with_tx",
+      "executedAt": "2026-04-28T12:47:07.837Z",
+      "txHash": "0x1858d70590b5f9357228312702ca1af17f27c1ef9f45d208d1f7730cd6e8729c",
+      "network": "eip155:8453",
+      "payer": "0x62c2d106293398961894bcd4908b06a8620b7351",
+      "payTo": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "10000",
+      "request": {
+        "method": "GET",
+        "url": "https://api.paysponge.com/x402/purchase/svc_d5y7k40sm2ntn45xr/kalshi/trades",
+        "bodySha256": null,
+        "bodySource": null
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "10000",
+        "payTo": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57"
+      },
+      "response": {
+        "status": 200,
+        "bodySha256": "f2044ffa2ffbfd4cef18456f7b4d26eacbe9e1afa564a6a1f4bb02af70dd86fa",
+        "contentType": "application/json"
+      },
+      "payment": {
+        "status": "paid",
+        "selectedOption": {
+          "index": 0,
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "amount": "10000",
+          "payTo": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+          "timeoutSeconds": 300
+        },
+        "settlement": {
+          "success": true,
+          "payer": "0x62c2d106293398961894bcd4908b06a8620b7351",
+          "transaction": "0x1858d70590b5f9357228312702ca1af17f27c1ef9f45d208d1f7730cd6e8729c",
+          "network": "base"
+        }
+      },
+      "stdoutSha256": "38b439b9fc695ff7c3993199e04d9caeac3949bcd46cf2ff5f044ff22805b579",
+      "stderrSha256": null,
+      "error": null
+    },
+    {
+      "caseId": "spcat-exa-endp_d6dt25gr6m2pv34mw-route-0",
+      "providerName": "Exa",
+      "serviceName": "Get the contents of web pages by URL or document ID.",
+      "routeKind": "provider_direct_x402",
+      "status": "error",
+      "executedAt": "2026-04-28T12:47:12.080Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x6d6E695b09861467c7d462f5AAF31cF3540B9192",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "0",
+      "request": {
+        "method": "POST",
+        "url": "https://api.exa.ai/contents",
+        "bodySha256": "01deed08443621c0ee212fc96260990152867b76de04b49c9fbb4042ec271f07",
+        "bodySource": "manifest_request_body_template"
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "0",
+        "payTo": "0x6d6E695b09861467c7d462f5AAF31cF3540B9192"
+      },
+      "response": {
+        "bodySha256": null,
+        "contentType": null
+      },
+      "payment": {
+        "settlement": null
+      },
+      "stdoutSha256": "46f620dffca46c2e240dfc6d4ba5dcd55af42e3de31446f9cce056f93e9e0223",
+      "stderrSha256": null,
+      "error": ""
+    },
+    {
+      "caseId": "spcat-exa-endp_d6dt25gwh4fj373v0-route-0",
+      "providerName": "Exa",
+      "serviceName": "Semantic web search. Returns relevant web pages for a natural language query. Max 10 results per request via x402.",
+      "routeKind": "provider_direct_x402",
+      "status": "paid_with_tx",
+      "executedAt": "2026-04-28T12:47:12.758Z",
+      "txHash": "0x0b70a61184863a9c1913c243e76347400051ba0c5e3d983d418b12a59ea03275",
+      "network": "eip155:8453",
+      "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+      "payTo": "0x6d6E695b09861467c7d462f5AAF31cF3540B9192",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "7000",
+      "request": {
+        "method": "POST",
+        "url": "https://api.exa.ai/search",
+        "bodySha256": "ba1b463b2d2b1e9bc6db96e2c32642adc3d3cded75db368b05439c5ac3847b4b",
+        "bodySource": "manifest_request_body_template"
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "7000",
+        "payTo": "0x6d6E695b09861467c7d462f5AAF31cF3540B9192"
+      },
+      "response": {
+        "status": 200,
+        "bodySha256": "abe63d4c5859d60c6e36de1a9f482fe7cc05dd7eeb37605af42cc046e28de8ae",
+        "contentType": "application/json; charset=utf-8"
+      },
+      "payment": {
+        "status": "paid",
+        "selectedOption": {
+          "index": 0,
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "amount": "7000",
+          "payTo": "0x6d6E695b09861467c7d462f5AAF31cF3540B9192",
+          "timeoutSeconds": 60
+        },
+        "settlement": {
+          "success": true,
+          "transaction": "0x0b70a61184863a9c1913c243e76347400051ba0c5e3d983d418b12a59ea03275",
+          "network": "eip155:8453",
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351"
+        }
+      },
+      "stdoutSha256": "000a5811f80744ae55ab757a961a3cae06f1e5cd4a2415f42f0edffac586320b",
+      "stderrSha256": null,
+      "error": null
+    },
+    {
+      "caseId": "spcat-laso-endp_d6j9rfgsqhvymjchc-route-0",
+      "providerName": "Laso Finance",
+      "serviceName": "REQUIRED FIRST STEP: Get authentication credentials (id_token, refresh_token, user_id) before calling any other Laso endpoint. The id_token is a Bearer token valid for ~1 hour.",
+      "routeKind": "provider_direct_x402",
+      "status": "paid_with_tx",
+      "executedAt": "2026-04-28T12:47:15.147Z",
+      "txHash": "0x881798dcc358238da2b56cecd4519f913cd385a3a08d92c4832863bf4ceff87d",
+      "network": "eip155:8453",
+      "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+      "payTo": "0x3291e96b3bff7ed56e3ca8364273c5b4654b2b37",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "1000",
+      "request": {
+        "method": "GET",
+        "url": "https://laso.finance/auth",
+        "bodySha256": null,
+        "bodySource": null
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "1000",
+        "payTo": "0x3291e96b3bff7ed56e3ca8364273c5b4654b2b37"
+      },
+      "response": {
+        "status": 200,
+        "bodySha256": "c0addac1f680f8275aa9df3af26eed000fdd20f32417ad4f2e9761bf8194d68a",
+        "contentType": "application/json; charset=utf-8"
+      },
+      "payment": {
+        "status": "paid",
+        "selectedOption": {
+          "index": 0,
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "amount": "1000",
+          "payTo": "0x3291e96b3bff7ed56e3ca8364273c5b4654b2b37",
+          "timeoutSeconds": 300
+        },
+        "settlement": {
+          "network": "eip155:8453",
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "success": true,
+          "transaction": "0x881798dcc358238da2b56cecd4519f913cd385a3a08d92c4832863bf4ceff87d"
+        }
+      },
+      "stdoutSha256": "829d7a60ee52fd6ec406d474629cc87f85f2834f2014e72a8a4111fd7d0e3da9",
+      "stderrSha256": null,
+      "error": null
+    },
+    {
+      "caseId": "spcat-nansen-endp_d6ef1g002pch7nk58-route-0",
+      "providerName": "Nansen",
+      "serviceName": "Get DEX trade data for tokens or wallets.",
+      "routeKind": "provider_direct_x402",
+      "status": "paid_with_tx",
+      "executedAt": "2026-04-28T12:47:18.410Z",
+      "txHash": "0x8fb9493ce0ecc6cb5b7fda6a515e7cac4d5f65ab0a6c864bd4b104d725d0f673",
+      "network": "eip155:8453",
+      "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+      "payTo": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "10000",
+      "request": {
+        "method": "POST",
+        "url": "https://api.nansen.ai/api/v1/tgm/dex-trades",
+        "bodySha256": "8ddc527d22b884e742f9aabc95c974f9643955672e76a18c398cc6dd47b2c41e",
+        "bodySource": "manifest_request_body_template"
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "10000",
+        "payTo": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f"
+      },
+      "response": {
+        "status": 200,
+        "bodySha256": "64818463371b27d246cce7bfb7fddcd1eb419ab5488b361f7c173997d3d927db",
+        "contentType": "application/json"
+      },
+      "payment": {
+        "status": "paid",
+        "selectedOption": {
+          "index": 0,
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "amount": "10000",
+          "payTo": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+          "timeoutSeconds": 300
+        },
+        "settlement": {
+          "success": true,
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "transaction": "0x8fb9493ce0ecc6cb5b7fda6a515e7cac4d5f65ab0a6c864bd4b104d725d0f673",
+          "network": "eip155:8453"
+        }
+      },
+      "stdoutSha256": "7f3d9a5b430af784719b0a1b74645d3da8394eca65120b0d95a5743e21b29c86",
+      "stderrSha256": null,
+      "error": null
+    },
+    {
+      "caseId": "spcat-nansen-endp_d6ef1g02n035nb3jg-route-0",
+      "providerName": "Nansen",
+      "serviceName": "Get perpetual futures positions for a wallet address.",
+      "routeKind": "provider_direct_x402",
+      "status": "paid_with_tx",
+      "executedAt": "2026-04-28T12:47:23.499Z",
+      "txHash": "0x72a54d929d29a3fcb90daaa564ac3501bb71b7b9e1605e30285d455bf6625f83",
+      "network": "eip155:8453",
+      "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+      "payTo": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "10000",
+      "request": {
+        "method": "POST",
+        "url": "https://api.nansen.ai/api/v1/profiler/perp-positions",
+        "bodySha256": "7c2c087e1d25fb885b347dc38338d18037de2f95f6b267cd06141bdf53d27bc2",
+        "bodySource": "manifest_request_body_template"
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "10000",
+        "payTo": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f"
+      },
+      "response": {
+        "status": 200,
+        "bodySha256": "ecaa4b8ac5921e7cf3511e4b4cae776587a173770635eba36e7d2379bda77f2e",
+        "contentType": "application/json"
+      },
+      "payment": {
+        "status": "paid",
+        "selectedOption": {
+          "index": 0,
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "amount": "10000",
+          "payTo": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+          "timeoutSeconds": 300
+        },
+        "settlement": {
+          "success": true,
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "transaction": "0x72a54d929d29a3fcb90daaa564ac3501bb71b7b9e1605e30285d455bf6625f83",
+          "network": "eip155:8453"
+        }
+      },
+      "stdoutSha256": "01706712b8fa601dfeca80ce733684858d12082c75022b508923cc4b6fdf8e0a",
+      "stderrSha256": null,
+      "error": null
+    },
+    {
+      "caseId": "spcat-nansen-endp_d6ef1g03xc6sj5xq8-route-0",
+      "providerName": "Nansen",
+      "serviceName": "Get holder data for a token.",
+      "routeKind": "provider_direct_x402",
+      "status": "paid_with_tx",
+      "executedAt": "2026-04-28T12:47:25.831Z",
+      "txHash": "0xc477c9e4daacd88db60661cd1f71554cdaa0604aa9134028791451e571496fa9",
+      "network": "eip155:8453",
+      "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+      "payTo": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "50000",
+      "request": {
+        "method": "POST",
+        "url": "https://api.nansen.ai/api/v1/tgm/holders",
+        "bodySha256": "7a56153560cab05d6c8ad6039b0296bc3cbcd7a77af94cdfbf28a1908f03469b",
+        "bodySource": "manifest_request_body_template"
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "50000",
+        "payTo": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f"
+      },
+      "response": {
+        "status": 200,
+        "bodySha256": "df49cb6f02b0e418c323e9a452cb8e25d2a6d3c3552e69bd06c8df74466b5c26",
+        "contentType": "application/json"
+      },
+      "payment": {
+        "status": "paid",
+        "selectedOption": {
+          "index": 0,
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "amount": "50000",
+          "payTo": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+          "timeoutSeconds": 300
+        },
+        "settlement": {
+          "success": true,
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "transaction": "0xc477c9e4daacd88db60661cd1f71554cdaa0604aa9134028791451e571496fa9",
+          "network": "eip155:8453"
+        }
+      },
+      "stdoutSha256": "9d6877a4373462fa523a370000ce705f481f71e5f21253193a00075721b73eee",
+      "stderrSha256": null,
+      "error": null
+    },
+    {
+      "caseId": "spcat-nansen-endp_d6ef1g046q5ybwm7r-route-0",
+      "providerName": "Nansen",
+      "serviceName": "Get perpetual futures trading leaderboard.",
+      "routeKind": "provider_direct_x402",
+      "status": "paid_with_tx",
+      "executedAt": "2026-04-28T12:47:29.418Z",
+      "txHash": "0x479c13984c0ce5078a164bb461ef6f222da5322af5b2bdf5694399707465acee",
+      "network": "eip155:8453",
+      "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+      "payTo": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "50000",
+      "request": {
+        "method": "POST",
+        "url": "https://api.nansen.ai/api/v1/perp-leaderboard",
+        "bodySha256": "77e4a0015040178bfe32c21d46d6a85d6743c48171047b65d5f27c2564930ca4",
+        "bodySource": "manifest_request_body_template"
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "50000",
+        "payTo": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f"
+      },
+      "response": {
+        "status": 200,
+        "bodySha256": "8c010c642fa38eb7cd0791e52db052079ab10829e61b17bd232f1e42708ba2ad",
+        "contentType": "application/json"
+      },
+      "payment": {
+        "status": "paid",
+        "selectedOption": {
+          "index": 0,
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "amount": "50000",
+          "payTo": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+          "timeoutSeconds": 300
+        },
+        "settlement": {
+          "success": true,
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "transaction": "0x479c13984c0ce5078a164bb461ef6f222da5322af5b2bdf5694399707465acee",
+          "network": "eip155:8453"
+        }
+      },
+      "stdoutSha256": "c990bd9f03ab0b97c46a44551ed1b0c3f53c1f43b65506dc78c6e417c1afa3d1",
+      "stderrSha256": null,
+      "error": null
+    },
+    {
+      "caseId": "spcat-nansen-endp_d6ef1g06580tt1mnw-route-0",
+      "providerName": "Nansen",
+      "serviceName": "Find wallets related to a given address through on-chain activity.",
+      "routeKind": "provider_direct_x402",
+      "status": "paid_with_tx",
+      "executedAt": "2026-04-28T12:47:31.968Z",
+      "txHash": "0xc20e95a18fea970f15a4aa37214443e9443f6054f4f60074f2cd79775668e488",
+      "network": "eip155:8453",
+      "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+      "payTo": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "10000",
+      "request": {
+        "method": "POST",
+        "url": "https://api.nansen.ai/api/v1/profiler/address/related-wallets",
+        "bodySha256": "aaf5f5fb6d0d53a684f7a5eee936ac8281ddaf319366e56b852239d3486f445a",
+        "bodySource": "manifest_request_body_template"
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "10000",
+        "payTo": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f"
+      },
+      "response": {
+        "status": 200,
+        "bodySha256": "7a49a6346e60bd832c5beda22691f78eeca5092cbf132cdfc80704b64ca94c00",
+        "contentType": "application/json"
+      },
+      "payment": {
+        "status": "paid",
+        "selectedOption": {
+          "index": 0,
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "amount": "10000",
+          "payTo": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+          "timeoutSeconds": 300
+        },
+        "settlement": {
+          "success": true,
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "transaction": "0xc20e95a18fea970f15a4aa37214443e9443f6054f4f60074f2cd79775668e488",
+          "network": "eip155:8453"
+        }
+      },
+      "stdoutSha256": "7f8664f7d7663cacfaa75d3a9b17608beedaeb1609ca7605f27cf65e791cc492",
+      "stderrSha256": null,
+      "error": null
+    },
+    {
+      "caseId": "spcat-nansen-endp_d6ef1g06rx80ep4pm-route-0",
+      "providerName": "Nansen",
+      "serviceName": "Get token transfers for analysis.",
+      "routeKind": "provider_direct_x402",
+      "status": "paid_with_tx",
+      "executedAt": "2026-04-28T12:47:34.532Z",
+      "txHash": "0xd791f178d618025826024e9975c40681e20da08b969a0f1cc07adbb9dcb4d5f6",
+      "network": "eip155:8453",
+      "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+      "payTo": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "10000",
+      "request": {
+        "method": "POST",
+        "url": "https://api.nansen.ai/api/v1/tgm/transfers",
+        "bodySha256": "fcbef25d2f596d7caa80296cc6cd4d02d675b3658006d88cbe1e77ac997ff171",
+        "bodySource": "manifest_request_body_template"
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "10000",
+        "payTo": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f"
+      },
+      "response": {
+        "status": 200,
+        "bodySha256": "4fd45c4835d77940e6feed848072870ced50209afd2e2dca1acb8ba6dfbf99b1",
+        "contentType": "application/json"
+      },
+      "payment": {
+        "status": "paid",
+        "selectedOption": {
+          "index": 0,
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "amount": "10000",
+          "payTo": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+          "timeoutSeconds": 300
+        },
+        "settlement": {
+          "success": true,
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "transaction": "0xd791f178d618025826024e9975c40681e20da08b969a0f1cc07adbb9dcb4d5f6",
+          "network": "eip155:8453"
+        }
+      },
+      "stdoutSha256": "ae79d4cceddeb65bc02b05ebb9f72ef9b81ab121b7cfaa104064ca635328823c",
+      "stderrSha256": null,
+      "error": null
+    },
+    {
+      "caseId": "spcat-nansen-endp_d6ef1g09gdj9p3mfr-route-0",
+      "providerName": "Nansen",
+      "serviceName": "Get token flow data showing movement between addresses.",
+      "routeKind": "provider_direct_x402",
+      "status": "paid_with_tx",
+      "executedAt": "2026-04-28T12:47:38.445Z",
+      "txHash": "0xc5d8b49dfbfce7bdec68f5749186204eeebb607f1c03c1a451f6ea143e7eaf73",
+      "network": "eip155:8453",
+      "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+      "payTo": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "10000",
+      "request": {
+        "method": "POST",
+        "url": "https://api.nansen.ai/api/v1/tgm/flows",
+        "bodySha256": "85f0dda78679a7b11f701f88fb9d5aee6956d003863d46df9da7c1ae916d4944",
+        "bodySource": "manifest_request_body_template"
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "10000",
+        "payTo": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f"
+      },
+      "response": {
+        "status": 200,
+        "bodySha256": "ed58f1fac4838ce4fe6c718b8be3489e56d0719badbf021a02c3e09c96a5eb96",
+        "contentType": "application/json"
+      },
+      "payment": {
+        "status": "paid",
+        "selectedOption": {
+          "index": 0,
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "amount": "10000",
+          "payTo": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+          "timeoutSeconds": 300
+        },
+        "settlement": {
+          "success": true,
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "transaction": "0xc5d8b49dfbfce7bdec68f5749186204eeebb607f1c03c1a451f6ea143e7eaf73",
+          "network": "eip155:8453"
+        }
+      },
+      "stdoutSha256": "10fb322f0c92e3322bb465d2a7c2173a030292c208d6291c958024de959a2f13",
+      "stderrSha256": null,
+      "error": null
+    },
+    {
+      "caseId": "spcat-nansen-endp_d6ef1g0bgan5w1v8r-route-0",
+      "providerName": "Nansen",
+      "serviceName": "Get DEX trades made by smart money wallets.",
+      "routeKind": "provider_direct_x402",
+      "status": "paid_with_tx",
+      "executedAt": "2026-04-28T12:47:42.189Z",
+      "txHash": "0x5b5c1f7a77bdcf9c340790c75958741d0c9a7b9f00d8509b67c9bf1bef3476cb",
+      "network": "eip155:8453",
+      "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+      "payTo": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "50000",
+      "request": {
+        "method": "POST",
+        "url": "https://api.nansen.ai/api/v1/smart-money/dex-trades",
+        "bodySha256": "4c12549a6d8d3b093809dabe6ab0e9b49d01c523cf12cb1aba3a7abf99e8784c",
+        "bodySource": "manifest_request_body_template"
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "50000",
+        "payTo": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f"
+      },
+      "response": {
+        "status": 200,
+        "bodySha256": "be983e66ca3b639f261f67ff14a7ce22b5ca58ed24f74d9611f29d1f87441985",
+        "contentType": "application/json"
+      },
+      "payment": {
+        "status": "paid",
+        "selectedOption": {
+          "index": 0,
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "amount": "50000",
+          "payTo": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+          "timeoutSeconds": 300
+        },
+        "settlement": {
+          "success": true,
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "transaction": "0x5b5c1f7a77bdcf9c340790c75958741d0c9a7b9f00d8509b67c9bf1bef3476cb",
+          "network": "eip155:8453"
+        }
+      },
+      "stdoutSha256": "1d111cc3463e7fc58d8890a525fd1849e2b837a336d5e945981c031ea5d631a4",
+      "stderrSha256": null,
+      "error": null
+    },
+    {
+      "caseId": "spcat-nansen-endp_d6ef1g0d9z6a87k6m-route-0",
+      "providerName": "Nansen",
+      "serviceName": "Get transaction history for a wallet address.",
+      "routeKind": "provider_direct_x402",
+      "status": "paid_with_tx",
+      "executedAt": "2026-04-28T12:47:44.469Z",
+      "txHash": "0xb48b7b0d87f469f198b6096f8e500977817b5271814ab5b52d2d3d596af55b01",
+      "network": "eip155:8453",
+      "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+      "payTo": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "10000",
+      "request": {
+        "method": "POST",
+        "url": "https://api.nansen.ai/api/v1/profiler/address/transactions",
+        "bodySha256": "edc50c08fc9b4a08f2574b59ffb324ed71376565a7d3da2694660d3979c1c3b5",
+        "bodySource": "manifest_request_body_template"
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "10000",
+        "payTo": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f"
+      },
+      "response": {
+        "status": 200,
+        "bodySha256": "3a4fb0173b2fa458be5279f7561b54d8fbf3217666e661d30b4821bff400b795",
+        "contentType": "application/json"
+      },
+      "payment": {
+        "status": "paid",
+        "selectedOption": {
+          "index": 0,
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "amount": "10000",
+          "payTo": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+          "timeoutSeconds": 300
+        },
+        "settlement": {
+          "success": true,
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "transaction": "0xb48b7b0d87f469f198b6096f8e500977817b5271814ab5b52d2d3d596af55b01",
+          "network": "eip155:8453"
+        }
+      },
+      "stdoutSha256": "021c55a3876716ec587a3169e06b98c56c12b5d1106c1120c5cca30cdfb28c0d",
+      "stderrSha256": null,
+      "error": null
+    },
+    {
+      "caseId": "spcat-nansen-endp_d6ef1g0eafgwy5vjc-route-0",
+      "providerName": "Nansen",
+      "serviceName": "Get profit/loss summary for a wallet address.",
+      "routeKind": "provider_direct_x402",
+      "status": "paid_with_tx",
+      "executedAt": "2026-04-28T12:47:48.711Z",
+      "txHash": "0xed64c2278dd8c40ec4d3461ac7e1f4c2106d21cc2c421aa8dc11729b5a70049a",
+      "network": "eip155:8453",
+      "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+      "payTo": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "10000",
+      "request": {
+        "method": "POST",
+        "url": "https://api.nansen.ai/api/v1/profiler/address/pnl-summary",
+        "bodySha256": "645f550cb092057570162c5b14a0b1659a267c5c3f844146db50c52f99e8ed76",
+        "bodySource": "manifest_request_body_template"
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "10000",
+        "payTo": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f"
+      },
+      "response": {
+        "status": 200,
+        "bodySha256": "069067ca18573c254fd7322921608bfe1ce48f6ab69755c632dfc115b1af4e16",
+        "contentType": "application/json"
+      },
+      "payment": {
+        "status": "paid",
+        "selectedOption": {
+          "index": 0,
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "amount": "10000",
+          "payTo": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+          "timeoutSeconds": 300
+        },
+        "settlement": {
+          "success": true,
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "transaction": "0xed64c2278dd8c40ec4d3461ac7e1f4c2106d21cc2c421aa8dc11729b5a70049a",
+          "network": "eip155:8453"
+        }
+      },
+      "stdoutSha256": "c0fecede7d9f10e8a8751376d6072c821a1139382bd6fdd8cf3a25460afb1ad7",
+      "stderrSha256": null,
+      "error": null
+    },
+    {
+      "caseId": "spcat-nansen-endp_d6ef1g0g5vqyz9wv4-route-0",
+      "providerName": "Nansen",
+      "serviceName": "Get perpetual futures PnL leaderboard.",
+      "routeKind": "provider_direct_x402",
+      "status": "paid_with_tx",
+      "executedAt": "2026-04-28T12:47:54.154Z",
+      "txHash": "0x407af4a007f44b1154c383e717ccc0ba09b90f15c3d65d86d7c335660329fa28",
+      "network": "eip155:8453",
+      "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+      "payTo": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "50000",
+      "request": {
+        "method": "POST",
+        "url": "https://api.nansen.ai/api/v1/tgm/perp-pnl-leaderboard",
+        "bodySha256": "eb089b89f77bb676f287b96159a8026a0f263258bd8ae3bac4fd09a5d8f19e55",
+        "bodySource": "manifest_request_body_template"
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "50000",
+        "payTo": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f"
+      },
+      "response": {
+        "status": 200,
+        "bodySha256": "c82e3b1b09e8294a893dcf93b9d745dceda681559fbc740b51c45fb0688071bb",
+        "contentType": "application/json"
+      },
+      "payment": {
+        "status": "paid",
+        "selectedOption": {
+          "index": 0,
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "amount": "50000",
+          "payTo": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+          "timeoutSeconds": 300
+        },
+        "settlement": {
+          "success": true,
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "transaction": "0x407af4a007f44b1154c383e717ccc0ba09b90f15c3d65d86d7c335660329fa28",
+          "network": "eip155:8453"
+        }
+      },
+      "stdoutSha256": "9d8ccafdd8b7a5ae128772a8ae4f3235f3184198917be546cfd4cea17ef6a729",
+      "stderrSha256": null,
+      "error": null
+    },
+    {
+      "caseId": "spcat-nansen-endp_d6ef1g0hxsb0wge5r-route-0",
+      "providerName": "Nansen",
+      "serviceName": "Get flow intelligence data for tokens showing inflows/outflows.",
+      "routeKind": "provider_direct_x402",
+      "status": "paid_with_tx",
+      "executedAt": "2026-04-28T12:48:01.646Z",
+      "txHash": "0xa22d567aa4590d57536ce8e94756a45b8282015ecdfae0c779ab3c90d37f0f52",
+      "network": "eip155:8453",
+      "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+      "payTo": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "10000",
+      "request": {
+        "method": "POST",
+        "url": "https://api.nansen.ai/api/v1/tgm/flow-intelligence",
+        "bodySha256": "269fac1163a56a35b0fcd70184b7fcd7c62ec7e43b6ce0e4022b5631b26447b3",
+        "bodySource": "manifest_request_body_template"
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "10000",
+        "payTo": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f"
+      },
+      "response": {
+        "status": 200,
+        "bodySha256": "a828f729fe15f0a8dc3dfcc02efdcc4fd4509283d840bbbcc123410c8ecf788e",
+        "contentType": "application/json"
+      },
+      "payment": {
+        "status": "paid",
+        "selectedOption": {
+          "index": 0,
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "amount": "10000",
+          "payTo": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+          "timeoutSeconds": 300
+        },
+        "settlement": {
+          "success": true,
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "transaction": "0xa22d567aa4590d57536ce8e94756a45b8282015ecdfae0c779ab3c90d37f0f52",
+          "network": "eip155:8453"
+        }
+      },
+      "stdoutSha256": "2eb69d028e1f5188ed2b2c542faa9485341b91bea8a0619f532784114ba3b170",
+      "stderrSha256": null,
+      "error": null
+    },
+    {
+      "caseId": "spcat-nansen-endp_d6ef1g0k1reqnpk8w-route-0",
+      "providerName": "Nansen",
+      "serviceName": "Get counterparties (addresses that have transacted with) a wallet address.",
+      "routeKind": "provider_direct_x402",
+      "status": "paid_with_tx",
+      "executedAt": "2026-04-28T12:48:05.138Z",
+      "txHash": "0x1d78ce0bb63de7e00d14f16047c3447544f563f2fc758a37efaecb68875b1137",
+      "network": "eip155:8453",
+      "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+      "payTo": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "50000",
+      "request": {
+        "method": "POST",
+        "url": "https://api.nansen.ai/api/v1/profiler/address/counterparties",
+        "bodySha256": "b0806eb87496fe9b06ecf7230558b2a7278a00b616b0e2a2d6b1c0a66347384c",
+        "bodySource": "manifest_request_body_template"
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "50000",
+        "payTo": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f"
+      },
+      "response": {
+        "status": 200,
+        "bodySha256": "5efafdf8d33d8a33d7bddfa6fd0f8c3d4918a8c4a154db1d8a04f1ea96e8e6e4",
+        "contentType": "application/json"
+      },
+      "payment": {
+        "status": "paid",
+        "selectedOption": {
+          "index": 0,
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "amount": "50000",
+          "payTo": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+          "timeoutSeconds": 300
+        },
+        "settlement": {
+          "success": true,
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "transaction": "0x1d78ce0bb63de7e00d14f16047c3447544f563f2fc758a37efaecb68875b1137",
+          "network": "eip155:8453"
+        }
+      },
+      "stdoutSha256": "f04ae74d1f4dbc0221f797f311620e50f776f4f5b5dfc150cf0d5917e37be30a",
+      "stderrSha256": null,
+      "error": null
+    },
+    {
+      "caseId": "spcat-nansen-endp_d6ef1g0n4gpbsxxdg-route-0",
+      "providerName": "Nansen",
+      "serviceName": "Get PnL leaderboard showing top profitable traders.",
+      "routeKind": "provider_direct_x402",
+      "status": "paid_with_tx",
+      "executedAt": "2026-04-28T12:48:08.017Z",
+      "txHash": "0xe27641d2fbff5830f622b4be5b181375c7607013516fd3aa98f05bc90d87cc6e",
+      "network": "eip155:8453",
+      "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+      "payTo": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "50000",
+      "request": {
+        "method": "POST",
+        "url": "https://api.nansen.ai/api/v1/tgm/pnl-leaderboard",
+        "bodySha256": "3a135b1b32ddd3fddea74d967b824a2997b59271eac0c123b5847b578cbaedf3",
+        "bodySource": "manifest_request_body_template"
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "50000",
+        "payTo": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f"
+      },
+      "response": {
+        "status": 200,
+        "bodySha256": "72a43630f197f6dfaaf0ca72236b3273a498c8cd20e94e7004782fb4ead5490a",
+        "contentType": "application/json"
+      },
+      "payment": {
+        "status": "paid",
+        "selectedOption": {
+          "index": 0,
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "amount": "50000",
+          "payTo": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+          "timeoutSeconds": 300
+        },
+        "settlement": {
+          "success": true,
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "transaction": "0xe27641d2fbff5830f622b4be5b181375c7607013516fd3aa98f05bc90d87cc6e",
+          "network": "eip155:8453"
+        }
+      },
+      "stdoutSha256": "3520e12ae821f3f8e2b0194935594ac7225244911e8cd7713d1d81dbee32d7e1",
+      "stderrSha256": null,
+      "error": null
+    },
+    {
+      "caseId": "spcat-nansen-endp_d6ef1g0se7ex497hm-route-0",
+      "providerName": "Nansen",
+      "serviceName": "Get historical token balance snapshots for a wallet address.",
+      "routeKind": "provider_direct_x402",
+      "status": "paid_with_tx",
+      "executedAt": "2026-04-28T12:48:11.312Z",
+      "txHash": "0xd01ebe9687aebc1ce66a177e16ae085c5f05592b73dbf931f7a94b6a63c60f80",
+      "network": "eip155:8453",
+      "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+      "payTo": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "10000",
+      "request": {
+        "method": "POST",
+        "url": "https://api.nansen.ai/api/v1/profiler/address/historical-balances",
+        "bodySha256": "66c42160d28696ebec36a062e80a1a51c827d23a53823d67b86ad16683245d97",
+        "bodySource": "manifest_request_body_template"
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "10000",
+        "payTo": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f"
+      },
+      "response": {
+        "status": 200,
+        "bodySha256": "0e58bc33e61b5bb57caf369cc2458c5293041026f3158f1cd4aa401da3f8df7b",
+        "contentType": "application/json"
+      },
+      "payment": {
+        "status": "paid",
+        "selectedOption": {
+          "index": 0,
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "amount": "10000",
+          "payTo": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+          "timeoutSeconds": 300
+        },
+        "settlement": {
+          "success": true,
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "transaction": "0xd01ebe9687aebc1ce66a177e16ae085c5f05592b73dbf931f7a94b6a63c60f80",
+          "network": "eip155:8453"
+        }
+      },
+      "stdoutSha256": "ebf054adc22c763c1a8346f1f53cef219cfc71a2d126c28b5251aec58bb57456",
+      "stderrSha256": null,
+      "error": null
+    },
+    {
+      "caseId": "spcat-nansen-endp_d6ef1g0zx136w74jr-route-0",
+      "providerName": "Nansen",
+      "serviceName": "Screen and filter tokens based on various criteria.",
+      "routeKind": "provider_direct_x402",
+      "status": "error",
+      "executedAt": "2026-04-28T12:48:18.691Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "10000",
+      "request": {
+        "method": "POST",
+        "url": "https://api.nansen.ai/api/v1/token-screener",
+        "bodySha256": "6106b9ef7236b8223b37cf8abc14397ee1e2ed580e8629b57951a6d4894092dd",
+        "bodySource": "manifest_request_body_template"
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "10000",
+        "payTo": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f"
+      },
+      "response": {
+        "bodySha256": null,
+        "contentType": null
+      },
+      "payment": {
+        "settlement": null
+      },
+      "stdoutSha256": "f85b5ecfe09ec39fe8a2388204999b9bd2adf21cfd50a9bf2873679602fc5b35",
+      "stderrSha256": null,
+      "error": ""
+    },
+    {
+      "caseId": "spcat-nyne-endp_d6dt25r3ksxxs6gn8-route-0",
+      "providerName": "Nyne",
+      "serviceName": "Start an async person enrichment by email, phone number, or social media URL. Returns requestId for polling.",
+      "routeKind": "sponge_wrapper_x402",
+      "status": "error",
+      "executedAt": "2026-04-28T12:48:20.031Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "20000",
+      "request": {
+        "method": "POST",
+        "url": "https://api.paysponge.com/x402/purchase/svc_d5ymfernpzeh58gb8/person/enrichment",
+        "bodySha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "bodySource": "manifest_request_body_template"
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "20000",
+        "payTo": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57"
+      },
+      "response": {
+        "bodySha256": null,
+        "contentType": null
+      },
+      "payment": {
+        "settlement": null
+      },
+      "stdoutSha256": "95c9daaf4a37fd38dfdb50af92a235e51177230dc5530059c84175a2b1f1f943",
+      "stderrSha256": null,
+      "error": ""
+    },
+    {
+      "caseId": "spcat-nyne-endp_d6dt25rgazs9fr3dw-route-0",
+      "providerName": "Nyne",
+      "serviceName": "Start an async person search by company name, role, geography, and person name. Returns requestId for polling.",
+      "routeKind": "sponge_wrapper_x402",
+      "status": "error",
+      "executedAt": "2026-04-28T12:48:23.183Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "20000",
+      "request": {
+        "method": "POST",
+        "url": "https://api.paysponge.com/x402/purchase/svc_d5ymfernpzeh58gb8/person/search",
+        "bodySha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "bodySource": "manifest_request_body_template"
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "20000",
+        "payTo": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57"
+      },
+      "response": {
+        "bodySha256": null,
+        "contentType": null
+      },
+      "payment": {
+        "settlement": null
+      },
+      "stdoutSha256": "95c9daaf4a37fd38dfdb50af92a235e51177230dc5530059c84175a2b1f1f943",
+      "stderrSha256": null,
+      "error": ""
+    },
+    {
+      "caseId": "spcat-nyne-endp_d6dt25rj4a8gqh91m-route-0",
+      "providerName": "Nyne",
+      "serviceName": "Poll async person enrichment results by requestId.",
+      "routeKind": "sponge_wrapper_x402",
+      "status": "error",
+      "executedAt": "2026-04-28T12:48:28.016Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "0",
+      "request": {
+        "method": "GET",
+        "url": "https://api.paysponge.com/x402/purchase/svc_d5ymfernpzeh58gb8/person/enrichment",
+        "bodySha256": null,
+        "bodySource": null
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "0",
+        "payTo": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57"
+      },
+      "response": {
+        "bodySha256": null,
+        "contentType": null
+      },
+      "payment": {
+        "settlement": null
+      },
+      "stdoutSha256": "95c9daaf4a37fd38dfdb50af92a235e51177230dc5530059c84175a2b1f1f943",
+      "stderrSha256": null,
+      "error": ""
+    },
+    {
+      "caseId": "spcat-openrouter-endp_d6dt25g1hh38s0tf0-route-0",
+      "providerName": "OpenRouter",
+      "serviceName": "Send chat completion requests to any supported LLM model.",
+      "routeKind": "sponge_wrapper_x402",
+      "status": "error",
+      "executedAt": "2026-04-28T12:48:29.334Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "10000",
+      "request": {
+        "method": "POST",
+        "url": "https://api.paysponge.com/x402/purchase/svc_d5zgtpg00dvssgj28/chat/completions",
+        "bodySha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "bodySource": "manifest_request_body_template"
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "10000",
+        "payTo": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57"
+      },
+      "response": {
+        "bodySha256": null,
+        "contentType": null
+      },
+      "payment": {
+        "settlement": null
+      },
+      "stdoutSha256": "95c9daaf4a37fd38dfdb50af92a235e51177230dc5530059c84175a2b1f1f943",
+      "stderrSha256": null,
+      "error": ""
+    },
+    {
+      "caseId": "spcat-openrouter-endp_d6dt25g9hhg1p5hjr-route-0",
+      "providerName": "OpenRouter",
+      "serviceName": "Send messages (Anthropic-compatible).",
+      "routeKind": "sponge_wrapper_x402",
+      "status": "error",
+      "executedAt": "2026-04-28T12:48:34.199Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "10000",
+      "request": {
+        "method": "POST",
+        "url": "https://api.paysponge.com/x402/purchase/svc_d5zgtpg00dvssgj28/messages",
+        "bodySha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "bodySource": "manifest_request_body_template"
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "10000",
+        "payTo": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57"
+      },
+      "response": {
+        "bodySha256": null,
+        "contentType": null
+      },
+      "payment": {
+        "settlement": null
+      },
+      "stdoutSha256": "95c9daaf4a37fd38dfdb50af92a235e51177230dc5530059c84175a2b1f1f943",
+      "stderrSha256": null,
+      "error": ""
+    },
+    {
+      "caseId": "spcat-openrouter-endp_d6dt25gebfw60f440-route-0",
+      "providerName": "OpenRouter",
+      "serviceName": "Send text completion requests.",
+      "routeKind": "sponge_wrapper_x402",
+      "status": "error",
+      "executedAt": "2026-04-28T12:48:38.139Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "10000",
+      "request": {
+        "method": "POST",
+        "url": "https://api.paysponge.com/x402/purchase/svc_d5zgtpg00dvssgj28/completions",
+        "bodySha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "bodySource": "manifest_request_body_template"
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "10000",
+        "payTo": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57"
+      },
+      "response": {
+        "bodySha256": null,
+        "contentType": null
+      },
+      "payment": {
+        "settlement": null
+      },
+      "stdoutSha256": "95c9daaf4a37fd38dfdb50af92a235e51177230dc5530059c84175a2b1f1f943",
+      "stderrSha256": null,
+      "error": ""
+    },
+    {
+      "caseId": "spcat-openrouter-endp_d6dt25gejd5m69a4r-route-0",
+      "providerName": "OpenRouter",
+      "serviceName": "Generate embeddings for text input.",
+      "routeKind": "sponge_wrapper_x402",
+      "status": "error",
+      "executedAt": "2026-04-28T12:48:41.774Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "10000",
+      "request": {
+        "method": "POST",
+        "url": "https://api.paysponge.com/x402/purchase/svc_d5zgtpg00dvssgj28/embeddings",
+        "bodySha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "bodySource": "manifest_request_body_template"
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "10000",
+        "payTo": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57"
+      },
+      "response": {
+        "bodySha256": null,
+        "contentType": null
+      },
+      "payment": {
+        "settlement": null
+      },
+      "stdoutSha256": "95c9daaf4a37fd38dfdb50af92a235e51177230dc5530059c84175a2b1f1f943",
+      "stderrSha256": null,
+      "error": ""
+    },
+    {
+      "caseId": "spcat-openrouter-endp_d6dt25gen10rseewr-route-0",
+      "providerName": "OpenRouter",
+      "serviceName": "Send a response request (OpenAI Responses API compatible).",
+      "routeKind": "sponge_wrapper_x402",
+      "status": "error",
+      "executedAt": "2026-04-28T12:48:45.697Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "10000",
+      "request": {
+        "method": "POST",
+        "url": "https://api.paysponge.com/x402/purchase/svc_d5zgtpg00dvssgj28/responses",
+        "bodySha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "bodySource": "manifest_request_body_template"
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "10000",
+        "payTo": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57"
+      },
+      "response": {
+        "bodySha256": null,
+        "contentType": null
+      },
+      "payment": {
+        "settlement": null
+      },
+      "stdoutSha256": "95c9daaf4a37fd38dfdb50af92a235e51177230dc5530059c84175a2b1f1f943",
+      "stderrSha256": null,
+      "error": ""
+    },
+    {
+      "caseId": "spcat-orca-whirlpools-endp_d7emhtr3kvky8egy8-route-0",
+      "providerName": "Orca Whirlpools",
+      "serviceName": "Build a withdrawal transaction for an existing liquidity position. If withdrawing 100%, also closes the position and burns the Orca NFT.",
+      "routeKind": "sponge_wrapper_x402",
+      "status": "error",
+      "executedAt": "2026-04-28T12:48:50.129Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x65059A66a0aBbdA1925D23eF87D407a5aDa6Cb79",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "0",
+      "request": {
+        "method": "POST",
+        "url": "https://api.paysponge.com/x402/purchase/svc_d6y9cggxhd3pcq41m/v1/withdraw",
+        "bodySha256": "7251a0b95c9b1f003591c06531a92e64842b02e78184858a455dd1c4c375a49f",
+        "bodySource": "manifest_request_body_template"
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "0",
+        "payTo": "0x65059A66a0aBbdA1925D23eF87D407a5aDa6Cb79"
+      },
+      "response": {
+        "bodySha256": null,
+        "contentType": null
+      },
+      "payment": {
+        "settlement": null
+      },
+      "stdoutSha256": "f85b5ecfe09ec39fe8a2388204999b9bd2adf21cfd50a9bf2873679602fc5b35",
+      "stderrSha256": null,
+      "error": ""
+    },
+    {
+      "caseId": "spcat-orca-whirlpools-endp_d7emhtryk4g1vqy7w-route-0",
+      "providerName": "Orca Whirlpools",
+      "serviceName": "One-shot deposit into a concentrated liquidity pool. Handles pool selection, price range, and transaction creation automatically.",
+      "routeKind": "sponge_wrapper_x402",
+      "status": "error",
+      "executedAt": "2026-04-28T12:48:53.092Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x65059A66a0aBbdA1925D23eF87D407a5aDa6Cb79",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "10000",
+      "request": {
+        "method": "POST",
+        "url": "https://api.paysponge.com/x402/purchase/svc_d6y9cggxhd3pcq41m/v1/deposit",
+        "bodySha256": "a25d4110ceef32acf5efb20c87d50fe2b4e5d33749c028d793f1fae36d13a47b",
+        "bodySource": "manifest_request_body_template"
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "10000",
+        "payTo": "0x65059A66a0aBbdA1925D23eF87D407a5aDa6Cb79"
+      },
+      "response": {
+        "bodySha256": null,
+        "contentType": null
+      },
+      "payment": {
+        "settlement": null
+      },
+      "stdoutSha256": "f85b5ecfe09ec39fe8a2388204999b9bd2adf21cfd50a9bf2873679602fc5b35",
+      "stderrSha256": null,
+      "error": ""
+    },
+    {
+      "caseId": "spcat-orca-whirlpools-endp_d7emhv02vxpyj4cvm-route-0",
+      "providerName": "Orca Whirlpools",
+      "serviceName": "Calculate liquidity and token amounts for a proposed deposit before building a transaction.",
+      "routeKind": "sponge_wrapper_x402",
+      "status": "error",
+      "executedAt": "2026-04-28T12:48:55.718Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x65059A66a0aBbdA1925D23eF87D407a5aDa6Cb79",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "0",
+      "request": {
+        "method": "POST",
+        "url": "https://api.paysponge.com/x402/purchase/svc_d6y9cggxhd3pcq41m/v1/quote",
+        "bodySha256": "bc52e13fe6305792b4cc5706f2a6598aee99c62c776af2f1263c31ae79785121",
+        "bodySource": "manifest_request_body_template"
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "0",
+        "payTo": "0x65059A66a0aBbdA1925D23eF87D407a5aDa6Cb79"
+      },
+      "response": {
+        "bodySha256": null,
+        "contentType": null
+      },
+      "payment": {
+        "settlement": null
+      },
+      "stdoutSha256": "f85b5ecfe09ec39fe8a2388204999b9bd2adf21cfd50a9bf2873679602fc5b35",
+      "stderrSha256": null,
+      "error": ""
+    },
+    {
+      "caseId": "spcat-orca-whirlpools-endp_d7emhv0554vd4vxnm-route-0",
+      "providerName": "Orca Whirlpools",
+      "serviceName": "Build a ready-to-sign deposit transaction with explicit tick and liquidity parameters.",
+      "routeKind": "sponge_wrapper_x402",
+      "status": "error",
+      "executedAt": "2026-04-28T12:48:56.948Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x65059A66a0aBbdA1925D23eF87D407a5aDa6Cb79",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "10000",
+      "request": {
+        "method": "POST",
+        "url": "https://api.paysponge.com/x402/purchase/svc_d6y9cggxhd3pcq41m/v1/transaction",
+        "bodySha256": "78cc3b1a0d08a4cb89c530a796a422258e8d035ac3b9e7e97b04d8bdddbf60f2",
+        "bodySource": "manifest_request_body_template"
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "10000",
+        "payTo": "0x65059A66a0aBbdA1925D23eF87D407a5aDa6Cb79"
+      },
+      "response": {
+        "bodySha256": null,
+        "contentType": null
+      },
+      "payment": {
+        "settlement": null
+      },
+      "stdoutSha256": "f85b5ecfe09ec39fe8a2388204999b9bd2adf21cfd50a9bf2873679602fc5b35",
+      "stderrSha256": null,
+      "error": ""
+    },
+    {
+      "caseId": "spcat-orca-whirlpools-endp_d7emhv0hhef6tb6xw-route-0",
+      "providerName": "Orca Whirlpools",
+      "serviceName": "Search for concentrated liquidity pools by token pair, ordered by TVL.",
+      "routeKind": "sponge_wrapper_x402",
+      "status": "error",
+      "executedAt": "2026-04-28T12:49:00.007Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x65059A66a0aBbdA1925D23eF87D407a5aDa6Cb79",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "0",
+      "request": {
+        "method": "GET",
+        "url": "https://api.paysponge.com/x402/purchase/svc_d6y9cggxhd3pcq41m/v1/pools/search",
+        "bodySha256": null,
+        "bodySource": null
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "0",
+        "payTo": "0x65059A66a0aBbdA1925D23eF87D407a5aDa6Cb79"
+      },
+      "response": {
+        "bodySha256": null,
+        "contentType": null
+      },
+      "payment": {
+        "settlement": null
+      },
+      "stdoutSha256": "f85b5ecfe09ec39fe8a2388204999b9bd2adf21cfd50a9bf2873679602fc5b35",
+      "stderrSha256": null,
+      "error": ""
+    },
+    {
+      "caseId": "spcat-quickintel-endp_d6hkzfrptfrt7d7ac-route-0",
+      "providerName": "Quick Intel",
+      "serviceName": "Scan any token contract across 60+ blockchains for security risks — honeypots, tax analysis, ownership status, scam patterns, and more.",
+      "routeKind": "provider_direct_x402",
+      "status": "paid",
+      "executedAt": "2026-04-28T12:49:01.424Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x3dBDfB6E5dCFa8f51AA07bC3aDf18a62b186C362",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "30000",
+      "request": {
+        "method": "POST",
+        "url": "https://x402.quickintel.io/v1/scan/full",
+        "bodySha256": "3a1d44bcb101eeda91dc4e87975fb00ac7de8805dc6bd0a5b9a1f26dc1f2a0f7",
+        "bodySource": "manifest_request_body_template"
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "30000",
+        "payTo": "0x3dBDfB6E5dCFa8f51AA07bC3aDf18a62b186C362"
+      },
+      "response": {
+        "status": 200,
+        "bodySha256": "63cd9ae126a91fbfcb2f3974e5d4157f852130c22e1367a35906504fbe540191",
+        "contentType": "application/json; charset=utf-8"
+      },
+      "payment": {
+        "status": "paid",
+        "selectedOption": {
+          "index": 0,
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "amount": "30000",
+          "payTo": "0x3dBDfB6E5dCFa8f51AA07bC3aDf18a62b186C362",
+          "timeoutSeconds": 3600
+        },
+        "settlement": {
+          "success": true,
+          "txHash": "0xdb9aa0e4e11817e636c55a497e2755fe825b74512cdd7f25627e9b0f1467f3eb",
+          "network": "eip155:8453",
+          "blockNumber": 45295599
+        }
+      },
+      "stdoutSha256": "836bf9af4d9a0b03051b4cbf3ef78a94b6336fb1870da32efacc8f50c9379d36",
+      "stderrSha256": null,
+      "error": null
+    },
+    {
+      "caseId": "spcat-reducto-endp_d6dt25r3wagz5xvtr-route-0",
+      "providerName": "Reducto",
+      "serviceName": "Parse a document by URL and extract structured content. Supports PDFs, images, spreadsheets, and other document formats.",
+      "routeKind": "sponge_wrapper_x402",
+      "status": "error",
+      "executedAt": "2026-04-28T12:49:04.501Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "50000",
+      "request": {
+        "method": "POST",
+        "url": "https://api.paysponge.com/x402/purchase/svc_d672d90ggvqqygj60/parse",
+        "bodySha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "bodySource": "manifest_request_body_template"
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "50000",
+        "payTo": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57"
+      },
+      "response": {
+        "bodySha256": null,
+        "contentType": null
+      },
+      "payment": {
+        "settlement": null
+      },
+      "stdoutSha256": "f85b5ecfe09ec39fe8a2388204999b9bd2adf21cfd50a9bf2873679602fc5b35",
+      "stderrSha256": null,
+      "error": ""
+    },
+    {
+      "caseId": "spcat-reducto-endp_d6fpnfr461nqza2v8-route-0",
+      "providerName": "Reducto",
+      "serviceName": "Pull specific data from documents into structured JSON.",
+      "routeKind": "sponge_wrapper_x402",
+      "status": "error",
+      "executedAt": "2026-04-28T12:49:07.665Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "50000",
+      "request": {
+        "method": "POST",
+        "url": "https://api.paysponge.com/x402/purchase/svc_d672d90ggvqqygj60/extract",
+        "bodySha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "bodySource": "manifest_request_body_template"
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "50000",
+        "payTo": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57"
+      },
+      "response": {
+        "bodySha256": null,
+        "contentType": null
+      },
+      "payment": {
+        "settlement": null
+      },
+      "stdoutSha256": "f85b5ecfe09ec39fe8a2388204999b9bd2adf21cfd50a9bf2873679602fc5b35",
+      "stderrSha256": null,
+      "error": ""
+    },
+    {
+      "caseId": "spcat-rug-pull-detector-endp_d7ekf7gc4g0v9vnkm-route-0",
+      "providerName": "Rug Pull Detector",
+      "serviceName": "Search for tokens matching a name or symbol and return known contract addresses, sorted by market cap rank.",
+      "routeKind": "sponge_wrapper_x402",
+      "status": "error",
+      "executedAt": "2026-04-28T12:49:11.911Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x65059A66a0aBbdA1925D23eF87D407a5aDa6Cb79",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "0",
+      "request": {
+        "method": "GET",
+        "url": "https://api.paysponge.com/x402/purchase/svc_d6tc4d89rramggb4m/search",
+        "bodySha256": null,
+        "bodySource": null
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "0",
+        "payTo": "0x65059A66a0aBbdA1925D23eF87D407a5aDa6Cb79"
+      },
+      "response": {
+        "bodySha256": null,
+        "contentType": null
+      },
+      "payment": {
+        "settlement": null
+      },
+      "stdoutSha256": "f85b5ecfe09ec39fe8a2388204999b9bd2adf21cfd50a9bf2873679602fc5b35",
+      "stderrSha256": null,
+      "error": ""
+    },
+    {
+      "caseId": "spcat-rug-pull-detector-endp_d7ekf7gnapzxtq8qg-route-0",
+      "providerName": "Rug Pull Detector",
+      "serviceName": "List all supported blockchains and their accepted aliases.",
+      "routeKind": "sponge_wrapper_x402",
+      "status": "paid",
+      "executedAt": "2026-04-28T12:49:16.915Z",
+      "txHash": null,
+      "network": "eip155:8453",
+      "payer": null,
+      "payTo": "0x65059A66a0aBbdA1925D23eF87D407a5aDa6Cb79",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "0",
+      "request": {
+        "method": "GET",
+        "url": "https://api.paysponge.com/x402/purchase/svc_d6tc4d89rramggb4m/chains",
+        "bodySha256": null,
+        "bodySource": null
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "0",
+        "payTo": "0x65059A66a0aBbdA1925D23eF87D407a5aDa6Cb79"
+      },
+      "response": {
+        "status": 200,
+        "bodySha256": "a4b59876e7e16368ed1844390ab2c5258ebd99e6e2c052571461c24319c2cfee",
+        "contentType": "application/json"
+      },
+      "payment": {
+        "status": "paid",
+        "selectedOption": {
+          "index": 0,
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "amount": "0",
+          "payTo": "0x65059A66a0aBbdA1925D23eF87D407a5aDa6Cb79",
+          "timeoutSeconds": 300
+        },
+        "settlement": null
+      },
+      "stdoutSha256": "9499fe1c909fa5080e9c7a7a8d4b1a1a026660c5169a541e41b244dce6571047",
+      "stderrSha256": null,
+      "error": null
+    },
+    {
+      "caseId": "spcat-textbelt-endp_d6kv030qsth1y0ey8-route-0",
+      "providerName": "Textbelt",
+      "serviceName": "Send an SMS message to a US or Canada phone number.",
+      "routeKind": "sponge_wrapper_x402",
+      "status": "paid_with_tx",
+      "executedAt": "2026-04-28T12:49:18.287Z",
+      "txHash": "0x32f240144c428e7ddc2caffe7d771f91bc046492ad7d44bbda148a7019cb91f1",
+      "network": "eip155:8453",
+      "payer": "0x62c2d106293398961894bcd4908b06a8620b7351",
+      "payTo": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "20000",
+      "request": {
+        "method": "POST",
+        "url": "https://api.paysponge.com/x402/purchase/svc_d6kszbre4qwg5n4n4/text",
+        "bodySha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "bodySource": "manifest_request_body_template"
+      },
+      "challenge": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amountAtomic": "20000",
+        "payTo": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57"
+      },
+      "response": {
+        "status": 200,
+        "bodySha256": "b2c3be8470f37433906b04e0c79564e48193ceadefa8179b6d92350bcb39e25b",
+        "contentType": "application/json"
+      },
+      "payment": {
+        "status": "paid",
+        "selectedOption": {
+          "index": 0,
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "amount": "20000",
+          "payTo": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+          "timeoutSeconds": 300
+        },
+        "settlement": {
+          "success": true,
+          "payer": "0x62c2d106293398961894bcd4908b06a8620b7351",
+          "transaction": "0x32f240144c428e7ddc2caffe7d771f91bc046492ad7d44bbda148a7019cb91f1",
+          "network": "base"
+        }
+      },
+      "stdoutSha256": "3683aef9c733eef8c5920f5dab87ea3d7ed4a38c7539609b689bd32e324538ad",
+      "stderrSha256": null,
+      "error": null
+    }
+  ]
+}
