@@ -1,26 +1,11 @@
 services:
-  cli:
-    image: ghcr.io/${GHCR_REPOSITORY_OWNER:?GHCR_REPOSITORY_OWNER is required}/flovia-poc-cli:${IMAGE_TAG:-main}
-    environment:
-      DATABASE_URL: /data/flovia.db
-      REPORTS_DIR: /data/reports
-      FIXTURES_DIR: /app/apps/cli/fixtures
-      MANIFEST_PATH: /app/apps/cli/fixtures/manifest.json
-      RPC_REQUEST_TIMEOUT_MS: 30000
-    volumes:
-      - ./docker-data:/data
-    restart: "no"
-
   bff:
-    image: ghcr.io/${GHCR_REPOSITORY_OWNER:?GHCR_REPOSITORY_OWNER is required}/flovia-poc-bff:${IMAGE_TAG:-main}
-    depends_on:
-      cli:
-        condition: service_completed_successfully
+    image: ${BFF_IMAGE:?BFF_IMAGE is required}
     environment:
-      DATABASE_URL: /data/flovia.db
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
       PORT: 3001
     volumes:
-      - ./docker-data:/data
+      - ${FLOVIA_DATA_DIR:?FLOVIA_DATA_DIR is required}:${BFF_DATA_MOUNT_PATH:?BFF_DATA_MOUNT_PATH is required}
     ports:
       - "${BFF_PORT:-3001}:3001"
     restart: unless-stopped

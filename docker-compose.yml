@@ -1,29 +1,15 @@
 services:
-  cli:
-    build:
-      context: .
-      dockerfile: apps/cli/Dockerfile
-    environment:
-      DATABASE_URL: /data/flovia.db
-      REPORTS_DIR: /data/reports
-      FIXTURES_DIR: /app/apps/cli/fixtures
-      MANIFEST_PATH: /app/apps/cli/fixtures/manifest.json
-      RPC_REQUEST_TIMEOUT_MS: 30000
-    volumes:
-      - ./docker-data:/data
-    restart: "no"
-
   bff:
     build:
       context: .
       dockerfile: apps/bff/Dockerfile
     environment:
-      DATABASE_URL: /data/flovia.db
+      DATABASE_URL: ${DATABASE_URL:-/data/flovia.db}
       PORT: 3001
     volumes:
-      - ./docker-data:/data
+      - ${FLOVIA_DATA_DIR:-./docker-data}:${BFF_DATA_MOUNT_PATH:-/data}
     ports:
-      - "3001:3001"
+      - "${BFF_PORT:-3001}:3001"
     healthcheck:
       test: ["CMD", "bun", "-e", "const r = await fetch('http://localhost:3001/health'); process.exit(r.ok ? 0 : 1)"]
       interval: 5s

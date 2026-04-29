@@ -5,10 +5,13 @@ name: deploy-lightsail
 # - AWS_ROLE_TO_ASSUME
 # - LIGHTSAIL_INSTANCE_NAME
 # - LIGHTSAIL_DEPLOY_PATH
+# LIGHTSAIL_DEPLOY_PATH should point at the repository checkout on the
+# instance, for example /home/ec2-user/poc.
 # AWS_ROLE_TO_ASSUME should allow OIDC from this repository and
 # lightsail:GetInstanceAccessDetails on the target instance.
-# Optional on the instance:
-# - create ${LIGHTSAIL_DEPLOY_PATH}/.env with BFF_PORT=80, etc.
+# The workflow seeds missing FLOVIA_DATA_DIR / BFF_DATA_MOUNT_PATH /
+# DATABASE_URL / REPORTS_DIR entries into ${LIGHTSAIL_DEPLOY_PATH}/.env
+# and updates BFF_IMAGE before docker compose runs.
 
 on:
   push:
@@ -52,26 +55,37 @@ jobs:
         run: |
           set -euo pipefail
           image_namespace="$(printf '%s' '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')"
+          deploy_git_sha="$(git rev-parse HEAD)"
+
           {
-            echo "REGISTRY=ghcr.io"
             echo "IMAGE_NAMESPACE=${image_namespace}"
-            echo "CLI_IMAGE=ghcr.io/${image_namespace}/flovia-poc-cli"
             echo "BFF_IMAGE=ghcr.io/${image_namespace}/flovia-poc-bff"
+            echo "DEPLOY_GIT_SHA=${deploy_git_sha}"
           } >> "$GITHUB_ENV"
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+      - name: Setup QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Setup Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
         with:
-          bun-version-file: package.json
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
-
-      # - name: Verify CLI offline pipeline
-      #   run: cd apps/cli && bun run verify
-
-      # - name: Validate BFF typecheck and tests
-      #   run: cd apps/bff && bun run typecheck && bun test
+      - name: Build and push BFF image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/bff/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ${{ env.BFF_IMAGE }}:main
+            ${{ env.BFF_IMAGE }}:${{ env.DEPLOY_GIT_SHA }}
 
       - name: Configure AWS credentials with OIDC
         uses: aws-actions/configure-aws-credentials@v6
@@ -80,33 +94,6 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
           role-session-name: deploy-lightsail-${{ github.run_id }}
           mask-aws-account-id: true
-
-      - name: Login to GHCR
-        run: |
-          set -euo pipefail
-          printf '%s\n' "${{ secrets.GITHUB_TOKEN }}" | docker login "${REGISTRY}" -u "${{ github.actor }}" --password-stdin
-
-      - name: Build and push CLI image
-        run: |
-          set -euo pipefail
-          docker build \
-            --file apps/cli/Dockerfile \
-            --tag "${CLI_IMAGE}:main" \
-            --tag "${CLI_IMAGE}:${GITHUB_SHA}" \
-            .
-          docker push "${CLI_IMAGE}:main"
-          docker push "${CLI_IMAGE}:${GITHUB_SHA}"
-
-      - name: Build and push BFF image
-        run: |
-          set -euo pipefail
-          docker build \
-            --file apps/bff/Dockerfile \
-            --tag "${BFF_IMAGE}:main" \
-            --tag "${BFF_IMAGE}:${GITHUB_SHA}" \
-            .
-          docker push "${BFF_IMAGE}:main"
-          docker push "${BFF_IMAGE}:${GITHUB_SHA}"
 
       - name: Prepare temporary Lightsail SSH access
         run: |
@@ -135,7 +122,7 @@ jobs:
             echo "LIGHTSAIL_KNOWN_HOSTS_PATH=$HOME/.ssh/known_hosts"
           } >> "$GITHUB_ENV"
 
-      - name: Ensure deploy directory exists
+      - name: Pull repository and restart services on Lightsail
         run: |
           set -euo pipefail
           ssh \
@@ -145,45 +132,80 @@ jobs:
             -o StrictHostKeyChecking=yes \
             -o UserKnownHostsFile="${LIGHTSAIL_KNOWN_HOSTS_PATH}" \
             "${LIGHTSAIL_USER}@${LIGHTSAIL_HOST}" \
-            "mkdir -p '${LIGHTSAIL_DEPLOY_PATH}'"
-
-      - name: Upload compose file
-        run: |
-          set -euo pipefail
-          scp \
-            -i "${LIGHTSAIL_SSH_KEY_PATH}" \
-            -o CertificateFile="${LIGHTSAIL_SSH_CERT_PATH}" \
-            -o IdentitiesOnly=yes \
-            -o StrictHostKeyChecking=yes \
-            -o UserKnownHostsFile="${LIGHTSAIL_KNOWN_HOSTS_PATH}" \
-            docker-compose.lightsail.yml \
-            "${LIGHTSAIL_USER}@${LIGHTSAIL_HOST}:${LIGHTSAIL_DEPLOY_PATH}/docker-compose.lightsail.yml"
-
-      - name: Restart services on Lightsail
-        env:
-          GHCR_USERNAME: ${{ github.actor }}
-          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          IMAGE_TAG: ${{ github.sha }}
-        run: |
-          set -euo pipefail
-          ssh \
-            -i "${LIGHTSAIL_SSH_KEY_PATH}" \
-            -o CertificateFile="${LIGHTSAIL_SSH_CERT_PATH}" \
-            -o IdentitiesOnly=yes \
-            -o StrictHostKeyChecking=yes \
-            -o UserKnownHostsFile="${LIGHTSAIL_KNOWN_HOSTS_PATH}" \
-            "${LIGHTSAIL_USER}@${LIGHTSAIL_HOST}" \
-            GHCR_USERNAME="${GHCR_USERNAME}" \
-            GHCR_TOKEN="${GHCR_TOKEN}" \
-            GHCR_REPOSITORY_OWNER="${IMAGE_NAMESPACE}" \
-            IMAGE_TAG="${IMAGE_TAG}" \
+            GHCR_USERNAME="${{ github.actor }}" \
+            GHCR_TOKEN="${{ secrets.GITHUB_TOKEN }}" \
+            BFF_IMAGE_REF="${BFF_IMAGE}:${DEPLOY_GIT_SHA}" \
             LIGHTSAIL_DEPLOY_PATH="${LIGHTSAIL_DEPLOY_PATH}" \
             "bash -s" <<'EOF'
           set -euo pipefail
+          if [ ! -d "$LIGHTSAIL_DEPLOY_PATH/.git" ]; then
+            echo "Expected a git checkout at $LIGHTSAIL_DEPLOY_PATH" >&2
+            exit 1
+          fi
+
+          if ! git -C "$LIGHTSAIL_DEPLOY_PATH" diff --quiet || ! git -C "$LIGHTSAIL_DEPLOY_PATH" diff --cached --quiet; then
+            echo "Refusing to deploy because tracked files under $LIGHTSAIL_DEPLOY_PATH have local changes." >&2
+            git -C "$LIGHTSAIL_DEPLOY_PATH" status --short >&2
+            exit 1
+          fi
+
+          git -C "$LIGHTSAIL_DEPLOY_PATH" fetch --prune origin
+          git -C "$LIGHTSAIL_DEPLOY_PATH" checkout main
+          git -C "$LIGHTSAIL_DEPLOY_PATH" pull --ff-only origin main
+
           cd "$LIGHTSAIL_DEPLOY_PATH"
-          docker compose version >/dev/null
+
+          touch .env
+
+          upsert_env_var() {
+            key="$1"
+            value="$2"
+            temp_file="$(mktemp)"
+
+            awk -v key="$key" -v value="$value" '
+              BEGIN { updated = 0 }
+              index($0, key "=") == 1 {
+                print key "=" value
+                updated = 1
+                next
+              }
+              { print }
+              END {
+                if (!updated) {
+                  print key "=" value
+                }
+              }
+            ' .env > "$temp_file"
+
+            mv "$temp_file" .env
+          }
+
+          ensure_env_var() {
+            key="$1"
+            value="$2"
+
+            if ! grep -q "^${key}=" .env; then
+              printf '\n%s=%s\n' "$key" "$value" >> .env
+            fi
+          }
+
+          default_data_dir="${LIGHTSAIL_DEPLOY_PATH}/docker-data"
+          ensure_env_var FLOVIA_DATA_DIR "$default_data_dir"
+          ensure_env_var BFF_DATA_MOUNT_PATH "$default_data_dir"
+          ensure_env_var DATABASE_URL "${default_data_dir}/flovia.db"
+          ensure_env_var REPORTS_DIR "${default_data_dir}/reports"
+          upsert_env_var BFF_IMAGE "$BFF_IMAGE_REF"
+
+          set -a
+          . ./.env
+          set +a
+
+          FLOVIA_DATA_DIR="${FLOVIA_DATA_DIR:-$default_data_dir}"
+
+          mkdir -p "$FLOVIA_DATA_DIR" "$FLOVIA_DATA_DIR/reports"
           printf '%s\n' "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USERNAME" --password-stdin
-          GHCR_REPOSITORY_OWNER="$GHCR_REPOSITORY_OWNER" IMAGE_TAG="$IMAGE_TAG" docker compose -f docker-compose.lightsail.yml pull
-          GHCR_REPOSITORY_OWNER="$GHCR_REPOSITORY_OWNER" IMAGE_TAG="$IMAGE_TAG" docker compose -f docker-compose.lightsail.yml up -d --force-recreate --remove-orphans
+          docker compose -f docker-compose.lightsail.yml config >/dev/null
+          docker compose -f docker-compose.lightsail.yml pull bff
+          docker compose -f docker-compose.lightsail.yml up -d --force-recreate --remove-orphans
           docker logout ghcr.io >/dev/null 2>&1 || true
           EOF
