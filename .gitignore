@@ -25,3 +25,4 @@ packages/*/node_modules/
 /.cursor/
 /.codex/
 /openspec/
+docker-data/

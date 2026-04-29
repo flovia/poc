@@ -1,0 +1,11 @@
+.git
+.gitignore
+node_modules
+**/node_modules
+**/dist
+**/reports
+**/*.db
+**/*.db-shm
+**/*.db-wal
+.env
+apps/cli/.env

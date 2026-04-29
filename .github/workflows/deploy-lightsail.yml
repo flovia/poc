@@ -1,0 +1,189 @@
+name: deploy-lightsail
+
+# Required repository secrets:
+# - AWS_REGION
+# - AWS_ROLE_TO_ASSUME
+# - LIGHTSAIL_INSTANCE_NAME
+# - LIGHTSAIL_DEPLOY_PATH
+# AWS_ROLE_TO_ASSUME should allow OIDC from this repository and
+# lightsail:GetInstanceAccessDetails on the target instance.
+# Optional on the instance:
+# - create ${LIGHTSAIL_DEPLOY_PATH}/.env with BFF_PORT=80, etc.
+
+on:
+  push:
+    branches:
+      - Kourin1996/deploy-test
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-lightsail-main
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  id-token: write
+  packages: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      LIGHTSAIL_INSTANCE_NAME: ${{ secrets.LIGHTSAIL_INSTANCE_NAME }}
+      LIGHTSAIL_DEPLOY_PATH: ${{ secrets.LIGHTSAIL_DEPLOY_PATH }}
+    steps:
+      - name: Validate deployment configuration
+        env:
+          AWS_ROLE_TO_ASSUME: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+        run: |
+          set -euo pipefail
+          for key in AWS_REGION AWS_ROLE_TO_ASSUME LIGHTSAIL_INSTANCE_NAME LIGHTSAIL_DEPLOY_PATH; do
+            if [ -z "${!key}" ]; then
+              echo "Missing required secret: ${key}" >&2
+              exit 1
+            fi
+          done
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set image metadata
+        run: |
+          set -euo pipefail
+          image_namespace="$(printf '%s' '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')"
+          {
+            echo "REGISTRY=ghcr.io"
+            echo "IMAGE_NAMESPACE=${image_namespace}"
+            echo "CLI_IMAGE=ghcr.io/${image_namespace}/flovia-poc-cli"
+            echo "BFF_IMAGE=ghcr.io/${image_namespace}/flovia-poc-bff"
+          } >> "$GITHUB_ENV"
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      # - name: Verify CLI offline pipeline
+      #   run: cd apps/cli && bun run verify
+
+      # - name: Validate BFF typecheck and tests
+      #   run: cd apps/bff && bun run typecheck && bun test
+
+      - name: Configure AWS credentials with OIDC
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          role-session-name: deploy-lightsail-${{ github.run_id }}
+          mask-aws-account-id: true
+
+      - name: Login to GHCR
+        run: |
+          set -euo pipefail
+          printf '%s\n' "${{ secrets.GITHUB_TOKEN }}" | docker login "${REGISTRY}" -u "${{ github.actor }}" --password-stdin
+
+      - name: Build and push CLI image
+        run: |
+          set -euo pipefail
+          docker build \
+            --file apps/cli/Dockerfile \
+            --tag "${CLI_IMAGE}:main" \
+            --tag "${CLI_IMAGE}:${GITHUB_SHA}" \
+            .
+          docker push "${CLI_IMAGE}:main"
+          docker push "${CLI_IMAGE}:${GITHUB_SHA}"
+
+      - name: Build and push BFF image
+        run: |
+          set -euo pipefail
+          docker build \
+            --file apps/bff/Dockerfile \
+            --tag "${BFF_IMAGE}:main" \
+            --tag "${BFF_IMAGE}:${GITHUB_SHA}" \
+            .
+          docker push "${BFF_IMAGE}:main"
+          docker push "${BFF_IMAGE}:${GITHUB_SHA}"
+
+      - name: Prepare temporary Lightsail SSH access
+        run: |
+          set -euo pipefail
+          access_details="$(aws lightsail get-instance-access-details \
+            --region "${AWS_REGION}" \
+            --instance-name "${LIGHTSAIL_INSTANCE_NAME}" \
+            --protocol ssh \
+            --output json)"
+
+          lightsail_host="$(printf '%s' "${access_details}" | jq -r '.accessDetails.ipAddress')"
+          lightsail_user="$(printf '%s' "${access_details}" | jq -r '.accessDetails.username')"
+
+          install -m 700 -d ~/.ssh
+          printf '%s' "${access_details}" | jq -r '.accessDetails.privateKey' > ~/.ssh/lightsail-tempkey
+          printf '%s' "${access_details}" | jq -r '.accessDetails.certKey' > ~/.ssh/lightsail-tempkey-cert.pub
+          printf '%s' "${access_details}" | jq -r --arg host "${lightsail_host}" '.accessDetails.hostKeys[] | "\($host) \(.algorithm) \(.publicKey)"' > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/lightsail-tempkey
+          chmod 644 ~/.ssh/lightsail-tempkey-cert.pub ~/.ssh/known_hosts
+
+          {
+            echo "LIGHTSAIL_HOST=${lightsail_host}"
+            echo "LIGHTSAIL_USER=${lightsail_user}"
+            echo "LIGHTSAIL_SSH_KEY_PATH=$HOME/.ssh/lightsail-tempkey"
+            echo "LIGHTSAIL_SSH_CERT_PATH=$HOME/.ssh/lightsail-tempkey-cert.pub"
+            echo "LIGHTSAIL_KNOWN_HOSTS_PATH=$HOME/.ssh/known_hosts"
+          } >> "$GITHUB_ENV"
+
+      - name: Ensure deploy directory exists
+        run: |
+          set -euo pipefail
+          ssh \
+            -i "${LIGHTSAIL_SSH_KEY_PATH}" \
+            -o CertificateFile="${LIGHTSAIL_SSH_CERT_PATH}" \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            -o UserKnownHostsFile="${LIGHTSAIL_KNOWN_HOSTS_PATH}" \
+            "${LIGHTSAIL_USER}@${LIGHTSAIL_HOST}" \
+            "mkdir -p '${LIGHTSAIL_DEPLOY_PATH}'"
+
+      - name: Upload compose file
+        run: |
+          set -euo pipefail
+          scp \
+            -i "${LIGHTSAIL_SSH_KEY_PATH}" \
+            -o CertificateFile="${LIGHTSAIL_SSH_CERT_PATH}" \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            -o UserKnownHostsFile="${LIGHTSAIL_KNOWN_HOSTS_PATH}" \
+            docker-compose.lightsail.yml \
+            "${LIGHTSAIL_USER}@${LIGHTSAIL_HOST}:${LIGHTSAIL_DEPLOY_PATH}/docker-compose.lightsail.yml"
+
+      - name: Restart services on Lightsail
+        env:
+          GHCR_USERNAME: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          ssh \
+            -i "${LIGHTSAIL_SSH_KEY_PATH}" \
+            -o CertificateFile="${LIGHTSAIL_SSH_CERT_PATH}" \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            -o UserKnownHostsFile="${LIGHTSAIL_KNOWN_HOSTS_PATH}" \
+            "${LIGHTSAIL_USER}@${LIGHTSAIL_HOST}" \
+            GHCR_USERNAME="${GHCR_USERNAME}" \
+            GHCR_TOKEN="${GHCR_TOKEN}" \
+            GHCR_REPOSITORY_OWNER="${IMAGE_NAMESPACE}" \
+            IMAGE_TAG="${IMAGE_TAG}" \
+            LIGHTSAIL_DEPLOY_PATH="${LIGHTSAIL_DEPLOY_PATH}" \
+            "bash -s" <<'EOF'
+          set -euo pipefail
+          cd "$LIGHTSAIL_DEPLOY_PATH"
+          docker compose version >/dev/null
+          printf '%s\n' "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USERNAME" --password-stdin
+          GHCR_REPOSITORY_OWNER="$GHCR_REPOSITORY_OWNER" IMAGE_TAG="$IMAGE_TAG" docker compose -f docker-compose.lightsail.yml pull
+          GHCR_REPOSITORY_OWNER="$GHCR_REPOSITORY_OWNER" IMAGE_TAG="$IMAGE_TAG" docker compose -f docker-compose.lightsail.yml up -d --force-recreate --remove-orphans
+          docker logout ghcr.io >/dev/null 2>&1 || true
+          EOF
