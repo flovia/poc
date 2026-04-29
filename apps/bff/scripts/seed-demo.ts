@@ -106,20 +106,21 @@ const pushObservation = (seed: Omit<ObservationSeed, "observationId">) => {
 // - cursor → 1 provider (price), steady → low upsell
 // - n8nflow → 2 providers (price + signal), declining → medium upsell
 // - curl1 → 1 provider (route), one-off → low upsell
-const bot1Times: Array<{ provider: number; offsetDays: number; amount: string; relayer: string }> = [
-  { provider: 0, offsetDays: 0.0, amount: "150000", relayer: RELAYER_PRIMARY },
-  { provider: 1, offsetDays: 0.05, amount: "320000", relayer: RELAYER_PRIMARY },
-  { provider: 2, offsetDays: 0.07, amount: "1400000", relayer: RELAYER_PRIMARY },
-  { provider: 3, offsetDays: 0.08, amount: "40000", relayer: RELAYER_PRIMARY },
-  { provider: 0, offsetDays: 1.0, amount: "180000", relayer: RELAYER_PRIMARY },
-  { provider: 1, offsetDays: 1.05, amount: "360000", relayer: RELAYER_PRIMARY },
-  { provider: 2, offsetDays: 1.07, amount: "1580000", relayer: RELAYER_PRIMARY },
-  { provider: 3, offsetDays: 1.08, amount: "40000", relayer: RELAYER_PRIMARY },
-  { provider: 0, offsetDays: 6.0, amount: "260000", relayer: RELAYER_PRIMARY },
-  { provider: 1, offsetDays: 6.05, amount: "420000", relayer: RELAYER_PRIMARY },
-  { provider: 2, offsetDays: 6.07, amount: "2110000", relayer: RELAYER_PRIMARY },
-  { provider: 3, offsetDays: 6.08, amount: "40000", relayer: RELAYER_PRIMARY },
-];
+const bot1Times: Array<{ provider: number; offsetDays: number; amount: string; relayer: string }> =
+  [
+    { provider: 0, offsetDays: 0.0, amount: "150000", relayer: RELAYER_PRIMARY },
+    { provider: 1, offsetDays: 0.05, amount: "320000", relayer: RELAYER_PRIMARY },
+    { provider: 2, offsetDays: 0.07, amount: "1400000", relayer: RELAYER_PRIMARY },
+    { provider: 3, offsetDays: 0.08, amount: "40000", relayer: RELAYER_PRIMARY },
+    { provider: 0, offsetDays: 5.0, amount: "180000", relayer: RELAYER_PRIMARY },
+    { provider: 1, offsetDays: 5.05, amount: "360000", relayer: RELAYER_PRIMARY },
+    { provider: 2, offsetDays: 5.07, amount: "1580000", relayer: RELAYER_PRIMARY },
+    { provider: 3, offsetDays: 5.08, amount: "40000", relayer: RELAYER_PRIMARY },
+    { provider: 0, offsetDays: 6.0, amount: "260000", relayer: RELAYER_PRIMARY },
+    { provider: 1, offsetDays: 6.05, amount: "420000", relayer: RELAYER_PRIMARY },
+    { provider: 2, offsetDays: 6.07, amount: "2110000", relayer: RELAYER_PRIMARY },
+    { provider: 3, offsetDays: 6.08, amount: "40000", relayer: RELAYER_PRIMARY },
+  ];
 for (const [i, row] of bot1Times.entries()) {
   pushObservation({
     caseId: `bot1-${i + 1}`,
@@ -193,10 +194,7 @@ for (const [i, row] of n8nRows.entries()) {
   });
 }
 
-const curlRows = [
-  { offsetDays: 3.0, amount: "1500000" },
-  { offsetDays: 3.05, amount: "1500000" },
-];
+const curlRows = [{ offsetDays: 3.0, amount: "750000" }];
 for (const [i, row] of curlRows.entries()) {
   pushObservation({
     caseId: `curl-${i + 1}`,
@@ -287,7 +285,18 @@ const insertCandidate = database.prepare(`
   ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `);
 
+const candidateLimitByPayerIndex = new Map<number, number>([
+  [2, 1],
+  [4, 0],
+]);
+const candidateCountByPayerIndex = new Map<number, number>();
+const candidateObservationIds = new Set<number>();
+
 for (const obs of observations) {
+  const candidateLimit = candidateLimitByPayerIndex.get(obs.payerIndex) ?? Number.POSITIVE_INFINITY;
+  const candidateCount = candidateCountByPayerIndex.get(obs.payerIndex) ?? 0;
+  if (candidateCount >= candidateLimit) continue;
+
   const provider = providers[obs.providerIndex];
   insertCandidate.run(
     obs.observationId,
@@ -304,6 +313,8 @@ for (const obs of observations) {
     NOW_ISO,
     NOW_ISO,
   );
+  candidateCountByPayerIndex.set(obs.payerIndex, candidateCount + 1);
+  candidateObservationIds.add(obs.observationId);
 }
 
 // --------- AGGREGATES ---------
@@ -392,7 +403,7 @@ for (const obs of observations) {
     totalAmountAtomic: 0n,
   };
   daily.observationCount += 1;
-  daily.candidateCount += 1;
+  if (candidateObservationIds.has(obs.observationId)) daily.candidateCount += 1;
   daily.payers.add(payer.wallet);
   daily.recipients.add(provider.payTo);
   daily.relayers.add(obs.relayer);
