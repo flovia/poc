@@ -70,7 +70,7 @@ Phase A の core は完了。ただし、次は hardening として扱う。
 
 BFF が frontend demo のための read-only product API boundary になること。
 
-frontend: ../poc-frontend or 
+frontend: ../poc-frontend or https://github.com/flovia/poc-frontend (private repo)
 
 ### Build order
 
