@@ -5,6 +5,7 @@ import {
   cdpDiscoveryPageFingerprint,
   fetchCdpDiscoveryResources,
   fetchBitqueryBaseUsdcAggregates,
+  fetchPaymentTransfersByPayTo,
   makeCdpDiscoveryBody,
 } from "../src/index";
 
@@ -188,5 +189,62 @@ describe("bitquery source client", () => {
         process.env.BITQUERY_TOKEN = old;
       }
     }
+  });
+
+  test("parses paginated payment transfers by payTo", async () => {
+    const pages = [
+      readFixture<unknown>("bitquery-transfers-page-1.json"),
+      readFixture<unknown>("bitquery-transfers-page-2.json"),
+    ];
+    const calls: Array<Record<string, unknown>> = [];
+
+    const result = await fetchPaymentTransfersByPayTo({
+      network: "base",
+      asset: "USDC",
+      payTo: "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
+      token: "test-token",
+      limit: 3,
+      pageSize: 2,
+      timeWindow: { from: "2026-04-01T00:00:00Z", to: "2026-04-29T23:59:59Z" },
+      fetchFn: async (_url, init) => {
+        const body = JSON.parse(String(init?.body)) as { variables: Record<string, unknown> };
+        calls.push(body.variables);
+        const page = pages[calls.length - 1] ?? { data: { EVM: { transfers: [] } } };
+        return new Response(JSON.stringify(page), { status: 200 });
+      },
+    });
+
+    expect(result).toHaveLength(3);
+    expect(result[0]).toMatchObject({
+      txHash: "0x6248880ec36541e6783ab756afdb427939f6209551b751cec5a2c97f71176d94",
+      sender: "0xac5a07c44a4f971667b3df4b6551fb6991b2142d",
+      recipient: "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
+      amountAtomic: "10000",
+      blockTimestamp: "2026-04-29T04:11:53Z",
+    });
+    expect(result[2]?.amountAtomic).toBe("20000");
+    expect(calls).toEqual([
+      expect.objectContaining({ limit: 2, offset: 0 }),
+      expect.objectContaining({ limit: 1, offset: 2 }),
+    ]);
+  });
+
+  test("allows explicit transfer capture limits over 1000", async () => {
+    const calls: Array<Record<string, unknown>> = [];
+    await fetchPaymentTransfersByPayTo({
+      network: "base",
+      asset: "USDC",
+      payTo: "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
+      token: "test-token",
+      limit: 1500,
+      pageSize: 1500,
+      fetchFn: async (_url, init) => {
+        const body = JSON.parse(String(init?.body)) as { variables: Record<string, unknown> };
+        calls.push(body.variables);
+        return new Response(JSON.stringify({ data: { EVM: { transfers: [] } } }), { status: 200 });
+      },
+    });
+
+    expect(calls[0]).toMatchObject({ limit: 1500, offset: 0 });
   });
 });

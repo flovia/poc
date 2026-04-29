@@ -77,12 +77,14 @@ transaction だけです。
 
 CoinGecko には demo 上で扱いたい endpoint が複数あります。
 
+現在の demo で扱う CoinGecko x402 endpoint は次の 5 つです。
+
 ```text
-CoinGecko endpoint A
-CoinGecko endpoint B
-CoinGecko endpoint C
-CoinGecko endpoint D
-CoinGecko endpoint E
+GET /api/v3/x402/onchain/simple/networks/{id}/token_price/{address}
+GET /api/v3/x402/onchain/search/pools
+GET /api/v3/x402/onchain/networks/{id}/trending_pools
+GET /api/v3/x402/onchain/networks/{id}/tokens/{address}
+GET /api/v3/x402/simple/price
 ```
 
 しかし、これらの endpoint に対する支払いが同じ `payTo` に集約される場合、public/onchain data
@@ -228,6 +230,51 @@ Phase A の `sources` / `intelligence` を呼んでいません。
 2. Phase B demo 用の mock endpoint attribution
 3. 将来 SDK に置き換える future telemetry fields
 4. それらを組み合わせた derived insights
+
+### 4.9 実装済み capture / projection flow
+
+現時点の CoinGecko Base USDC 観測値は次の通りです。
+
+```text
+payTo: 0x110cdbba7fe6434ec4ce3464cc523942ad6fb784
+transactionCount: 628
+uniqueSenderCount: 75
+latestTxHash: 0x6248880ec36541e6783ab756afdb427939f6209551b751cec5a2c97f71176d94
+latestSender: 0xac5a07c44a4f971667b3df4b6551fb6991b2142d
+latestBlockTimestamp: 2026-04-29T04:11:53Z
+```
+
+現在の fixture capture は 2026-01-01 から 2026-04-29 までを対象に、`requestedLimit: 5000` で 1916 件の valid transfer facts を保存しています。
+
+実装上のファイル配置は次の通りです。
+
+- `packages/sources/src/bitquery.ts`
+  - `fetchPaymentTransfersByPayTo()` が `network`、`asset`、`payTo`、time window、limit を受け取り、Bitquery の transfer list を pagination しながら取得します。default limit は 1000 件で、明示 limit では 1000 件超も許可します。
+- `apps/bff/fixtures/phase-a/coingecko-transactions.json`
+  - real onchain transaction fact fixture です。
+  - `txHash`、`payerWallet`、`payTo`、`amount`、`asset`、`network`、`timestamp` は `onchain_fact` として扱います。
+  - `requestedLimit`、`capturedCount`、`timeWindow`、`source` を metadata として保持します。
+- `apps/bff/fixtures/phase-b/mock-attribution.json`
+  - `txHash -> endpointPath / endpointName / workflowLabel` の mock attribution fixture です。
+  - 現在は real transaction fact 全件に対して、5 endpoint を deterministic に割り当てています。
+  - endpoint / workflow は `demo_label` または `future_sdk_field` として扱います。
+- `apps/bff/src/data/projection-builder.ts`
+  - real tx fact と mock attribution を `txHash` で join し、Phase B customer list / profile / wallet usage graph projection を生成します。
+  - 生成結果は `packages/contracts` の Phase B validator で検証されます。
+
+fixture を再生成する正式 command は次です。
+
+```sh
+bun --cwd apps/cli coingecko:transactions -- \
+  --from 2026-01-01T00:00:00Z \
+  --to 2026-04-29T23:59:59Z \
+  --limit 5000 \
+  --page-size 100
+```
+
+この command は live Bitquery を使うため、offline verification 用の `bun run verify` には含めません。
+
+BFF request path では CDP、Bitquery、RPC、SDK collector を呼びません。保存済み fixture から生成された projection のみを read-only に返します。
 
 ## 5. フィールドレベルの provenance
 

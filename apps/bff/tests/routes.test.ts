@@ -1,13 +1,19 @@
 import { describe, expect, test } from "bun:test";
 import { createBffHandler } from "../src/http";
 import {
+  joinedPhaseBProjectionRecords,
   knownCustomerProfileAddress,
   phaseBCustomerListResponse,
 } from "../src/data/phase-b-demo";
+import transactionFixture from "../fixtures/phase-a/coingecko-transactions.json";
+import attributionFixture from "../fixtures/phase-b/mock-attribution.json";
+import { buildPhaseBProjections, joinTransactionAttribution } from "../src/data/projection-builder";
 import {
   validatePhaseBCustomerListResponse,
   validatePhaseBCustomerProfileResponse,
   validatePhaseBWalletUsageGraphResponse,
+  validateMockEndpointAttributionFixture,
+  validateRealTransactionFixture,
 } from "contracts";
 
 const request = (path: string, init: RequestInit = {}) =>
@@ -61,7 +67,9 @@ describe("BFF routes", () => {
   test("returns a validated profile for a known customer wallet", async () => {
     const handler = createBffHandler();
 
-    const response = handler(request(`/customers/${knownCustomerProfileAddress.toUpperCase()}/profile`));
+    const response = handler(
+      request(`/customers/${knownCustomerProfileAddress.toUpperCase()}/profile`),
+    );
     const body = await response.json();
 
     expect(response.status).toBe(200);
@@ -73,7 +81,9 @@ describe("BFF routes", () => {
   test("returns not found for an unknown customer wallet", async () => {
     const handler = createBffHandler();
 
-    const response = handler(request("/customers/0x9999999999999999999999999999999999999999/profile"));
+    const response = handler(
+      request("/customers/0x9999999999999999999999999999999999999999/profile"),
+    );
     const body = (await response.json()) as { error: string };
 
     expect(response.status).toBe(404);
@@ -93,7 +103,7 @@ describe("BFF routes", () => {
   test("does not expose demo and telemetry endpoints", async () => {
     const handler = createBffHandler();
 
-    for (const path of ["/demo-data", "/sdk-events", "/telemetry"] as const) {
+    for (const path of ["/demo-data", "/sdk-events", "/telemetry", "/mock-attribution"] as const) {
       const response = handler(request(path));
       const body = (await response.json()) as { error: string };
 
@@ -120,5 +130,81 @@ describe("BFF routes", () => {
       expect(response.headers.get("allow")).toBe("GET");
       expect(body.error).toBe("method_not_allowed");
     }
+  });
+
+  test("validates real transaction and mock attribution fixtures", () => {
+    const transactions = validateRealTransactionFixture(transactionFixture);
+    const attribution = validateMockEndpointAttributionFixture(attributionFixture);
+
+    expect(transactions.metadata.requestedLimit).toBe(5000);
+    expect(new Date(transactions.metadata.timeWindow.from ?? "").toISOString()).toBe(
+      "2026-01-01T00:00:00.000Z",
+    );
+    expect(transactions.metadata.capturedCount).toBeGreaterThan(1000);
+    expect(transactions.metadata.capturedCount).toBe(transactions.facts.length);
+    expect(attribution.items).toHaveLength(transactions.facts.length);
+    expect(transactions.facts[0]).toMatchObject({
+      txHash: "0x6248880ec36541e6783ab756afdb427939f6209551b751cec5a2c97f71176d94",
+      payerWallet: "0xac5a07c44a4f971667b3df4b6551fb6991b2142d",
+      payTo: "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
+      amount: "10000",
+      asset: "USDC",
+      network: "base",
+      provenance: "onchain_fact",
+    });
+    expect(attribution.items.map((item) => item.endpointPath)).toEqual(
+      expect.arrayContaining([
+        "/api/v3/x402/onchain/simple/networks/base/token_price/0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+        "/api/v3/x402/onchain/search/pools",
+        "/api/v3/x402/onchain/networks/base/trending_pools",
+        "/api/v3/x402/onchain/networks/base/tokens/0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+        "/api/v3/x402/simple/price",
+      ]),
+    );
+  });
+
+  test("rejects mock attribution whose txHash is absent from transaction facts", () => {
+    expect(() =>
+      joinTransactionAttribution(transactionFixture, {
+        ...attributionFixture,
+        items: [
+          ...attributionFixture.items,
+          {
+            ...attributionFixture.items[0],
+            txHash: "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+          },
+        ],
+      }),
+    ).toThrow("unknown txHash");
+  });
+
+  test("keeps onchain facts and demo attribution provenance separated", () => {
+    const [record] = joinedPhaseBProjectionRecords;
+
+    expect(record?.provenanceByField).toMatchObject({
+      txHash: "onchain_fact",
+      payerWallet: "onchain_fact",
+      payTo: "onchain_fact",
+      endpointPath: "demo_label",
+      workflowLabel: "future_sdk_field",
+    });
+    expect(phaseBCustomerListResponse.customers.every((customer) => customer.reasons?.length)).toBe(
+      true,
+    );
+    expect(record?.reasons.length).toBeGreaterThan(0);
+  });
+
+  test("builds projections that validate against Phase B schemas", () => {
+    const projections = buildPhaseBProjections(transactionFixture, attributionFixture);
+
+    expect(validatePhaseBCustomerListResponse(projections.customerList).customerCount).toBeGreaterThan(100);
+    for (const profile of Object.values(projections.profilesByAddress)) {
+      expect(
+        validatePhaseBCustomerProfileResponse(profile).profile.metrics.reasons?.length,
+      ).toBeGreaterThan(0);
+    }
+    expect(
+      validatePhaseBWalletUsageGraphResponse(projections.walletUsageGraph).graph.reasons.length,
+    ).toBeGreaterThan(0);
   });
 });
