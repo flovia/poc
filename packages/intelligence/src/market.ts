@@ -50,7 +50,8 @@ const asNumber = (value: string | number): number => {
 const asString = (value: string | number): string => String(value);
 
 const matchesScope = (option: Pick<CdpPaymentOption, "network" | "asset">, scope?: MarketScope) => {
-  if (scope?.network && normalizeNetwork(option.network) !== normalizeNetwork(scope.network)) return false;
+  if (scope?.network && normalizeNetwork(option.network) !== normalizeNetwork(scope.network))
+    return false;
   if (scope?.asset && normalizeAsset(option.asset) !== normalizeAsset(scope.asset)) return false;
   return true;
 };

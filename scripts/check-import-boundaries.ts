@@ -97,10 +97,7 @@ for (const workspace of workspaceRoots) {
         );
       }
 
-      if (
-        workspace.name === "frontend" &&
-        !new Set(["contracts"]).has(targetWorkspace)
-      ) {
+      if (workspace.name === "frontend" && !new Set(["contracts"]).has(targetWorkspace)) {
         violations.push(
           `${path.relative(root, file)} imports ${specifier}; apps/frontend may only depend on packages/contracts`,
         );

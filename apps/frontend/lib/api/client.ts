@@ -4,11 +4,7 @@ import {
   validatePhaseBWalletUsageGraphResponse,
 } from "contracts";
 import { adaptCustomerList, adaptCustomerProfile, adaptWalletUsageGraph } from "./adapters";
-import type {
-  CustomerListItemDto,
-  CustomerProfileDto,
-  WalletUsageGraphDto,
-} from "./types";
+import type { CustomerListItemDto, CustomerProfileDto, WalletUsageGraphDto } from "./types";
 
 const DEFAULT_BFF_URL = "http://localhost:3001";
 const DEFAULT_PUBLIC_BFF_URL = "/api";

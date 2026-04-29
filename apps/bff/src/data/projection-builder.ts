@@ -61,10 +61,7 @@ const joinValidatedTransactionAttribution = (
   attribution: MockEndpointAttributionFixture,
 ): JoinedProjectionRecord[] => {
   const factsByHash = new Map<string, RealTransactionFact[]>();
-  const attributionByHash = new Map<
-    string,
-    MockEndpointAttributionFixture["items"]
-  >();
+  const attributionByHash = new Map<string, MockEndpointAttributionFixture["items"]>();
 
   for (const fact of transactions.facts) {
     const facts = factsByHash.get(fact.txHash) ?? [];
