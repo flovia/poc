@@ -1,0 +1,4327 @@
+{
+  "schemaVersion": "1",
+  "generatedAt": "2026-04-29T03:05:09.216Z",
+  "mode": "paid_probe_fingerprint_enrichment",
+  "inputs": [
+    {
+      "path": "fixtures/acquisition/paid_probe_results.json",
+      "collectedAt": "2026-04-28T12:49:22.107Z",
+      "results": 95
+    },
+    {
+      "path": "fixtures/acquisition/paid_probe_retry_results.json",
+      "collectedAt": "2026-04-28T13:50:34.851Z",
+      "results": 51
+    }
+  ],
+  "totals": {
+    "candidates": 44,
+    "fingerprinted": 44,
+    "skipped": 0,
+    "observations": 44,
+    "knownFingerprints": 44,
+    "settlementFingerprints": 2,
+    "insertedObservations": 0,
+    "evidenceRowsUpdated": 0
+  },
+  "results": [
+    {
+      "caseId": "spcat-coingecko-endp_d6dt25rhf9jcfp9xm-route-0",
+      "providerName": "CoinGecko",
+      "serviceName": "Get price and market data for CoinGecko-listed coins by ID or symbol.",
+      "routeKind": "provider_direct_x402",
+      "sourcePath": "fixtures/acquisition/paid_probe_results.json",
+      "txHash": "0xd55144936d08b50a4ae667c08f654666d1129af01ad277ef6c43b69231017e9e",
+      "observationCount": 1,
+      "insertedObservations": 0,
+      "evidenceRowsUpdated": 0,
+      "observations": [
+        {
+          "chainId": 8453,
+          "txHash": "0xd55144936d08b50a4ae667c08f654666d1129af01ad277ef6c43b69231017e9e",
+          "blockNumber": 45295511,
+          "blockTimestamp": 1777380369,
+          "relayer": "0x68a96f41ff1e9f2e7b591a931a4ad224e7c07863",
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "recipient": "0x110cdBba7FE6434Ec4CE3464CC523942ad6Fb784",
+          "amountAtomic": "10000",
+          "tokenAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "method": "direct_transferWithAuthorization",
+          "topLevelSelector": "0xe3ee160e",
+          "caseId": "spcat-coingecko-endp_d6dt25rhf9jcfp9xm-route-0",
+          "stableHash": "a9c29236a081484674d4f52adaaad758a5ea358f7ce9860a252299bbdd9210fa",
+          "evidence": [
+            {
+              "type": "authorization",
+              "detail": "transferWithAuthorization calldata",
+              "raw": {
+                "selector": "0xe3ee160e",
+                "arguments": {
+                  "authorizationKind": "vrs",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x110cdBba7FE6434Ec4CE3464CC523942ad6Fb784",
+                  "value": "10000",
+                  "validAfter": "1777379767",
+                  "validBefore": "1777380427",
+                  "nonce": "0x68d0d679143bd54188824ca6dc48f1d22f13837b6ea5aaa4cff89a5c3b2c5c8b",
+                  "v": 28,
+                  "r": "0x9f418c3b059cfe0836293aa810ad1fbab7738d0f8f65fd01675ea394b25ad09f",
+                  "s": "0x322383be5d22117441548fb7df77f9ea3d7cc0d61b4fba4bcc867ffc14543a67"
+                }
+              }
+            },
+            {
+              "type": "transfer",
+              "detail": "USDC Transfer log",
+              "raw": [
+                {
+                  "kind": "transfer",
+                  "index": 1,
+                  "txHash": "0xd55144936d08b50a4ae667c08f654666d1129af01ad277ef6c43b69231017e9e",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x110cdBba7FE6434Ec4CE3464CC523942ad6Fb784",
+                  "amount": "10000"
+                }
+              ]
+            },
+            {
+              "type": "receipt_validation",
+              "detail": "receipt logs matched",
+              "raw": {
+                "totalLogs": 2,
+                "authorizationLogs": 1,
+                "transferLogs": 1
+              }
+            }
+          ],
+          "topLevelTo": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "innerSelector": null
+        }
+      ],
+      "status": "fingerprinted"
+    },
+    {
+      "caseId": "spcat-coingecko-endp_d6dt25rjmmfrpmkbr-route-0",
+      "providerName": "CoinGecko",
+      "serviceName": "Get trending liquidity pools on a specific network.",
+      "routeKind": "provider_direct_x402",
+      "sourcePath": "fixtures/acquisition/paid_probe_results.json",
+      "txHash": "0x2236d490c0917dbfc5e22b5dc0a92a8c5b66fdd751ded55a2e35c40198a84e17",
+      "observationCount": 1,
+      "insertedObservations": 0,
+      "evidenceRowsUpdated": 0,
+      "observations": [
+        {
+          "chainId": 8453,
+          "txHash": "0x2236d490c0917dbfc5e22b5dc0a92a8c5b66fdd751ded55a2e35c40198a84e17",
+          "blockNumber": 45295512,
+          "blockTimestamp": 1777380371,
+          "relayer": "0xa32ccda98ba7529705a059bd2d213da8de10d101",
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "recipient": "0x110cdBba7FE6434Ec4CE3464CC523942ad6Fb784",
+          "amountAtomic": "10000",
+          "tokenAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "method": "direct_transferWithAuthorization",
+          "topLevelSelector": "0xe3ee160e",
+          "caseId": "spcat-coingecko-endp_d6dt25rjmmfrpmkbr-route-0",
+          "stableHash": "e7f549ad87928cd2d1c74da0e1adb6f5812d8856320533581221dc94a7b1fbc5",
+          "evidence": [
+            {
+              "type": "authorization",
+              "detail": "transferWithAuthorization calldata",
+              "raw": {
+                "selector": "0xe3ee160e",
+                "arguments": {
+                  "authorizationKind": "vrs",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x110cdBba7FE6434Ec4CE3464CC523942ad6Fb784",
+                  "value": "10000",
+                  "validAfter": "1777379769",
+                  "validBefore": "1777380429",
+                  "nonce": "0x47c756dfeca09d0c7f1a1805847da5172c06c1566780f4890433dc52e7e50267",
+                  "v": 28,
+                  "r": "0x33b5f545b5884afe0d7d17ec002ad167ab0181da361aaf960d775e5fb1435e51",
+                  "s": "0x7c1f6c7fe281998a7718b46d6b158b31b6ae508e4d46f398760f1a71e64928d8"
+                }
+              }
+            },
+            {
+              "type": "transfer",
+              "detail": "USDC Transfer log",
+              "raw": [
+                {
+                  "kind": "transfer",
+                  "index": 1,
+                  "txHash": "0x2236d490c0917dbfc5e22b5dc0a92a8c5b66fdd751ded55a2e35c40198a84e17",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x110cdBba7FE6434Ec4CE3464CC523942ad6Fb784",
+                  "amount": "10000"
+                }
+              ]
+            },
+            {
+              "type": "receipt_validation",
+              "detail": "receipt logs matched",
+              "raw": {
+                "totalLogs": 2,
+                "authorizationLogs": 1,
+                "transferLogs": 1
+              }
+            }
+          ],
+          "topLevelTo": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "innerSelector": null
+        }
+      ],
+      "status": "fingerprinted"
+    },
+    {
+      "caseId": "spcat-coingecko-endp_d6dt25rmvx3yd7678-route-0",
+      "providerName": "CoinGecko",
+      "serviceName": "Get token price by contract address on a specific network.",
+      "routeKind": "provider_direct_x402",
+      "sourcePath": "fixtures/acquisition/paid_probe_results.json",
+      "txHash": "0x569f193a2350aeb5d9a67dbd336a4dc802d22b36dd7578e856ac850ee7df22c6",
+      "observationCount": 1,
+      "insertedObservations": 0,
+      "evidenceRowsUpdated": 0,
+      "observations": [
+        {
+          "chainId": 8453,
+          "txHash": "0x569f193a2350aeb5d9a67dbd336a4dc802d22b36dd7578e856ac850ee7df22c6",
+          "blockNumber": 45295514,
+          "blockTimestamp": 1777380375,
+          "relayer": "0x67b9ce703d9ce658d7c4ac3c289cea112fe662af",
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "recipient": "0x110cdBba7FE6434Ec4CE3464CC523942ad6Fb784",
+          "amountAtomic": "10000",
+          "tokenAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "method": "direct_transferWithAuthorization",
+          "topLevelSelector": "0xe3ee160e",
+          "caseId": "spcat-coingecko-endp_d6dt25rmvx3yd7678-route-0",
+          "stableHash": "2044199e1be25f071bfd41c089c19774f25f78b7884c298f7a4ce36ea69806fd",
+          "evidence": [
+            {
+              "type": "authorization",
+              "detail": "transferWithAuthorization calldata",
+              "raw": {
+                "selector": "0xe3ee160e",
+                "arguments": {
+                  "authorizationKind": "vrs",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x110cdBba7FE6434Ec4CE3464CC523942ad6Fb784",
+                  "value": "10000",
+                  "validAfter": "1777379771",
+                  "validBefore": "1777380431",
+                  "nonce": "0x90dc7aa195aa989c9905a6225f3310a623106387b2420209a1d4ff483069d371",
+                  "v": 27,
+                  "r": "0x7d285d48076a8c3d6985e3757b2b85b8013919ff1aabccc227828498e9936f17",
+                  "s": "0x06ee49a0f53a5f8b75cded98dbda51eeb97a356603b11a07f2c56422b977cd47"
+                }
+              }
+            },
+            {
+              "type": "transfer",
+              "detail": "USDC Transfer log",
+              "raw": [
+                {
+                  "kind": "transfer",
+                  "index": 1,
+                  "txHash": "0x569f193a2350aeb5d9a67dbd336a4dc802d22b36dd7578e856ac850ee7df22c6",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x110cdBba7FE6434Ec4CE3464CC523942ad6Fb784",
+                  "amount": "10000"
+                }
+              ]
+            },
+            {
+              "type": "receipt_validation",
+              "detail": "receipt logs matched",
+              "raw": {
+                "totalLogs": 2,
+                "authorizationLogs": 1,
+                "transferLogs": 1
+              }
+            }
+          ],
+          "topLevelTo": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "innerSelector": null
+        }
+      ],
+      "status": "fingerprinted"
+    },
+    {
+      "caseId": "spcat-coingecko-endp_d6dt25rrhyje9v76r-route-0",
+      "providerName": "CoinGecko",
+      "serviceName": "Get price, liquidity, and market data for a token by contract address.",
+      "routeKind": "provider_direct_x402",
+      "sourcePath": "fixtures/acquisition/paid_probe_results.json",
+      "txHash": "0x28d7c0504665480d0819561699fd72774ca6119d8f864caf8de730ee7f4f4f26",
+      "observationCount": 1,
+      "insertedObservations": 0,
+      "evidenceRowsUpdated": 0,
+      "observations": [
+        {
+          "chainId": 8453,
+          "txHash": "0x28d7c0504665480d0819561699fd72774ca6119d8f864caf8de730ee7f4f4f26",
+          "blockNumber": 45295515,
+          "blockTimestamp": 1777380377,
+          "relayer": "0x8f5cb67b49555e614892b7233cfddebfb746e531",
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "recipient": "0x110cdBba7FE6434Ec4CE3464CC523942ad6Fb784",
+          "amountAtomic": "10000",
+          "tokenAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "method": "direct_transferWithAuthorization",
+          "topLevelSelector": "0xe3ee160e",
+          "caseId": "spcat-coingecko-endp_d6dt25rrhyje9v76r-route-0",
+          "stableHash": "11659ffd6278072132a18b3187929d781fe6e60ea672cd266ddc27a4f4057c06",
+          "evidence": [
+            {
+              "type": "authorization",
+              "detail": "transferWithAuthorization calldata",
+              "raw": {
+                "selector": "0xe3ee160e",
+                "arguments": {
+                  "authorizationKind": "vrs",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x110cdBba7FE6434Ec4CE3464CC523942ad6Fb784",
+                  "value": "10000",
+                  "validAfter": "1777379774",
+                  "validBefore": "1777380434",
+                  "nonce": "0x8fbd7931ae6451aa465d39642d2584a02622f658f7a20d1abb19522b1230b6ab",
+                  "v": 27,
+                  "r": "0xba48aeeecd72a05af042ac50aed6400966e418e180243d20a2f367551eedd879",
+                  "s": "0x1590c09cc416b8bef491f0ee6ee9c39f9b41c532fb6d8e9cf1579577e78f74ed"
+                }
+              }
+            },
+            {
+              "type": "transfer",
+              "detail": "USDC Transfer log",
+              "raw": [
+                {
+                  "kind": "transfer",
+                  "index": 1,
+                  "txHash": "0x28d7c0504665480d0819561699fd72774ca6119d8f864caf8de730ee7f4f4f26",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x110cdBba7FE6434Ec4CE3464CC523942ad6Fb784",
+                  "amount": "10000"
+                }
+              ]
+            },
+            {
+              "type": "receipt_validation",
+              "detail": "receipt logs matched",
+              "raw": {
+                "totalLogs": 2,
+                "authorizationLogs": 1,
+                "transferLogs": 1
+              }
+            }
+          ],
+          "topLevelTo": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "innerSelector": null
+        }
+      ],
+      "status": "fingerprinted"
+    },
+    {
+      "caseId": "spcat-coingecko-endp_d6dt25rxdc8zwkx4r-route-0",
+      "providerName": "CoinGecko",
+      "serviceName": "Search liquidity pools and tokens by contract address, name, or symbol across networks.",
+      "routeKind": "provider_direct_x402",
+      "sourcePath": "fixtures/acquisition/paid_probe_results.json",
+      "txHash": "0xe0bb38bc6c4f85a8a5de3672dec11609d580fbca172c39d26922bc2a42a3f909",
+      "observationCount": 1,
+      "insertedObservations": 0,
+      "evidenceRowsUpdated": 0,
+      "observations": [
+        {
+          "chainId": 8453,
+          "txHash": "0xe0bb38bc6c4f85a8a5de3672dec11609d580fbca172c39d26922bc2a42a3f909",
+          "blockNumber": 45295516,
+          "blockTimestamp": 1777380379,
+          "relayer": "0x68a96f41ff1e9f2e7b591a931a4ad224e7c07863",
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "recipient": "0x110cdBba7FE6434Ec4CE3464CC523942ad6Fb784",
+          "amountAtomic": "10000",
+          "tokenAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "method": "direct_transferWithAuthorization",
+          "topLevelSelector": "0xe3ee160e",
+          "caseId": "spcat-coingecko-endp_d6dt25rxdc8zwkx4r-route-0",
+          "stableHash": "04b1faf10c3824098376a7a53617ea4ba4c81a8accdcf14c71cf63a62c612c91",
+          "evidence": [
+            {
+              "type": "authorization",
+              "detail": "transferWithAuthorization calldata",
+              "raw": {
+                "selector": "0xe3ee160e",
+                "arguments": {
+                  "authorizationKind": "vrs",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x110cdBba7FE6434Ec4CE3464CC523942ad6Fb784",
+                  "value": "10000",
+                  "validAfter": "1777379776",
+                  "validBefore": "1777380436",
+                  "nonce": "0x390ba7ec6962d7abdb4fcc9031d973d7cb01ae93ddcbf29f52cbe7a165737d33",
+                  "v": 27,
+                  "r": "0x92f872bcdaa97b7fe59de073917a6c731cbe80f672a2f11c6eeabac0b96ab86d",
+                  "s": "0x1243d7e3b6b3fd7c3423f64e0c3c992e4d300e15cc45d06ae9794b6854ee6582"
+                }
+              }
+            },
+            {
+              "type": "transfer",
+              "detail": "USDC Transfer log",
+              "raw": [
+                {
+                  "kind": "transfer",
+                  "index": 1,
+                  "txHash": "0xe0bb38bc6c4f85a8a5de3672dec11609d580fbca172c39d26922bc2a42a3f909",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x110cdBba7FE6434Ec4CE3464CC523942ad6Fb784",
+                  "amount": "10000"
+                }
+              ]
+            },
+            {
+              "type": "receipt_validation",
+              "detail": "receipt logs matched",
+              "raw": {
+                "totalLogs": 2,
+                "authorizationLogs": 1,
+                "transferLogs": 1
+              }
+            }
+          ],
+          "topLevelTo": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "innerSelector": null
+        }
+      ],
+      "status": "fingerprinted"
+    },
+    {
+      "caseId": "spcat-dome-endp_d6dt25gmj8sarre6c-route-0",
+      "providerName": "Dome",
+      "serviceName": "List Kalshi prediction markets.",
+      "routeKind": "sponge_wrapper_x402",
+      "sourcePath": "fixtures/acquisition/paid_probe_results.json",
+      "txHash": "0xf28f059ac0f9f3b23b71d914d6b9ace59b62b82621d52d3df45573e1acdefd16",
+      "observationCount": 1,
+      "insertedObservations": 0,
+      "evidenceRowsUpdated": 0,
+      "observations": [
+        {
+          "chainId": 8453,
+          "txHash": "0xf28f059ac0f9f3b23b71d914d6b9ace59b62b82621d52d3df45573e1acdefd16",
+          "blockNumber": 45295524,
+          "blockTimestamp": 1777380395,
+          "relayer": "0xb2bd29925cbbcea7628279c91945ca5b98bf371b",
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "recipient": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+          "amountAtomic": "10000",
+          "tokenAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "method": "multicall3_aggregate3",
+          "topLevelSelector": "0x82ad56cb",
+          "caseId": "spcat-dome-endp_d6dt25gmj8sarre6c-route-0",
+          "stableHash": "bcc3356fafcae5f1992b9e9093c6a9df1bbf887c0ad884d95da08e129fe388e9",
+          "evidence": [
+            {
+              "type": "multicall",
+              "detail": "multicall3 aggregate3 decoded",
+              "raw": {
+                "call": {
+                  "target": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+                  "allowFailure": true,
+                  "callData": "0xcf09299500000000000000000000000062c2d106293398961894bcd4908b06a8620b73510000000000000000000000006302d9e6dbb22fec3c350551568bb39b4b35ad5700000000000000000000000000000000000000000000000000000000000027100000000000000000000000000000000000000000000000000000000069f0a9d00000000000000000000000000000000000000000000000000000000069f0ad54da08dbb0f7cfec9795695892b05ca521ba498e4e0912c426f6d3a6839ca45b0200000000000000000000000000000000000000000000000000000000000000e000000000000000000000000000000000000000000000000000000000000000418e9d73f5260f0f3e6593a95398f565cfaae89d5a4fe6e70392cd6366a3d1931017a754b1488a34eee5c65126b4354061180cc212c49514e52a985c45f8276b771b00000000000000000000000000000000000000000000000000000000000000"
+                },
+                "args": {
+                  "authorizationKind": "bytes",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+                  "value": "10000",
+                  "validAfter": "1777379792",
+                  "validBefore": "1777380692",
+                  "nonce": "0xda08dbb0f7cfec9795695892b05ca521ba498e4e0912c426f6d3a6839ca45b02",
+                  "signature": "0x8e9d73f5260f0f3e6593a95398f565cfaae89d5a4fe6e70392cd6366a3d1931017a754b1488a34eee5c65126b4354061180cc212c49514e52a985c45f8276b771b"
+                }
+              }
+            },
+            {
+              "type": "transfer",
+              "detail": "USDC Transfer log",
+              "raw": [
+                {
+                  "kind": "transfer",
+                  "index": 1,
+                  "txHash": "0xf28f059ac0f9f3b23b71d914d6b9ace59b62b82621d52d3df45573e1acdefd16",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+                  "amount": "10000"
+                }
+              ]
+            },
+            {
+              "type": "receipt_validation",
+              "detail": "receipt logs matched",
+              "raw": {
+                "totalLogs": 2,
+                "authorizationLogs": 1,
+                "transferLogs": 1
+              }
+            }
+          ],
+          "topLevelTo": "0xca11bde05977b3631167028862be2a173976ca11",
+          "innerSelector": "0xcf092995"
+        }
+      ],
+      "status": "fingerprinted"
+    },
+    {
+      "caseId": "spcat-dome-endp_d6dt25gp3e3jntpn4-route-0",
+      "providerName": "Dome",
+      "serviceName": "List Polymarket events.",
+      "routeKind": "sponge_wrapper_x402",
+      "sourcePath": "fixtures/acquisition/paid_probe_results.json",
+      "txHash": "0xc105074edc115cdcfd30310f9659ec4673fcbd0dadaa12baa1a03509917a1ae4",
+      "observationCount": 1,
+      "insertedObservations": 0,
+      "evidenceRowsUpdated": 0,
+      "observations": [
+        {
+          "chainId": 8453,
+          "txHash": "0xc105074edc115cdcfd30310f9659ec4673fcbd0dadaa12baa1a03509917a1ae4",
+          "blockNumber": 45295531,
+          "blockTimestamp": 1777380409,
+          "relayer": "0xc6699d2aada6c36dfea5c248dd70f9cb0235cb63",
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "recipient": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+          "amountAtomic": "10000",
+          "tokenAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "method": "multicall3_aggregate3",
+          "topLevelSelector": "0x82ad56cb",
+          "caseId": "spcat-dome-endp_d6dt25gp3e3jntpn4-route-0",
+          "stableHash": "a47bd7a48973a25535ecf5bfd618ab1771a4c7ee390374549ebc9505f1fb31df",
+          "evidence": [
+            {
+              "type": "multicall",
+              "detail": "multicall3 aggregate3 decoded",
+              "raw": {
+                "call": {
+                  "target": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+                  "allowFailure": true,
+                  "callData": "0xcf09299500000000000000000000000062c2d106293398961894bcd4908b06a8620b73510000000000000000000000006302d9e6dbb22fec3c350551568bb39b4b35ad5700000000000000000000000000000000000000000000000000000000000027100000000000000000000000000000000000000000000000000000000069f0a9df0000000000000000000000000000000000000000000000000000000069f0ad6362a8252acc80a317d792fe2a116d67d689d21dd9e273e026f02396978b849a3100000000000000000000000000000000000000000000000000000000000000e000000000000000000000000000000000000000000000000000000000000000411fe9258aa9742517a273c3d1dedb2cf4d948dc35e9933c86587644b382c3777250d0deb95c8a6254cef212f3b97cc1c6d4bb46a0cb3efdb9bc5750b9e4b4d8391c00000000000000000000000000000000000000000000000000000000000000"
+                },
+                "args": {
+                  "authorizationKind": "bytes",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+                  "value": "10000",
+                  "validAfter": "1777379807",
+                  "validBefore": "1777380707",
+                  "nonce": "0x62a8252acc80a317d792fe2a116d67d689d21dd9e273e026f02396978b849a31",
+                  "signature": "0x1fe9258aa9742517a273c3d1dedb2cf4d948dc35e9933c86587644b382c3777250d0deb95c8a6254cef212f3b97cc1c6d4bb46a0cb3efdb9bc5750b9e4b4d8391c"
+                }
+              }
+            },
+            {
+              "type": "transfer",
+              "detail": "USDC Transfer log",
+              "raw": [
+                {
+                  "kind": "transfer",
+                  "index": 1,
+                  "txHash": "0xc105074edc115cdcfd30310f9659ec4673fcbd0dadaa12baa1a03509917a1ae4",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+                  "amount": "10000"
+                }
+              ]
+            },
+            {
+              "type": "receipt_validation",
+              "detail": "receipt logs matched",
+              "raw": {
+                "totalLogs": 2,
+                "authorizationLogs": 1,
+                "transferLogs": 1
+              }
+            }
+          ],
+          "topLevelTo": "0xca11bde05977b3631167028862be2a173976ca11",
+          "innerSelector": "0xcf092995"
+        }
+      ],
+      "status": "fingerprinted"
+    },
+    {
+      "caseId": "spcat-dome-endp_d6dt25gp3xja8jg68-route-0",
+      "providerName": "Dome",
+      "serviceName": "Get Polymarket orders.",
+      "routeKind": "sponge_wrapper_x402",
+      "sourcePath": "fixtures/acquisition/paid_probe_results.json",
+      "txHash": "0x24aa51560808bdc055a7f10c747bdd46354099d53112e61c87aed7e4726cc392",
+      "observationCount": 1,
+      "insertedObservations": 0,
+      "evidenceRowsUpdated": 0,
+      "observations": [
+        {
+          "chainId": 8453,
+          "txHash": "0x24aa51560808bdc055a7f10c747bdd46354099d53112e61c87aed7e4726cc392",
+          "blockNumber": 45295534,
+          "blockTimestamp": 1777380415,
+          "relayer": "0xb2bd29925cbbcea7628279c91945ca5b98bf371b",
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "recipient": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+          "amountAtomic": "10000",
+          "tokenAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "method": "multicall3_aggregate3",
+          "topLevelSelector": "0x82ad56cb",
+          "caseId": "spcat-dome-endp_d6dt25gp3xja8jg68-route-0",
+          "stableHash": "51ef50d8fdb20d328a64447997a2d9a98c04a9d6ed16f6839542ef1bf90920e7",
+          "evidence": [
+            {
+              "type": "multicall",
+              "detail": "multicall3 aggregate3 decoded",
+              "raw": {
+                "call": {
+                  "target": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+                  "allowFailure": true,
+                  "callData": "0xcf09299500000000000000000000000062c2d106293398961894bcd4908b06a8620b73510000000000000000000000006302d9e6dbb22fec3c350551568bb39b4b35ad5700000000000000000000000000000000000000000000000000000000000027100000000000000000000000000000000000000000000000000000000069f0a9e40000000000000000000000000000000000000000000000000000000069f0ad6872f63cec9fd72ca6ffad44d32707784666e6caed17fda6026037b1c5e3b5840a00000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000041794adc5259caad008aca13d275d501628744f09aadacd71503facb30246a450906490a1c5fc2298b45369190a850bbee021a85a82bae90073e2f098633ec39c01c00000000000000000000000000000000000000000000000000000000000000"
+                },
+                "args": {
+                  "authorizationKind": "bytes",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+                  "value": "10000",
+                  "validAfter": "1777379812",
+                  "validBefore": "1777380712",
+                  "nonce": "0x72f63cec9fd72ca6ffad44d32707784666e6caed17fda6026037b1c5e3b5840a",
+                  "signature": "0x794adc5259caad008aca13d275d501628744f09aadacd71503facb30246a450906490a1c5fc2298b45369190a850bbee021a85a82bae90073e2f098633ec39c01c"
+                }
+              }
+            },
+            {
+              "type": "transfer",
+              "detail": "USDC Transfer log",
+              "raw": [
+                {
+                  "kind": "transfer",
+                  "index": 1,
+                  "txHash": "0x24aa51560808bdc055a7f10c747bdd46354099d53112e61c87aed7e4726cc392",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+                  "amount": "10000"
+                }
+              ]
+            },
+            {
+              "type": "receipt_validation",
+              "detail": "receipt logs matched",
+              "raw": {
+                "totalLogs": 2,
+                "authorizationLogs": 1,
+                "transferLogs": 1
+              }
+            }
+          ],
+          "topLevelTo": "0xca11bde05977b3631167028862be2a173976ca11",
+          "innerSelector": "0xcf092995"
+        }
+      ],
+      "status": "fingerprinted"
+    },
+    {
+      "caseId": "spcat-dome-endp_d6dt25gq3wvazgxdr-route-0",
+      "providerName": "Dome",
+      "serviceName": "Search and list Polymarket prediction markets.",
+      "routeKind": "sponge_wrapper_x402",
+      "sourcePath": "fixtures/acquisition/paid_probe_results.json",
+      "txHash": "0x2b9b2bd5c10d3d81e3c6b3ec4e550dee0b5ef1edcb6552a7280ac0375a5d406d",
+      "observationCount": 1,
+      "insertedObservations": 0,
+      "evidenceRowsUpdated": 0,
+      "observations": [
+        {
+          "chainId": 8453,
+          "txHash": "0x2b9b2bd5c10d3d81e3c6b3ec4e550dee0b5ef1edcb6552a7280ac0375a5d406d",
+          "blockNumber": 45295537,
+          "blockTimestamp": 1777380421,
+          "relayer": "0xc6699d2aada6c36dfea5c248dd70f9cb0235cb63",
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "recipient": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+          "amountAtomic": "10000",
+          "tokenAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "method": "multicall3_aggregate3",
+          "topLevelSelector": "0x82ad56cb",
+          "caseId": "spcat-dome-endp_d6dt25gq3wvazgxdr-route-0",
+          "stableHash": "a7ee29f1f3e046c2d54f6447fa08f177b2657e9639c92ed9d59ac30b0ae476a2",
+          "evidence": [
+            {
+              "type": "multicall",
+              "detail": "multicall3 aggregate3 decoded",
+              "raw": {
+                "call": {
+                  "target": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+                  "allowFailure": true,
+                  "callData": "0xcf09299500000000000000000000000062c2d106293398961894bcd4908b06a8620b73510000000000000000000000006302d9e6dbb22fec3c350551568bb39b4b35ad5700000000000000000000000000000000000000000000000000000000000027100000000000000000000000000000000000000000000000000000000069f0a9e90000000000000000000000000000000000000000000000000000000069f0ad6d16476bd4da7f69da5188d476e9c1f867eb7545a2c3b72a52090e8d928ec1aa9800000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000041d1140de6cdd3dc7431270ce5b666d57f05080ad9cd21705f042657a5b69aee120eeef4aad186b1a9a3f6de078d3c21eb27bcff5c5e4002af9dcb05ae633e2b921c00000000000000000000000000000000000000000000000000000000000000"
+                },
+                "args": {
+                  "authorizationKind": "bytes",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+                  "value": "10000",
+                  "validAfter": "1777379817",
+                  "validBefore": "1777380717",
+                  "nonce": "0x16476bd4da7f69da5188d476e9c1f867eb7545a2c3b72a52090e8d928ec1aa98",
+                  "signature": "0xd1140de6cdd3dc7431270ce5b666d57f05080ad9cd21705f042657a5b69aee120eeef4aad186b1a9a3f6de078d3c21eb27bcff5c5e4002af9dcb05ae633e2b921c"
+                }
+              }
+            },
+            {
+              "type": "transfer",
+              "detail": "USDC Transfer log",
+              "raw": [
+                {
+                  "kind": "transfer",
+                  "index": 1,
+                  "txHash": "0x2b9b2bd5c10d3d81e3c6b3ec4e550dee0b5ef1edcb6552a7280ac0375a5d406d",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+                  "amount": "10000"
+                }
+              ]
+            },
+            {
+              "type": "receipt_validation",
+              "detail": "receipt logs matched",
+              "raw": {
+                "totalLogs": 2,
+                "authorizationLogs": 1,
+                "transferLogs": 1
+              }
+            }
+          ],
+          "topLevelTo": "0xca11bde05977b3631167028862be2a173976ca11",
+          "innerSelector": "0xcf092995"
+        }
+      ],
+      "status": "fingerprinted"
+    },
+    {
+      "caseId": "spcat-dome-endp_d6dt25gzfp4w0a98w-route-0",
+      "providerName": "Dome",
+      "serviceName": "Get Kalshi trade history.",
+      "routeKind": "sponge_wrapper_x402",
+      "sourcePath": "fixtures/acquisition/paid_probe_results.json",
+      "txHash": "0x1858d70590b5f9357228312702ca1af17f27c1ef9f45d208d1f7730cd6e8729c",
+      "observationCount": 1,
+      "insertedObservations": 0,
+      "evidenceRowsUpdated": 0,
+      "observations": [
+        {
+          "chainId": 8453,
+          "txHash": "0x1858d70590b5f9357228312702ca1af17f27c1ef9f45d208d1f7730cd6e8729c",
+          "blockNumber": 45295542,
+          "blockTimestamp": 1777380431,
+          "relayer": "0xc6699d2aada6c36dfea5c248dd70f9cb0235cb63",
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "recipient": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+          "amountAtomic": "10000",
+          "tokenAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "method": "multicall3_aggregate3",
+          "topLevelSelector": "0x82ad56cb",
+          "caseId": "spcat-dome-endp_d6dt25gzfp4w0a98w-route-0",
+          "stableHash": "89067df69ce370abf9c1144e15b8b872a092aedf22a32769578396b8680c25f4",
+          "evidence": [
+            {
+              "type": "multicall",
+              "detail": "multicall3 aggregate3 decoded",
+              "raw": {
+                "call": {
+                  "target": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+                  "allowFailure": true,
+                  "callData": "0xcf09299500000000000000000000000062c2d106293398961894bcd4908b06a8620b73510000000000000000000000006302d9e6dbb22fec3c350551568bb39b4b35ad5700000000000000000000000000000000000000000000000000000000000027100000000000000000000000000000000000000000000000000000000069f0a9f40000000000000000000000000000000000000000000000000000000069f0ad7802db30282157a9be555a8c71cfc0ee07d28ca17102c9374f92e95e06a32488d100000000000000000000000000000000000000000000000000000000000000e000000000000000000000000000000000000000000000000000000000000000418b51620bb8c33e49bccd8503c9756c4ce3b3ec2208d7a10b78223a865235d358173cc2eef41fb06af0950bd3a8c9ae4b12903a8d8ae8228571582f9982ff2db71c00000000000000000000000000000000000000000000000000000000000000"
+                },
+                "args": {
+                  "authorizationKind": "bytes",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+                  "value": "10000",
+                  "validAfter": "1777379828",
+                  "validBefore": "1777380728",
+                  "nonce": "0x02db30282157a9be555a8c71cfc0ee07d28ca17102c9374f92e95e06a32488d1",
+                  "signature": "0x8b51620bb8c33e49bccd8503c9756c4ce3b3ec2208d7a10b78223a865235d358173cc2eef41fb06af0950bd3a8c9ae4b12903a8d8ae8228571582f9982ff2db71c"
+                }
+              }
+            },
+            {
+              "type": "transfer",
+              "detail": "USDC Transfer log",
+              "raw": [
+                {
+                  "kind": "transfer",
+                  "index": 1,
+                  "txHash": "0x1858d70590b5f9357228312702ca1af17f27c1ef9f45d208d1f7730cd6e8729c",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+                  "amount": "10000"
+                }
+              ]
+            },
+            {
+              "type": "receipt_validation",
+              "detail": "receipt logs matched",
+              "raw": {
+                "totalLogs": 2,
+                "authorizationLogs": 1,
+                "transferLogs": 1
+              }
+            }
+          ],
+          "topLevelTo": "0xca11bde05977b3631167028862be2a173976ca11",
+          "innerSelector": "0xcf092995"
+        }
+      ],
+      "status": "fingerprinted"
+    },
+    {
+      "caseId": "spcat-exa-endp_d6dt25gwh4fj373v0-route-0",
+      "providerName": "Exa",
+      "serviceName": "Semantic web search. Returns relevant web pages for a natural language query. Max 10 results per request via x402.",
+      "routeKind": "provider_direct_x402",
+      "sourcePath": "fixtures/acquisition/paid_probe_results.json",
+      "txHash": "0x0b70a61184863a9c1913c243e76347400051ba0c5e3d983d418b12a59ea03275",
+      "observationCount": 1,
+      "insertedObservations": 0,
+      "evidenceRowsUpdated": 0,
+      "observations": [
+        {
+          "chainId": 8453,
+          "txHash": "0x0b70a61184863a9c1913c243e76347400051ba0c5e3d983d418b12a59ea03275",
+          "blockNumber": 45295544,
+          "blockTimestamp": 1777380435,
+          "relayer": "0x67b9ce703d9ce658d7c4ac3c289cea112fe662af",
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "recipient": "0x6d6E695b09861467c7d462f5AAF31cF3540B9192",
+          "amountAtomic": "7000",
+          "tokenAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "method": "direct_transferWithAuthorization",
+          "topLevelSelector": "0xe3ee160e",
+          "caseId": "spcat-exa-endp_d6dt25gwh4fj373v0-route-0",
+          "stableHash": "5b0965063e5ca7cef8e2e4e5e2131c358c15654f2bc0882535e9ba255fe9950a",
+          "evidence": [
+            {
+              "type": "authorization",
+              "detail": "transferWithAuthorization calldata",
+              "raw": {
+                "selector": "0xe3ee160e",
+                "arguments": {
+                  "authorizationKind": "vrs",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x6d6E695b09861467c7d462f5AAF31cF3540B9192",
+                  "value": "7000",
+                  "validAfter": "1777379833",
+                  "validBefore": "1777380493",
+                  "nonce": "0x8aa62ec1e463cda081862eec31788f45fbf27bc51ade212426f7ef7e0a1363f3",
+                  "v": 28,
+                  "r": "0xefc3c34028c1adc83a36d3e1053351dc8ecb9e5d36a15cf6ac1009d7850194a7",
+                  "s": "0x5c0e479ee48de97e9243001855d3932df1da33985d22b06227360912242d172a"
+                }
+              }
+            },
+            {
+              "type": "transfer",
+              "detail": "USDC Transfer log",
+              "raw": [
+                {
+                  "kind": "transfer",
+                  "index": 1,
+                  "txHash": "0x0b70a61184863a9c1913c243e76347400051ba0c5e3d983d418b12a59ea03275",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x6d6E695b09861467c7d462f5AAF31cF3540B9192",
+                  "amount": "7000"
+                }
+              ]
+            },
+            {
+              "type": "receipt_validation",
+              "detail": "receipt logs matched",
+              "raw": {
+                "totalLogs": 2,
+                "authorizationLogs": 1,
+                "transferLogs": 1
+              }
+            }
+          ],
+          "topLevelTo": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "innerSelector": null
+        }
+      ],
+      "status": "fingerprinted"
+    },
+    {
+      "caseId": "spcat-laso-endp_d6j9rfgsqhvymjchc-route-0",
+      "providerName": "Laso Finance",
+      "serviceName": "REQUIRED FIRST STEP: Get authentication credentials (id_token, refresh_token, user_id) before calling any other Laso endpoint. The id_token is a Bearer token valid for ~1 hour.",
+      "routeKind": "provider_direct_x402",
+      "sourcePath": "fixtures/acquisition/paid_probe_results.json",
+      "txHash": "0x881798dcc358238da2b56cecd4519f913cd385a3a08d92c4832863bf4ceff87d",
+      "observationCount": 1,
+      "insertedObservations": 0,
+      "evidenceRowsUpdated": 0,
+      "observations": [
+        {
+          "chainId": 8453,
+          "txHash": "0x881798dcc358238da2b56cecd4519f913cd385a3a08d92c4832863bf4ceff87d",
+          "blockNumber": 45295546,
+          "blockTimestamp": 1777380439,
+          "relayer": "0x67b9ce703d9ce658d7c4ac3c289cea112fe662af",
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "recipient": "0x3291E96b3bff7eD56e3ca8364273C5b4654b2B37",
+          "amountAtomic": "1000",
+          "tokenAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "method": "direct_transferWithAuthorization",
+          "topLevelSelector": "0xe3ee160e",
+          "caseId": "spcat-laso-endp_d6j9rfgsqhvymjchc-route-0",
+          "stableHash": "22fd6a0a3af3c0091be372717ee4e7d7a3f90bb498418f3bfbb8837bbb5e6abd",
+          "evidence": [
+            {
+              "type": "authorization",
+              "detail": "transferWithAuthorization calldata",
+              "raw": {
+                "selector": "0xe3ee160e",
+                "arguments": {
+                  "authorizationKind": "vrs",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x3291E96b3bff7eD56e3ca8364273C5b4654b2B37",
+                  "value": "1000",
+                  "validAfter": "1777379836",
+                  "validBefore": "1777380736",
+                  "nonce": "0x48ff4e1809192b4a02ae80b487e50c9d6cdc413a5f72349fd69185ee8f0aec99",
+                  "v": 28,
+                  "r": "0xca88a171b691d0216f5ea7cac58162669d8112b4bb364a3d85ee6aa30957e603",
+                  "s": "0x6f42561f8c84d4d378a7f8ea20226b559f1aa22797170232e059a4667de39e1a"
+                }
+              }
+            },
+            {
+              "type": "transfer",
+              "detail": "USDC Transfer log",
+              "raw": [
+                {
+                  "kind": "transfer",
+                  "index": 1,
+                  "txHash": "0x881798dcc358238da2b56cecd4519f913cd385a3a08d92c4832863bf4ceff87d",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x3291E96b3bff7eD56e3ca8364273C5b4654b2B37",
+                  "amount": "1000"
+                }
+              ]
+            },
+            {
+              "type": "receipt_validation",
+              "detail": "receipt logs matched",
+              "raw": {
+                "totalLogs": 2,
+                "authorizationLogs": 1,
+                "transferLogs": 1
+              }
+            }
+          ],
+          "topLevelTo": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "innerSelector": null
+        }
+      ],
+      "status": "fingerprinted"
+    },
+    {
+      "caseId": "spcat-nansen-endp_d6ef1g002pch7nk58-route-0",
+      "providerName": "Nansen",
+      "serviceName": "Get DEX trade data for tokens or wallets.",
+      "routeKind": "provider_direct_x402",
+      "sourcePath": "fixtures/acquisition/paid_probe_results.json",
+      "txHash": "0x8fb9493ce0ecc6cb5b7fda6a515e7cac4d5f65ab0a6c864bd4b104d725d0f673",
+      "observationCount": 1,
+      "insertedObservations": 0,
+      "evidenceRowsUpdated": 0,
+      "observations": [
+        {
+          "chainId": 8453,
+          "txHash": "0x8fb9493ce0ecc6cb5b7fda6a515e7cac4d5f65ab0a6c864bd4b104d725d0f673",
+          "blockNumber": 45295549,
+          "blockTimestamp": 1777380445,
+          "relayer": "0x97acce27d5069544480bde0f04d9f47d7422a016",
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "recipient": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+          "amountAtomic": "10000",
+          "tokenAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "method": "direct_transferWithAuthorization",
+          "topLevelSelector": "0xe3ee160e",
+          "caseId": "spcat-nansen-endp_d6ef1g002pch7nk58-route-0",
+          "stableHash": "67259d5bba0e8dc18ec852128d85739564d3408459c495e77c0606d8e6bb96c9",
+          "evidence": [
+            {
+              "type": "authorization",
+              "detail": "transferWithAuthorization calldata",
+              "raw": {
+                "selector": "0xe3ee160e",
+                "arguments": {
+                  "authorizationKind": "vrs",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+                  "value": "10000",
+                  "validAfter": "1777379839",
+                  "validBefore": "1777380739",
+                  "nonce": "0x558c9a75aaabb4a21b24141a11471bb2a04dfa48caebcd02a474647bb71c81e4",
+                  "v": 27,
+                  "r": "0x71e2ae909a407f91e3a8eb50eddad7c047adb3bef4014a314b4c2f550077f843",
+                  "s": "0x26c9ef93c38ab60df00bf877e04aac2f1748a3623e7c03e378fdf00b93f6b8b0"
+                }
+              }
+            },
+            {
+              "type": "transfer",
+              "detail": "USDC Transfer log",
+              "raw": [
+                {
+                  "kind": "transfer",
+                  "index": 1,
+                  "txHash": "0x8fb9493ce0ecc6cb5b7fda6a515e7cac4d5f65ab0a6c864bd4b104d725d0f673",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+                  "amount": "10000"
+                }
+              ]
+            },
+            {
+              "type": "receipt_validation",
+              "detail": "receipt logs matched",
+              "raw": {
+                "totalLogs": 2,
+                "authorizationLogs": 1,
+                "transferLogs": 1
+              }
+            }
+          ],
+          "topLevelTo": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "innerSelector": null
+        }
+      ],
+      "status": "fingerprinted"
+    },
+    {
+      "caseId": "spcat-nansen-endp_d6ef1g02n035nb3jg-route-0",
+      "providerName": "Nansen",
+      "serviceName": "Get perpetual futures positions for a wallet address.",
+      "routeKind": "provider_direct_x402",
+      "sourcePath": "fixtures/acquisition/paid_probe_results.json",
+      "txHash": "0x72a54d929d29a3fcb90daaa564ac3501bb71b7b9e1605e30285d455bf6625f83",
+      "observationCount": 1,
+      "insertedObservations": 0,
+      "evidenceRowsUpdated": 0,
+      "observations": [
+        {
+          "chainId": 8453,
+          "txHash": "0x72a54d929d29a3fcb90daaa564ac3501bb71b7b9e1605e30285d455bf6625f83",
+          "blockNumber": 45295550,
+          "blockTimestamp": 1777380447,
+          "relayer": "0x67b9ce703d9ce658d7c4ac3c289cea112fe662af",
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "recipient": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+          "amountAtomic": "10000",
+          "tokenAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "method": "direct_transferWithAuthorization",
+          "topLevelSelector": "0xe3ee160e",
+          "caseId": "spcat-nansen-endp_d6ef1g02n035nb3jg-route-0",
+          "stableHash": "f4b05d6010c19f8adadab39b6c05e3674e2e647cef6de5b69409614cdef61f6d",
+          "evidence": [
+            {
+              "type": "authorization",
+              "detail": "transferWithAuthorization calldata",
+              "raw": {
+                "selector": "0xe3ee160e",
+                "arguments": {
+                  "authorizationKind": "vrs",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+                  "value": "10000",
+                  "validAfter": "1777379844",
+                  "validBefore": "1777380744",
+                  "nonce": "0xb99f6cb2b2cb322ce0ded0cb02c3b6ba6e0258e67080ced0403e96c4145172e7",
+                  "v": 28,
+                  "r": "0x4e18d6bb421b5e055296bab3cc8c097ce25f458f96c1eee0c2b87e00f569c932",
+                  "s": "0x249da5dfa6f3c7a2b8a72ffd974450332623105e8dcc60576bde30e9de18d5e2"
+                }
+              }
+            },
+            {
+              "type": "transfer",
+              "detail": "USDC Transfer log",
+              "raw": [
+                {
+                  "kind": "transfer",
+                  "index": 1,
+                  "txHash": "0x72a54d929d29a3fcb90daaa564ac3501bb71b7b9e1605e30285d455bf6625f83",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+                  "amount": "10000"
+                }
+              ]
+            },
+            {
+              "type": "receipt_validation",
+              "detail": "receipt logs matched",
+              "raw": {
+                "totalLogs": 2,
+                "authorizationLogs": 1,
+                "transferLogs": 1
+              }
+            }
+          ],
+          "topLevelTo": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "innerSelector": null
+        }
+      ],
+      "status": "fingerprinted"
+    },
+    {
+      "caseId": "spcat-nansen-endp_d6ef1g03xc6sj5xq8-route-0",
+      "providerName": "Nansen",
+      "serviceName": "Get holder data for a token.",
+      "routeKind": "provider_direct_x402",
+      "sourcePath": "fixtures/acquisition/paid_probe_results.json",
+      "txHash": "0xc477c9e4daacd88db60661cd1f71554cdaa0604aa9134028791451e571496fa9",
+      "observationCount": 1,
+      "insertedObservations": 0,
+      "evidenceRowsUpdated": 0,
+      "observations": [
+        {
+          "chainId": 8453,
+          "txHash": "0xc477c9e4daacd88db60661cd1f71554cdaa0604aa9134028791451e571496fa9",
+          "blockNumber": 45295552,
+          "blockTimestamp": 1777380451,
+          "relayer": "0x68a96f41ff1e9f2e7b591a931a4ad224e7c07863",
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "recipient": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+          "amountAtomic": "50000",
+          "tokenAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "method": "direct_transferWithAuthorization",
+          "topLevelSelector": "0xe3ee160e",
+          "caseId": "spcat-nansen-endp_d6ef1g03xc6sj5xq8-route-0",
+          "stableHash": "f4f3292e97883c46ba5a3f8742f29976231bb0b59bd1ad1bda955e0a14d3ccad",
+          "evidence": [
+            {
+              "type": "authorization",
+              "detail": "transferWithAuthorization calldata",
+              "raw": {
+                "selector": "0xe3ee160e",
+                "arguments": {
+                  "authorizationKind": "vrs",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+                  "value": "50000",
+                  "validAfter": "1777379846",
+                  "validBefore": "1777380746",
+                  "nonce": "0x2df90448d404b37a848f972124ab25678896c7909711dc8549ae50d2c0d32c93",
+                  "v": 28,
+                  "r": "0x3bd0dd18d5b8f25e54a9e7095b8e2d0271d6590ca1ad0fc8413c95efcbf7507b",
+                  "s": "0x105751b7c390176ba83d73d5d80ccf7d926564b7741dc5a938efb9683d50264b"
+                }
+              }
+            },
+            {
+              "type": "transfer",
+              "detail": "USDC Transfer log",
+              "raw": [
+                {
+                  "kind": "transfer",
+                  "index": 1,
+                  "txHash": "0xc477c9e4daacd88db60661cd1f71554cdaa0604aa9134028791451e571496fa9",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+                  "amount": "50000"
+                }
+              ]
+            },
+            {
+              "type": "receipt_validation",
+              "detail": "receipt logs matched",
+              "raw": {
+                "totalLogs": 2,
+                "authorizationLogs": 1,
+                "transferLogs": 1
+              }
+            }
+          ],
+          "topLevelTo": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "innerSelector": null
+        }
+      ],
+      "status": "fingerprinted"
+    },
+    {
+      "caseId": "spcat-nansen-endp_d6ef1g046q5ybwm7r-route-0",
+      "providerName": "Nansen",
+      "serviceName": "Get perpetual futures trading leaderboard.",
+      "routeKind": "provider_direct_x402",
+      "sourcePath": "fixtures/acquisition/paid_probe_results.json",
+      "txHash": "0x479c13984c0ce5078a164bb461ef6f222da5322af5b2bdf5694399707465acee",
+      "observationCount": 1,
+      "insertedObservations": 0,
+      "evidenceRowsUpdated": 0,
+      "observations": [
+        {
+          "chainId": 8453,
+          "txHash": "0x479c13984c0ce5078a164bb461ef6f222da5322af5b2bdf5694399707465acee",
+          "blockNumber": 45295553,
+          "blockTimestamp": 1777380453,
+          "relayer": "0x8f5cb67b49555e614892b7233cfddebfb746e531",
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "recipient": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+          "amountAtomic": "50000",
+          "tokenAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "method": "direct_transferWithAuthorization",
+          "topLevelSelector": "0xe3ee160e",
+          "caseId": "spcat-nansen-endp_d6ef1g046q5ybwm7r-route-0",
+          "stableHash": "7c5042203fb10b2f3d8f9afa87bd7764180c7f95a22854986b4728a4f945bbcf",
+          "evidence": [
+            {
+              "type": "authorization",
+              "detail": "transferWithAuthorization calldata",
+              "raw": {
+                "selector": "0xe3ee160e",
+                "arguments": {
+                  "authorizationKind": "vrs",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+                  "value": "50000",
+                  "validAfter": "1777379850",
+                  "validBefore": "1777380750",
+                  "nonce": "0xaad8fb99256327bc6bc48fd76bc7c04960d7173553a117a5bb6641f12cb82b28",
+                  "v": 27,
+                  "r": "0x7f2e0306cd673e85494edee0c7f59564a0ae362faea1b471836054499e7b8468",
+                  "s": "0x4e78a8a83cce5de451e2099b49cf278bda4ef680a276a2afa1c4fc0d05ff2f83"
+                }
+              }
+            },
+            {
+              "type": "transfer",
+              "detail": "USDC Transfer log",
+              "raw": [
+                {
+                  "kind": "transfer",
+                  "index": 1,
+                  "txHash": "0x479c13984c0ce5078a164bb461ef6f222da5322af5b2bdf5694399707465acee",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+                  "amount": "50000"
+                }
+              ]
+            },
+            {
+              "type": "receipt_validation",
+              "detail": "receipt logs matched",
+              "raw": {
+                "totalLogs": 2,
+                "authorizationLogs": 1,
+                "transferLogs": 1
+              }
+            }
+          ],
+          "topLevelTo": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "innerSelector": null
+        }
+      ],
+      "status": "fingerprinted"
+    },
+    {
+      "caseId": "spcat-nansen-endp_d6ef1g06580tt1mnw-route-0",
+      "providerName": "Nansen",
+      "serviceName": "Find wallets related to a given address through on-chain activity.",
+      "routeKind": "provider_direct_x402",
+      "sourcePath": "fixtures/acquisition/paid_probe_results.json",
+      "txHash": "0xc20e95a18fea970f15a4aa37214443e9443f6054f4f60074f2cd79775668e488",
+      "observationCount": 1,
+      "insertedObservations": 0,
+      "evidenceRowsUpdated": 0,
+      "observations": [
+        {
+          "chainId": 8453,
+          "txHash": "0xc20e95a18fea970f15a4aa37214443e9443f6054f4f60074f2cd79775668e488",
+          "blockNumber": 45295554,
+          "blockTimestamp": 1777380455,
+          "relayer": "0x8f5cb67b49555e614892b7233cfddebfb746e531",
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "recipient": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+          "amountAtomic": "10000",
+          "tokenAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "method": "direct_transferWithAuthorization",
+          "topLevelSelector": "0xe3ee160e",
+          "caseId": "spcat-nansen-endp_d6ef1g06580tt1mnw-route-0",
+          "stableHash": "9bca3bb1bc4c90d0cbdd3eb473612d12d4a5d3a72a700847a5b2c69cb654e0d9",
+          "evidence": [
+            {
+              "type": "authorization",
+              "detail": "transferWithAuthorization calldata",
+              "raw": {
+                "selector": "0xe3ee160e",
+                "arguments": {
+                  "authorizationKind": "vrs",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+                  "value": "10000",
+                  "validAfter": "1777379852",
+                  "validBefore": "1777380752",
+                  "nonce": "0x1cf07bd8ab98a3a4d0e4cd5a83eaf57fd00cf436b5ac83d55ad8adb54b0a4d5e",
+                  "v": 27,
+                  "r": "0xaeeeaea4b4bf6df0bda21b813ded886b54053b879322deb5eb1138098eed269d",
+                  "s": "0x5d82ac81459b3cc878fef74cebc224b03f1d5889e639307beae138490e3befb5"
+                }
+              }
+            },
+            {
+              "type": "transfer",
+              "detail": "USDC Transfer log",
+              "raw": [
+                {
+                  "kind": "transfer",
+                  "index": 1,
+                  "txHash": "0xc20e95a18fea970f15a4aa37214443e9443f6054f4f60074f2cd79775668e488",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+                  "amount": "10000"
+                }
+              ]
+            },
+            {
+              "type": "receipt_validation",
+              "detail": "receipt logs matched",
+              "raw": {
+                "totalLogs": 2,
+                "authorizationLogs": 1,
+                "transferLogs": 1
+              }
+            }
+          ],
+          "topLevelTo": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "innerSelector": null
+        }
+      ],
+      "status": "fingerprinted"
+    },
+    {
+      "caseId": "spcat-nansen-endp_d6ef1g06rx80ep4pm-route-0",
+      "providerName": "Nansen",
+      "serviceName": "Get token transfers for analysis.",
+      "routeKind": "provider_direct_x402",
+      "sourcePath": "fixtures/acquisition/paid_probe_results.json",
+      "txHash": "0xd791f178d618025826024e9975c40681e20da08b969a0f1cc07adbb9dcb4d5f6",
+      "observationCount": 1,
+      "insertedObservations": 0,
+      "evidenceRowsUpdated": 0,
+      "observations": [
+        {
+          "chainId": 8453,
+          "txHash": "0xd791f178d618025826024e9975c40681e20da08b969a0f1cc07adbb9dcb4d5f6",
+          "blockNumber": 45295556,
+          "blockTimestamp": 1777380459,
+          "relayer": "0x97acce27d5069544480bde0f04d9f47d7422a016",
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "recipient": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+          "amountAtomic": "10000",
+          "tokenAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "method": "direct_transferWithAuthorization",
+          "topLevelSelector": "0xe3ee160e",
+          "caseId": "spcat-nansen-endp_d6ef1g06rx80ep4pm-route-0",
+          "stableHash": "d91050fe6454dd72f041896723d137448825205dad4b137d35511fd2caf20bc0",
+          "evidence": [
+            {
+              "type": "authorization",
+              "detail": "transferWithAuthorization calldata",
+              "raw": {
+                "selector": "0xe3ee160e",
+                "arguments": {
+                  "authorizationKind": "vrs",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+                  "value": "10000",
+                  "validAfter": "1777379855",
+                  "validBefore": "1777380755",
+                  "nonce": "0x074c8b37fa7612528fbbf5969c830a32ee13f0ea55417ddc2caabf157ac6e4e6",
+                  "v": 27,
+                  "r": "0x08e80fe875d6ffdd0877a8cfd1d6eba451e8e13049081b75ef6706aeafe5fecd",
+                  "s": "0x4cf7b327907384399c9d42f03b4496239952277ae38132f931b5aca31e2e8b9a"
+                }
+              }
+            },
+            {
+              "type": "transfer",
+              "detail": "USDC Transfer log",
+              "raw": [
+                {
+                  "kind": "transfer",
+                  "index": 1,
+                  "txHash": "0xd791f178d618025826024e9975c40681e20da08b969a0f1cc07adbb9dcb4d5f6",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+                  "amount": "10000"
+                }
+              ]
+            },
+            {
+              "type": "receipt_validation",
+              "detail": "receipt logs matched",
+              "raw": {
+                "totalLogs": 2,
+                "authorizationLogs": 1,
+                "transferLogs": 1
+              }
+            }
+          ],
+          "topLevelTo": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "innerSelector": null
+        }
+      ],
+      "status": "fingerprinted"
+    },
+    {
+      "caseId": "spcat-nansen-endp_d6ef1g09gdj9p3mfr-route-0",
+      "providerName": "Nansen",
+      "serviceName": "Get token flow data showing movement between addresses.",
+      "routeKind": "provider_direct_x402",
+      "sourcePath": "fixtures/acquisition/paid_probe_results.json",
+      "txHash": "0xc5d8b49dfbfce7bdec68f5749186204eeebb607f1c03c1a451f6ea143e7eaf73",
+      "observationCount": 1,
+      "insertedObservations": 0,
+      "evidenceRowsUpdated": 0,
+      "observations": [
+        {
+          "chainId": 8453,
+          "txHash": "0xc5d8b49dfbfce7bdec68f5749186204eeebb607f1c03c1a451f6ea143e7eaf73",
+          "blockNumber": 45295558,
+          "blockTimestamp": 1777380463,
+          "relayer": "0x8f5cb67b49555e614892b7233cfddebfb746e531",
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "recipient": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+          "amountAtomic": "10000",
+          "tokenAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "method": "direct_transferWithAuthorization",
+          "topLevelSelector": "0xe3ee160e",
+          "caseId": "spcat-nansen-endp_d6ef1g09gdj9p3mfr-route-0",
+          "stableHash": "67028e770907be91a554a67b2b5a44865e5af39c301854bba02928746137632a",
+          "evidence": [
+            {
+              "type": "authorization",
+              "detail": "transferWithAuthorization calldata",
+              "raw": {
+                "selector": "0xe3ee160e",
+                "arguments": {
+                  "authorizationKind": "vrs",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+                  "value": "10000",
+                  "validAfter": "1777379859",
+                  "validBefore": "1777380759",
+                  "nonce": "0xa92658dda2076c20c119ec166327e6567dfdcfd73719347c58b85d1e6e314755",
+                  "v": 28,
+                  "r": "0xedbdabdc3790a09aac3342ea5624e3cc450a20d87bb831b94ac7dbf890de04d7",
+                  "s": "0x7f9979ffc338d86cdedebc4bacc595091c74a9ff1b11e609a96eb42f5faed456"
+                }
+              }
+            },
+            {
+              "type": "transfer",
+              "detail": "USDC Transfer log",
+              "raw": [
+                {
+                  "kind": "transfer",
+                  "index": 1,
+                  "txHash": "0xc5d8b49dfbfce7bdec68f5749186204eeebb607f1c03c1a451f6ea143e7eaf73",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+                  "amount": "10000"
+                }
+              ]
+            },
+            {
+              "type": "receipt_validation",
+              "detail": "receipt logs matched",
+              "raw": {
+                "totalLogs": 2,
+                "authorizationLogs": 1,
+                "transferLogs": 1
+              }
+            }
+          ],
+          "topLevelTo": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "innerSelector": null
+        }
+      ],
+      "status": "fingerprinted"
+    },
+    {
+      "caseId": "spcat-nansen-endp_d6ef1g0bgan5w1v8r-route-0",
+      "providerName": "Nansen",
+      "serviceName": "Get DEX trades made by smart money wallets.",
+      "routeKind": "provider_direct_x402",
+      "sourcePath": "fixtures/acquisition/paid_probe_results.json",
+      "txHash": "0x5b5c1f7a77bdcf9c340790c75958741d0c9a7b9f00d8509b67c9bf1bef3476cb",
+      "observationCount": 1,
+      "insertedObservations": 0,
+      "evidenceRowsUpdated": 0,
+      "observations": [
+        {
+          "chainId": 8453,
+          "txHash": "0x5b5c1f7a77bdcf9c340790c75958741d0c9a7b9f00d8509b67c9bf1bef3476cb",
+          "blockNumber": 45295559,
+          "blockTimestamp": 1777380465,
+          "relayer": "0xa32ccda98ba7529705a059bd2d213da8de10d101",
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "recipient": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+          "amountAtomic": "50000",
+          "tokenAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "method": "direct_transferWithAuthorization",
+          "topLevelSelector": "0xe3ee160e",
+          "caseId": "spcat-nansen-endp_d6ef1g0bgan5w1v8r-route-0",
+          "stableHash": "ebf0e632abcd9667b3cd57aff7a690a8c0f19a516a82318243c00a76f036cb8d",
+          "evidence": [
+            {
+              "type": "authorization",
+              "detail": "transferWithAuthorization calldata",
+              "raw": {
+                "selector": "0xe3ee160e",
+                "arguments": {
+                  "authorizationKind": "vrs",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+                  "value": "50000",
+                  "validAfter": "1777379863",
+                  "validBefore": "1777380763",
+                  "nonce": "0x462d3ed6134c47843aa41f7b472296571c8a49dc9ce93caa6b18737f5c9b2772",
+                  "v": 27,
+                  "r": "0x0f0385f49c13c5421eba6bcd49dcbc2309687b6ee76c073270a2773616bae1de",
+                  "s": "0x150e0cbe52fc95d9dc1f184b14e70cca86620fa9fdaca2b34e5769fefef00b98"
+                }
+              }
+            },
+            {
+              "type": "transfer",
+              "detail": "USDC Transfer log",
+              "raw": [
+                {
+                  "kind": "transfer",
+                  "index": 1,
+                  "txHash": "0x5b5c1f7a77bdcf9c340790c75958741d0c9a7b9f00d8509b67c9bf1bef3476cb",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+                  "amount": "50000"
+                }
+              ]
+            },
+            {
+              "type": "receipt_validation",
+              "detail": "receipt logs matched",
+              "raw": {
+                "totalLogs": 2,
+                "authorizationLogs": 1,
+                "transferLogs": 1
+              }
+            }
+          ],
+          "topLevelTo": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "innerSelector": null
+        }
+      ],
+      "status": "fingerprinted"
+    },
+    {
+      "caseId": "spcat-nansen-endp_d6ef1g0d9z6a87k6m-route-0",
+      "providerName": "Nansen",
+      "serviceName": "Get transaction history for a wallet address.",
+      "routeKind": "provider_direct_x402",
+      "sourcePath": "fixtures/acquisition/paid_probe_results.json",
+      "txHash": "0xb48b7b0d87f469f198b6096f8e500977817b5271814ab5b52d2d3d596af55b01",
+      "observationCount": 1,
+      "insertedObservations": 0,
+      "evidenceRowsUpdated": 0,
+      "observations": [
+        {
+          "chainId": 8453,
+          "txHash": "0xb48b7b0d87f469f198b6096f8e500977817b5271814ab5b52d2d3d596af55b01",
+          "blockNumber": 45295561,
+          "blockTimestamp": 1777380469,
+          "relayer": "0xa32ccda98ba7529705a059bd2d213da8de10d101",
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "recipient": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+          "amountAtomic": "10000",
+          "tokenAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "method": "direct_transferWithAuthorization",
+          "topLevelSelector": "0xe3ee160e",
+          "caseId": "spcat-nansen-endp_d6ef1g0d9z6a87k6m-route-0",
+          "stableHash": "70b54cbe372648b0e8f28cda2ec8c52740f56592449432fd323d9e2b63268ee8",
+          "evidence": [
+            {
+              "type": "authorization",
+              "detail": "transferWithAuthorization calldata",
+              "raw": {
+                "selector": "0xe3ee160e",
+                "arguments": {
+                  "authorizationKind": "vrs",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+                  "value": "10000",
+                  "validAfter": "1777379865",
+                  "validBefore": "1777380765",
+                  "nonce": "0x51e67882f24495e1838e8bca38e6941d3d4d3cbd4a51903d6cd4864ba4a79621",
+                  "v": 27,
+                  "r": "0xcb8de01939e6f31a62280da9452b85fa116414ace334b42196b00b39db5acc6e",
+                  "s": "0x736c8e2b0f187cdb15865b8b423d838d36d588a1f699ddbe58dfdc28ac8ec444"
+                }
+              }
+            },
+            {
+              "type": "transfer",
+              "detail": "USDC Transfer log",
+              "raw": [
+                {
+                  "kind": "transfer",
+                  "index": 1,
+                  "txHash": "0xb48b7b0d87f469f198b6096f8e500977817b5271814ab5b52d2d3d596af55b01",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+                  "amount": "10000"
+                }
+              ]
+            },
+            {
+              "type": "receipt_validation",
+              "detail": "receipt logs matched",
+              "raw": {
+                "totalLogs": 2,
+                "authorizationLogs": 1,
+                "transferLogs": 1
+              }
+            }
+          ],
+          "topLevelTo": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "innerSelector": null
+        }
+      ],
+      "status": "fingerprinted"
+    },
+    {
+      "caseId": "spcat-nansen-endp_d6ef1g0eafgwy5vjc-route-0",
+      "providerName": "Nansen",
+      "serviceName": "Get profit/loss summary for a wallet address.",
+      "routeKind": "provider_direct_x402",
+      "sourcePath": "fixtures/acquisition/paid_probe_results.json",
+      "txHash": "0xed64c2278dd8c40ec4d3461ac7e1f4c2106d21cc2c421aa8dc11729b5a70049a",
+      "observationCount": 1,
+      "insertedObservations": 0,
+      "evidenceRowsUpdated": 0,
+      "observations": [
+        {
+          "chainId": 8453,
+          "txHash": "0xed64c2278dd8c40ec4d3461ac7e1f4c2106d21cc2c421aa8dc11729b5a70049a",
+          "blockNumber": 45295563,
+          "blockTimestamp": 1777380473,
+          "relayer": "0x67b9ce703d9ce658d7c4ac3c289cea112fe662af",
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "recipient": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+          "amountAtomic": "10000",
+          "tokenAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "method": "direct_transferWithAuthorization",
+          "topLevelSelector": "0xe3ee160e",
+          "caseId": "spcat-nansen-endp_d6ef1g0eafgwy5vjc-route-0",
+          "stableHash": "18632e863d695e7af3086abe93a7b6c5aacdd8e2650caa6ac122abf9ec348ef3",
+          "evidence": [
+            {
+              "type": "authorization",
+              "detail": "transferWithAuthorization calldata",
+              "raw": {
+                "selector": "0xe3ee160e",
+                "arguments": {
+                  "authorizationKind": "vrs",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+                  "value": "10000",
+                  "validAfter": "1777379869",
+                  "validBefore": "1777380769",
+                  "nonce": "0xb4b84d317dd14dcacc0c15d097a724378b79fd4afe07f356ddc50229f0049289",
+                  "v": 27,
+                  "r": "0xd102bba41f57648af3df92af2bf39d63b6ed6efe7261a9a8213a385dc9670d7f",
+                  "s": "0x406da2ffc84a771f88debfc10defec297a564afe10d15741f88c261f97d60143"
+                }
+              }
+            },
+            {
+              "type": "transfer",
+              "detail": "USDC Transfer log",
+              "raw": [
+                {
+                  "kind": "transfer",
+                  "index": 1,
+                  "txHash": "0xed64c2278dd8c40ec4d3461ac7e1f4c2106d21cc2c421aa8dc11729b5a70049a",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+                  "amount": "10000"
+                }
+              ]
+            },
+            {
+              "type": "receipt_validation",
+              "detail": "receipt logs matched",
+              "raw": {
+                "totalLogs": 2,
+                "authorizationLogs": 1,
+                "transferLogs": 1
+              }
+            }
+          ],
+          "topLevelTo": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "innerSelector": null
+        }
+      ],
+      "status": "fingerprinted"
+    },
+    {
+      "caseId": "spcat-nansen-endp_d6ef1g0g5vqyz9wv4-route-0",
+      "providerName": "Nansen",
+      "serviceName": "Get perpetual futures PnL leaderboard.",
+      "routeKind": "provider_direct_x402",
+      "sourcePath": "fixtures/acquisition/paid_probe_results.json",
+      "txHash": "0x407af4a007f44b1154c383e717ccc0ba09b90f15c3d65d86d7c335660329fa28",
+      "observationCount": 1,
+      "insertedObservations": 0,
+      "evidenceRowsUpdated": 0,
+      "observations": [
+        {
+          "chainId": 8453,
+          "txHash": "0x407af4a007f44b1154c383e717ccc0ba09b90f15c3d65d86d7c335660329fa28",
+          "blockNumber": 45295568,
+          "blockTimestamp": 1777380483,
+          "relayer": "0xa32ccda98ba7529705a059bd2d213da8de10d101",
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "recipient": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+          "amountAtomic": "50000",
+          "tokenAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "method": "direct_transferWithAuthorization",
+          "topLevelSelector": "0xe3ee160e",
+          "caseId": "spcat-nansen-endp_d6ef1g0g5vqyz9wv4-route-0",
+          "stableHash": "ed6795eb7d6a28b978ad6b9e04df5eafe4b9477768567142ecc92581fb0b6e16",
+          "evidence": [
+            {
+              "type": "authorization",
+              "detail": "transferWithAuthorization calldata",
+              "raw": {
+                "selector": "0xe3ee160e",
+                "arguments": {
+                  "authorizationKind": "vrs",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+                  "value": "50000",
+                  "validAfter": "1777379875",
+                  "validBefore": "1777380775",
+                  "nonce": "0xa3c37b59213e7ac254bb38524c755ef7a913c7ef840ab5d3e5e19bc52e9c61d4",
+                  "v": 27,
+                  "r": "0xb095eb7df093d3c877ca5783448ec803b8eaaa8fe13ce0926671787658c5cc29",
+                  "s": "0x15b00154e37e5c132fab45014cc83e4383ef4d5428dd2327c65c669f138f3778"
+                }
+              }
+            },
+            {
+              "type": "transfer",
+              "detail": "USDC Transfer log",
+              "raw": [
+                {
+                  "kind": "transfer",
+                  "index": 1,
+                  "txHash": "0x407af4a007f44b1154c383e717ccc0ba09b90f15c3d65d86d7c335660329fa28",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+                  "amount": "50000"
+                }
+              ]
+            },
+            {
+              "type": "receipt_validation",
+              "detail": "receipt logs matched",
+              "raw": {
+                "totalLogs": 2,
+                "authorizationLogs": 1,
+                "transferLogs": 1
+              }
+            }
+          ],
+          "topLevelTo": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "innerSelector": null
+        }
+      ],
+      "status": "fingerprinted"
+    },
+    {
+      "caseId": "spcat-nansen-endp_d6ef1g0hxsb0wge5r-route-0",
+      "providerName": "Nansen",
+      "serviceName": "Get flow intelligence data for tokens showing inflows/outflows.",
+      "routeKind": "provider_direct_x402",
+      "sourcePath": "fixtures/acquisition/paid_probe_results.json",
+      "txHash": "0xa22d567aa4590d57536ce8e94756a45b8282015ecdfae0c779ab3c90d37f0f52",
+      "observationCount": 1,
+      "insertedObservations": 0,
+      "evidenceRowsUpdated": 0,
+      "observations": [
+        {
+          "chainId": 8453,
+          "txHash": "0xa22d567aa4590d57536ce8e94756a45b8282015ecdfae0c779ab3c90d37f0f52",
+          "blockNumber": 45295569,
+          "blockTimestamp": 1777380485,
+          "relayer": "0x67b9ce703d9ce658d7c4ac3c289cea112fe662af",
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "recipient": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+          "amountAtomic": "10000",
+          "tokenAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "method": "direct_transferWithAuthorization",
+          "topLevelSelector": "0xe3ee160e",
+          "caseId": "spcat-nansen-endp_d6ef1g0hxsb0wge5r-route-0",
+          "stableHash": "40df6c41c03c29665e466b2c7b3960afbd2988f257ee1b1c4797aaf8eaf62182",
+          "evidence": [
+            {
+              "type": "authorization",
+              "detail": "transferWithAuthorization calldata",
+              "raw": {
+                "selector": "0xe3ee160e",
+                "arguments": {
+                  "authorizationKind": "vrs",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+                  "value": "10000",
+                  "validAfter": "1777379882",
+                  "validBefore": "1777380782",
+                  "nonce": "0xd6f41539fd0d48a9a987228973151e16d7044c240b502914551e9f3c2415a483",
+                  "v": 27,
+                  "r": "0x3e9744045ebf73f333189646f536d228e5c0d7b70b9c90ece1f8d6686d4ee417",
+                  "s": "0x42c7cefb25c68b20c04da36c7f3873c4ff5426912c9e75540a8ebca88af8f622"
+                }
+              }
+            },
+            {
+              "type": "transfer",
+              "detail": "USDC Transfer log",
+              "raw": [
+                {
+                  "kind": "transfer",
+                  "index": 1,
+                  "txHash": "0xa22d567aa4590d57536ce8e94756a45b8282015ecdfae0c779ab3c90d37f0f52",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+                  "amount": "10000"
+                }
+              ]
+            },
+            {
+              "type": "receipt_validation",
+              "detail": "receipt logs matched",
+              "raw": {
+                "totalLogs": 2,
+                "authorizationLogs": 1,
+                "transferLogs": 1
+              }
+            }
+          ],
+          "topLevelTo": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "innerSelector": null
+        }
+      ],
+      "status": "fingerprinted"
+    },
+    {
+      "caseId": "spcat-nansen-endp_d6ef1g0k1reqnpk8w-route-0",
+      "providerName": "Nansen",
+      "serviceName": "Get counterparties (addresses that have transacted with) a wallet address.",
+      "routeKind": "provider_direct_x402",
+      "sourcePath": "fixtures/acquisition/paid_probe_results.json",
+      "txHash": "0x1d78ce0bb63de7e00d14f16047c3447544f563f2fc758a37efaecb68875b1137",
+      "observationCount": 1,
+      "insertedObservations": 0,
+      "evidenceRowsUpdated": 0,
+      "observations": [
+        {
+          "chainId": 8453,
+          "txHash": "0x1d78ce0bb63de7e00d14f16047c3447544f563f2fc758a37efaecb68875b1137",
+          "blockNumber": 45295571,
+          "blockTimestamp": 1777380489,
+          "relayer": "0x68a96f41ff1e9f2e7b591a931a4ad224e7c07863",
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "recipient": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+          "amountAtomic": "50000",
+          "tokenAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "method": "direct_transferWithAuthorization",
+          "topLevelSelector": "0xe3ee160e",
+          "caseId": "spcat-nansen-endp_d6ef1g0k1reqnpk8w-route-0",
+          "stableHash": "d9a594de21cf3764f3817a69aa376a53ba192b35ecf779e7bd205c01cd47e473",
+          "evidence": [
+            {
+              "type": "authorization",
+              "detail": "transferWithAuthorization calldata",
+              "raw": {
+                "selector": "0xe3ee160e",
+                "arguments": {
+                  "authorizationKind": "vrs",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+                  "value": "50000",
+                  "validAfter": "1777379886",
+                  "validBefore": "1777380786",
+                  "nonce": "0xcd32f4ac26208f7107d228a6c872d05a649aed2d6ce9d6a098f4dd3ec7bf421a",
+                  "v": 28,
+                  "r": "0xab006a8b067ca6885f601c69bbbe53ce89429b6b5c10b08f905e13e27e3474ec",
+                  "s": "0x3ff8fd52813371ace7d5bc672680a6dec8878d67021b95cdbca479a9af58093a"
+                }
+              }
+            },
+            {
+              "type": "transfer",
+              "detail": "USDC Transfer log",
+              "raw": [
+                {
+                  "kind": "transfer",
+                  "index": 1,
+                  "txHash": "0x1d78ce0bb63de7e00d14f16047c3447544f563f2fc758a37efaecb68875b1137",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+                  "amount": "50000"
+                }
+              ]
+            },
+            {
+              "type": "receipt_validation",
+              "detail": "receipt logs matched",
+              "raw": {
+                "totalLogs": 2,
+                "authorizationLogs": 1,
+                "transferLogs": 1
+              }
+            }
+          ],
+          "topLevelTo": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "innerSelector": null
+        }
+      ],
+      "status": "fingerprinted"
+    },
+    {
+      "caseId": "spcat-nansen-endp_d6ef1g0n4gpbsxxdg-route-0",
+      "providerName": "Nansen",
+      "serviceName": "Get PnL leaderboard showing top profitable traders.",
+      "routeKind": "provider_direct_x402",
+      "sourcePath": "fixtures/acquisition/paid_probe_results.json",
+      "txHash": "0xe27641d2fbff5830f622b4be5b181375c7607013516fd3aa98f05bc90d87cc6e",
+      "observationCount": 1,
+      "insertedObservations": 0,
+      "evidenceRowsUpdated": 0,
+      "observations": [
+        {
+          "chainId": 8453,
+          "txHash": "0xe27641d2fbff5830f622b4be5b181375c7607013516fd3aa98f05bc90d87cc6e",
+          "blockNumber": 45295573,
+          "blockTimestamp": 1777380493,
+          "relayer": "0x67b9ce703d9ce658d7c4ac3c289cea112fe662af",
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "recipient": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+          "amountAtomic": "50000",
+          "tokenAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "method": "direct_transferWithAuthorization",
+          "topLevelSelector": "0xe3ee160e",
+          "caseId": "spcat-nansen-endp_d6ef1g0n4gpbsxxdg-route-0",
+          "stableHash": "eb79c76817b9a6cf4e7673676ee7c7e8a71d9ce36a0b0e862abec0a927a4d4ae",
+          "evidence": [
+            {
+              "type": "authorization",
+              "detail": "transferWithAuthorization calldata",
+              "raw": {
+                "selector": "0xe3ee160e",
+                "arguments": {
+                  "authorizationKind": "vrs",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+                  "value": "50000",
+                  "validAfter": "1777379888",
+                  "validBefore": "1777380788",
+                  "nonce": "0xef2fc9d1e707ee88be7ee5c19b9dbff53e5877a63fae929ef831b144a25a88cd",
+                  "v": 28,
+                  "r": "0x22daeb0d69a287f9bb104a2fe2bdbd367e7c41677a0d870b4fa164531c4b26f9",
+                  "s": "0x487870bf785bc90dddd5a301d9dcd0e26e564c266dd573528d3d2ba0bd73de84"
+                }
+              }
+            },
+            {
+              "type": "transfer",
+              "detail": "USDC Transfer log",
+              "raw": [
+                {
+                  "kind": "transfer",
+                  "index": 1,
+                  "txHash": "0xe27641d2fbff5830f622b4be5b181375c7607013516fd3aa98f05bc90d87cc6e",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+                  "amount": "50000"
+                }
+              ]
+            },
+            {
+              "type": "receipt_validation",
+              "detail": "receipt logs matched",
+              "raw": {
+                "totalLogs": 2,
+                "authorizationLogs": 1,
+                "transferLogs": 1
+              }
+            }
+          ],
+          "topLevelTo": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "innerSelector": null
+        }
+      ],
+      "status": "fingerprinted"
+    },
+    {
+      "caseId": "spcat-nansen-endp_d6ef1g0se7ex497hm-route-0",
+      "providerName": "Nansen",
+      "serviceName": "Get historical token balance snapshots for a wallet address.",
+      "routeKind": "provider_direct_x402",
+      "sourcePath": "fixtures/acquisition/paid_probe_results.json",
+      "txHash": "0xd01ebe9687aebc1ce66a177e16ae085c5f05592b73dbf931f7a94b6a63c60f80",
+      "observationCount": 1,
+      "insertedObservations": 0,
+      "evidenceRowsUpdated": 0,
+      "observations": [
+        {
+          "chainId": 8453,
+          "txHash": "0xd01ebe9687aebc1ce66a177e16ae085c5f05592b73dbf931f7a94b6a63c60f80",
+          "blockNumber": 45295576,
+          "blockTimestamp": 1777380499,
+          "relayer": "0xa32ccda98ba7529705a059bd2d213da8de10d101",
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "recipient": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+          "amountAtomic": "10000",
+          "tokenAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "method": "direct_transferWithAuthorization",
+          "topLevelSelector": "0xe3ee160e",
+          "caseId": "spcat-nansen-endp_d6ef1g0se7ex497hm-route-0",
+          "stableHash": "8d8207dd0353a443bfcaca23a03949aa8cdd4ec864906a355439f1961a0abaea",
+          "evidence": [
+            {
+              "type": "authorization",
+              "detail": "transferWithAuthorization calldata",
+              "raw": {
+                "selector": "0xe3ee160e",
+                "arguments": {
+                  "authorizationKind": "vrs",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+                  "value": "10000",
+                  "validAfter": "1777379892",
+                  "validBefore": "1777380792",
+                  "nonce": "0x91ab0ce65d9852289383351da2d3c9a4444b41a4af1760d151cf728146d1022e",
+                  "v": 27,
+                  "r": "0x1da59a33405e2407bdd039e2f95d1fbeb4e2201b1b8bca6a522b54ffee6991c7",
+                  "s": "0x20906168941ddc8d7df5f7946fedcc84dc8f1b46bb639147987d7fba6dc9e013"
+                }
+              }
+            },
+            {
+              "type": "transfer",
+              "detail": "USDC Transfer log",
+              "raw": [
+                {
+                  "kind": "transfer",
+                  "index": 1,
+                  "txHash": "0xd01ebe9687aebc1ce66a177e16ae085c5f05592b73dbf931f7a94b6a63c60f80",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+                  "amount": "10000"
+                }
+              ]
+            },
+            {
+              "type": "receipt_validation",
+              "detail": "receipt logs matched",
+              "raw": {
+                "totalLogs": 2,
+                "authorizationLogs": 1,
+                "transferLogs": 1
+              }
+            }
+          ],
+          "topLevelTo": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "innerSelector": null
+        }
+      ],
+      "status": "fingerprinted"
+    },
+    {
+      "caseId": "spcat-textbelt-endp_d6kv030qsth1y0ey8-route-0",
+      "providerName": "Textbelt",
+      "serviceName": "Send an SMS message to a US or Canada phone number.",
+      "routeKind": "sponge_wrapper_x402",
+      "sourcePath": "fixtures/acquisition/paid_probe_results.json",
+      "txHash": "0x32f240144c428e7ddc2caffe7d771f91bc046492ad7d44bbda148a7019cb91f1",
+      "observationCount": 1,
+      "insertedObservations": 0,
+      "evidenceRowsUpdated": 0,
+      "observations": [
+        {
+          "chainId": 8453,
+          "txHash": "0x32f240144c428e7ddc2caffe7d771f91bc046492ad7d44bbda148a7019cb91f1",
+          "blockNumber": 45295608,
+          "blockTimestamp": 1777380563,
+          "relayer": "0xb2bd29925cbbcea7628279c91945ca5b98bf371b",
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "recipient": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+          "amountAtomic": "20000",
+          "tokenAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "method": "multicall3_aggregate3",
+          "topLevelSelector": "0x82ad56cb",
+          "caseId": "spcat-textbelt-endp_d6kv030qsth1y0ey8-route-0",
+          "stableHash": "b00541f4697158699406a0f64a4a068a7ecc798882b15d90074bc35bd18c0f62",
+          "evidence": [
+            {
+              "type": "multicall",
+              "detail": "multicall3 aggregate3 decoded",
+              "raw": {
+                "call": {
+                  "target": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+                  "allowFailure": true,
+                  "callData": "0xcf09299500000000000000000000000062c2d106293398961894bcd4908b06a8620b73510000000000000000000000006302d9e6dbb22fec3c350551568bb39b4b35ad570000000000000000000000000000000000000000000000000000000000004e200000000000000000000000000000000000000000000000000000000069f0aa770000000000000000000000000000000000000000000000000000000069f0adfb204a90e7b1c9ea9065b750e0e61f1ae7f83d95cc388a9466fa760d7444566ad800000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000041a638903315970d921bd18206e5975b6c136e584f453cb24f5a33d538b01be3e078da435f59826926a271b3d77a5905c603c4a15967e3e40bb43ef57636b81eea1c00000000000000000000000000000000000000000000000000000000000000"
+                },
+                "args": {
+                  "authorizationKind": "bytes",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+                  "value": "20000",
+                  "validAfter": "1777379959",
+                  "validBefore": "1777380859",
+                  "nonce": "0x204a90e7b1c9ea9065b750e0e61f1ae7f83d95cc388a9466fa760d7444566ad8",
+                  "signature": "0xa638903315970d921bd18206e5975b6c136e584f453cb24f5a33d538b01be3e078da435f59826926a271b3d77a5905c603c4a15967e3e40bb43ef57636b81eea1c"
+                }
+              }
+            },
+            {
+              "type": "transfer",
+              "detail": "USDC Transfer log",
+              "raw": [
+                {
+                  "kind": "transfer",
+                  "index": 1,
+                  "txHash": "0x32f240144c428e7ddc2caffe7d771f91bc046492ad7d44bbda148a7019cb91f1",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+                  "amount": "20000"
+                }
+              ]
+            },
+            {
+              "type": "receipt_validation",
+              "detail": "receipt logs matched",
+              "raw": {
+                "totalLogs": 2,
+                "authorizationLogs": 1,
+                "transferLogs": 1
+              }
+            }
+          ],
+          "topLevelTo": "0xca11bde05977b3631167028862be2a173976ca11",
+          "innerSelector": "0xcf092995"
+        }
+      ],
+      "status": "fingerprinted"
+    },
+    {
+      "caseId": "spcat-agentmail-endp_d6krn581b0vmrys94-route-0",
+      "providerName": "AgentMail",
+      "serviceName": "Create a new pod.",
+      "routeKind": "provider_direct_x402",
+      "sourcePath": "fixtures/acquisition/paid_probe_retry_results.json",
+      "txHash": "0x1fcbe0c008a3657d6625a6fe1ab72148d4bd2e29732dd900b392d2d6afa2cc95",
+      "observationCount": 1,
+      "insertedObservations": 0,
+      "evidenceRowsUpdated": 0,
+      "observations": [
+        {
+          "chainId": 8453,
+          "txHash": "0x1fcbe0c008a3657d6625a6fe1ab72148d4bd2e29732dd900b392d2d6afa2cc95",
+          "blockNumber": 45297335,
+          "blockTimestamp": 1777384017,
+          "relayer": "0xc6699d2aada6c36dfea5c248dd70f9cb0235cb63",
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "recipient": "0x6e3184C204e596dED89E8A5693B602097F4Ab687",
+          "amountAtomic": "10000",
+          "tokenAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "method": "multicall3_aggregate3",
+          "topLevelSelector": "0x82ad56cb",
+          "caseId": "spcat-agentmail-endp_d6krn581b0vmrys94-route-0",
+          "stableHash": "287d0928f83c83ce763aedc35c8e922572ea7e121901af92f4517732b860e44d",
+          "evidence": [
+            {
+              "type": "multicall",
+              "detail": "multicall3 aggregate3 decoded",
+              "raw": {
+                "call": {
+                  "target": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+                  "allowFailure": true,
+                  "callData": "0xcf09299500000000000000000000000062c2d106293398961894bcd4908b06a8620b73510000000000000000000000006e3184c204e596ded89e8a5693b602097f4ab68700000000000000000000000000000000000000000000000000000000000027100000000000000000000000000000000000000000000000000000000069f0b7f50000000000000000000000000000000000000000000000000000000069f0bb79a6b72cd12d9090e2934b0a151596308699de3a97f871229f9b395c524a8a0e7000000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000041674b46cc06af8a8b044b96bea06c8726c9f4ca9223eb11ea89a1c33d615f1021736e000217def27948812c1fdd99a66990d44cf43ccd4a81fe00c0b36df14abc1c00000000000000000000000000000000000000000000000000000000000000"
+                },
+                "args": {
+                  "authorizationKind": "bytes",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x6e3184C204e596dED89E8A5693B602097F4Ab687",
+                  "value": "10000",
+                  "validAfter": "1777383413",
+                  "validBefore": "1777384313",
+                  "nonce": "0xa6b72cd12d9090e2934b0a151596308699de3a97f871229f9b395c524a8a0e70",
+                  "signature": "0x674b46cc06af8a8b044b96bea06c8726c9f4ca9223eb11ea89a1c33d615f1021736e000217def27948812c1fdd99a66990d44cf43ccd4a81fe00c0b36df14abc1c"
+                }
+              }
+            },
+            {
+              "type": "transfer",
+              "detail": "USDC Transfer log",
+              "raw": [
+                {
+                  "kind": "transfer",
+                  "index": 1,
+                  "txHash": "0x1fcbe0c008a3657d6625a6fe1ab72148d4bd2e29732dd900b392d2d6afa2cc95",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x6e3184C204e596dED89E8A5693B602097F4Ab687",
+                  "amount": "10000"
+                }
+              ]
+            },
+            {
+              "type": "receipt_validation",
+              "detail": "receipt logs matched",
+              "raw": {
+                "totalLogs": 2,
+                "authorizationLogs": 1,
+                "transferLogs": 1
+              }
+            }
+          ],
+          "topLevelTo": "0xca11bde05977b3631167028862be2a173976ca11",
+          "innerSelector": "0xcf092995"
+        }
+      ],
+      "status": "fingerprinted"
+    },
+    {
+      "caseId": "spcat-agentmail-endp_d6krn58sdbsjt494g-route-0",
+      "providerName": "AgentMail",
+      "serviceName": "Create a webhook for email events.",
+      "routeKind": "provider_direct_x402",
+      "sourcePath": "fixtures/acquisition/paid_probe_retry_results.json",
+      "txHash": "0xdf3cbdc064933e1e70d6b07e05c2a2e68f808c6770d3acf6e28f1666841a8038",
+      "observationCount": 1,
+      "insertedObservations": 0,
+      "evidenceRowsUpdated": 0,
+      "observations": [
+        {
+          "chainId": 8453,
+          "txHash": "0xdf3cbdc064933e1e70d6b07e05c2a2e68f808c6770d3acf6e28f1666841a8038",
+          "blockNumber": 45297338,
+          "blockTimestamp": 1777384023,
+          "relayer": "0xb2bd29925cbbcea7628279c91945ca5b98bf371b",
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "recipient": "0x6e3184C204e596dED89E8A5693B602097F4Ab687",
+          "amountAtomic": "10000",
+          "tokenAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "method": "multicall3_aggregate3",
+          "topLevelSelector": "0x82ad56cb",
+          "caseId": "spcat-agentmail-endp_d6krn58sdbsjt494g-route-0",
+          "stableHash": "93c94507db767ec59703dd6d2d1a1177d7ecc6dc9b63dd171246929e38f257e6",
+          "evidence": [
+            {
+              "type": "multicall",
+              "detail": "multicall3 aggregate3 decoded",
+              "raw": {
+                "call": {
+                  "target": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+                  "allowFailure": true,
+                  "callData": "0xcf09299500000000000000000000000062c2d106293398961894bcd4908b06a8620b73510000000000000000000000006e3184c204e596ded89e8a5693b602097f4ab68700000000000000000000000000000000000000000000000000000000000027100000000000000000000000000000000000000000000000000000000069f0b7fb0000000000000000000000000000000000000000000000000000000069f0bb7faeefcaef5993f15a0256418fcf38ce875ebb07930a14c8c218c8a3f0f41303ff00000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000041079397bb433c33519e6c4bab88c24a97358cb38c9125b80a9bb10a2bee7fde6500ab6c342a75a03736f6bc58b5b4d76944748ddab6a438d26c7c542e632574c01b00000000000000000000000000000000000000000000000000000000000000"
+                },
+                "args": {
+                  "authorizationKind": "bytes",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x6e3184C204e596dED89E8A5693B602097F4Ab687",
+                  "value": "10000",
+                  "validAfter": "1777383419",
+                  "validBefore": "1777384319",
+                  "nonce": "0xaeefcaef5993f15a0256418fcf38ce875ebb07930a14c8c218c8a3f0f41303ff",
+                  "signature": "0x079397bb433c33519e6c4bab88c24a97358cb38c9125b80a9bb10a2bee7fde6500ab6c342a75a03736f6bc58b5b4d76944748ddab6a438d26c7c542e632574c01b"
+                }
+              }
+            },
+            {
+              "type": "transfer",
+              "detail": "USDC Transfer log",
+              "raw": [
+                {
+                  "kind": "transfer",
+                  "index": 1,
+                  "txHash": "0xdf3cbdc064933e1e70d6b07e05c2a2e68f808c6770d3acf6e28f1666841a8038",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x6e3184C204e596dED89E8A5693B602097F4Ab687",
+                  "amount": "10000"
+                }
+              ]
+            },
+            {
+              "type": "receipt_validation",
+              "detail": "receipt logs matched",
+              "raw": {
+                "totalLogs": 2,
+                "authorizationLogs": 1,
+                "transferLogs": 1
+              }
+            }
+          ],
+          "topLevelTo": "0xca11bde05977b3631167028862be2a173976ca11",
+          "innerSelector": "0xcf092995"
+        }
+      ],
+      "status": "fingerprinted"
+    },
+    {
+      "caseId": "spcat-alchemy-endp_d6gf1dr34cyasjf2g-route-0",
+      "providerName": "Alchemy",
+      "serviceName": "Get historical prices by symbol or by network/address.",
+      "routeKind": "provider_direct_x402",
+      "sourcePath": "fixtures/acquisition/paid_probe_retry_results.json",
+      "txHash": "0x376fb6204585c10c59cf307b733421d6cabe312fde6bd30d750bd5b4a2500627",
+      "observationCount": 1,
+      "insertedObservations": 0,
+      "evidenceRowsUpdated": 0,
+      "observations": [
+        {
+          "chainId": 8453,
+          "txHash": "0x376fb6204585c10c59cf307b733421d6cabe312fde6bd30d750bd5b4a2500627",
+          "blockNumber": 45297340,
+          "blockTimestamp": 1777384027,
+          "relayer": "0x97acce27d5069544480bde0f04d9f47d7422a016",
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "recipient": "0x0573c4dA7fC31E944e5FF959fEf3b42199C308B2",
+          "amountAtomic": "1000",
+          "tokenAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "method": "direct_transferWithAuthorization",
+          "topLevelSelector": "0xe3ee160e",
+          "caseId": "spcat-alchemy-endp_d6gf1dr34cyasjf2g-route-0",
+          "stableHash": "dfb009f892c55570bf9f7a2de9456d1d0008976928b3425a9d1ca2e16f6bf7db",
+          "evidence": [
+            {
+              "type": "authorization",
+              "detail": "transferWithAuthorization calldata",
+              "raw": {
+                "selector": "0xe3ee160e",
+                "arguments": {
+                  "authorizationKind": "vrs",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x0573c4dA7fC31E944e5FF959fEf3b42199C308B2",
+                  "value": "1000",
+                  "validAfter": "1777383423",
+                  "validBefore": "1777384323",
+                  "nonce": "0xba55a053b7980376018faeb8e3624e9ee37bf0851397eb5b48873c90e72024d5",
+                  "v": 28,
+                  "r": "0x9fdcd1d2f4674b0c48e334b4a5c6e0841ad15435627b056e566953a3b715a202",
+                  "s": "0x0ad82ac44cb77155f85658df619a7e5cabd017cb94bca9c6506de7b3d627b4e3"
+                }
+              }
+            },
+            {
+              "type": "transfer",
+              "detail": "USDC Transfer log",
+              "raw": [
+                {
+                  "kind": "transfer",
+                  "index": 1,
+                  "txHash": "0x376fb6204585c10c59cf307b733421d6cabe312fde6bd30d750bd5b4a2500627",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x0573c4dA7fC31E944e5FF959fEf3b42199C308B2",
+                  "amount": "1000"
+                }
+              ]
+            },
+            {
+              "type": "receipt_validation",
+              "detail": "receipt logs matched",
+              "raw": {
+                "totalLogs": 2,
+                "authorizationLogs": 1,
+                "transferLogs": 1
+              }
+            }
+          ],
+          "topLevelTo": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "innerSelector": null
+        }
+      ],
+      "status": "fingerprinted"
+    },
+    {
+      "caseId": "spcat-alchemy-endp_d6gf1draejxtpexz8-route-0",
+      "providerName": "Alchemy",
+      "serviceName": "Get raw token balances (without price and metadata).",
+      "routeKind": "provider_direct_x402",
+      "sourcePath": "fixtures/acquisition/paid_probe_retry_results.json",
+      "txHash": "0x928d6562b9a288f0eb6fcd7529f3dae6915ccc420f8a39f8178820c34f92699e",
+      "observationCount": 1,
+      "insertedObservations": 0,
+      "evidenceRowsUpdated": 0,
+      "observations": [
+        {
+          "chainId": 8453,
+          "txHash": "0x928d6562b9a288f0eb6fcd7529f3dae6915ccc420f8a39f8178820c34f92699e",
+          "blockNumber": 45297341,
+          "blockTimestamp": 1777384029,
+          "relayer": "0x8f5cb67b49555e614892b7233cfddebfb746e531",
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "recipient": "0x0573c4dA7fC31E944e5FF959fEf3b42199C308B2",
+          "amountAtomic": "1000",
+          "tokenAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "method": "direct_transferWithAuthorization",
+          "topLevelSelector": "0xe3ee160e",
+          "caseId": "spcat-alchemy-endp_d6gf1draejxtpexz8-route-0",
+          "stableHash": "0f239c4606f1f43d5eca3b65a570d31c0bc6eba8265ae8d6213ab728eb0a1d39",
+          "evidence": [
+            {
+              "type": "authorization",
+              "detail": "transferWithAuthorization calldata",
+              "raw": {
+                "selector": "0xe3ee160e",
+                "arguments": {
+                  "authorizationKind": "vrs",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x0573c4dA7fC31E944e5FF959fEf3b42199C308B2",
+                  "value": "1000",
+                  "validAfter": "1777383427",
+                  "validBefore": "1777384327",
+                  "nonce": "0x0d4cd359bf54c24ab8a9d0d5fb7a03fba2b37d6908bc254decca52fcdc998b9e",
+                  "v": 27,
+                  "r": "0xae9ca4f6a255002f032018ca985d0384aef6fea602bf291196156ebd90e6fecd",
+                  "s": "0x6101117522088b33300ea875669547cf225f90fcc6f50901e05cb234c544fe81"
+                }
+              }
+            },
+            {
+              "type": "transfer",
+              "detail": "USDC Transfer log",
+              "raw": [
+                {
+                  "kind": "transfer",
+                  "index": 1,
+                  "txHash": "0x928d6562b9a288f0eb6fcd7529f3dae6915ccc420f8a39f8178820c34f92699e",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x0573c4dA7fC31E944e5FF959fEf3b42199C308B2",
+                  "amount": "1000"
+                }
+              ]
+            },
+            {
+              "type": "receipt_validation",
+              "detail": "receipt logs matched",
+              "raw": {
+                "totalLogs": 2,
+                "authorizationLogs": 1,
+                "transferLogs": 1
+              }
+            }
+          ],
+          "topLevelTo": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "innerSelector": null
+        }
+      ],
+      "status": "fingerprinted"
+    },
+    {
+      "caseId": "spcat-alchemy-endp_d6gf1drfbh3aeeh28-route-0",
+      "providerName": "Alchemy",
+      "serviceName": "Get latest token prices by network and contract address.",
+      "routeKind": "provider_direct_x402",
+      "sourcePath": "fixtures/acquisition/paid_probe_retry_results.json",
+      "txHash": "0xb380a5d52f4aa19fd20203fc7199394ee191620e993abacdfdaff0552b46cfd9",
+      "observationCount": 1,
+      "insertedObservations": 0,
+      "evidenceRowsUpdated": 0,
+      "observations": [
+        {
+          "chainId": 8453,
+          "txHash": "0xb380a5d52f4aa19fd20203fc7199394ee191620e993abacdfdaff0552b46cfd9",
+          "blockNumber": 45297343,
+          "blockTimestamp": 1777384033,
+          "relayer": "0x68a96f41ff1e9f2e7b591a931a4ad224e7c07863",
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "recipient": "0x0573c4dA7fC31E944e5FF959fEf3b42199C308B2",
+          "amountAtomic": "1000",
+          "tokenAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "method": "direct_transferWithAuthorization",
+          "topLevelSelector": "0xe3ee160e",
+          "caseId": "spcat-alchemy-endp_d6gf1drfbh3aeeh28-route-0",
+          "stableHash": "8ea88cca1545b78cc7100e4a1f0b3ec19a92a9d1d70710947da8ac33e6b7ead7",
+          "evidence": [
+            {
+              "type": "authorization",
+              "detail": "transferWithAuthorization calldata",
+              "raw": {
+                "selector": "0xe3ee160e",
+                "arguments": {
+                  "authorizationKind": "vrs",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x0573c4dA7fC31E944e5FF959fEf3b42199C308B2",
+                  "value": "1000",
+                  "validAfter": "1777383431",
+                  "validBefore": "1777384331",
+                  "nonce": "0xd750ce560e46e7ebecf7b120741ae42c5ac64c5f0da25537cfd1244fe30ea33f",
+                  "v": 27,
+                  "r": "0x74cdd8114690c1bae563ec688e16c39fc16af51ceb37be94c5aa70a93fa9c28f",
+                  "s": "0x46d40d21655543180871e620d966573c0440f0a2fbe5aa7ad04ec089b6130754"
+                }
+              }
+            },
+            {
+              "type": "transfer",
+              "detail": "USDC Transfer log",
+              "raw": [
+                {
+                  "kind": "transfer",
+                  "index": 1,
+                  "txHash": "0xb380a5d52f4aa19fd20203fc7199394ee191620e993abacdfdaff0552b46cfd9",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x0573c4dA7fC31E944e5FF959fEf3b42199C308B2",
+                  "amount": "1000"
+                }
+              ]
+            },
+            {
+              "type": "receipt_validation",
+              "detail": "receipt logs matched",
+              "raw": {
+                "totalLogs": 2,
+                "authorizationLogs": 1,
+                "transferLogs": 1
+              }
+            }
+          ],
+          "topLevelTo": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "innerSelector": null
+        }
+      ],
+      "status": "fingerprinted"
+    },
+    {
+      "caseId": "spcat-alchemy-endp_d6gf1drmybrj5sgq4-route-0",
+      "providerName": "Alchemy",
+      "serviceName": "Get token balances with metadata and prices across chains.",
+      "routeKind": "provider_direct_x402",
+      "sourcePath": "fixtures/acquisition/paid_probe_retry_results.json",
+      "txHash": "0x971c1ce1b0567f3df9d7d2c17a6e9e859d2b3879483ac4ded35e10a89faa274b",
+      "observationCount": 1,
+      "insertedObservations": 0,
+      "evidenceRowsUpdated": 0,
+      "observations": [
+        {
+          "chainId": 8453,
+          "txHash": "0x971c1ce1b0567f3df9d7d2c17a6e9e859d2b3879483ac4ded35e10a89faa274b",
+          "blockNumber": 45297345,
+          "blockTimestamp": 1777384037,
+          "relayer": "0x67b9ce703d9ce658d7c4ac3c289cea112fe662af",
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "recipient": "0x0573c4dA7fC31E944e5FF959fEf3b42199C308B2",
+          "amountAtomic": "1000",
+          "tokenAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "method": "direct_transferWithAuthorization",
+          "topLevelSelector": "0xe3ee160e",
+          "caseId": "spcat-alchemy-endp_d6gf1drmybrj5sgq4-route-0",
+          "stableHash": "d7deba4c825f3f36bad96c4a4a774705b8aba8ffaeb0b7da9803719b648d1514",
+          "evidence": [
+            {
+              "type": "authorization",
+              "detail": "transferWithAuthorization calldata",
+              "raw": {
+                "selector": "0xe3ee160e",
+                "arguments": {
+                  "authorizationKind": "vrs",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x0573c4dA7fC31E944e5FF959fEf3b42199C308B2",
+                  "value": "1000",
+                  "validAfter": "1777383434",
+                  "validBefore": "1777384334",
+                  "nonce": "0xc5ff75d9896c5effec65af9581a74532e3d98fb4514f4f4e91cf87d32bfc60ad",
+                  "v": 27,
+                  "r": "0x7f1746a8c7b1a5fbecb99b767ab90240b2dd2a0436d1692b6fc6eef25b046944",
+                  "s": "0x0a42cc5917509fb4b0900dbc07e94f32310eac6a7822d8bbb8e2107991154f60"
+                }
+              }
+            },
+            {
+              "type": "transfer",
+              "detail": "USDC Transfer log",
+              "raw": [
+                {
+                  "kind": "transfer",
+                  "index": 1,
+                  "txHash": "0x971c1ce1b0567f3df9d7d2c17a6e9e859d2b3879483ac4ded35e10a89faa274b",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x0573c4dA7fC31E944e5FF959fEf3b42199C308B2",
+                  "amount": "1000"
+                }
+              ]
+            },
+            {
+              "type": "receipt_validation",
+              "detail": "receipt logs matched",
+              "raw": {
+                "totalLogs": 2,
+                "authorizationLogs": 1,
+                "transferLogs": 1
+              }
+            }
+          ],
+          "topLevelTo": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "innerSelector": null
+        }
+      ],
+      "status": "fingerprinted"
+    },
+    {
+      "caseId": "spcat-alchemy-endp_d6gf1drrz6y74ec28-route-0",
+      "providerName": "Alchemy",
+      "serviceName": "Get NFTs owned by wallets across one or more networks.",
+      "routeKind": "provider_direct_x402",
+      "sourcePath": "fixtures/acquisition/paid_probe_retry_results.json",
+      "txHash": "0xc8dbf5320fcf4c7f5a7b855b2f8895035cbf3625e448321f37fb323969b39a60",
+      "observationCount": 1,
+      "insertedObservations": 0,
+      "evidenceRowsUpdated": 0,
+      "observations": [
+        {
+          "chainId": 8453,
+          "txHash": "0xc8dbf5320fcf4c7f5a7b855b2f8895035cbf3625e448321f37fb323969b39a60",
+          "blockNumber": 45297347,
+          "blockTimestamp": 1777384041,
+          "relayer": "0x8f5cb67b49555e614892b7233cfddebfb746e531",
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "recipient": "0x0573c4dA7fC31E944e5FF959fEf3b42199C308B2",
+          "amountAtomic": "1000",
+          "tokenAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "method": "direct_transferWithAuthorization",
+          "topLevelSelector": "0xe3ee160e",
+          "caseId": "spcat-alchemy-endp_d6gf1drrz6y74ec28-route-0",
+          "stableHash": "d612b9c5e0b05295d27b90ee0bdfa39fdee98cf06dfaf2424e820911cd55ba93",
+          "evidence": [
+            {
+              "type": "authorization",
+              "detail": "transferWithAuthorization calldata",
+              "raw": {
+                "selector": "0xe3ee160e",
+                "arguments": {
+                  "authorizationKind": "vrs",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x0573c4dA7fC31E944e5FF959fEf3b42199C308B2",
+                  "value": "1000",
+                  "validAfter": "1777383437",
+                  "validBefore": "1777384337",
+                  "nonce": "0x82566a4a1ba377fd23524e7657fe74fafa2986524bb5aa2e727eaa7dbf25ccbd",
+                  "v": 28,
+                  "r": "0x2fd6eda5ae01718e35b083ff89ab29c5aae5bbfe6dacd95abe29e305470354be",
+                  "s": "0x1c49d4bf867843ae179c275a3fe6789878af44a33f4b6c5314ef6ccdc4377cf3"
+                }
+              }
+            },
+            {
+              "type": "transfer",
+              "detail": "USDC Transfer log",
+              "raw": [
+                {
+                  "kind": "transfer",
+                  "index": 1,
+                  "txHash": "0xc8dbf5320fcf4c7f5a7b855b2f8895035cbf3625e448321f37fb323969b39a60",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x0573c4dA7fC31E944e5FF959fEf3b42199C308B2",
+                  "amount": "1000"
+                }
+              ]
+            },
+            {
+              "type": "receipt_validation",
+              "detail": "receipt logs matched",
+              "raw": {
+                "totalLogs": 2,
+                "authorizationLogs": 1,
+                "transferLogs": 1
+              }
+            }
+          ],
+          "topLevelTo": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "innerSelector": null
+        }
+      ],
+      "status": "fingerprinted"
+    },
+    {
+      "caseId": "spcat-alchemy-endp_d6gf1drx1f1bbcb7r-route-0",
+      "providerName": "Alchemy",
+      "serviceName": "Get NFT contracts held by wallet addresses.",
+      "routeKind": "provider_direct_x402",
+      "sourcePath": "fixtures/acquisition/paid_probe_retry_results.json",
+      "txHash": "0xda429bd0a7c738c329aff81be862dfa2443fac720cc9abb142092d65cdc596a8",
+      "observationCount": 1,
+      "insertedObservations": 0,
+      "evidenceRowsUpdated": 0,
+      "observations": [
+        {
+          "chainId": 8453,
+          "txHash": "0xda429bd0a7c738c329aff81be862dfa2443fac720cc9abb142092d65cdc596a8",
+          "blockNumber": 45297348,
+          "blockTimestamp": 1777384043,
+          "relayer": "0x97acce27d5069544480bde0f04d9f47d7422a016",
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "recipient": "0x0573c4dA7fC31E944e5FF959fEf3b42199C308B2",
+          "amountAtomic": "1000",
+          "tokenAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "method": "direct_transferWithAuthorization",
+          "topLevelSelector": "0xe3ee160e",
+          "caseId": "spcat-alchemy-endp_d6gf1drx1f1bbcb7r-route-0",
+          "stableHash": "cb219e48bec92eb8f7aabfdc495bde7b2ee9230cbac1f3c7dde135fa4f993fd1",
+          "evidence": [
+            {
+              "type": "authorization",
+              "detail": "transferWithAuthorization calldata",
+              "raw": {
+                "selector": "0xe3ee160e",
+                "arguments": {
+                  "authorizationKind": "vrs",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x0573c4dA7fC31E944e5FF959fEf3b42199C308B2",
+                  "value": "1000",
+                  "validAfter": "1777383441",
+                  "validBefore": "1777384341",
+                  "nonce": "0xd48c4f98765a58d72fb2c47f9165bf385541427fdb200f6c156aeedaf48c7881",
+                  "v": 27,
+                  "r": "0x3e9cdf0c4ba5d4cc6c9a9d55d4dc47fff63930f7cd6b5a665c20fa24382b4d0c",
+                  "s": "0x74a19ff139a1106e7fad098dfab21939378443ce3bdafa051f42eee485fb0207"
+                }
+              }
+            },
+            {
+              "type": "transfer",
+              "detail": "USDC Transfer log",
+              "raw": [
+                {
+                  "kind": "transfer",
+                  "index": 1,
+                  "txHash": "0xda429bd0a7c738c329aff81be862dfa2443fac720cc9abb142092d65cdc596a8",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x0573c4dA7fC31E944e5FF959fEf3b42199C308B2",
+                  "amount": "1000"
+                }
+              ]
+            },
+            {
+              "type": "receipt_validation",
+              "detail": "receipt logs matched",
+              "raw": {
+                "totalLogs": 2,
+                "authorizationLogs": 1,
+                "transferLogs": 1
+              }
+            }
+          ],
+          "topLevelTo": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "innerSelector": null
+        }
+      ],
+      "status": "fingerprinted"
+    },
+    {
+      "caseId": "spcat-alchemy-endp_d6gf1drx2q1gbmz10-route-0",
+      "providerName": "Alchemy",
+      "serviceName": "Get transaction history for wallet addresses across networks (beta).",
+      "routeKind": "provider_direct_x402",
+      "sourcePath": "fixtures/acquisition/paid_probe_retry_results.json",
+      "txHash": "0x67e4dacb61a6b64140c1a036e2f7cf564c46e07f73882f7dff354f363ef1d89d",
+      "observationCount": 1,
+      "insertedObservations": 0,
+      "evidenceRowsUpdated": 0,
+      "observations": [
+        {
+          "chainId": 8453,
+          "txHash": "0x67e4dacb61a6b64140c1a036e2f7cf564c46e07f73882f7dff354f363ef1d89d",
+          "blockNumber": 45297352,
+          "blockTimestamp": 1777384051,
+          "relayer": "0x68a96f41ff1e9f2e7b591a931a4ad224e7c07863",
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "recipient": "0x0573c4dA7fC31E944e5FF959fEf3b42199C308B2",
+          "amountAtomic": "1000",
+          "tokenAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "method": "direct_transferWithAuthorization",
+          "topLevelSelector": "0xe3ee160e",
+          "caseId": "spcat-alchemy-endp_d6gf1drx2q1gbmz10-route-0",
+          "stableHash": "794d240057232ed348524dbf2e9a7714476278af5362e58f7984a13ec073dca8",
+          "evidence": [
+            {
+              "type": "authorization",
+              "detail": "transferWithAuthorization calldata",
+              "raw": {
+                "selector": "0xe3ee160e",
+                "arguments": {
+                  "authorizationKind": "vrs",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x0573c4dA7fC31E944e5FF959fEf3b42199C308B2",
+                  "value": "1000",
+                  "validAfter": "1777383447",
+                  "validBefore": "1777384347",
+                  "nonce": "0x5c3e0c638c3cc77440ae9ab767baab992402cd9d03b73cbfe3724ba152c8ab8a",
+                  "v": 28,
+                  "r": "0x4719bb3dffc5fcc1e7c2f52e265990fac3f84e3dfd1ad2d7da4afed8834f7301",
+                  "s": "0x0c92a49ed26ba61fe32c18e3d1ffe90d8a081c415ab446c807f6fcf22c252ce0"
+                }
+              }
+            },
+            {
+              "type": "transfer",
+              "detail": "USDC Transfer log",
+              "raw": [
+                {
+                  "kind": "transfer",
+                  "index": 1,
+                  "txHash": "0x67e4dacb61a6b64140c1a036e2f7cf564c46e07f73882f7dff354f363ef1d89d",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x0573c4dA7fC31E944e5FF959fEf3b42199C308B2",
+                  "amount": "1000"
+                }
+              ]
+            },
+            {
+              "type": "receipt_validation",
+              "detail": "receipt logs matched",
+              "raw": {
+                "totalLogs": 2,
+                "authorizationLogs": 1,
+                "transferLogs": 1
+              }
+            }
+          ],
+          "topLevelTo": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "innerSelector": null
+        }
+      ],
+      "status": "fingerprinted"
+    },
+    {
+      "caseId": "spcat-alchemy-endp_d6gf1drx65936g4hg-route-0",
+      "providerName": "Alchemy",
+      "serviceName": "Get latest token prices by symbol.",
+      "routeKind": "provider_direct_x402",
+      "sourcePath": "fixtures/acquisition/paid_probe_retry_results.json",
+      "txHash": "0xce7021c13af3e1764bc9c5410bf5f9d991e1d382bb6a62555a672a5b582735cf",
+      "observationCount": 1,
+      "insertedObservations": 0,
+      "evidenceRowsUpdated": 0,
+      "observations": [
+        {
+          "chainId": 8453,
+          "txHash": "0xce7021c13af3e1764bc9c5410bf5f9d991e1d382bb6a62555a672a5b582735cf",
+          "blockNumber": 45297354,
+          "blockTimestamp": 1777384055,
+          "relayer": "0x68a96f41ff1e9f2e7b591a931a4ad224e7c07863",
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "recipient": "0x0573c4dA7fC31E944e5FF959fEf3b42199C308B2",
+          "amountAtomic": "1000",
+          "tokenAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "method": "direct_transferWithAuthorization",
+          "topLevelSelector": "0xe3ee160e",
+          "caseId": "spcat-alchemy-endp_d6gf1drx65936g4hg-route-0",
+          "stableHash": "d7e658118ab4260ce01bc58c77c693a5f0036a4903a9154b4d692131670779a8",
+          "evidence": [
+            {
+              "type": "authorization",
+              "detail": "transferWithAuthorization calldata",
+              "raw": {
+                "selector": "0xe3ee160e",
+                "arguments": {
+                  "authorizationKind": "vrs",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x0573c4dA7fC31E944e5FF959fEf3b42199C308B2",
+                  "value": "1000",
+                  "validAfter": "1777383452",
+                  "validBefore": "1777384352",
+                  "nonce": "0xd456d6c4e11e8269f1027c45f2dfff5dde774471ed919c1b7d2c5f27b846bf78",
+                  "v": 27,
+                  "r": "0x36fa7ac8af7957faf33f4f6d916bed60a6a331fdcf117dc94218b3a90b9813b6",
+                  "s": "0x65edb25cea451d96203ca4b1a9ba4f413650d4a08fb6fef8aa15fa03f5bc254d"
+                }
+              }
+            },
+            {
+              "type": "transfer",
+              "detail": "USDC Transfer log",
+              "raw": [
+                {
+                  "kind": "transfer",
+                  "index": 1,
+                  "txHash": "0xce7021c13af3e1764bc9c5410bf5f9d991e1d382bb6a62555a672a5b582735cf",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x0573c4dA7fC31E944e5FF959fEf3b42199C308B2",
+                  "amount": "1000"
+                }
+              ]
+            },
+            {
+              "type": "receipt_validation",
+              "detail": "receipt logs matched",
+              "raw": {
+                "totalLogs": 2,
+                "authorizationLogs": 1,
+                "transferLogs": 1
+              }
+            }
+          ],
+          "topLevelTo": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "innerSelector": null
+        }
+      ],
+      "status": "fingerprinted"
+    },
+    {
+      "caseId": "spcat-nyne-endp_d6dt25r3ksxxs6gn8-route-0",
+      "providerName": "Nyne",
+      "serviceName": "Start an async person enrichment by email, phone number, or social media URL. Returns requestId for polling.",
+      "routeKind": "sponge_wrapper_x402",
+      "sourcePath": "fixtures/acquisition/paid_probe_retry_results.json",
+      "txHash": "0xbc6cf3b0c191cde3175a75ee8875ce095cfcc24d7e29a76e7dfa06058c46cf85",
+      "observationCount": 1,
+      "insertedObservations": 0,
+      "evidenceRowsUpdated": 0,
+      "observations": [
+        {
+          "chainId": 8453,
+          "txHash": "0xbc6cf3b0c191cde3175a75ee8875ce095cfcc24d7e29a76e7dfa06058c46cf85",
+          "blockNumber": 45297399,
+          "blockTimestamp": 1777384145,
+          "relayer": "0xb2bd29925cbbcea7628279c91945ca5b98bf371b",
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "recipient": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+          "amountAtomic": "20000",
+          "tokenAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "method": "multicall3_aggregate3",
+          "topLevelSelector": "0x82ad56cb",
+          "caseId": "spcat-nyne-endp_d6dt25r3ksxxs6gn8-route-0",
+          "stableHash": "ef52e0bb0af708501d90248093d78913362dcdacc595abbda0e811883adc8b7a",
+          "evidence": [
+            {
+              "type": "multicall",
+              "detail": "multicall3 aggregate3 decoded",
+              "raw": {
+                "call": {
+                  "target": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+                  "allowFailure": true,
+                  "callData": "0xcf09299500000000000000000000000062c2d106293398961894bcd4908b06a8620b73510000000000000000000000006302d9e6dbb22fec3c350551568bb39b4b35ad570000000000000000000000000000000000000000000000000000000000004e200000000000000000000000000000000000000000000000000000000069f0b8760000000000000000000000000000000000000000000000000000000069f0bbfae7afa791e0271ecdd92c38d201c036adb974ac35f634f793d91b8eab91772fb700000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000041624d75f3272660c96180ae1cb9584940bf20ee51a2240747a599f2e14a8d5c6c6b73e05bed4a10b1513fe58e20211303f05207a858f780a9f69d44200487dd081c00000000000000000000000000000000000000000000000000000000000000"
+                },
+                "args": {
+                  "authorizationKind": "bytes",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+                  "value": "20000",
+                  "validAfter": "1777383542",
+                  "validBefore": "1777384442",
+                  "nonce": "0xe7afa791e0271ecdd92c38d201c036adb974ac35f634f793d91b8eab91772fb7",
+                  "signature": "0x624d75f3272660c96180ae1cb9584940bf20ee51a2240747a599f2e14a8d5c6c6b73e05bed4a10b1513fe58e20211303f05207a858f780a9f69d44200487dd081c"
+                }
+              }
+            },
+            {
+              "type": "transfer",
+              "detail": "USDC Transfer log",
+              "raw": [
+                {
+                  "kind": "transfer",
+                  "index": 1,
+                  "txHash": "0xbc6cf3b0c191cde3175a75ee8875ce095cfcc24d7e29a76e7dfa06058c46cf85",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+                  "amount": "20000"
+                }
+              ]
+            },
+            {
+              "type": "receipt_validation",
+              "detail": "receipt logs matched",
+              "raw": {
+                "totalLogs": 2,
+                "authorizationLogs": 1,
+                "transferLogs": 1
+              }
+            }
+          ],
+          "topLevelTo": "0xca11bde05977b3631167028862be2a173976ca11",
+          "innerSelector": "0xcf092995"
+        }
+      ],
+      "status": "fingerprinted"
+    },
+    {
+      "caseId": "spcat-openrouter-endp_d6dt25g9hhg1p5hjr-route-0",
+      "providerName": "OpenRouter",
+      "serviceName": "Send messages (Anthropic-compatible).",
+      "routeKind": "sponge_wrapper_x402",
+      "sourcePath": "fixtures/acquisition/paid_probe_retry_results.json",
+      "txHash": "0x4cbb4fddb801fb064d7eac995476693851d1891c110938c810e3e5e958766eab",
+      "observationCount": 1,
+      "insertedObservations": 0,
+      "evidenceRowsUpdated": 0,
+      "observations": [
+        {
+          "chainId": 8453,
+          "txHash": "0x4cbb4fddb801fb064d7eac995476693851d1891c110938c810e3e5e958766eab",
+          "blockNumber": 45297407,
+          "blockTimestamp": 1777384161,
+          "relayer": "0xc6699d2aada6c36dfea5c248dd70f9cb0235cb63",
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "recipient": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+          "amountAtomic": "10000",
+          "tokenAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "method": "multicall3_aggregate3",
+          "topLevelSelector": "0x82ad56cb",
+          "caseId": "spcat-openrouter-endp_d6dt25g9hhg1p5hjr-route-0",
+          "stableHash": "babcde05044f1d1dcac4a14829370385b931e8dada7548f631e137c092e882ec",
+          "evidence": [
+            {
+              "type": "multicall",
+              "detail": "multicall3 aggregate3 decoded",
+              "raw": {
+                "call": {
+                  "target": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+                  "allowFailure": true,
+                  "callData": "0xcf09299500000000000000000000000062c2d106293398961894bcd4908b06a8620b73510000000000000000000000006302d9e6dbb22fec3c350551568bb39b4b35ad5700000000000000000000000000000000000000000000000000000000000027100000000000000000000000000000000000000000000000000000000069f0b8860000000000000000000000000000000000000000000000000000000069f0bc0ac7dac1552081115eeac56e4c7d18cac1fc7b3c1735b1366c23e43648f637349700000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000041f95ccc9d3152c4b97e7077239c3d87ede48024fcab5181d741cad5e3e435f66b39c8eab683cc5c3aa6233586d033fc5c32082051281543850cc3a5e9f51b7b1f1b00000000000000000000000000000000000000000000000000000000000000"
+                },
+                "args": {
+                  "authorizationKind": "bytes",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+                  "value": "10000",
+                  "validAfter": "1777383558",
+                  "validBefore": "1777384458",
+                  "nonce": "0xc7dac1552081115eeac56e4c7d18cac1fc7b3c1735b1366c23e43648f6373497",
+                  "signature": "0xf95ccc9d3152c4b97e7077239c3d87ede48024fcab5181d741cad5e3e435f66b39c8eab683cc5c3aa6233586d033fc5c32082051281543850cc3a5e9f51b7b1f1b"
+                }
+              }
+            },
+            {
+              "type": "transfer",
+              "detail": "USDC Transfer log",
+              "raw": [
+                {
+                  "kind": "transfer",
+                  "index": 1,
+                  "txHash": "0x4cbb4fddb801fb064d7eac995476693851d1891c110938c810e3e5e958766eab",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+                  "amount": "10000"
+                }
+              ]
+            },
+            {
+              "type": "receipt_validation",
+              "detail": "receipt logs matched",
+              "raw": {
+                "totalLogs": 2,
+                "authorizationLogs": 1,
+                "transferLogs": 1
+              }
+            }
+          ],
+          "topLevelTo": "0xca11bde05977b3631167028862be2a173976ca11",
+          "innerSelector": "0xcf092995"
+        }
+      ],
+      "status": "fingerprinted"
+    },
+    {
+      "caseId": "spcat-openrouter-endp_d6dt25gebfw60f440-route-0",
+      "providerName": "OpenRouter",
+      "serviceName": "Send text completion requests.",
+      "routeKind": "sponge_wrapper_x402",
+      "sourcePath": "fixtures/acquisition/paid_probe_retry_results.json",
+      "txHash": "0x4e5091d0c3c72ded64553875251f94e48e5d78a2db5487782859f2321b5f47e9",
+      "observationCount": 1,
+      "insertedObservations": 0,
+      "evidenceRowsUpdated": 0,
+      "observations": [
+        {
+          "chainId": 8453,
+          "txHash": "0x4e5091d0c3c72ded64553875251f94e48e5d78a2db5487782859f2321b5f47e9",
+          "blockNumber": 45297410,
+          "blockTimestamp": 1777384167,
+          "relayer": "0xc6699d2aada6c36dfea5c248dd70f9cb0235cb63",
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "recipient": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+          "amountAtomic": "10000",
+          "tokenAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "method": "multicall3_aggregate3",
+          "topLevelSelector": "0x82ad56cb",
+          "caseId": "spcat-openrouter-endp_d6dt25gebfw60f440-route-0",
+          "stableHash": "aa302d6495f59ff68e0d2b0aebc7066db670edebe41daafccdb4b8d7f88559bb",
+          "evidence": [
+            {
+              "type": "multicall",
+              "detail": "multicall3 aggregate3 decoded",
+              "raw": {
+                "call": {
+                  "target": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+                  "allowFailure": true,
+                  "callData": "0xcf09299500000000000000000000000062c2d106293398961894bcd4908b06a8620b73510000000000000000000000006302d9e6dbb22fec3c350551568bb39b4b35ad5700000000000000000000000000000000000000000000000000000000000027100000000000000000000000000000000000000000000000000000000069f0b88c0000000000000000000000000000000000000000000000000000000069f0bc10a5adb74c569ab465a4e86585bc15e390007e421cd0301c7a7873a81cf2fb9a6900000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000041ca631292b06a1e1ee9a0d5170d4a01593ea41a8864e4264ffe61995f8bf464f97e8ddfe57ab57faf6a8c9cd2ed8a412059e817f426baca9bf6afb0b07f71589a1c00000000000000000000000000000000000000000000000000000000000000"
+                },
+                "args": {
+                  "authorizationKind": "bytes",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+                  "value": "10000",
+                  "validAfter": "1777383564",
+                  "validBefore": "1777384464",
+                  "nonce": "0xa5adb74c569ab465a4e86585bc15e390007e421cd0301c7a7873a81cf2fb9a69",
+                  "signature": "0xca631292b06a1e1ee9a0d5170d4a01593ea41a8864e4264ffe61995f8bf464f97e8ddfe57ab57faf6a8c9cd2ed8a412059e817f426baca9bf6afb0b07f71589a1c"
+                }
+              }
+            },
+            {
+              "type": "transfer",
+              "detail": "USDC Transfer log",
+              "raw": [
+                {
+                  "kind": "transfer",
+                  "index": 1,
+                  "txHash": "0x4e5091d0c3c72ded64553875251f94e48e5d78a2db5487782859f2321b5f47e9",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+                  "amount": "10000"
+                }
+              ]
+            },
+            {
+              "type": "receipt_validation",
+              "detail": "receipt logs matched",
+              "raw": {
+                "totalLogs": 2,
+                "authorizationLogs": 1,
+                "transferLogs": 1
+              }
+            }
+          ],
+          "topLevelTo": "0xca11bde05977b3631167028862be2a173976ca11",
+          "innerSelector": "0xcf092995"
+        }
+      ],
+      "status": "fingerprinted"
+    },
+    {
+      "caseId": "spcat-openrouter-endp_d6dt25gejd5m69a4r-route-0",
+      "providerName": "OpenRouter",
+      "serviceName": "Generate embeddings for text input.",
+      "routeKind": "sponge_wrapper_x402",
+      "sourcePath": "fixtures/acquisition/paid_probe_retry_results.json",
+      "txHash": "0x6ea04efec9fc8edc2caf057113d7d5bfd0c7ef4487311aa80b209d3aefb4c98d",
+      "observationCount": 1,
+      "insertedObservations": 0,
+      "evidenceRowsUpdated": 0,
+      "observations": [
+        {
+          "chainId": 8453,
+          "txHash": "0x6ea04efec9fc8edc2caf057113d7d5bfd0c7ef4487311aa80b209d3aefb4c98d",
+          "blockNumber": 45297413,
+          "blockTimestamp": 1777384173,
+          "relayer": "0xb2bd29925cbbcea7628279c91945ca5b98bf371b",
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "recipient": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+          "amountAtomic": "10000",
+          "tokenAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "method": "multicall3_aggregate3",
+          "topLevelSelector": "0x82ad56cb",
+          "caseId": "spcat-openrouter-endp_d6dt25gejd5m69a4r-route-0",
+          "stableHash": "542c65cda18e6f02b693dd1056ff48f2268d64150c7e7aca1d56536a31253259",
+          "evidence": [
+            {
+              "type": "multicall",
+              "detail": "multicall3 aggregate3 decoded",
+              "raw": {
+                "call": {
+                  "target": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+                  "allowFailure": true,
+                  "callData": "0xcf09299500000000000000000000000062c2d106293398961894bcd4908b06a8620b73510000000000000000000000006302d9e6dbb22fec3c350551568bb39b4b35ad5700000000000000000000000000000000000000000000000000000000000027100000000000000000000000000000000000000000000000000000000069f0b8910000000000000000000000000000000000000000000000000000000069f0bc15e7af21cf0641af9065dfcb6267a71f05c069ea5d57dbba5ec77e7b012f4194a700000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000041bcdf280372003b5ec219906d892ef510a0063559d35e468c342beff9f3aa93a4704099f045584ba0a3eef08702f2bb20e6c69d672009cbeb073a1849a85153f11c00000000000000000000000000000000000000000000000000000000000000"
+                },
+                "args": {
+                  "authorizationKind": "bytes",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+                  "value": "10000",
+                  "validAfter": "1777383569",
+                  "validBefore": "1777384469",
+                  "nonce": "0xe7af21cf0641af9065dfcb6267a71f05c069ea5d57dbba5ec77e7b012f4194a7",
+                  "signature": "0xbcdf280372003b5ec219906d892ef510a0063559d35e468c342beff9f3aa93a4704099f045584ba0a3eef08702f2bb20e6c69d672009cbeb073a1849a85153f11c"
+                }
+              }
+            },
+            {
+              "type": "transfer",
+              "detail": "USDC Transfer log",
+              "raw": [
+                {
+                  "kind": "transfer",
+                  "index": 1,
+                  "txHash": "0x6ea04efec9fc8edc2caf057113d7d5bfd0c7ef4487311aa80b209d3aefb4c98d",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+                  "amount": "10000"
+                }
+              ]
+            },
+            {
+              "type": "receipt_validation",
+              "detail": "receipt logs matched",
+              "raw": {
+                "totalLogs": 2,
+                "authorizationLogs": 1,
+                "transferLogs": 1
+              }
+            }
+          ],
+          "topLevelTo": "0xca11bde05977b3631167028862be2a173976ca11",
+          "innerSelector": "0xcf092995"
+        }
+      ],
+      "status": "fingerprinted"
+    },
+    {
+      "caseId": "spcat-reducto-endp_d6dt25r3wagz5xvtr-route-0",
+      "providerName": "Reducto",
+      "serviceName": "Parse a document by URL and extract structured content. Supports PDFs, images, spreadsheets, and other document formats.",
+      "routeKind": "sponge_wrapper_x402",
+      "sourcePath": "fixtures/acquisition/paid_probe_retry_results.json",
+      "txHash": "0xf4d3907780e3589e64211adea1532ae8960d051dc88a7ecc35cb16ff7fe2c490",
+      "observationCount": 1,
+      "insertedObservations": 0,
+      "evidenceRowsUpdated": 0,
+      "observations": [
+        {
+          "chainId": 8453,
+          "txHash": "0xf4d3907780e3589e64211adea1532ae8960d051dc88a7ecc35cb16ff7fe2c490",
+          "blockNumber": 45297424,
+          "blockTimestamp": 1777384195,
+          "relayer": "0xb2bd29925cbbcea7628279c91945ca5b98bf371b",
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "recipient": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+          "amountAtomic": "50000",
+          "tokenAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "method": "multicall3_aggregate3",
+          "topLevelSelector": "0x82ad56cb",
+          "caseId": "spcat-reducto-endp_d6dt25r3wagz5xvtr-route-0",
+          "stableHash": "1a9453e92bed02203527704a5fe5055d970a4c77645fc66f833d88c2cb13b27f",
+          "evidence": [
+            {
+              "type": "multicall",
+              "detail": "multicall3 aggregate3 decoded",
+              "raw": {
+                "call": {
+                  "target": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+                  "allowFailure": true,
+                  "callData": "0xcf09299500000000000000000000000062c2d106293398961894bcd4908b06a8620b73510000000000000000000000006302d9e6dbb22fec3c350551568bb39b4b35ad57000000000000000000000000000000000000000000000000000000000000c3500000000000000000000000000000000000000000000000000000000069f0b8a80000000000000000000000000000000000000000000000000000000069f0bc2c2b807011af7b16a90f8d934d70203a4ed09a2684d8a043cb2250aeebbb558d9d00000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000041972d711b7a90618f52e314070cab403836df79504ed1c085fc1c04c83cfcd98d0b51f85cfa171a46400b525ba4e42ef617102dd552858e740a6c331a491cd5461b00000000000000000000000000000000000000000000000000000000000000"
+                },
+                "args": {
+                  "authorizationKind": "bytes",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+                  "value": "50000",
+                  "validAfter": "1777383592",
+                  "validBefore": "1777384492",
+                  "nonce": "0x2b807011af7b16a90f8d934d70203a4ed09a2684d8a043cb2250aeebbb558d9d",
+                  "signature": "0x972d711b7a90618f52e314070cab403836df79504ed1c085fc1c04c83cfcd98d0b51f85cfa171a46400b525ba4e42ef617102dd552858e740a6c331a491cd5461b"
+                }
+              }
+            },
+            {
+              "type": "transfer",
+              "detail": "USDC Transfer log",
+              "raw": [
+                {
+                  "kind": "transfer",
+                  "index": 1,
+                  "txHash": "0xf4d3907780e3589e64211adea1532ae8960d051dc88a7ecc35cb16ff7fe2c490",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+                  "amount": "50000"
+                }
+              ]
+            },
+            {
+              "type": "receipt_validation",
+              "detail": "receipt logs matched",
+              "raw": {
+                "totalLogs": 2,
+                "authorizationLogs": 1,
+                "transferLogs": 1
+              }
+            }
+          ],
+          "topLevelTo": "0xca11bde05977b3631167028862be2a173976ca11",
+          "innerSelector": "0xcf092995"
+        }
+      ],
+      "status": "fingerprinted"
+    },
+    {
+      "caseId": "spcat-reducto-endp_d6fpnfr461nqza2v8-route-0",
+      "providerName": "Reducto",
+      "serviceName": "Pull specific data from documents into structured JSON.",
+      "routeKind": "sponge_wrapper_x402",
+      "sourcePath": "fixtures/acquisition/paid_probe_retry_results.json",
+      "txHash": "0xbb3378e30b0f5b118fd5ada1e774a3625e5a58dfb55ad5a77e1a38d0096b0b1e",
+      "observationCount": 1,
+      "insertedObservations": 0,
+      "evidenceRowsUpdated": 0,
+      "observations": [
+        {
+          "chainId": 8453,
+          "txHash": "0xbb3378e30b0f5b118fd5ada1e774a3625e5a58dfb55ad5a77e1a38d0096b0b1e",
+          "blockNumber": 45297433,
+          "blockTimestamp": 1777384213,
+          "relayer": "0xc6699d2aada6c36dfea5c248dd70f9cb0235cb63",
+          "payer": "0x62C2d106293398961894BCd4908B06a8620B7351",
+          "recipient": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+          "amountAtomic": "50000",
+          "tokenAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "method": "multicall3_aggregate3",
+          "topLevelSelector": "0x82ad56cb",
+          "caseId": "spcat-reducto-endp_d6fpnfr461nqza2v8-route-0",
+          "stableHash": "f971ec28f9ab4882de29b16088b235e606949f80caaab54fd00174bf348bda37",
+          "evidence": [
+            {
+              "type": "multicall",
+              "detail": "multicall3 aggregate3 decoded",
+              "raw": {
+                "call": {
+                  "target": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+                  "allowFailure": true,
+                  "callData": "0xcf09299500000000000000000000000062c2d106293398961894bcd4908b06a8620b73510000000000000000000000006302d9e6dbb22fec3c350551568bb39b4b35ad57000000000000000000000000000000000000000000000000000000000000c3500000000000000000000000000000000000000000000000000000000069f0b8bb0000000000000000000000000000000000000000000000000000000069f0bc3fa05464694896487f2ff12279bcc8b2ce3abee3682ce508a0c8527de6dcf1d2fa00000000000000000000000000000000000000000000000000000000000000e000000000000000000000000000000000000000000000000000000000000000414b8f91d34ca564f74f1bdba232f6edaf9024c6b6a3d94817ea05c4e350ec70145c192b7113cd5638cb32374ca582d503b9a28d74500fe6b298e569f281fc845d1c00000000000000000000000000000000000000000000000000000000000000"
+                },
+                "args": {
+                  "authorizationKind": "bytes",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+                  "value": "50000",
+                  "validAfter": "1777383611",
+                  "validBefore": "1777384511",
+                  "nonce": "0xa05464694896487f2ff12279bcc8b2ce3abee3682ce508a0c8527de6dcf1d2fa",
+                  "signature": "0x4b8f91d34ca564f74f1bdba232f6edaf9024c6b6a3d94817ea05c4e350ec70145c192b7113cd5638cb32374ca582d503b9a28d74500fe6b298e569f281fc845d1c"
+                }
+              }
+            },
+            {
+              "type": "transfer",
+              "detail": "USDC Transfer log",
+              "raw": [
+                {
+                  "kind": "transfer",
+                  "index": 1,
+                  "txHash": "0xbb3378e30b0f5b118fd5ada1e774a3625e5a58dfb55ad5a77e1a38d0096b0b1e",
+                  "from": "0x62C2d106293398961894BCd4908B06a8620B7351",
+                  "to": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+                  "amount": "50000"
+                }
+              ]
+            },
+            {
+              "type": "receipt_validation",
+              "detail": "receipt logs matched",
+              "raw": {
+                "totalLogs": 2,
+                "authorizationLogs": 1,
+                "transferLogs": 1
+              }
+            }
+          ],
+          "topLevelTo": "0xca11bde05977b3631167028862be2a173976ca11",
+          "innerSelector": "0xcf092995"
+        }
+      ],
+      "status": "fingerprinted"
+    }
+  ],
+  "knownFingerprints": {
+    "schemaVersion": "1",
+    "chainId": 8453,
+    "collectedAt": "2026-04-29T03:05:09.216Z",
+    "fingerprints": [
+      {
+        "type": "recipient",
+        "value": "0x110cdBba7FE6434Ec4CE3464CC523942ad6Fb784",
+        "providerLabel": "CoinGecko recipient",
+        "middlemanLabel": null,
+        "facilitatorLabel": null,
+        "confidence": 75,
+        "sourceName": "paid-probe-rpc-enrichment",
+        "provenance": [
+          {
+            "source": "paid-probe-rpc-enrichment",
+            "sourceId": "paid_probe_results.json",
+            "docPath": null,
+            "caseId": "spcat-coingecko-endp_d6dt25rhf9jcfp9xm-route-0",
+            "transaction": "0xd55144936d08b50a4ae667c08f654666d1129af01ad277ef6c43b69231017e9e",
+            "requestUrl": null,
+            "collectedAt": "2026-04-29T03:05:09.216Z"
+          }
+        ]
+      },
+      {
+        "type": "recipient",
+        "value": "0x110cdBba7FE6434Ec4CE3464CC523942ad6Fb784",
+        "providerLabel": "CoinGecko recipient",
+        "middlemanLabel": null,
+        "facilitatorLabel": null,
+        "confidence": 75,
+        "sourceName": "paid-probe-rpc-enrichment",
+        "provenance": [
+          {
+            "source": "paid-probe-rpc-enrichment",
+            "sourceId": "paid_probe_results.json",
+            "docPath": null,
+            "caseId": "spcat-coingecko-endp_d6dt25rjmmfrpmkbr-route-0",
+            "transaction": "0x2236d490c0917dbfc5e22b5dc0a92a8c5b66fdd751ded55a2e35c40198a84e17",
+            "requestUrl": null,
+            "collectedAt": "2026-04-29T03:05:09.216Z"
+          }
+        ]
+      },
+      {
+        "type": "recipient",
+        "value": "0x110cdBba7FE6434Ec4CE3464CC523942ad6Fb784",
+        "providerLabel": "CoinGecko recipient",
+        "middlemanLabel": null,
+        "facilitatorLabel": null,
+        "confidence": 75,
+        "sourceName": "paid-probe-rpc-enrichment",
+        "provenance": [
+          {
+            "source": "paid-probe-rpc-enrichment",
+            "sourceId": "paid_probe_results.json",
+            "docPath": null,
+            "caseId": "spcat-coingecko-endp_d6dt25rmvx3yd7678-route-0",
+            "transaction": "0x569f193a2350aeb5d9a67dbd336a4dc802d22b36dd7578e856ac850ee7df22c6",
+            "requestUrl": null,
+            "collectedAt": "2026-04-29T03:05:09.216Z"
+          }
+        ]
+      },
+      {
+        "type": "recipient",
+        "value": "0x110cdBba7FE6434Ec4CE3464CC523942ad6Fb784",
+        "providerLabel": "CoinGecko recipient",
+        "middlemanLabel": null,
+        "facilitatorLabel": null,
+        "confidence": 75,
+        "sourceName": "paid-probe-rpc-enrichment",
+        "provenance": [
+          {
+            "source": "paid-probe-rpc-enrichment",
+            "sourceId": "paid_probe_results.json",
+            "docPath": null,
+            "caseId": "spcat-coingecko-endp_d6dt25rrhyje9v76r-route-0",
+            "transaction": "0x28d7c0504665480d0819561699fd72774ca6119d8f864caf8de730ee7f4f4f26",
+            "requestUrl": null,
+            "collectedAt": "2026-04-29T03:05:09.216Z"
+          }
+        ]
+      },
+      {
+        "type": "recipient",
+        "value": "0x110cdBba7FE6434Ec4CE3464CC523942ad6Fb784",
+        "providerLabel": "CoinGecko recipient",
+        "middlemanLabel": null,
+        "facilitatorLabel": null,
+        "confidence": 75,
+        "sourceName": "paid-probe-rpc-enrichment",
+        "provenance": [
+          {
+            "source": "paid-probe-rpc-enrichment",
+            "sourceId": "paid_probe_results.json",
+            "docPath": null,
+            "caseId": "spcat-coingecko-endp_d6dt25rxdc8zwkx4r-route-0",
+            "transaction": "0xe0bb38bc6c4f85a8a5de3672dec11609d580fbca172c39d26922bc2a42a3f909",
+            "requestUrl": null,
+            "collectedAt": "2026-04-29T03:05:09.216Z"
+          }
+        ]
+      },
+      {
+        "type": "recipient",
+        "value": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+        "providerLabel": null,
+        "middlemanLabel": null,
+        "facilitatorLabel": null,
+        "confidence": 75,
+        "sourceName": "paid-probe-rpc-enrichment",
+        "provenance": [
+          {
+            "source": "paid-probe-rpc-enrichment",
+            "sourceId": "paid_probe_results.json",
+            "docPath": null,
+            "caseId": "spcat-dome-endp_d6dt25gmj8sarre6c-route-0",
+            "transaction": "0xf28f059ac0f9f3b23b71d914d6b9ace59b62b82621d52d3df45573e1acdefd16",
+            "requestUrl": null,
+            "collectedAt": "2026-04-29T03:05:09.216Z"
+          }
+        ]
+      },
+      {
+        "type": "recipient",
+        "value": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+        "providerLabel": null,
+        "middlemanLabel": null,
+        "facilitatorLabel": null,
+        "confidence": 75,
+        "sourceName": "paid-probe-rpc-enrichment",
+        "provenance": [
+          {
+            "source": "paid-probe-rpc-enrichment",
+            "sourceId": "paid_probe_results.json",
+            "docPath": null,
+            "caseId": "spcat-dome-endp_d6dt25gp3e3jntpn4-route-0",
+            "transaction": "0xc105074edc115cdcfd30310f9659ec4673fcbd0dadaa12baa1a03509917a1ae4",
+            "requestUrl": null,
+            "collectedAt": "2026-04-29T03:05:09.216Z"
+          }
+        ]
+      },
+      {
+        "type": "recipient",
+        "value": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+        "providerLabel": null,
+        "middlemanLabel": null,
+        "facilitatorLabel": null,
+        "confidence": 75,
+        "sourceName": "paid-probe-rpc-enrichment",
+        "provenance": [
+          {
+            "source": "paid-probe-rpc-enrichment",
+            "sourceId": "paid_probe_results.json",
+            "docPath": null,
+            "caseId": "spcat-dome-endp_d6dt25gp3xja8jg68-route-0",
+            "transaction": "0x24aa51560808bdc055a7f10c747bdd46354099d53112e61c87aed7e4726cc392",
+            "requestUrl": null,
+            "collectedAt": "2026-04-29T03:05:09.216Z"
+          }
+        ]
+      },
+      {
+        "type": "recipient",
+        "value": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+        "providerLabel": null,
+        "middlemanLabel": null,
+        "facilitatorLabel": null,
+        "confidence": 75,
+        "sourceName": "paid-probe-rpc-enrichment",
+        "provenance": [
+          {
+            "source": "paid-probe-rpc-enrichment",
+            "sourceId": "paid_probe_results.json",
+            "docPath": null,
+            "caseId": "spcat-dome-endp_d6dt25gq3wvazgxdr-route-0",
+            "transaction": "0x2b9b2bd5c10d3d81e3c6b3ec4e550dee0b5ef1edcb6552a7280ac0375a5d406d",
+            "requestUrl": null,
+            "collectedAt": "2026-04-29T03:05:09.216Z"
+          }
+        ]
+      },
+      {
+        "type": "recipient",
+        "value": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+        "providerLabel": null,
+        "middlemanLabel": null,
+        "facilitatorLabel": null,
+        "confidence": 75,
+        "sourceName": "paid-probe-rpc-enrichment",
+        "provenance": [
+          {
+            "source": "paid-probe-rpc-enrichment",
+            "sourceId": "paid_probe_results.json",
+            "docPath": null,
+            "caseId": "spcat-dome-endp_d6dt25gzfp4w0a98w-route-0",
+            "transaction": "0x1858d70590b5f9357228312702ca1af17f27c1ef9f45d208d1f7730cd6e8729c",
+            "requestUrl": null,
+            "collectedAt": "2026-04-29T03:05:09.216Z"
+          }
+        ]
+      },
+      {
+        "type": "recipient",
+        "value": "0x6d6E695b09861467c7d462f5AAF31cF3540B9192",
+        "providerLabel": "Exa recipient",
+        "middlemanLabel": null,
+        "facilitatorLabel": null,
+        "confidence": 75,
+        "sourceName": "paid-probe-rpc-enrichment",
+        "provenance": [
+          {
+            "source": "paid-probe-rpc-enrichment",
+            "sourceId": "paid_probe_results.json",
+            "docPath": null,
+            "caseId": "spcat-exa-endp_d6dt25gwh4fj373v0-route-0",
+            "transaction": "0x0b70a61184863a9c1913c243e76347400051ba0c5e3d983d418b12a59ea03275",
+            "requestUrl": null,
+            "collectedAt": "2026-04-29T03:05:09.216Z"
+          }
+        ]
+      },
+      {
+        "type": "recipient",
+        "value": "0x3291E96b3bff7eD56e3ca8364273C5b4654b2B37",
+        "providerLabel": "Laso Finance recipient",
+        "middlemanLabel": null,
+        "facilitatorLabel": null,
+        "confidence": 75,
+        "sourceName": "paid-probe-rpc-enrichment",
+        "provenance": [
+          {
+            "source": "paid-probe-rpc-enrichment",
+            "sourceId": "paid_probe_results.json",
+            "docPath": null,
+            "caseId": "spcat-laso-endp_d6j9rfgsqhvymjchc-route-0",
+            "transaction": "0x881798dcc358238da2b56cecd4519f913cd385a3a08d92c4832863bf4ceff87d",
+            "requestUrl": null,
+            "collectedAt": "2026-04-29T03:05:09.216Z"
+          }
+        ]
+      },
+      {
+        "type": "recipient",
+        "value": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+        "providerLabel": "Nansen recipient",
+        "middlemanLabel": null,
+        "facilitatorLabel": null,
+        "confidence": 75,
+        "sourceName": "paid-probe-rpc-enrichment",
+        "provenance": [
+          {
+            "source": "paid-probe-rpc-enrichment",
+            "sourceId": "paid_probe_results.json",
+            "docPath": null,
+            "caseId": "spcat-nansen-endp_d6ef1g002pch7nk58-route-0",
+            "transaction": "0x8fb9493ce0ecc6cb5b7fda6a515e7cac4d5f65ab0a6c864bd4b104d725d0f673",
+            "requestUrl": null,
+            "collectedAt": "2026-04-29T03:05:09.216Z"
+          }
+        ]
+      },
+      {
+        "type": "recipient",
+        "value": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+        "providerLabel": "Nansen recipient",
+        "middlemanLabel": null,
+        "facilitatorLabel": null,
+        "confidence": 75,
+        "sourceName": "paid-probe-rpc-enrichment",
+        "provenance": [
+          {
+            "source": "paid-probe-rpc-enrichment",
+            "sourceId": "paid_probe_results.json",
+            "docPath": null,
+            "caseId": "spcat-nansen-endp_d6ef1g02n035nb3jg-route-0",
+            "transaction": "0x72a54d929d29a3fcb90daaa564ac3501bb71b7b9e1605e30285d455bf6625f83",
+            "requestUrl": null,
+            "collectedAt": "2026-04-29T03:05:09.216Z"
+          }
+        ]
+      },
+      {
+        "type": "recipient",
+        "value": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+        "providerLabel": "Nansen recipient",
+        "middlemanLabel": null,
+        "facilitatorLabel": null,
+        "confidence": 75,
+        "sourceName": "paid-probe-rpc-enrichment",
+        "provenance": [
+          {
+            "source": "paid-probe-rpc-enrichment",
+            "sourceId": "paid_probe_results.json",
+            "docPath": null,
+            "caseId": "spcat-nansen-endp_d6ef1g03xc6sj5xq8-route-0",
+            "transaction": "0xc477c9e4daacd88db60661cd1f71554cdaa0604aa9134028791451e571496fa9",
+            "requestUrl": null,
+            "collectedAt": "2026-04-29T03:05:09.216Z"
+          }
+        ]
+      },
+      {
+        "type": "recipient",
+        "value": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+        "providerLabel": "Nansen recipient",
+        "middlemanLabel": null,
+        "facilitatorLabel": null,
+        "confidence": 75,
+        "sourceName": "paid-probe-rpc-enrichment",
+        "provenance": [
+          {
+            "source": "paid-probe-rpc-enrichment",
+            "sourceId": "paid_probe_results.json",
+            "docPath": null,
+            "caseId": "spcat-nansen-endp_d6ef1g046q5ybwm7r-route-0",
+            "transaction": "0x479c13984c0ce5078a164bb461ef6f222da5322af5b2bdf5694399707465acee",
+            "requestUrl": null,
+            "collectedAt": "2026-04-29T03:05:09.216Z"
+          }
+        ]
+      },
+      {
+        "type": "recipient",
+        "value": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+        "providerLabel": "Nansen recipient",
+        "middlemanLabel": null,
+        "facilitatorLabel": null,
+        "confidence": 75,
+        "sourceName": "paid-probe-rpc-enrichment",
+        "provenance": [
+          {
+            "source": "paid-probe-rpc-enrichment",
+            "sourceId": "paid_probe_results.json",
+            "docPath": null,
+            "caseId": "spcat-nansen-endp_d6ef1g06580tt1mnw-route-0",
+            "transaction": "0xc20e95a18fea970f15a4aa37214443e9443f6054f4f60074f2cd79775668e488",
+            "requestUrl": null,
+            "collectedAt": "2026-04-29T03:05:09.216Z"
+          }
+        ]
+      },
+      {
+        "type": "recipient",
+        "value": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+        "providerLabel": "Nansen recipient",
+        "middlemanLabel": null,
+        "facilitatorLabel": null,
+        "confidence": 75,
+        "sourceName": "paid-probe-rpc-enrichment",
+        "provenance": [
+          {
+            "source": "paid-probe-rpc-enrichment",
+            "sourceId": "paid_probe_results.json",
+            "docPath": null,
+            "caseId": "spcat-nansen-endp_d6ef1g06rx80ep4pm-route-0",
+            "transaction": "0xd791f178d618025826024e9975c40681e20da08b969a0f1cc07adbb9dcb4d5f6",
+            "requestUrl": null,
+            "collectedAt": "2026-04-29T03:05:09.216Z"
+          }
+        ]
+      },
+      {
+        "type": "recipient",
+        "value": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+        "providerLabel": "Nansen recipient",
+        "middlemanLabel": null,
+        "facilitatorLabel": null,
+        "confidence": 75,
+        "sourceName": "paid-probe-rpc-enrichment",
+        "provenance": [
+          {
+            "source": "paid-probe-rpc-enrichment",
+            "sourceId": "paid_probe_results.json",
+            "docPath": null,
+            "caseId": "spcat-nansen-endp_d6ef1g09gdj9p3mfr-route-0",
+            "transaction": "0xc5d8b49dfbfce7bdec68f5749186204eeebb607f1c03c1a451f6ea143e7eaf73",
+            "requestUrl": null,
+            "collectedAt": "2026-04-29T03:05:09.216Z"
+          }
+        ]
+      },
+      {
+        "type": "recipient",
+        "value": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+        "providerLabel": "Nansen recipient",
+        "middlemanLabel": null,
+        "facilitatorLabel": null,
+        "confidence": 75,
+        "sourceName": "paid-probe-rpc-enrichment",
+        "provenance": [
+          {
+            "source": "paid-probe-rpc-enrichment",
+            "sourceId": "paid_probe_results.json",
+            "docPath": null,
+            "caseId": "spcat-nansen-endp_d6ef1g0bgan5w1v8r-route-0",
+            "transaction": "0x5b5c1f7a77bdcf9c340790c75958741d0c9a7b9f00d8509b67c9bf1bef3476cb",
+            "requestUrl": null,
+            "collectedAt": "2026-04-29T03:05:09.216Z"
+          }
+        ]
+      },
+      {
+        "type": "recipient",
+        "value": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+        "providerLabel": "Nansen recipient",
+        "middlemanLabel": null,
+        "facilitatorLabel": null,
+        "confidence": 75,
+        "sourceName": "paid-probe-rpc-enrichment",
+        "provenance": [
+          {
+            "source": "paid-probe-rpc-enrichment",
+            "sourceId": "paid_probe_results.json",
+            "docPath": null,
+            "caseId": "spcat-nansen-endp_d6ef1g0d9z6a87k6m-route-0",
+            "transaction": "0xb48b7b0d87f469f198b6096f8e500977817b5271814ab5b52d2d3d596af55b01",
+            "requestUrl": null,
+            "collectedAt": "2026-04-29T03:05:09.216Z"
+          }
+        ]
+      },
+      {
+        "type": "recipient",
+        "value": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+        "providerLabel": "Nansen recipient",
+        "middlemanLabel": null,
+        "facilitatorLabel": null,
+        "confidence": 75,
+        "sourceName": "paid-probe-rpc-enrichment",
+        "provenance": [
+          {
+            "source": "paid-probe-rpc-enrichment",
+            "sourceId": "paid_probe_results.json",
+            "docPath": null,
+            "caseId": "spcat-nansen-endp_d6ef1g0eafgwy5vjc-route-0",
+            "transaction": "0xed64c2278dd8c40ec4d3461ac7e1f4c2106d21cc2c421aa8dc11729b5a70049a",
+            "requestUrl": null,
+            "collectedAt": "2026-04-29T03:05:09.216Z"
+          }
+        ]
+      },
+      {
+        "type": "recipient",
+        "value": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+        "providerLabel": "Nansen recipient",
+        "middlemanLabel": null,
+        "facilitatorLabel": null,
+        "confidence": 75,
+        "sourceName": "paid-probe-rpc-enrichment",
+        "provenance": [
+          {
+            "source": "paid-probe-rpc-enrichment",
+            "sourceId": "paid_probe_results.json",
+            "docPath": null,
+            "caseId": "spcat-nansen-endp_d6ef1g0g5vqyz9wv4-route-0",
+            "transaction": "0x407af4a007f44b1154c383e717ccc0ba09b90f15c3d65d86d7c335660329fa28",
+            "requestUrl": null,
+            "collectedAt": "2026-04-29T03:05:09.216Z"
+          }
+        ]
+      },
+      {
+        "type": "recipient",
+        "value": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+        "providerLabel": "Nansen recipient",
+        "middlemanLabel": null,
+        "facilitatorLabel": null,
+        "confidence": 75,
+        "sourceName": "paid-probe-rpc-enrichment",
+        "provenance": [
+          {
+            "source": "paid-probe-rpc-enrichment",
+            "sourceId": "paid_probe_results.json",
+            "docPath": null,
+            "caseId": "spcat-nansen-endp_d6ef1g0hxsb0wge5r-route-0",
+            "transaction": "0xa22d567aa4590d57536ce8e94756a45b8282015ecdfae0c779ab3c90d37f0f52",
+            "requestUrl": null,
+            "collectedAt": "2026-04-29T03:05:09.216Z"
+          }
+        ]
+      },
+      {
+        "type": "recipient",
+        "value": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+        "providerLabel": "Nansen recipient",
+        "middlemanLabel": null,
+        "facilitatorLabel": null,
+        "confidence": 75,
+        "sourceName": "paid-probe-rpc-enrichment",
+        "provenance": [
+          {
+            "source": "paid-probe-rpc-enrichment",
+            "sourceId": "paid_probe_results.json",
+            "docPath": null,
+            "caseId": "spcat-nansen-endp_d6ef1g0k1reqnpk8w-route-0",
+            "transaction": "0x1d78ce0bb63de7e00d14f16047c3447544f563f2fc758a37efaecb68875b1137",
+            "requestUrl": null,
+            "collectedAt": "2026-04-29T03:05:09.216Z"
+          }
+        ]
+      },
+      {
+        "type": "recipient",
+        "value": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+        "providerLabel": "Nansen recipient",
+        "middlemanLabel": null,
+        "facilitatorLabel": null,
+        "confidence": 75,
+        "sourceName": "paid-probe-rpc-enrichment",
+        "provenance": [
+          {
+            "source": "paid-probe-rpc-enrichment",
+            "sourceId": "paid_probe_results.json",
+            "docPath": null,
+            "caseId": "spcat-nansen-endp_d6ef1g0n4gpbsxxdg-route-0",
+            "transaction": "0xe27641d2fbff5830f622b4be5b181375c7607013516fd3aa98f05bc90d87cc6e",
+            "requestUrl": null,
+            "collectedAt": "2026-04-29T03:05:09.216Z"
+          }
+        ]
+      },
+      {
+        "type": "recipient",
+        "value": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+        "providerLabel": "Nansen recipient",
+        "middlemanLabel": null,
+        "facilitatorLabel": null,
+        "confidence": 75,
+        "sourceName": "paid-probe-rpc-enrichment",
+        "provenance": [
+          {
+            "source": "paid-probe-rpc-enrichment",
+            "sourceId": "paid_probe_results.json",
+            "docPath": null,
+            "caseId": "spcat-nansen-endp_d6ef1g0se7ex497hm-route-0",
+            "transaction": "0xd01ebe9687aebc1ce66a177e16ae085c5f05592b73dbf931f7a94b6a63c60f80",
+            "requestUrl": null,
+            "collectedAt": "2026-04-29T03:05:09.216Z"
+          }
+        ]
+      },
+      {
+        "type": "recipient",
+        "value": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+        "providerLabel": null,
+        "middlemanLabel": null,
+        "facilitatorLabel": null,
+        "confidence": 75,
+        "sourceName": "paid-probe-rpc-enrichment",
+        "provenance": [
+          {
+            "source": "paid-probe-rpc-enrichment",
+            "sourceId": "paid_probe_results.json",
+            "docPath": null,
+            "caseId": "spcat-textbelt-endp_d6kv030qsth1y0ey8-route-0",
+            "transaction": "0x32f240144c428e7ddc2caffe7d771f91bc046492ad7d44bbda148a7019cb91f1",
+            "requestUrl": null,
+            "collectedAt": "2026-04-29T03:05:09.216Z"
+          }
+        ]
+      },
+      {
+        "type": "recipient",
+        "value": "0x6e3184C204e596dED89E8A5693B602097F4Ab687",
+        "providerLabel": "AgentMail recipient",
+        "middlemanLabel": null,
+        "facilitatorLabel": null,
+        "confidence": 75,
+        "sourceName": "paid-probe-rpc-enrichment",
+        "provenance": [
+          {
+            "source": "paid-probe-rpc-enrichment",
+            "sourceId": "paid_probe_retry_results.json",
+            "docPath": null,
+            "caseId": "spcat-agentmail-endp_d6krn581b0vmrys94-route-0",
+            "transaction": "0x1fcbe0c008a3657d6625a6fe1ab72148d4bd2e29732dd900b392d2d6afa2cc95",
+            "requestUrl": null,
+            "collectedAt": "2026-04-29T03:05:09.216Z"
+          }
+        ]
+      },
+      {
+        "type": "recipient",
+        "value": "0x6e3184C204e596dED89E8A5693B602097F4Ab687",
+        "providerLabel": "AgentMail recipient",
+        "middlemanLabel": null,
+        "facilitatorLabel": null,
+        "confidence": 75,
+        "sourceName": "paid-probe-rpc-enrichment",
+        "provenance": [
+          {
+            "source": "paid-probe-rpc-enrichment",
+            "sourceId": "paid_probe_retry_results.json",
+            "docPath": null,
+            "caseId": "spcat-agentmail-endp_d6krn58sdbsjt494g-route-0",
+            "transaction": "0xdf3cbdc064933e1e70d6b07e05c2a2e68f808c6770d3acf6e28f1666841a8038",
+            "requestUrl": null,
+            "collectedAt": "2026-04-29T03:05:09.216Z"
+          }
+        ]
+      },
+      {
+        "type": "recipient",
+        "value": "0x0573c4dA7fC31E944e5FF959fEf3b42199C308B2",
+        "providerLabel": "Alchemy recipient",
+        "middlemanLabel": null,
+        "facilitatorLabel": null,
+        "confidence": 75,
+        "sourceName": "paid-probe-rpc-enrichment",
+        "provenance": [
+          {
+            "source": "paid-probe-rpc-enrichment",
+            "sourceId": "paid_probe_retry_results.json",
+            "docPath": null,
+            "caseId": "spcat-alchemy-endp_d6gf1dr34cyasjf2g-route-0",
+            "transaction": "0x376fb6204585c10c59cf307b733421d6cabe312fde6bd30d750bd5b4a2500627",
+            "requestUrl": null,
+            "collectedAt": "2026-04-29T03:05:09.216Z"
+          }
+        ]
+      },
+      {
+        "type": "recipient",
+        "value": "0x0573c4dA7fC31E944e5FF959fEf3b42199C308B2",
+        "providerLabel": "Alchemy recipient",
+        "middlemanLabel": null,
+        "facilitatorLabel": null,
+        "confidence": 75,
+        "sourceName": "paid-probe-rpc-enrichment",
+        "provenance": [
+          {
+            "source": "paid-probe-rpc-enrichment",
+            "sourceId": "paid_probe_retry_results.json",
+            "docPath": null,
+            "caseId": "spcat-alchemy-endp_d6gf1draejxtpexz8-route-0",
+            "transaction": "0x928d6562b9a288f0eb6fcd7529f3dae6915ccc420f8a39f8178820c34f92699e",
+            "requestUrl": null,
+            "collectedAt": "2026-04-29T03:05:09.216Z"
+          }
+        ]
+      },
+      {
+        "type": "recipient",
+        "value": "0x0573c4dA7fC31E944e5FF959fEf3b42199C308B2",
+        "providerLabel": "Alchemy recipient",
+        "middlemanLabel": null,
+        "facilitatorLabel": null,
+        "confidence": 75,
+        "sourceName": "paid-probe-rpc-enrichment",
+        "provenance": [
+          {
+            "source": "paid-probe-rpc-enrichment",
+            "sourceId": "paid_probe_retry_results.json",
+            "docPath": null,
+            "caseId": "spcat-alchemy-endp_d6gf1drfbh3aeeh28-route-0",
+            "transaction": "0xb380a5d52f4aa19fd20203fc7199394ee191620e993abacdfdaff0552b46cfd9",
+            "requestUrl": null,
+            "collectedAt": "2026-04-29T03:05:09.216Z"
+          }
+        ]
+      },
+      {
+        "type": "recipient",
+        "value": "0x0573c4dA7fC31E944e5FF959fEf3b42199C308B2",
+        "providerLabel": "Alchemy recipient",
+        "middlemanLabel": null,
+        "facilitatorLabel": null,
+        "confidence": 75,
+        "sourceName": "paid-probe-rpc-enrichment",
+        "provenance": [
+          {
+            "source": "paid-probe-rpc-enrichment",
+            "sourceId": "paid_probe_retry_results.json",
+            "docPath": null,
+            "caseId": "spcat-alchemy-endp_d6gf1drmybrj5sgq4-route-0",
+            "transaction": "0x971c1ce1b0567f3df9d7d2c17a6e9e859d2b3879483ac4ded35e10a89faa274b",
+            "requestUrl": null,
+            "collectedAt": "2026-04-29T03:05:09.216Z"
+          }
+        ]
+      },
+      {
+        "type": "recipient",
+        "value": "0x0573c4dA7fC31E944e5FF959fEf3b42199C308B2",
+        "providerLabel": "Alchemy recipient",
+        "middlemanLabel": null,
+        "facilitatorLabel": null,
+        "confidence": 75,
+        "sourceName": "paid-probe-rpc-enrichment",
+        "provenance": [
+          {
+            "source": "paid-probe-rpc-enrichment",
+            "sourceId": "paid_probe_retry_results.json",
+            "docPath": null,
+            "caseId": "spcat-alchemy-endp_d6gf1drrz6y74ec28-route-0",
+            "transaction": "0xc8dbf5320fcf4c7f5a7b855b2f8895035cbf3625e448321f37fb323969b39a60",
+            "requestUrl": null,
+            "collectedAt": "2026-04-29T03:05:09.216Z"
+          }
+        ]
+      },
+      {
+        "type": "recipient",
+        "value": "0x0573c4dA7fC31E944e5FF959fEf3b42199C308B2",
+        "providerLabel": "Alchemy recipient",
+        "middlemanLabel": null,
+        "facilitatorLabel": null,
+        "confidence": 75,
+        "sourceName": "paid-probe-rpc-enrichment",
+        "provenance": [
+          {
+            "source": "paid-probe-rpc-enrichment",
+            "sourceId": "paid_probe_retry_results.json",
+            "docPath": null,
+            "caseId": "spcat-alchemy-endp_d6gf1drx1f1bbcb7r-route-0",
+            "transaction": "0xda429bd0a7c738c329aff81be862dfa2443fac720cc9abb142092d65cdc596a8",
+            "requestUrl": null,
+            "collectedAt": "2026-04-29T03:05:09.216Z"
+          }
+        ]
+      },
+      {
+        "type": "recipient",
+        "value": "0x0573c4dA7fC31E944e5FF959fEf3b42199C308B2",
+        "providerLabel": "Alchemy recipient",
+        "middlemanLabel": null,
+        "facilitatorLabel": null,
+        "confidence": 75,
+        "sourceName": "paid-probe-rpc-enrichment",
+        "provenance": [
+          {
+            "source": "paid-probe-rpc-enrichment",
+            "sourceId": "paid_probe_retry_results.json",
+            "docPath": null,
+            "caseId": "spcat-alchemy-endp_d6gf1drx2q1gbmz10-route-0",
+            "transaction": "0x67e4dacb61a6b64140c1a036e2f7cf564c46e07f73882f7dff354f363ef1d89d",
+            "requestUrl": null,
+            "collectedAt": "2026-04-29T03:05:09.216Z"
+          }
+        ]
+      },
+      {
+        "type": "recipient",
+        "value": "0x0573c4dA7fC31E944e5FF959fEf3b42199C308B2",
+        "providerLabel": "Alchemy recipient",
+        "middlemanLabel": null,
+        "facilitatorLabel": null,
+        "confidence": 75,
+        "sourceName": "paid-probe-rpc-enrichment",
+        "provenance": [
+          {
+            "source": "paid-probe-rpc-enrichment",
+            "sourceId": "paid_probe_retry_results.json",
+            "docPath": null,
+            "caseId": "spcat-alchemy-endp_d6gf1drx65936g4hg-route-0",
+            "transaction": "0xce7021c13af3e1764bc9c5410bf5f9d991e1d382bb6a62555a672a5b582735cf",
+            "requestUrl": null,
+            "collectedAt": "2026-04-29T03:05:09.216Z"
+          }
+        ]
+      },
+      {
+        "type": "recipient",
+        "value": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+        "providerLabel": null,
+        "middlemanLabel": null,
+        "facilitatorLabel": null,
+        "confidence": 75,
+        "sourceName": "paid-probe-rpc-enrichment",
+        "provenance": [
+          {
+            "source": "paid-probe-rpc-enrichment",
+            "sourceId": "paid_probe_retry_results.json",
+            "docPath": null,
+            "caseId": "spcat-nyne-endp_d6dt25r3ksxxs6gn8-route-0",
+            "transaction": "0xbc6cf3b0c191cde3175a75ee8875ce095cfcc24d7e29a76e7dfa06058c46cf85",
+            "requestUrl": null,
+            "collectedAt": "2026-04-29T03:05:09.216Z"
+          }
+        ]
+      },
+      {
+        "type": "recipient",
+        "value": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+        "providerLabel": null,
+        "middlemanLabel": null,
+        "facilitatorLabel": null,
+        "confidence": 75,
+        "sourceName": "paid-probe-rpc-enrichment",
+        "provenance": [
+          {
+            "source": "paid-probe-rpc-enrichment",
+            "sourceId": "paid_probe_retry_results.json",
+            "docPath": null,
+            "caseId": "spcat-openrouter-endp_d6dt25g9hhg1p5hjr-route-0",
+            "transaction": "0x4cbb4fddb801fb064d7eac995476693851d1891c110938c810e3e5e958766eab",
+            "requestUrl": null,
+            "collectedAt": "2026-04-29T03:05:09.216Z"
+          }
+        ]
+      },
+      {
+        "type": "recipient",
+        "value": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+        "providerLabel": null,
+        "middlemanLabel": null,
+        "facilitatorLabel": null,
+        "confidence": 75,
+        "sourceName": "paid-probe-rpc-enrichment",
+        "provenance": [
+          {
+            "source": "paid-probe-rpc-enrichment",
+            "sourceId": "paid_probe_retry_results.json",
+            "docPath": null,
+            "caseId": "spcat-openrouter-endp_d6dt25gebfw60f440-route-0",
+            "transaction": "0x4e5091d0c3c72ded64553875251f94e48e5d78a2db5487782859f2321b5f47e9",
+            "requestUrl": null,
+            "collectedAt": "2026-04-29T03:05:09.216Z"
+          }
+        ]
+      },
+      {
+        "type": "recipient",
+        "value": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+        "providerLabel": null,
+        "middlemanLabel": null,
+        "facilitatorLabel": null,
+        "confidence": 75,
+        "sourceName": "paid-probe-rpc-enrichment",
+        "provenance": [
+          {
+            "source": "paid-probe-rpc-enrichment",
+            "sourceId": "paid_probe_retry_results.json",
+            "docPath": null,
+            "caseId": "spcat-openrouter-endp_d6dt25gejd5m69a4r-route-0",
+            "transaction": "0x6ea04efec9fc8edc2caf057113d7d5bfd0c7ef4487311aa80b209d3aefb4c98d",
+            "requestUrl": null,
+            "collectedAt": "2026-04-29T03:05:09.216Z"
+          }
+        ]
+      },
+      {
+        "type": "recipient",
+        "value": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+        "providerLabel": null,
+        "middlemanLabel": null,
+        "facilitatorLabel": null,
+        "confidence": 75,
+        "sourceName": "paid-probe-rpc-enrichment",
+        "provenance": [
+          {
+            "source": "paid-probe-rpc-enrichment",
+            "sourceId": "paid_probe_retry_results.json",
+            "docPath": null,
+            "caseId": "spcat-reducto-endp_d6dt25r3wagz5xvtr-route-0",
+            "transaction": "0xf4d3907780e3589e64211adea1532ae8960d051dc88a7ecc35cb16ff7fe2c490",
+            "requestUrl": null,
+            "collectedAt": "2026-04-29T03:05:09.216Z"
+          }
+        ]
+      },
+      {
+        "type": "recipient",
+        "value": "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57",
+        "providerLabel": null,
+        "middlemanLabel": null,
+        "facilitatorLabel": null,
+        "confidence": 75,
+        "sourceName": "paid-probe-rpc-enrichment",
+        "provenance": [
+          {
+            "source": "paid-probe-rpc-enrichment",
+            "sourceId": "paid_probe_retry_results.json",
+            "docPath": null,
+            "caseId": "spcat-reducto-endp_d6fpnfr461nqza2v8-route-0",
+            "transaction": "0xbb3378e30b0f5b118fd5ada1e774a3625e5a58dfb55ad5a77e1a38d0096b0b1e",
+            "requestUrl": null,
+            "collectedAt": "2026-04-29T03:05:09.216Z"
+          }
+        ]
+      }
+    ]
+  },
+  "settlementFingerprintPacks": {
+    "schemaVersion": "1",
+    "chainId": 8453,
+    "collectedAt": "2026-04-29T03:05:09.216Z",
+    "fingerprints": [
+      {
+        "fingerprintId": "direct-transferwithauthorization-0x833589fcd6edb6e08f4c7c32d4f71b54bda02913-0xe3ee160e",
+        "clusterId": "direct_transferWithAuthorization_e3ee160e",
+        "displayName": "direct_transferWithAuthorization via 0xe3ee160e",
+        "method": "direct_transferWithAuthorization",
+        "topLevelTo": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+        "topLevelSelector": "0xe3ee160e",
+        "innerSelector": null,
+        "entityId": null,
+        "evidenceClass": "host_joined",
+        "baseConfidence": 90,
+        "reasons": [
+          "observed direct_transferWithAuthorization settlement in paid probe transaction"
+        ],
+        "evidenceRefs": [
+          "tx:0xd55144936d08b50a4ae667c08f654666d1129af01ad277ef6c43b69231017e9e:case:spcat-coingecko-endp_d6dt25rhf9jcfp9xm-route-0",
+          "tx:0x2236d490c0917dbfc5e22b5dc0a92a8c5b66fdd751ded55a2e35c40198a84e17:case:spcat-coingecko-endp_d6dt25rjmmfrpmkbr-route-0",
+          "tx:0x569f193a2350aeb5d9a67dbd336a4dc802d22b36dd7578e856ac850ee7df22c6:case:spcat-coingecko-endp_d6dt25rmvx3yd7678-route-0",
+          "tx:0x28d7c0504665480d0819561699fd72774ca6119d8f864caf8de730ee7f4f4f26:case:spcat-coingecko-endp_d6dt25rrhyje9v76r-route-0",
+          "tx:0xe0bb38bc6c4f85a8a5de3672dec11609d580fbca172c39d26922bc2a42a3f909:case:spcat-coingecko-endp_d6dt25rxdc8zwkx4r-route-0",
+          "tx:0x0b70a61184863a9c1913c243e76347400051ba0c5e3d983d418b12a59ea03275:case:spcat-exa-endp_d6dt25gwh4fj373v0-route-0",
+          "tx:0x881798dcc358238da2b56cecd4519f913cd385a3a08d92c4832863bf4ceff87d:case:spcat-laso-endp_d6j9rfgsqhvymjchc-route-0",
+          "tx:0x8fb9493ce0ecc6cb5b7fda6a515e7cac4d5f65ab0a6c864bd4b104d725d0f673:case:spcat-nansen-endp_d6ef1g002pch7nk58-route-0",
+          "tx:0x72a54d929d29a3fcb90daaa564ac3501bb71b7b9e1605e30285d455bf6625f83:case:spcat-nansen-endp_d6ef1g02n035nb3jg-route-0",
+          "tx:0xc477c9e4daacd88db60661cd1f71554cdaa0604aa9134028791451e571496fa9:case:spcat-nansen-endp_d6ef1g03xc6sj5xq8-route-0",
+          "tx:0x479c13984c0ce5078a164bb461ef6f222da5322af5b2bdf5694399707465acee:case:spcat-nansen-endp_d6ef1g046q5ybwm7r-route-0",
+          "tx:0xc20e95a18fea970f15a4aa37214443e9443f6054f4f60074f2cd79775668e488:case:spcat-nansen-endp_d6ef1g06580tt1mnw-route-0",
+          "tx:0xd791f178d618025826024e9975c40681e20da08b969a0f1cc07adbb9dcb4d5f6:case:spcat-nansen-endp_d6ef1g06rx80ep4pm-route-0",
+          "tx:0xc5d8b49dfbfce7bdec68f5749186204eeebb607f1c03c1a451f6ea143e7eaf73:case:spcat-nansen-endp_d6ef1g09gdj9p3mfr-route-0",
+          "tx:0x5b5c1f7a77bdcf9c340790c75958741d0c9a7b9f00d8509b67c9bf1bef3476cb:case:spcat-nansen-endp_d6ef1g0bgan5w1v8r-route-0",
+          "tx:0xb48b7b0d87f469f198b6096f8e500977817b5271814ab5b52d2d3d596af55b01:case:spcat-nansen-endp_d6ef1g0d9z6a87k6m-route-0",
+          "tx:0xed64c2278dd8c40ec4d3461ac7e1f4c2106d21cc2c421aa8dc11729b5a70049a:case:spcat-nansen-endp_d6ef1g0eafgwy5vjc-route-0",
+          "tx:0x407af4a007f44b1154c383e717ccc0ba09b90f15c3d65d86d7c335660329fa28:case:spcat-nansen-endp_d6ef1g0g5vqyz9wv4-route-0",
+          "tx:0xa22d567aa4590d57536ce8e94756a45b8282015ecdfae0c779ab3c90d37f0f52:case:spcat-nansen-endp_d6ef1g0hxsb0wge5r-route-0",
+          "tx:0x1d78ce0bb63de7e00d14f16047c3447544f563f2fc758a37efaecb68875b1137:case:spcat-nansen-endp_d6ef1g0k1reqnpk8w-route-0",
+          "tx:0xe27641d2fbff5830f622b4be5b181375c7607013516fd3aa98f05bc90d87cc6e:case:spcat-nansen-endp_d6ef1g0n4gpbsxxdg-route-0",
+          "tx:0xd01ebe9687aebc1ce66a177e16ae085c5f05592b73dbf931f7a94b6a63c60f80:case:spcat-nansen-endp_d6ef1g0se7ex497hm-route-0",
+          "tx:0x376fb6204585c10c59cf307b733421d6cabe312fde6bd30d750bd5b4a2500627:case:spcat-alchemy-endp_d6gf1dr34cyasjf2g-route-0",
+          "tx:0x928d6562b9a288f0eb6fcd7529f3dae6915ccc420f8a39f8178820c34f92699e:case:spcat-alchemy-endp_d6gf1draejxtpexz8-route-0",
+          "tx:0xb380a5d52f4aa19fd20203fc7199394ee191620e993abacdfdaff0552b46cfd9:case:spcat-alchemy-endp_d6gf1drfbh3aeeh28-route-0",
+          "tx:0x971c1ce1b0567f3df9d7d2c17a6e9e859d2b3879483ac4ded35e10a89faa274b:case:spcat-alchemy-endp_d6gf1drmybrj5sgq4-route-0",
+          "tx:0xc8dbf5320fcf4c7f5a7b855b2f8895035cbf3625e448321f37fb323969b39a60:case:spcat-alchemy-endp_d6gf1drrz6y74ec28-route-0",
+          "tx:0xda429bd0a7c738c329aff81be862dfa2443fac720cc9abb142092d65cdc596a8:case:spcat-alchemy-endp_d6gf1drx1f1bbcb7r-route-0",
+          "tx:0x67e4dacb61a6b64140c1a036e2f7cf564c46e07f73882f7dff354f363ef1d89d:case:spcat-alchemy-endp_d6gf1drx2q1gbmz10-route-0",
+          "tx:0xce7021c13af3e1764bc9c5410bf5f9d991e1d382bb6a62555a672a5b582735cf:case:spcat-alchemy-endp_d6gf1drx65936g4hg-route-0"
+        ]
+      },
+      {
+        "fingerprintId": "multicall3-aggregate3-0xca11bde05977b3631167028862be2a173976ca11-0x82ad56cb-0xcf092995",
+        "clusterId": "multicall3_aggregate3_82ad56cb",
+        "displayName": "multicall3_aggregate3 via 0x82ad56cb",
+        "method": "multicall3_aggregate3",
+        "topLevelTo": "0xca11bde05977b3631167028862be2a173976ca11",
+        "topLevelSelector": "0x82ad56cb",
+        "innerSelector": "0xcf092995",
+        "entityId": null,
+        "evidenceClass": "host_joined",
+        "baseConfidence": 90,
+        "reasons": ["observed multicall3_aggregate3 settlement in paid probe transaction"],
+        "evidenceRefs": [
+          "tx:0xf28f059ac0f9f3b23b71d914d6b9ace59b62b82621d52d3df45573e1acdefd16:case:spcat-dome-endp_d6dt25gmj8sarre6c-route-0",
+          "tx:0xc105074edc115cdcfd30310f9659ec4673fcbd0dadaa12baa1a03509917a1ae4:case:spcat-dome-endp_d6dt25gp3e3jntpn4-route-0",
+          "tx:0x24aa51560808bdc055a7f10c747bdd46354099d53112e61c87aed7e4726cc392:case:spcat-dome-endp_d6dt25gp3xja8jg68-route-0",
+          "tx:0x2b9b2bd5c10d3d81e3c6b3ec4e550dee0b5ef1edcb6552a7280ac0375a5d406d:case:spcat-dome-endp_d6dt25gq3wvazgxdr-route-0",
+          "tx:0x1858d70590b5f9357228312702ca1af17f27c1ef9f45d208d1f7730cd6e8729c:case:spcat-dome-endp_d6dt25gzfp4w0a98w-route-0",
+          "tx:0x32f240144c428e7ddc2caffe7d771f91bc046492ad7d44bbda148a7019cb91f1:case:spcat-textbelt-endp_d6kv030qsth1y0ey8-route-0",
+          "tx:0x1fcbe0c008a3657d6625a6fe1ab72148d4bd2e29732dd900b392d2d6afa2cc95:case:spcat-agentmail-endp_d6krn581b0vmrys94-route-0",
+          "tx:0xdf3cbdc064933e1e70d6b07e05c2a2e68f808c6770d3acf6e28f1666841a8038:case:spcat-agentmail-endp_d6krn58sdbsjt494g-route-0",
+          "tx:0xbc6cf3b0c191cde3175a75ee8875ce095cfcc24d7e29a76e7dfa06058c46cf85:case:spcat-nyne-endp_d6dt25r3ksxxs6gn8-route-0",
+          "tx:0x4cbb4fddb801fb064d7eac995476693851d1891c110938c810e3e5e958766eab:case:spcat-openrouter-endp_d6dt25g9hhg1p5hjr-route-0",
+          "tx:0x4e5091d0c3c72ded64553875251f94e48e5d78a2db5487782859f2321b5f47e9:case:spcat-openrouter-endp_d6dt25gebfw60f440-route-0",
+          "tx:0x6ea04efec9fc8edc2caf057113d7d5bfd0c7ef4487311aa80b209d3aefb4c98d:case:spcat-openrouter-endp_d6dt25gejd5m69a4r-route-0",
+          "tx:0xf4d3907780e3589e64211adea1532ae8960d051dc88a7ecc35cb16ff7fe2c490:case:spcat-reducto-endp_d6dt25r3wagz5xvtr-route-0",
+          "tx:0xbb3378e30b0f5b118fd5ada1e774a3625e5a58dfb55ad5a77e1a38d0096b0b1e:case:spcat-reducto-endp_d6fpnfr461nqza2v8-route-0"
+        ]
+      }
+    ]
+  }
+}

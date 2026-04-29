@@ -1,8 +1,8 @@
-import { db, env, initDb, type AppDatabase } from "../lib/db";
-import { buildPaymentObservations } from "../lib/observations/build-observation";
-import { storePaymentObservations } from "../lib/observations/store-observations";
-import { fetchRpcFixture, type FetchLike } from "../lib/rpc-fixtures";
-import { resolveBaseRpcUrl, resolveRpcRequestTimeoutMs } from "../lib/rpc-config";
+import { type AppDatabase, db, env, initDb } from "../../lib/db";
+import { buildPaymentObservations } from "../../lib/observations/build-observation";
+import { storePaymentObservations } from "../../lib/observations/store-observations";
+import { resolveBaseRpcUrl, resolveRpcRequestTimeoutMs } from "../../lib/rpc-config";
+import { type FetchLike, fetchRpcFixture } from "../../lib/rpc-fixtures";
 
 type RunRpcTxIngestOptions = {
   rpcUrl: string;
@@ -92,7 +92,7 @@ export const runRpcTxIngestFromCli = async () => {
   const txHash = readArg("--tx-hash") ?? process.argv[2];
   if (!txHash) {
     throw new Error(
-      "Usage: bun scripts/ingest-rpc-tx.ts --tx-hash <tx-hash>\nEnvironment: BASE_RPC_URL or ALCHEMY_API_KEY, RPC_REQUEST_TIMEOUT_MS",
+      "Usage: bun scripts/ingest/ingest-rpc-tx.ts --tx-hash <tx-hash>\nEnvironment: BASE_RPC_URL or ALCHEMY_API_KEY, RPC_REQUEST_TIMEOUT_MS",
     );
   }
 

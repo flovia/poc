@@ -1,6 +1,6 @@
+import { Database } from "bun:sqlite";
 import fs from "node:fs";
 import path from "node:path";
-import { Database } from "bun:sqlite";
 
 const resolvePath = (value: string) =>
   path.isAbsolute(value) ? value : path.resolve(process.cwd(), value);

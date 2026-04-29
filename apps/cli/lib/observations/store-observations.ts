@@ -1,4 +1,4 @@
-import { db, nowIso, type AppDatabase } from "../db";
+import { type AppDatabase, db, nowIso } from "../db";
 import type { PaymentObservationInput } from "../schema";
 
 const safeStringify = (value: unknown): string =>

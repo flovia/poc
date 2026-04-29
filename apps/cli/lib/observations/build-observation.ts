@@ -2,22 +2,22 @@ import crypto from "node:crypto";
 import {
   BASE_CHAIN_ID,
   BASE_USDC_ADDRESS,
-  BASE_USDC_ADDRESS as USDC,
   EXECUTE_WITH_AUTHORIZATION_SELECTOR,
   MULTICALL3_ADDRESS,
   MULTICALL3_AGGREGATE3_SELECTOR,
   TRANSFER_WITH_AUTHORIZATION_SELECTOR,
+  BASE_USDC_ADDRESS as USDC,
 } from "../constants";
+import { decodeTransferWithAuthorization } from "../decoder/direct-usdc";
+import { decodeReceiptLogsForUsdc } from "../decoder/logs";
+import { extractUsdcCallsFromMulticall } from "../decoder/multicall3";
+import { extractTopLevelSelector } from "../decoder/selectors";
 import type {
+  PaymentObservationInput,
   RawReceipt,
   RawTransaction,
   SettledEvidence,
-  PaymentObservationInput,
 } from "../schema";
-import { extractTopLevelSelector } from "../decoder/selectors";
-import { decodeReceiptLogsForUsdc } from "../decoder/logs";
-import { decodeTransferWithAuthorization } from "../decoder/direct-usdc";
-import { extractUsdcCallsFromMulticall } from "../decoder/multicall3";
 
 const toBlockNumber = (value: string): number => {
   if (value.startsWith("0x")) return Number.parseInt(value, 16);

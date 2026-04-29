@@ -1,11 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
-import { nowIso, db, env, type AppDatabase } from "../db";
+import { type AppDatabase, db, env, nowIso } from "../db";
 import {
-  validateKnownFingerprintsSeed,
   type KnownFingerprint,
   type KnownFingerprintSeedEntry,
   type KnownFingerprintsSeed,
+  validateKnownFingerprintsSeed,
 } from "../schema";
 
 const readJson = <T>(filePath: string): T => JSON.parse(fs.readFileSync(filePath, "utf8")) as T;

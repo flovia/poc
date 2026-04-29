@@ -1,7 +1,7 @@
 import {
   listAttributionCandidates,
-  listPaymentObservations,
   listPayerProfiles,
+  listPaymentObservations,
 } from "../../../cli/lib/aggregates/summaries";
 import type { AppDatabase } from "../../../cli/lib/db";
 import type {
@@ -11,11 +11,15 @@ import type {
   CustomerProfileDto,
   CustomerProviderUsageDto,
   CustomerTimelineEventDto,
+  RetentionMetricDto,
   UpsellOpportunity,
 } from "../api/customer-dto";
 
 const CUSTOMER_CAVEAT =
   "Customer projections are wallet-address based and do not claim verified human identity.";
+const D14_RETENTION_CAVEAT =
+  "D14 retention is computed from payer wallet first paid and last paid timestamps; it is wallet-address based and not verified human identity retention.";
+const D14_SECONDS = 14 * 24 * 60 * 60;
 
 type Observation = ReturnType<typeof listPaymentObservations>[number];
 type Candidate = ReturnType<typeof listAttributionCandidates>[number];
@@ -89,6 +93,45 @@ export const getCustomerProfileProjection = (
     providers,
     timeline: buildTimeline(observations, candidates, metrics),
     insights: buildInsights(metrics, providers),
+  };
+};
+
+export const getD14RetentionMetric = (database: AppDatabase): RetentionMetricDto => {
+  const cohorts = new Map<string, { cohortSize: number; retainedCount: number }>();
+
+  for (const profile of listPayerProfiles(database)) {
+    const cohortDate = toIsoDate(profile.first_seen_at).slice(0, 10);
+    const retained = profile.last_seen_at - profile.first_seen_at >= D14_SECONDS;
+    const cohort = cohorts.get(cohortDate) ?? { cohortSize: 0, retainedCount: 0 };
+
+    cohort.cohortSize += 1;
+    if (retained) {
+      cohort.retainedCount += 1;
+    }
+    cohorts.set(cohortDate, cohort);
+  }
+
+  const cohortRows = [...cohorts.entries()]
+    .map(([cohortDate, cohort]) => ({
+      cohortDate,
+      cohortSize: cohort.cohortSize,
+      retainedCount: cohort.retainedCount,
+      retentionRate: calculateRetentionRate(cohort.retainedCount, cohort.cohortSize),
+    }))
+    .sort((left, right) => left.cohortDate.localeCompare(right.cohortDate));
+  const cohortSize = cohortRows.reduce((total, cohort) => total + cohort.cohortSize, 0);
+  const retainedCount = cohortRows.reduce((total, cohort) => total + cohort.retainedCount, 0);
+
+  return {
+    metric: "d14_retention",
+    retentionDays: 14,
+    cohortBasis: "first_paid_at",
+    retainedBasis: "last_paid_at_at_or_after_d14",
+    cohortSize,
+    retainedCount,
+    retentionRate: calculateRetentionRate(retainedCount, cohortSize),
+    cohorts: cohortRows,
+    caveat: D14_RETENTION_CAVEAT,
   };
 };
 
@@ -334,6 +377,14 @@ const sumAtomic = (values: string[]): string =>
   values.reduce((total, value) => total + BigInt(value), 0n).toString();
 
 const roundRatio = (value: number): number => Math.round(value * 100) / 100;
+
+const calculateRetentionRate = (retainedCount: number, cohortSize: number): number => {
+  if (cohortSize === 0) {
+    return 0;
+  }
+
+  return roundRatio(retainedCount / cohortSize);
+};
 
 const toIsoDate = (timestampSeconds: number): string =>
   new Date(timestampSeconds * 1000).toISOString();

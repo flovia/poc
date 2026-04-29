@@ -1,4 +1,4 @@
-import { loadEndpointManifestFromFile } from "../lib/endpoint-manifest";
+import { loadEndpointManifestFromFile } from "../../lib/endpoint-manifest";
 
 const manifestPath = process.env.ENDPOINT_MANIFEST_PATH;
 const manifest = loadEndpointManifestFromFile(manifestPath);

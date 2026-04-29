@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { validateEndpointManifest, type RouteKind } from "../../lib/endpoint-manifest";
+import { type RouteKind, validateEndpointManifest } from "../../lib/endpoint-manifest";
 
 type Snapshot = {
   services: ServiceSnapshotRecord[];

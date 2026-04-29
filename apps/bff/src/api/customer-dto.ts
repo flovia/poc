@@ -63,3 +63,22 @@ export type CustomerProfileDto = {
   timeline: CustomerTimelineEventDto[];
   insights: CustomerInsightDto[];
 };
+
+export type RetentionCohortDto = {
+  cohortDate: string;
+  cohortSize: number;
+  retainedCount: number;
+  retentionRate: number;
+};
+
+export type RetentionMetricDto = {
+  metric: "d14_retention";
+  retentionDays: 14;
+  cohortBasis: "first_paid_at";
+  retainedBasis: "last_paid_at_at_or_after_d14";
+  cohortSize: number;
+  retainedCount: number;
+  retentionRate: number;
+  cohorts: RetentionCohortDto[];
+  caveat: string;
+};

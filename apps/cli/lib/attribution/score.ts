@@ -1,8 +1,8 @@
-import { db, nowIso, type AppDatabase } from "../db";
+import { BASE_USDC_ADDRESS, MULTICALL3_ADDRESS } from "../constants";
+import { type AppDatabase, db, nowIso } from "../db";
 import type { AttributionCandidate, AttributionCandidateType, KnownFingerprint } from "../schema";
 import { listProviderEndpointClaims } from "./provider-claims";
 import { listSettlementFingerprintPacks } from "./settlement-fingerprints";
-import { BASE_USDC_ADDRESS, MULTICALL3_ADDRESS } from "../constants";
 
 const BASE_MAINNET_CHAIN_ID = 8453;
 const PAYSPONGE_HOST_SUFFIX = ".x402.paysponge.com";

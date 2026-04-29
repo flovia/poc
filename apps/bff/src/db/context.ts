@@ -1,4 +1,4 @@
-import { createDb, initDb, type AppDatabase } from "../../../cli/lib/db";
+import { type AppDatabase, createDb, initDb } from "../../../cli/lib/db";
 
 export type BffDatabaseContext = {
   database: AppDatabase;

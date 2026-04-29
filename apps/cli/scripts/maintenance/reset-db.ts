@@ -1,4 +1,4 @@
-import { ensureDir, initDb, resetDb, env } from "../lib/db";
+import { ensureDir, env, initDb, resetDb } from "../../lib/db";
 
 ensureDir(".");
 

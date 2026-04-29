@@ -1,9 +1,9 @@
 import { decodeEventLog } from "viem";
 import {
   BASE_USDC_ADDRESS,
-  USDC_TRANSFER_WITH_AUTHORIZATION_ABI,
   EVENT_AUTHORIZATION_USED_TOPIC,
   EVENT_TRANSFER_TOPIC,
+  USDC_TRANSFER_WITH_AUTHORIZATION_ABI,
 } from "../constants";
 import type { DecodedLogEvent, TxLog } from "../schema";
 
