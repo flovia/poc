@@ -143,6 +143,12 @@ describe("BFF routes", () => {
     expect(transactions.metadata.capturedCount).toBeGreaterThan(1000);
     expect(transactions.metadata.capturedCount).toBe(transactions.facts.length);
     expect(attribution.items).toHaveLength(transactions.facts.length);
+    expect(new Set(transactions.facts.map((fact) => fact.txHash)).size).toBe(
+      transactions.facts.length,
+    );
+    expect(new Set(attribution.items.map((item) => item.txHash)).size).toBe(
+      attribution.items.length,
+    );
     expect(transactions.facts[0]).toMatchObject({
       txHash: "0x6248880ec36541e6783ab756afdb427939f6209551b751cec5a2c97f71176d94",
       payerWallet: "0xac5a07c44a4f971667b3df4b6551fb6991b2142d",
@@ -178,6 +184,15 @@ describe("BFF routes", () => {
     ).toThrow("unknown txHash");
   });
 
+  test("rejects transaction facts without matching mock attribution", () => {
+    expect(() =>
+      joinTransactionAttribution(transactionFixture, {
+        ...attributionFixture,
+        items: attributionFixture.items.slice(1),
+      }),
+    ).toThrow("missing mock attribution");
+  });
+
   test("keeps onchain facts and demo attribution provenance separated", () => {
     const [record] = joinedPhaseBProjectionRecords;
 
@@ -208,5 +223,14 @@ describe("BFF routes", () => {
     expect(
       validatePhaseBWalletUsageGraphResponse(projections.walletUsageGraph).graph.reasons.length,
     ).toBeGreaterThan(0);
+    expect(
+      validatePhaseBWalletUsageGraphResponse(projections.walletUsageGraph).graph.providerWallets[0]
+        ?.payerWallets.length,
+    ).toBeLessThanOrEqual(100);
+    expect(
+      Object.values(projections.profilesByAddress).every(
+        (profile) => profile.profile.timeline.length <= 20 && profile.profile.providers.length <= 5,
+      ),
+    ).toBe(true);
   });
 });

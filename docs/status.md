@@ -126,7 +126,7 @@ latestSender: 0xac5a07c44a4f971667b3df4b6551fb6991b2142d
 latestBlockTimestamp: 2026-04-29T04:11:53Z
 ```
 
-現在の fixture capture は `2026-01-01T00:00:00Z` から `2026-04-29T23:59:59Z` までを対象に、`requestedLimit: 5000` で 1916 件の valid transfer facts を保存している。
+現在の fixture capture は `2026-01-01T00:00:00Z` から `2026-04-29T23:59:59Z` までを対象に、`requestedLimit: 5000` で 1908 件の unique valid transaction facts を保存している。
 
 ### 現時点では実データではない値
 

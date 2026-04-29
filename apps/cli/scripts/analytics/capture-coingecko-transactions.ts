@@ -150,18 +150,38 @@ const resolveBitqueryToken = (token: string | undefined) => {
   return token;
 };
 
+const uniqueTransfersByTxHash = (transfers: BitqueryTransferFact[]): BitqueryTransferFact[] => {
+  const seen = new Set<string>();
+  const uniqueTransfers: BitqueryTransferFact[] = [];
+  for (const transfer of transfers) {
+    if (seen.has(transfer.txHash)) continue;
+    seen.add(transfer.txHash);
+    uniqueTransfers.push(transfer);
+  }
+  return uniqueTransfers;
+};
+
+const endpointIndexForTxHash = (txHash: string) => {
+  let hash = 0;
+  for (const character of txHash.toLowerCase()) {
+    hash = (hash * 31 + character.charCodeAt(0)) >>> 0;
+  }
+  return hash % COINGECKO_X402_ENDPOINTS.length;
+};
+
 const buildTransactionFixture = (
   options: CliOptions,
   transfers: BitqueryTransferFact[],
   generatedAt: string,
-): RealTransactionFixture =>
-  validateRealTransactionFixture({
+): RealTransactionFixture => {
+  const uniqueTransfers = uniqueTransfersByTxHash(transfers);
+  return validateRealTransactionFixture({
     generatedAt,
     providerId: options.providerId,
     resource: options.resource,
     metadata: {
       requestedLimit: options.limit,
-      capturedCount: transfers.length,
+      capturedCount: uniqueTransfers.length,
       timeWindow: options.timeWindow,
       source: {
         sourceKind: "bitquery",
@@ -171,7 +191,7 @@ const buildTransactionFixture = (
         fetchedAt: generatedAt,
       },
     },
-    facts: transfers.map((transfer) => ({
+    facts: uniqueTransfers.map((transfer) => ({
       txHash: transfer.txHash,
       payerWallet: transfer.sender,
       payTo: transfer.recipient,
@@ -183,6 +203,7 @@ const buildTransactionFixture = (
       provenance: "onchain_fact",
     })),
   });
+};
 
 export const buildMockAttributionFixture = (
   transactions: RealTransactionFixture,
@@ -195,8 +216,8 @@ export const buildMockAttributionFixture = (
       sourceId: "mock:x402-coingecko-endpoint-attribution",
       fetchedAt: transactions.generatedAt,
     },
-    items: transactions.facts.map((fact, index) => {
-      const endpoint = COINGECKO_X402_ENDPOINTS[index % COINGECKO_X402_ENDPOINTS.length];
+    items: transactions.facts.map((fact) => {
+      const endpoint = COINGECKO_X402_ENDPOINTS[endpointIndexForTxHash(fact.txHash)];
       return {
         txHash: fact.txHash,
         ...endpoint,

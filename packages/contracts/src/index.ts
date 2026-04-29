@@ -88,6 +88,7 @@ export const ProvenanceByFieldSchema = z.record(z.string(), DataProvenanceSchema
 export type ProvenanceByField = z.infer<typeof ProvenanceByFieldSchema>;
 
 export const AtomicAmountSchema = z.string().regex(/^\d+$/);
+export const TransactionHashSchema = z.string().regex(/^0x[a-f0-9]{64}$/i);
 export const EvidenceLabelSchema = z
   .object({
     provenance: DataProvenanceSchema,
@@ -164,7 +165,7 @@ export type CdpResource = z.infer<typeof CdpResourceSchema>;
 
 export const BitqueryLatestTransferSchema = z
   .object({
-    txHash: z.string().min(1),
+    txHash: TransactionHashSchema,
     sender: z.string().min(1),
     recipient: z.string().min(1),
     amountAtomic: z.string().regex(/^\d+$/),
@@ -177,7 +178,7 @@ export type BitqueryLatestTransfer = z.infer<typeof BitqueryLatestTransferSchema
 
 export const BitqueryTransferFactSchema = z
   .object({
-    txHash: z.string().min(1),
+    txHash: TransactionHashSchema,
     sender: EvmAddressSchema,
     recipient: EvmAddressSchema,
     amountAtomic: AtomicAmountSchema,
@@ -361,13 +362,24 @@ export const RealTransactionFixtureSchema = z
         path: ["metadata", "capturedCount"],
       });
     }
+    const seenTxHashes = new Set<string>();
+    for (const [index, fact] of value.facts.entries()) {
+      if (seenTxHashes.has(fact.txHash)) {
+        ctx.addIssue({
+          code: "custom",
+          message: "facts txHash values must be unique",
+          path: ["facts", index, "txHash"],
+        });
+      }
+      seenTxHashes.add(fact.txHash);
+    }
   });
 
 export type RealTransactionFixture = z.infer<typeof RealTransactionFixtureSchema>;
 
 export const MockEndpointAttributionItemSchema = z
   .object({
-    txHash: z.string().min(1),
+    txHash: TransactionHashSchema,
     endpointPath: z.string().min(1),
     endpointName: z.string().min(1),
     workflowLabel: z.string().min(1),
@@ -392,7 +404,20 @@ export const MockEndpointAttributionFixtureSchema = z
     source: SourceProvenanceSchema.extend({ sourceKind: z.literal("derived") }),
     items: z.array(MockEndpointAttributionItemSchema).min(1),
   })
-  .strict();
+  .strict()
+  .superRefine((value, ctx) => {
+    const seenTxHashes = new Set<string>();
+    for (const [index, item] of value.items.entries()) {
+      if (seenTxHashes.has(item.txHash)) {
+        ctx.addIssue({
+          code: "custom",
+          message: "attribution txHash values must be unique",
+          path: ["items", index, "txHash"],
+        });
+      }
+      seenTxHashes.add(item.txHash);
+    }
+  });
 
 export type MockEndpointAttributionFixture = z.infer<typeof MockEndpointAttributionFixtureSchema>;
 

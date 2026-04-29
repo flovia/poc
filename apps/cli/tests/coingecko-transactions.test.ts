@@ -102,10 +102,9 @@ describe("coingecko transaction capture script", () => {
       expect(attribution.items).toHaveLength(3);
       expect(attribution.items[0]).toMatchObject({
         txHash: transactions.facts[0].txHash,
-        endpointPath: "/api/v3/x402/onchain/search/pools",
-        workflowLabel: "pool discovery",
       });
-      expect(attribution.items[1].endpointPath).toContain("token_price");
+      expect(attribution.items[0].endpointPath).toMatch(/^\/api\/v3\/x402\//);
+      expect(attribution.items[0].reasons).toHaveLength(1);
     }));
 
   test("builds deterministic attribution for every transaction fact", () => {

@@ -50,7 +50,7 @@ const buildBitqueryResponse = (payTo: string) => ({
         senderCount: 3,
         volume: "0.0021",
         latest: {
-          txHash: "0xtx",
+          txHash: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
           sender: "0xsender",
           recipient: payTo,
           amountAtomic: "0.0021",

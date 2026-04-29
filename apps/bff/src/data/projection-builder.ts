@@ -31,6 +31,8 @@ export type PhaseBProjectionSet = {
 };
 
 const generatedFrom = "phase-a-real-tx-plus-mock-attribution";
+const PROFILE_TIMELINE_LIMIT = 20;
+const GRAPH_PAYER_WALLET_LIMIT = 100;
 
 const demoReason: EvidenceLabel = {
   provenance: "demo_label",
@@ -59,6 +61,11 @@ const joinValidatedTransactionAttribution = (
   attribution: MockEndpointAttributionFixture,
 ): JoinedProjectionRecord[] => {
   const factsByHash = new Map(transactions.facts.map((fact) => [fact.txHash, fact]));
+  const attributionHashes = new Set(attribution.items.map((item) => item.txHash));
+  const missingAttribution = transactions.facts.find((fact) => !attributionHashes.has(fact.txHash));
+  if (missingAttribution) {
+    throw new Error(`transaction fact missing mock attribution: ${missingAttribution.txHash}`);
+  }
   return attribution.items.map((item) => {
     const fact = factsByHash.get(item.txHash);
     if (!fact) {
@@ -108,6 +115,19 @@ const unique = <T>(items: T[]) => [...new Set(items)];
 
 const uniqueEndpointCount = (records: JoinedProjectionRecord[]) =>
   unique(records.map((record) => record.endpointPath)).length;
+
+const byEndpoint = (records: JoinedProjectionRecord[]) => {
+  const grouped = new Map<string, JoinedProjectionRecord[]>();
+  for (const record of records) {
+    const existing = grouped.get(record.endpointPath);
+    if (existing) existing.push(record);
+    else grouped.set(record.endpointPath, [record]);
+  }
+  return [...grouped.values()].map((endpointRecords) => endpointRecords);
+};
+
+const firstSeenAt = (records: JoinedProjectionRecord[]) => records.at(-1)?.timestamp;
+const lastSeenAt = (records: JoinedProjectionRecord[]) => records[0]?.timestamp;
 
 export const buildPhaseBProjections = (
   transactionFixture: unknown,
@@ -210,16 +230,16 @@ export const buildPhaseBProjections = (
             },
             reasons: [onchainReason, demoReason],
           },
-          providers: records.map((record) => ({
+          providers: byEndpoint(records).map((endpointRecords) => ({
             providerId: transactions.providerId,
-            name: record.endpointName,
-            providerName: record.endpointName,
-            payToWallet: record.payTo,
-            spendAtomic: record.amount,
-            transactionCount: 1,
-            txCount: 1,
-            firstSeenAt: record.timestamp,
-            lastSeenAt: record.timestamp,
+            name: endpointRecords[0].endpointName,
+            providerName: endpointRecords[0].endpointName,
+            payToWallet: endpointRecords[0].payTo,
+            spendAtomic: sumAmounts(endpointRecords),
+            transactionCount: endpointRecords.length,
+            txCount: endpointRecords.length,
+            firstSeenAt: firstSeenAt(endpointRecords),
+            lastSeenAt: lastSeenAt(endpointRecords),
             confidence: 0.8,
             provenance: "derived_insight",
             provenanceByField: {
@@ -231,7 +251,7 @@ export const buildPhaseBProjections = (
             },
             reasons: [onchainReason, demoReason],
           })),
-          timeline: records.map((record) => ({
+          timeline: records.slice(0, PROFILE_TIMELINE_LIMIT).map((record) => ({
             at: record.timestamp,
             eventType: "payment",
             description: `${record.workflowLabel}: ${record.requestMethod} ${record.endpointPath}`,
@@ -306,56 +326,58 @@ export const buildPhaseBProjections = (
             payerWallets: "onchain_fact",
           },
           reasons: [onchainReason, demoReason],
-          payerWallets: grouped.map(({ payerWallet, records }) => ({
-            address: payerWallet,
-            label: payerWallet === grouped[0]?.payerWallet ? "Observed CoinGecko payer" : null,
-            sharedSpendAtomic: sumAmounts(records),
-            sharedTransactionCount: records.length,
-            overlapProviderCount: unique(records.map((record) => record.endpointPath)).length,
-            confidence: 0.8,
-            firstSeenAt: records.at(-1)?.timestamp,
-            lastSeenAt: records[0]?.timestamp,
-            provenance: "derived_insight",
-            provenanceByField: {
-              address: "onchain_fact",
-              sharedSpendAtomic: "onchain_fact",
-              sharedTransactionCount: "onchain_fact",
-              overlapProviderCount: "demo_label",
-            },
-            reasons: [onchainReason, demoReason],
-            observations: records.map((record) => ({
-              providerId: transactions.providerId,
-              providerName: "CoinGecko x402",
-              serviceName: record.workflowLabel,
-              sharedSpendAtomic: record.amount,
-              sharedTransactionCount: 1,
-              overlapProviderCount: 1,
-              confidence: 0.75,
-              firstSeenAt: record.timestamp,
-              lastSeenAt: record.timestamp,
+          payerWallets: grouped
+            .slice(0, GRAPH_PAYER_WALLET_LIMIT)
+            .map(({ payerWallet, records }) => ({
+              address: payerWallet,
+              label: payerWallet === grouped[0]?.payerWallet ? "Observed CoinGecko payer" : null,
+              sharedSpendAtomic: sumAmounts(records),
+              sharedTransactionCount: records.length,
+              overlapProviderCount: unique(records.map((record) => record.endpointPath)).length,
+              confidence: 0.8,
+              firstSeenAt: records.at(-1)?.timestamp,
+              lastSeenAt: records[0]?.timestamp,
               provenance: "derived_insight",
               provenanceByField: {
-                serviceName: "demo_label",
+                address: "onchain_fact",
                 sharedSpendAtomic: "onchain_fact",
+                sharedTransactionCount: "onchain_fact",
+                overlapProviderCount: "demo_label",
               },
               reasons: [onchainReason, demoReason],
+              observations: byEndpoint(records).map((endpointRecords) => ({
+                providerId: transactions.providerId,
+                providerName: "CoinGecko x402",
+                serviceName: endpointRecords[0].workflowLabel,
+                sharedSpendAtomic: sumAmounts(endpointRecords),
+                sharedTransactionCount: endpointRecords.length,
+                overlapProviderCount: 1,
+                confidence: 0.75,
+                firstSeenAt: firstSeenAt(endpointRecords),
+                lastSeenAt: lastSeenAt(endpointRecords),
+                provenance: "derived_insight",
+                provenanceByField: {
+                  serviceName: "demo_label",
+                  sharedSpendAtomic: "onchain_fact",
+                },
+                reasons: [onchainReason, demoReason],
+              })),
+              otherServiceCandidates: byEndpoint(records).map((endpointRecords) => ({
+                providerId: transactions.providerId,
+                providerName: "CoinGecko x402",
+                serviceName: endpointRecords[0].endpointName,
+                coUsageCount: endpointRecords.length,
+                confidence: 0.65,
+                payToWallet: endpointRecords[0].payTo,
+                provenance: "future_sdk_field",
+                provenanceByField: {
+                  serviceName: "demo_label",
+                  coUsageCount: "future_sdk_field",
+                  payToWallet: "onchain_fact",
+                },
+                reasons: [demoReason],
+              })),
             })),
-            otherServiceCandidates: records.map((record) => ({
-              providerId: transactions.providerId,
-              providerName: "CoinGecko x402",
-              serviceName: record.endpointName,
-              coUsageCount: 1,
-              confidence: 0.65,
-              payToWallet: record.payTo,
-              provenance: "future_sdk_field",
-              provenanceByField: {
-                serviceName: "demo_label",
-                coUsageCount: "future_sdk_field",
-                payToWallet: "onchain_fact",
-              },
-              reasons: [demoReason],
-            })),
-          })),
         },
       ],
     },

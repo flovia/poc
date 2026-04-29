@@ -1,10 +1,10 @@
 {
-  "generatedAt": "2026-04-29T11:23:38.413Z",
+  "generatedAt": "2026-04-29T11:38:00.805Z",
   "providerId": "coingecko",
   "resource": "https://pro-api.coingecko.com/api/v3/x402/onchain/search/pools",
   "metadata": {
     "requestedLimit": 5000,
-    "capturedCount": 1916,
+    "capturedCount": 1908,
     "timeWindow": {
       "from": "2026-01-01T00:00:00.000Z",
       "to": "2026-04-29T23:59:59.000Z"
@@ -14,7 +14,7 @@
       "sourceName": "bitquery-graphql",
       "sourceUrl": "https://streaming.bitquery.io/graphql",
       "sourceId": "bitquery:base:USDC:0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
-      "fetchedAt": "2026-04-29T11:23:38.413Z"
+      "fetchedAt": "2026-04-29T11:38:00.805Z"
     }
   },
   "facts": [
@@ -1130,17 +1130,6 @@
       "provenance": "onchain_fact"
     },
     {
-      "txHash": "0xe9aeb10282c5b0f46504d10453e3cd6dbc6e785d884d5b97ebd75975533f142b",
-      "payerWallet": "0x15c3cdd668c6c8dc0d9f0e2b9dde14d9a1ecbc2b",
-      "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
-      "amount": "10000",
-      "asset": "USDC",
-      "network": "base",
-      "timestamp": "2026-04-26T01:21:33Z",
-      "blockNumber": "45188573",
-      "provenance": "onchain_fact"
-    },
-    {
       "txHash": "0xd744022c5a2fee2dc50a5740cd4d481cf6bbcdf4ef68a84766e9c5177b762717",
       "payerWallet": "0x15c3cdd668c6c8dc0d9f0e2b9dde14d9a1ecbc2b",
       "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
@@ -1171,17 +1160,6 @@
       "network": "base",
       "timestamp": "2026-04-25T22:21:33Z",
       "blockNumber": "45183173",
-      "provenance": "onchain_fact"
-    },
-    {
-      "txHash": "0x6745e69ae5b9eeab03c35c4d6ab20b5119d53aba11ee3b314b8414fe7422d110",
-      "payerWallet": "0x15c3cdd668c6c8dc0d9f0e2b9dde14d9a1ecbc2b",
-      "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
-      "amount": "10000",
-      "asset": "USDC",
-      "network": "base",
-      "timestamp": "2026-04-25T21:21:33Z",
-      "blockNumber": "45181373",
       "provenance": "onchain_fact"
     },
     {
@@ -1391,17 +1369,6 @@
       "network": "base",
       "timestamp": "2026-04-25T15:18:37Z",
       "blockNumber": "45170485",
-      "provenance": "onchain_fact"
-    },
-    {
-      "txHash": "0x2a0a52d6087e0f098637f0b257b74fef5432794d187922390a560522c47802",
-      "payerWallet": "0x15c3cdd668c6c8dc0d9f0e2b9dde14d9a1ecbc2b",
-      "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
-      "amount": "10000",
-      "asset": "USDC",
-      "network": "base",
-      "timestamp": "2026-04-25T15:06:43Z",
-      "blockNumber": "45170128",
       "provenance": "onchain_fact"
     },
     {
@@ -2810,17 +2777,6 @@
       "network": "base",
       "timestamp": "2026-04-22T14:17:21Z",
       "blockNumber": "45039047",
-      "provenance": "onchain_fact"
-    },
-    {
-      "txHash": "0x31fc7781e6405631feec0e80bf7426322035cbb1c33f9795d2d3095b8bcf02",
-      "payerWallet": "0xeca6f83df56a010a738629454882669976d0e00c",
-      "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
-      "amount": "10000",
-      "asset": "USDC",
-      "network": "base",
-      "timestamp": "2026-04-22T14:14:13Z",
-      "blockNumber": "45038953",
       "provenance": "onchain_fact"
     },
     {
@@ -4306,17 +4262,6 @@
       "network": "base",
       "timestamp": "2026-04-17T20:46:11Z",
       "blockNumber": "44834712",
-      "provenance": "onchain_fact"
-    },
-    {
-      "txHash": "0xe7b8ddbaddd34d042f232f6ba1a0387f9b337e3a99d665b1c69a96971f6b58",
-      "payerWallet": "0x9cc42f3d9245b867acccd630b43f906c1665b176",
-      "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
-      "amount": "10000",
-      "asset": "USDC",
-      "network": "base",
-      "timestamp": "2026-04-17T20:39:05Z",
-      "blockNumber": "44834499",
       "provenance": "onchain_fact"
     },
     {
@@ -7144,6 +7089,17 @@
       "network": "base",
       "timestamp": "2026-03-31T05:46:03Z",
       "blockNumber": "44073308",
+      "provenance": "onchain_fact"
+    },
+    {
+      "txHash": "0x5eeeb2f15aa3cd00e402659dafb4e4dc2435dd91ebe265a754ba1020a0adb1f4",
+      "payerWallet": "0x8f5cb67b49555e614892b7233cfddebfb746e531",
+      "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
+      "amount": "10000",
+      "asset": "USDC",
+      "network": "base",
+      "timestamp": "2026-03-30T18:52:45Z",
+      "blockNumber": "44053709",
       "provenance": "onchain_fact"
     },
     {
@@ -10205,6 +10161,17 @@
       "provenance": "onchain_fact"
     },
     {
+      "txHash": "0x153f1b8798e95a5b9970213e9da0ab333bdcff0f41e37839bb53f1c0ca7f724a",
+      "payerWallet": "0x41fa1a9de7dbbc742f0e5ce8053aea6d8898c93e",
+      "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
+      "amount": "10000",
+      "asset": "USDC",
+      "network": "base",
+      "timestamp": "2026-03-11T08:59:25Z",
+      "blockNumber": "43215109",
+      "provenance": "onchain_fact"
+    },
+    {
       "txHash": "0xae9a848ad77c1778b0145966ab7c1fab53ea345f1575b95f036d14abb6ae39a7",
       "payerWallet": "0x41fa1a9de7dbbc742f0e5ce8053aea6d8898c93e",
       "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
@@ -10217,17 +10184,6 @@
     },
     {
       "txHash": "0x93a696624483543be2e52ed2df59d7aa703b94f13373e6cf33c8fdcff16a7638",
-      "payerWallet": "0x41fa1a9de7dbbc742f0e5ce8053aea6d8898c93e",
-      "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
-      "amount": "10000",
-      "asset": "USDC",
-      "network": "base",
-      "timestamp": "2026-03-11T08:59:25Z",
-      "blockNumber": "43215109",
-      "provenance": "onchain_fact"
-    },
-    {
-      "txHash": "0x153f1b8798e95a5b9970213e9da0ab333bdcff0f41e37839bb53f1c0ca7f724a",
       "payerWallet": "0x41fa1a9de7dbbc742f0e5ce8053aea6d8898c93e",
       "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
       "amount": "10000",
@@ -10425,6 +10381,17 @@
       "provenance": "onchain_fact"
     },
     {
+      "txHash": "0x007f0cea3d25ed291ed85a3e9e54f613e2fc5e232e9a65775681dbdaae940d75",
+      "payerWallet": "0x41fa1a9de7dbbc742f0e5ce8053aea6d8898c93e",
+      "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
+      "amount": "10000",
+      "asset": "USDC",
+      "network": "base",
+      "timestamp": "2026-03-11T08:51:43Z",
+      "blockNumber": "43214878",
+      "provenance": "onchain_fact"
+    },
+    {
       "txHash": "0x68f1cd01441e1d46599f3aa9b701b67a9a618de8dca613f8d48b1d2846925f66",
       "payerWallet": "0x41fa1a9de7dbbc742f0e5ce8053aea6d8898c93e",
       "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
@@ -10437,17 +10404,6 @@
     },
     {
       "txHash": "0x1b9ce44a28d772778bbb79445f4b7216b6fe5ae5508a7da1b52403d9b58d1e19",
-      "payerWallet": "0x41fa1a9de7dbbc742f0e5ce8053aea6d8898c93e",
-      "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
-      "amount": "10000",
-      "asset": "USDC",
-      "network": "base",
-      "timestamp": "2026-03-11T08:51:43Z",
-      "blockNumber": "43214878",
-      "provenance": "onchain_fact"
-    },
-    {
-      "txHash": "0x007f0cea3d25ed291ed85a3e9e54f613e2fc5e232e9a65775681dbdaae940d75",
       "payerWallet": "0x41fa1a9de7dbbc742f0e5ce8053aea6d8898c93e",
       "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
       "amount": "10000",
@@ -10612,6 +10568,17 @@
       "provenance": "onchain_fact"
     },
     {
+      "txHash": "0x11c6a28d5cb51714da7f625ff680afccf70c00dfe8e13a262ae4b4fe9106173a",
+      "payerWallet": "0x41fa1a9de7dbbc742f0e5ce8053aea6d8898c93e",
+      "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
+      "amount": "10000",
+      "asset": "USDC",
+      "network": "base",
+      "timestamp": "2026-03-11T08:48:59Z",
+      "blockNumber": "43214796",
+      "provenance": "onchain_fact"
+    },
+    {
       "txHash": "0xc403b606e44b9edd007abbb719f47ca04e3c56d4c4c0cef576a4e353c797c55d",
       "payerWallet": "0x41fa1a9de7dbbc742f0e5ce8053aea6d8898c93e",
       "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
@@ -10624,17 +10591,6 @@
     },
     {
       "txHash": "0x8ab4cce04994289a7873eee2feb7f3008c630ee555fdf3a8207e95f1d5b12110",
-      "payerWallet": "0x41fa1a9de7dbbc742f0e5ce8053aea6d8898c93e",
-      "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
-      "amount": "10000",
-      "asset": "USDC",
-      "network": "base",
-      "timestamp": "2026-03-11T08:48:59Z",
-      "blockNumber": "43214796",
-      "provenance": "onchain_fact"
-    },
-    {
-      "txHash": "0x11c6a28d5cb51714da7f625ff680afccf70c00dfe8e13a262ae4b4fe9106173a",
       "payerWallet": "0x41fa1a9de7dbbc742f0e5ce8053aea6d8898c93e",
       "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
       "amount": "10000",
@@ -11052,17 +11008,6 @@
       "provenance": "onchain_fact"
     },
     {
-      "txHash": "0xde9f748701a4e19cf5e67dec3f53a0f43fa0a5371868e784e3c2a05acdff626b",
-      "payerWallet": "0x3d54426879099855d2ae4bf5f81297454244ff98",
-      "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
-      "amount": "10000",
-      "asset": "USDC",
-      "network": "base",
-      "timestamp": "2026-03-09T18:43:45Z",
-      "blockNumber": "43146239",
-      "provenance": "onchain_fact"
-    },
-    {
       "txHash": "0x9e01a076323b134eb762792ae1114ba714b92cd9828fb813d183faa358808e9f",
       "payerWallet": "0x3d54426879099855d2ae4bf5f81297454244ff98",
       "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
@@ -11096,14 +11041,14 @@
       "provenance": "onchain_fact"
     },
     {
-      "txHash": "0xdcfa2a4efa2b930f7de335f17bb5942c12844bdeb8efc65341ae97493d691436",
+      "txHash": "0xde9f748701a4e19cf5e67dec3f53a0f43fa0a5371868e784e3c2a05acdff626b",
       "payerWallet": "0x3d54426879099855d2ae4bf5f81297454244ff98",
       "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
       "amount": "10000",
       "asset": "USDC",
       "network": "base",
-      "timestamp": "2026-03-09T18:43:43Z",
-      "blockNumber": "43146238",
+      "timestamp": "2026-03-09T18:43:45Z",
+      "blockNumber": "43146239",
       "provenance": "onchain_fact"
     },
     {
@@ -11140,14 +11085,14 @@
       "provenance": "onchain_fact"
     },
     {
-      "txHash": "0xf1331e34ea9e78444b5c429b88863781461e315fb648d6613f4085c6746b5721",
+      "txHash": "0xdcfa2a4efa2b930f7de335f17bb5942c12844bdeb8efc65341ae97493d691436",
       "payerWallet": "0x3d54426879099855d2ae4bf5f81297454244ff98",
       "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
       "amount": "10000",
       "asset": "USDC",
       "network": "base",
-      "timestamp": "2026-03-09T18:43:41Z",
-      "blockNumber": "43146237",
+      "timestamp": "2026-03-09T18:43:43Z",
+      "blockNumber": "43146238",
       "provenance": "onchain_fact"
     },
     {
@@ -11162,7 +11107,18 @@
       "provenance": "onchain_fact"
     },
     {
-      "txHash": "0xdca176975c1fb43605b03db6ed81fb2f675beca2d2fe7c8794f6d2eb01b9a7ee",
+      "txHash": "0xf1331e34ea9e78444b5c429b88863781461e315fb648d6613f4085c6746b5721",
+      "payerWallet": "0x3d54426879099855d2ae4bf5f81297454244ff98",
+      "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
+      "amount": "10000",
+      "asset": "USDC",
+      "network": "base",
+      "timestamp": "2026-03-09T18:43:41Z",
+      "blockNumber": "43146237",
+      "provenance": "onchain_fact"
+    },
+    {
+      "txHash": "0x5717f46cac7066a000a98ba1cc95a9a7d726ced592da8c7b6115e345f8457679",
       "payerWallet": "0x3d54426879099855d2ae4bf5f81297454244ff98",
       "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
       "amount": "10000",
@@ -11173,7 +11129,7 @@
       "provenance": "onchain_fact"
     },
     {
-      "txHash": "0x5717f46cac7066a000a98ba1cc95a9a7d726ced592da8c7b6115e345f8457679",
+      "txHash": "0xdca176975c1fb43605b03db6ed81fb2f675beca2d2fe7c8794f6d2eb01b9a7ee",
       "payerWallet": "0x3d54426879099855d2ae4bf5f81297454244ff98",
       "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
       "amount": "10000",
@@ -11239,7 +11195,7 @@
       "provenance": "onchain_fact"
     },
     {
-      "txHash": "0xf15d6ac7bdadbd8c90b3167b5c66bad21b1a3c51ff7eb9e3c3f53a7ecc608cac",
+      "txHash": "0x9a23a0ed1b21ffae094d5c0d03f8404c87e8bbd30e42c8010a2c91a794436b8d",
       "payerWallet": "0x3d54426879099855d2ae4bf5f81297454244ff98",
       "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
       "amount": "10000",
@@ -11250,7 +11206,7 @@
       "provenance": "onchain_fact"
     },
     {
-      "txHash": "0x9a23a0ed1b21ffae094d5c0d03f8404c87e8bbd30e42c8010a2c91a794436b8d",
+      "txHash": "0xf15d6ac7bdadbd8c90b3167b5c66bad21b1a3c51ff7eb9e3c3f53a7ecc608cac",
       "payerWallet": "0x3d54426879099855d2ae4bf5f81297454244ff98",
       "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
       "amount": "10000",
@@ -11272,7 +11228,7 @@
       "provenance": "onchain_fact"
     },
     {
-      "txHash": "0xf63d5448b8180aec659e4d2a12b528adb1946b968f50f918bff00cd297074a73",
+      "txHash": "0x16ead74baa622269b445799e124eb0cf17030d9dbe0f352df7ab80f92d0b23e1",
       "payerWallet": "0x3d54426879099855d2ae4bf5f81297454244ff98",
       "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
       "amount": "10000",
@@ -11283,7 +11239,7 @@
       "provenance": "onchain_fact"
     },
     {
-      "txHash": "0x16ead74baa622269b445799e124eb0cf17030d9dbe0f352df7ab80f92d0b23e1",
+      "txHash": "0xf63d5448b8180aec659e4d2a12b528adb1946b968f50f918bff00cd297074a73",
       "payerWallet": "0x3d54426879099855d2ae4bf5f81297454244ff98",
       "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
       "amount": "10000",
@@ -11448,17 +11404,6 @@
       "provenance": "onchain_fact"
     },
     {
-      "txHash": "0xd49489da6ba78bf1b60c9d6291ec4a98df89ada90daa8af2676f5504a82b9d21",
-      "payerWallet": "0x3d54426879099855d2ae4bf5f81297454244ff98",
-      "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
-      "amount": "10000",
-      "asset": "USDC",
-      "network": "base",
-      "timestamp": "2026-03-09T18:23:05Z",
-      "blockNumber": "43145619",
-      "provenance": "onchain_fact"
-    },
-    {
       "txHash": "0x6635f2ef9dc07f03ae3709102a3cf351d510152ccc24cb32f98cc9c489274376",
       "payerWallet": "0x3d54426879099855d2ae4bf5f81297454244ff98",
       "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
@@ -11471,6 +11416,17 @@
     },
     {
       "txHash": "0x3eafba1c5e9f7cf4c5e776770dc7f07cd4d57d59abd97345e6d2c96fcfd6e80b",
+      "payerWallet": "0x3d54426879099855d2ae4bf5f81297454244ff98",
+      "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
+      "amount": "10000",
+      "asset": "USDC",
+      "network": "base",
+      "timestamp": "2026-03-09T18:23:05Z",
+      "blockNumber": "43145619",
+      "provenance": "onchain_fact"
+    },
+    {
+      "txHash": "0xd49489da6ba78bf1b60c9d6291ec4a98df89ada90daa8af2676f5504a82b9d21",
       "payerWallet": "0x3d54426879099855d2ae4bf5f81297454244ff98",
       "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
       "amount": "10000",
@@ -11514,17 +11470,6 @@
       "provenance": "onchain_fact"
     },
     {
-      "txHash": "0xefb6010beab485c92333c6114609c6ef93f1e708e3640a178cd98953d82dfd67",
-      "payerWallet": "0x3d54426879099855d2ae4bf5f81297454244ff98",
-      "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
-      "amount": "10000",
-      "asset": "USDC",
-      "network": "base",
-      "timestamp": "2026-03-09T18:23:01Z",
-      "blockNumber": "43145617",
-      "provenance": "onchain_fact"
-    },
-    {
       "txHash": "0x92d7da26bf11242b188a32cb89efa946d5feb85782eea7e53334e1b118f0ced6",
       "payerWallet": "0x3d54426879099855d2ae4bf5f81297454244ff98",
       "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
@@ -11536,14 +11481,14 @@
       "provenance": "onchain_fact"
     },
     {
-      "txHash": "0xf10b110b6439afdd0e1d303b518b74dcd9f714de6b1bf90f4a25de6dce8b6f9b",
+      "txHash": "0xefb6010beab485c92333c6114609c6ef93f1e708e3640a178cd98953d82dfd67",
       "payerWallet": "0x3d54426879099855d2ae4bf5f81297454244ff98",
       "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
       "amount": "10000",
       "asset": "USDC",
       "network": "base",
-      "timestamp": "2026-03-09T18:22:57Z",
-      "blockNumber": "43145615",
+      "timestamp": "2026-03-09T18:23:01Z",
+      "blockNumber": "43145617",
       "provenance": "onchain_fact"
     },
     {
@@ -11558,14 +11503,14 @@
       "provenance": "onchain_fact"
     },
     {
-      "txHash": "0xf5e0fe1a8d874587a299d819658b171475b955757d11908ca1d3c18fa104d76c",
+      "txHash": "0xf10b110b6439afdd0e1d303b518b74dcd9f714de6b1bf90f4a25de6dce8b6f9b",
       "payerWallet": "0x3d54426879099855d2ae4bf5f81297454244ff98",
       "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
       "amount": "10000",
       "asset": "USDC",
       "network": "base",
-      "timestamp": "2026-03-09T18:22:55Z",
-      "blockNumber": "43145614",
+      "timestamp": "2026-03-09T18:22:57Z",
+      "blockNumber": "43145615",
       "provenance": "onchain_fact"
     },
     {
@@ -11580,7 +11525,18 @@
       "provenance": "onchain_fact"
     },
     {
-      "txHash": "0xf2542987f1529b178ee98f9ee368b9e28d9bd2e469a552f88b2e1432335bd8f2",
+      "txHash": "0xf5e0fe1a8d874587a299d819658b171475b955757d11908ca1d3c18fa104d76c",
+      "payerWallet": "0x3d54426879099855d2ae4bf5f81297454244ff98",
+      "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
+      "amount": "10000",
+      "asset": "USDC",
+      "network": "base",
+      "timestamp": "2026-03-09T18:22:55Z",
+      "blockNumber": "43145614",
+      "provenance": "onchain_fact"
+    },
+    {
+      "txHash": "0xacf59c159a7a0ec91f8db5e6627789b7c244a52d81bd048ee44fea9225455dbb",
       "payerWallet": "0x3d54426879099855d2ae4bf5f81297454244ff98",
       "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
       "amount": "10000",
@@ -11591,7 +11547,7 @@
       "provenance": "onchain_fact"
     },
     {
-      "txHash": "0xacf59c159a7a0ec91f8db5e6627789b7c244a52d81bd048ee44fea9225455dbb",
+      "txHash": "0xf2542987f1529b178ee98f9ee368b9e28d9bd2e469a552f88b2e1432335bd8f2",
       "payerWallet": "0x3d54426879099855d2ae4bf5f81297454244ff98",
       "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
       "amount": "10000",
@@ -11712,7 +11668,7 @@
       "provenance": "onchain_fact"
     },
     {
-      "txHash": "0xc45664ddc49a9af688a0254da4dc8082abc7c3993d523dfe234cb1255ab620b1",
+      "txHash": "0x0f2183746a6244f02d9ad07f26a3fecf6787e973fec921688764df0b92e4a6d6",
       "payerWallet": "0x3d54426879099855d2ae4bf5f81297454244ff98",
       "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
       "amount": "10000",
@@ -11723,7 +11679,7 @@
       "provenance": "onchain_fact"
     },
     {
-      "txHash": "0x0f2183746a6244f02d9ad07f26a3fecf6787e973fec921688764df0b92e4a6d6",
+      "txHash": "0xc45664ddc49a9af688a0254da4dc8082abc7c3993d523dfe234cb1255ab620b1",
       "payerWallet": "0x3d54426879099855d2ae4bf5f81297454244ff98",
       "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
       "amount": "10000",
@@ -11800,17 +11756,6 @@
       "provenance": "onchain_fact"
     },
     {
-      "txHash": "0xd349037468e93779316f6d0ec9d20a4a7516eeb4ed1ff50b35b8c1c95abb1aee",
-      "payerWallet": "0x3d54426879099855d2ae4bf5f81297454244ff98",
-      "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
-      "amount": "10000",
-      "asset": "USDC",
-      "network": "base",
-      "timestamp": "2026-03-09T18:13:17Z",
-      "blockNumber": "43145325",
-      "provenance": "onchain_fact"
-    },
-    {
       "txHash": "0x370fcf20fec6ac6766e2bd8ae50d2d93e7b0582e08524e19a8154dd6299cd647",
       "payerWallet": "0x3d54426879099855d2ae4bf5f81297454244ff98",
       "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
@@ -11823,6 +11768,17 @@
     },
     {
       "txHash": "0x1574f8e3b16b62be0c8a620f2eaec18871dc7f1b452bb03cacc1dd883817903f",
+      "payerWallet": "0x3d54426879099855d2ae4bf5f81297454244ff98",
+      "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
+      "amount": "10000",
+      "asset": "USDC",
+      "network": "base",
+      "timestamp": "2026-03-09T18:13:17Z",
+      "blockNumber": "43145325",
+      "provenance": "onchain_fact"
+    },
+    {
+      "txHash": "0xd349037468e93779316f6d0ec9d20a4a7516eeb4ed1ff50b35b8c1c95abb1aee",
       "payerWallet": "0x3d54426879099855d2ae4bf5f81297454244ff98",
       "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
       "amount": "10000",
@@ -11866,17 +11822,6 @@
       "provenance": "onchain_fact"
     },
     {
-      "txHash": "0xd1f81b2e22bc680532ca5b0928c9e67fb651d36a29ecfc7f0f3452e2c52ab0ec",
-      "payerWallet": "0x3d54426879099855d2ae4bf5f81297454244ff98",
-      "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
-      "amount": "10000",
-      "asset": "USDC",
-      "network": "base",
-      "timestamp": "2026-03-09T18:13:13Z",
-      "blockNumber": "43145323",
-      "provenance": "onchain_fact"
-    },
-    {
       "txHash": "0x966f2e0943844a38126e6d53560e4bbd4e7d959e248775b43864afd7865192b8",
       "payerWallet": "0x3d54426879099855d2ae4bf5f81297454244ff98",
       "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
@@ -11910,6 +11855,17 @@
       "provenance": "onchain_fact"
     },
     {
+      "txHash": "0xd1f81b2e22bc680532ca5b0928c9e67fb651d36a29ecfc7f0f3452e2c52ab0ec",
+      "payerWallet": "0x3d54426879099855d2ae4bf5f81297454244ff98",
+      "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
+      "amount": "10000",
+      "asset": "USDC",
+      "network": "base",
+      "timestamp": "2026-03-09T18:13:13Z",
+      "blockNumber": "43145323",
+      "provenance": "onchain_fact"
+    },
+    {
       "txHash": "0xf9c3b7c4dead5a93ee49b0be4a0de89956ea5e0f124574fd0109cbeba7c9d8cf",
       "payerWallet": "0x3d54426879099855d2ae4bf5f81297454244ff98",
       "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
@@ -11932,6 +11888,17 @@
       "provenance": "onchain_fact"
     },
     {
+      "txHash": "0x5d75a82e6a9767abcef52565e3f7e126df2f3142f757e4b2d33360b4faf7375d",
+      "payerWallet": "0x3d54426879099855d2ae4bf5f81297454244ff98",
+      "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
+      "amount": "10000",
+      "asset": "USDC",
+      "network": "base",
+      "timestamp": "2026-03-09T18:13:07Z",
+      "blockNumber": "43145320",
+      "provenance": "onchain_fact"
+    },
+    {
       "txHash": "0xd9a66c6fcf94cda05c03df064001dac000829d56e950dbbdf3f0fc80614bb627",
       "payerWallet": "0x3d54426879099855d2ae4bf5f81297454244ff98",
       "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
@@ -11944,17 +11911,6 @@
     },
     {
       "txHash": "0xc5926bcd2d70dc3ab98422a093b1800fcc56d5dd64135ce4d0b653f7fe8684c1",
-      "payerWallet": "0x3d54426879099855d2ae4bf5f81297454244ff98",
-      "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
-      "amount": "10000",
-      "asset": "USDC",
-      "network": "base",
-      "timestamp": "2026-03-09T18:13:07Z",
-      "blockNumber": "43145320",
-      "provenance": "onchain_fact"
-    },
-    {
-      "txHash": "0x5d75a82e6a9767abcef52565e3f7e126df2f3142f757e4b2d33360b4faf7375d",
       "payerWallet": "0x3d54426879099855d2ae4bf5f81297454244ff98",
       "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
       "amount": "10000",
@@ -11987,7 +11943,7 @@
       "provenance": "onchain_fact"
     },
     {
-      "txHash": "0xe47bd3a6faf5cccfd06f41e8d2a01ce1b85f1b7f01499427c106767702dac165",
+      "txHash": "0x7dd10850ddf4e7078181a10ba74af3f591e459e7285e8a78fb5f385716951f87",
       "payerWallet": "0x3d54426879099855d2ae4bf5f81297454244ff98",
       "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
       "amount": "10000",
@@ -11998,7 +11954,7 @@
       "provenance": "onchain_fact"
     },
     {
-      "txHash": "0x7dd10850ddf4e7078181a10ba74af3f591e459e7285e8a78fb5f385716951f87",
+      "txHash": "0xe47bd3a6faf5cccfd06f41e8d2a01ce1b85f1b7f01499427c106767702dac165",
       "payerWallet": "0x3d54426879099855d2ae4bf5f81297454244ff98",
       "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
       "amount": "10000",
@@ -12053,7 +12009,7 @@
       "provenance": "onchain_fact"
     },
     {
-      "txHash": "0xe39f274381327c274fe7c8b351def5e7ddca0a99b9f75708466e9e3a5ec73cb2",
+      "txHash": "0x39dcc17cb8f27c8ccbbb2dc231b73ef545f0380d2271cb5db62440e30f775b5e",
       "payerWallet": "0x3d54426879099855d2ae4bf5f81297454244ff98",
       "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
       "amount": "10000",
@@ -12064,7 +12020,7 @@
       "provenance": "onchain_fact"
     },
     {
-      "txHash": "0x39dcc17cb8f27c8ccbbb2dc231b73ef545f0380d2271cb5db62440e30f775b5e",
+      "txHash": "0xe39f274381327c274fe7c8b351def5e7ddca0a99b9f75708466e9e3a5ec73cb2",
       "payerWallet": "0x3d54426879099855d2ae4bf5f81297454244ff98",
       "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
       "amount": "10000",
@@ -15023,17 +14979,6 @@
       "provenance": "onchain_fact"
     },
     {
-      "txHash": "0x5f2a46a5560f98af834a071819f5ba3e09251ee883b1842946afc71c2ad7bf",
-      "payerWallet": "0x3d54426879099855d2ae4bf5f81297454244ff98",
-      "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
-      "amount": "10000",
-      "asset": "USDC",
-      "network": "base",
-      "timestamp": "2026-03-09T15:23:47Z",
-      "blockNumber": "43140240",
-      "provenance": "onchain_fact"
-    },
-    {
       "txHash": "0xe964ebcc26e14e147fa4ea43709da28b0c661350436fc8653a51c13cb61e7666",
       "payerWallet": "0x3d54426879099855d2ae4bf5f81297454244ff98",
       "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
@@ -15903,17 +15848,6 @@
       "provenance": "onchain_fact"
     },
     {
-      "txHash": "0x3b9f6880ab680757b4a255e5544190e05ac65c500dce01b2c8d57d862bb0c1",
-      "payerWallet": "0x3d54426879099855d2ae4bf5f81297454244ff98",
-      "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
-      "amount": "10000",
-      "asset": "USDC",
-      "network": "base",
-      "timestamp": "2026-03-09T15:13:49Z",
-      "blockNumber": "43139941",
-      "provenance": "onchain_fact"
-    },
-    {
       "txHash": "0xb4f4a458f8d63301bb41c0faccd9f2f7ea4122173dffae1f85e5a399761a05bd",
       "payerWallet": "0x3d54426879099855d2ae4bf5f81297454244ff98",
       "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
@@ -15966,17 +15900,6 @@
       "network": "base",
       "timestamp": "2026-03-09T15:13:41Z",
       "blockNumber": "43139937",
-      "provenance": "onchain_fact"
-    },
-    {
-      "txHash": "0x9cc6b624c986eeea8c581dadbdaf661f610ddca1704a246ed6cd78624dc0e2",
-      "payerWallet": "0x3d54426879099855d2ae4bf5f81297454244ff98",
-      "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
-      "amount": "10000",
-      "asset": "USDC",
-      "network": "base",
-      "timestamp": "2026-03-09T15:13:39Z",
-      "blockNumber": "43139936",
       "provenance": "onchain_fact"
     },
     {
@@ -20102,17 +20025,6 @@
       "network": "base",
       "timestamp": "2026-02-13T05:15:53Z",
       "blockNumber": "42085203",
-      "provenance": "onchain_fact"
-    },
-    {
-      "txHash": "0xb20f9cb443fb52fd551149bdc73e34ae0c4ec991b9abb49311a166f1481a29",
-      "payerWallet": "0xf194da8f2eec05d4a7eb644e3ea6aa8664351da8",
-      "payTo": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
-      "amount": "10000",
-      "asset": "USDC",
-      "network": "base",
-      "timestamp": "2026-02-13T05:15:47Z",
-      "blockNumber": "42085200",
       "provenance": "onchain_fact"
     },
     {

@@ -5,9 +5,11 @@ import {
   validateBitqueryAggregate,
   validateCdpResource,
   validateMarketSnapshot,
+  validateMockEndpointAttributionFixture,
   validatePhaseBCustomerListResponse,
   validatePhaseBCustomerProfileResponse,
   validatePhaseBWalletUsageGraphResponse,
+  validateRealTransactionFixture,
 } from "../src/index";
 
 const readFixture = <T>(name: string): T => {
@@ -94,6 +96,56 @@ describe("contracts schema validation", () => {
 
     expect(() => validateMarketSnapshot(valid)).not.toThrow();
     expect(() => validateMarketSnapshot(invalid)).toThrow();
+  });
+
+  test("rejects duplicate transaction and attribution txHash values", () => {
+    const fact = {
+      txHash: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      payerWallet: "0x1111111111111111111111111111111111111111",
+      payTo: "0x2222222222222222222222222222222222222222",
+      amount: "10000",
+      asset: "USDC",
+      network: "base",
+      timestamp: "2026-01-01T00:00:00Z",
+      provenance: "onchain_fact",
+    };
+
+    expect(() =>
+      validateRealTransactionFixture({
+        generatedAt: "2026-01-01T00:00:00Z",
+        providerId: "coingecko",
+        metadata: {
+          requestedLimit: 2,
+          capturedCount: 2,
+          timeWindow: { from: "2026-01-01T00:00:00Z" },
+          source: { sourceKind: "bitquery", sourceName: "bitquery-graphql" },
+        },
+        facts: [fact, fact],
+      }),
+    ).toThrow();
+
+    const attribution = {
+      txHash: fact.txHash,
+      endpointPath: "/api/v3/x402/simple/price",
+      endpointName: "Simple price",
+      workflowLabel: "price lookup",
+      requestMethod: "GET",
+      provenance: {
+        endpointPath: "demo_label",
+        endpointName: "demo_label",
+        workflowLabel: "future_sdk_field",
+        requestMethod: "demo_label",
+      },
+      reasons: [{ provenance: "demo_label", label: "mock attribution" }],
+    };
+
+    expect(() =>
+      validateMockEndpointAttributionFixture({
+        generatedAt: "2026-01-01T00:00:00Z",
+        source: { sourceKind: "derived", sourceName: "mock-attribution" },
+        items: [attribution, attribution],
+      }),
+    ).toThrow();
   });
 
   test("accepts a valid Phase B customer list response", () => {
