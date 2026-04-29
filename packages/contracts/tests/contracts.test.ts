@@ -124,6 +124,26 @@ describe("contracts schema validation", () => {
       }),
     ).toThrow();
 
+    expect(() =>
+      validateRealTransactionFixture({
+        generatedAt: "2026-01-01T00:00:00Z",
+        providerId: "coingecko",
+        metadata: {
+          requestedLimit: 2,
+          capturedCount: 2,
+          timeWindow: { from: "2026-01-01T00:00:00Z" },
+          source: { sourceKind: "bitquery", sourceName: "bitquery-graphql" },
+        },
+        facts: [
+          fact,
+          {
+            ...fact,
+            txHash: fact.txHash.toUpperCase().replace("X", "x"),
+          },
+        ],
+      }),
+    ).toThrow();
+
     const attribution = {
       txHash: fact.txHash,
       endpointPath: "/api/v3/x402/simple/price",
@@ -144,6 +164,20 @@ describe("contracts schema validation", () => {
         generatedAt: "2026-01-01T00:00:00Z",
         source: { sourceKind: "derived", sourceName: "mock-attribution" },
         items: [attribution, attribution],
+      }),
+    ).toThrow();
+
+    expect(() =>
+      validateMockEndpointAttributionFixture({
+        generatedAt: "2026-01-01T00:00:00Z",
+        source: { sourceKind: "derived", sourceName: "mock-attribution" },
+        items: [
+          attribution,
+          {
+            ...attribution,
+            txHash: attribution.txHash.toUpperCase().replace("X", "x"),
+          },
+        ],
       }),
     ).toThrow();
   });

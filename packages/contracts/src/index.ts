@@ -88,7 +88,10 @@ export const ProvenanceByFieldSchema = z.record(z.string(), DataProvenanceSchema
 export type ProvenanceByField = z.infer<typeof ProvenanceByFieldSchema>;
 
 export const AtomicAmountSchema = z.string().regex(/^\d+$/);
-export const TransactionHashSchema = z.string().regex(/^0x[a-f0-9]{64}$/i);
+export const TransactionHashSchema = z
+  .string()
+  .regex(/^0x[a-f0-9]{64}$/i)
+  .transform((value) => value.toLowerCase());
 export const EvidenceLabelSchema = z
   .object({
     provenance: DataProvenanceSchema,
@@ -364,14 +367,15 @@ export const RealTransactionFixtureSchema = z
     }
     const seenTxHashes = new Set<string>();
     for (const [index, fact] of value.facts.entries()) {
-      if (seenTxHashes.has(fact.txHash)) {
+      const txHash = fact.txHash.toLowerCase();
+      if (seenTxHashes.has(txHash)) {
         ctx.addIssue({
           code: "custom",
           message: "facts txHash values must be unique",
           path: ["facts", index, "txHash"],
         });
       }
-      seenTxHashes.add(fact.txHash);
+      seenTxHashes.add(txHash);
     }
   });
 
@@ -408,14 +412,15 @@ export const MockEndpointAttributionFixtureSchema = z
   .superRefine((value, ctx) => {
     const seenTxHashes = new Set<string>();
     for (const [index, item] of value.items.entries()) {
-      if (seenTxHashes.has(item.txHash)) {
+      const txHash = item.txHash.toLowerCase();
+      if (seenTxHashes.has(txHash)) {
         ctx.addIssue({
           code: "custom",
           message: "attribution txHash values must be unique",
           path: ["items", index, "txHash"],
         });
       }
-      seenTxHashes.add(item.txHash);
+      seenTxHashes.add(txHash);
     }
   });
 

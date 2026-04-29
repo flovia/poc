@@ -154,8 +154,9 @@ const uniqueTransfersByTxHash = (transfers: BitqueryTransferFact[]): BitqueryTra
   const seen = new Set<string>();
   const uniqueTransfers: BitqueryTransferFact[] = [];
   for (const transfer of transfers) {
-    if (seen.has(transfer.txHash)) continue;
-    seen.add(transfer.txHash);
+    const txHash = transfer.txHash.toLowerCase();
+    if (seen.has(txHash)) continue;
+    seen.add(txHash);
     uniqueTransfers.push(transfer);
   }
   return uniqueTransfers;
