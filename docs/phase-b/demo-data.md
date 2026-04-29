@@ -5,7 +5,7 @@
 
 ## 1. Canonical 契約ポリシー
 
-Phase B のデモレスポンスは、`docs/api-contract.md` で定義された
+Phase B のデモレスポンスは、`docs/phase-b/api-contract.md` で定義された
 canonical 契約に一致している必要があります。
 
 フロントエンド移行時の想定:

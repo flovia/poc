@@ -28,7 +28,7 @@ apps/bff/README.md
 apps/bff/src/http.ts
 apps/bff/src/data/
 packages/contracts
-docs/api-contract.md
+docs/phase-b/api-contract.md
 ```
 
 ## 起動方法
@@ -129,7 +129,7 @@ BFF の product endpoint は `packages/contracts` に定義された API contrac
 
 frontend は `apps/bff/src/data/*` の fixture 構造に直接依存せず、BFF endpoint の response と contract を境界として扱ってください。
 
-詳細な DTO 構造は `docs/api-contract.md` を参照してください。
+詳細な DTO 構造は `docs/phase-b/api-contract.md` を参照してください。
 
 ## Read-only 制約
 
@@ -145,7 +145,7 @@ frontend からは POST、PUT、PATCH、DELETE を呼び出さないでくださ
 
 - frontend は BFF の endpoint と API contract に依存する
 - frontend は `apps/bff/src/data/` 配下の内部 read model に直接依存しない
-- payload 形状を変更する場合は `packages/contracts` と `docs/api-contract.md` を先に確認する
+- payload 形状を変更する場合は `packages/contracts` と `docs/phase-b/api-contract.md` を先に確認する
 - 通常の `verify` に live RPC や外部 service 依存の検証を混ぜない
 - 画面側では `response.ok` を確認し、404 / 405 / network error を扱う
 
@@ -189,5 +189,5 @@ bun --filter bff test
 ## 関連ドキュメント
 
 - `apps/bff/README.md`
-- `docs/api-contract.md`
+- `docs/phase-b/api-contract.md`
 - `packages/contracts`

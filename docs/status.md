@@ -64,8 +64,8 @@ frontend はこのリポジトリの `apps/frontend` に統合済み。Customers
   - `apps/bff/src/data/projection-builder.ts` が `txHash` で join し、customer list / profile / wallet usage graph projection を生成する。
   - module initialization 時に `packages/contracts` の Phase B validator で検証する。
 - docs
-  - `docs/api-contract.md` に canonical 契約、provenance 契約、延期対象 endpoint を記載している。
-  - `docs/demo-data.md` に demo data / provenance のラベリング規則を記載している。
+  - `docs/phase-b/api-contract.md` に canonical 契約、provenance 契約、延期対象 endpoint を記載している。
+  - `docs/phase-b/demo-data.md` に demo data / provenance のラベリング規則を記載している。
   - `apps/bff/README.md` に BFF の endpoint、非公開 endpoint、read-only 方針を記載している。
 - `apps/frontend`
   - `lib/api/client.ts` が `/customers`、`/customers/:address/profile`、`/wallet-usage-graph` を取得する。
@@ -84,7 +84,7 @@ GET /customers/:address/profile
 GET /wallet-usage-graph
 ```
 
-product endpoint は `docs/api-contract.md` と `packages/contracts` の Phase B schema に従う。
+product endpoint は `docs/phase-b/api-contract.md` と `packages/contracts` の Phase B schema に従う。
 
 ### 初回実装では公開しない endpoint
 

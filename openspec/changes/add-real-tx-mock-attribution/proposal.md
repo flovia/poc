@@ -28,4 +28,4 @@ Phase B の BFF は現在 deterministic demo read model を返しているが、
 - `packages/contracts` の Phase B provenance / schema validation 利用箇所。
 - `packages/sources` の Bitquery transfer list adapter と、`apps/cli` または script による real transaction fixture / projection generation。
 - `openspec/specs/phase-b-demo-bff` と `openspec/specs/market-intelligence` の要件。
-- docs: `docs/demo-data.md`、`docs/status.md`、必要に応じて BFF README。
+- docs: `docs/phase-b/demo-data.md`、`docs/status.md`、必要に応じて BFF README。

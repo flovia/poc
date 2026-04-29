@@ -313,8 +313,9 @@ Phase B の BFF は、request path で live CDP / Bitquery / RPC を呼びませ
 docs/
   overview.md
   desired-state.md
-  api-contract.md                # BFF contract を置く場合
-  demo-data.md                   # demo dataset の意味論を置く場合
+  phase-b/
+    api-contract.md              # Phase B BFF contract を置く場合
+    demo-data.md                 # Phase B demo dataset の意味論を置く場合
 
 packages/
   contracts/

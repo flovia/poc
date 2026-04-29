@@ -34,6 +34,6 @@
 ## 5. Documentation and verification
 
 - [x] 5.1 Document the observed CoinGecko `payTo`, current aggregate counts, latest observed tx, and the five supported x402 endpoint paths in the relevant demo/projection docs.
-- [x] 5.2 Update `docs/demo-data.md` with the implemented `packages/sources` capture path, fixture paths, and generation flow.
+- [x] 5.2 Update `docs/phase-b/demo-data.md` with the implemented `packages/sources` capture path, fixture paths, and generation flow.
 - [x] 5.3 Update `docs/status.md` to describe the new Phase A fact + mock attribution projection state.
 - [x] 5.4 Run `bun run verify` from the repository root and fix any failures.

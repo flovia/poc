@@ -1,7 +1,7 @@
 ## 1. Contract / docs checkpoint
 
-- [x] 1.1 Review existing Phase B contract schemas in `packages/contracts` and confirm they match `docs/api-contract.md`
-- [x] 1.2 Ensure `docs/demo-data.md` explains fixture provenance rules for `onchain_fact`, `demo_label`, `future_sdk_field`, and `derived_insight`
+- [x] 1.1 Review existing Phase B contract schemas in `packages/contracts` and confirm they match `docs/phase-b/api-contract.md`
+- [x] 1.2 Ensure `docs/phase-b/demo-data.md` explains fixture provenance rules for `onchain_fact`, `demo_label`, `future_sdk_field`, and `derived_insight`
 - [x] 1.3 Run `cd packages/contracts && bun run typecheck && bun test`
 
 ## 2. Demo read model fixture

@@ -23,7 +23,7 @@ bun run verify
 - `GET /customers/:address/profile` -> Phase B wallet profile projection
 - `GET /wallet-usage-graph` -> Phase B co-usage graph projection
 
-product endpoint の response は `docs/api-contract.md` と `packages/contracts` の Phase B schema に従います。
+product endpoint の response は `docs/phase-b/api-contract.md` と `packages/contracts` の Phase B schema に従います。
 demo label や future SDK telemetry 想定値は専用 endpoint ではなく、上記 3 endpoint の
 response に内包され、`provenance` / `provenanceByField` / `reasons` で区別されます。
 
