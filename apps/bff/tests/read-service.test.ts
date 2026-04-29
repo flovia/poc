@@ -46,6 +46,25 @@ describe("BFF read service", () => {
         expect.objectContaining({ wallet: "0xrelayer", uniquePayers: 1, uniqueRecipients: 2 }),
       );
       expect(service.getWalletUsageGraph().payerWalletLanguage).toBe(true);
+
+      expect(service.getD14Retention()).toEqual({
+        metric: "d14_retention",
+        retentionDays: 14,
+        cohortBasis: "first_paid_at",
+        retainedBasis: "last_paid_at_at_or_after_d14",
+        cohortSize: 1,
+        retainedCount: 0,
+        retentionRate: 0,
+        cohorts: [
+          {
+            cohortDate: "2026-04-27",
+            cohortSize: 1,
+            retainedCount: 0,
+            retentionRate: 0,
+          },
+        ],
+        caveat: expect.stringContaining("wallet-address"),
+      });
     } finally {
       close();
     }

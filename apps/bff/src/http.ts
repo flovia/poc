@@ -21,6 +21,7 @@ const readonlyRoutes = new Set([
   "/wallets/recipients",
   "/wallets/relayers",
   "/wallet-usage-graph",
+  "/metrics/retention/d14",
   "/customers",
 ]);
 
@@ -63,6 +64,8 @@ export const createBffHandler = (service: BffReadService) => (request: Request) 
       return json(service.listRelayerWallets());
     case "/wallet-usage-graph":
       return json(service.getWalletUsageGraph());
+    case "/metrics/retention/d14":
+      return json(service.getD14Retention());
     case "/customers":
       return json(service.listCustomers());
     default:

@@ -21,6 +21,7 @@ describe("BFF routes", () => {
         "/wallets/recipients",
         "/wallets/relayers",
         "/wallet-usage-graph",
+        "/metrics/retention/d14",
         "/customers",
         "/customers/0xpayer/profile",
       ] as const;
@@ -56,6 +57,25 @@ describe("BFF routes", () => {
             providerCount: 2,
             upsellOpportunity: "medium",
           });
+        }
+
+        if (path === "/metrics/retention/d14") {
+          expect(body).toEqual(
+            expect.objectContaining({
+              metric: "d14_retention",
+              retentionDays: 14,
+              cohortSize: 1,
+              retainedCount: 0,
+              retentionRate: 0,
+              cohorts: [
+                expect.objectContaining({
+                  cohortDate: "2026-04-27",
+                  cohortSize: 1,
+                  retainedCount: 0,
+                }),
+              ],
+            }),
+          );
         }
 
         if (path === "/customers/0xpayer/profile") {
@@ -125,7 +145,7 @@ describe("BFF routes", () => {
     const handler = createBffHandler(service);
 
     try {
-      for (const path of ["/customers", "/customers/0xpayer/profile"]) {
+      for (const path of ["/metrics/retention/d14", "/customers", "/customers/0xpayer/profile"]) {
         const response = handler(request(path, { method: "POST" }));
         const body = (await response.json()) as { error: string };
 

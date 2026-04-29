@@ -129,6 +129,32 @@ const run = async () => {
         },
       },
       {
+        path: "/metrics/retention/d14",
+        validate: (body) => {
+          const retention = body as {
+            metric: string;
+            retentionDays: number;
+            cohortBasis: string;
+            retainedBasis: string;
+            cohortSize: number;
+            retainedCount: number;
+            retentionRate: number;
+            cohorts: Array<{ cohortDate: string; cohortSize: number; retainedCount: number }>;
+            caveat: string;
+          };
+
+          assert.equal(retention.metric, "d14_retention");
+          assert.equal(retention.retentionDays, 14);
+          assert.equal(retention.cohortBasis, "first_paid_at");
+          assert.equal(retention.retainedBasis, "last_paid_at_at_or_after_d14");
+          assert.equal(retention.cohortSize, 1);
+          assert.equal(retention.retainedCount, 0);
+          assert.equal(retention.retentionRate, 0);
+          assert.equal(retention.cohorts[0]?.cohortDate, "2026-04-27");
+          assert.ok(retention.caveat.includes("wallet-address"));
+        },
+      },
+      {
         path: "/customers",
         validate: (body) => {
           const customers = body as Array<{
