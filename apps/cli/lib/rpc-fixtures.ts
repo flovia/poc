@@ -65,6 +65,12 @@ export type FetchRpcBlockRangeOptions = {
   fetchFn?: FetchLike;
 };
 
+export type FetchRpcLatestBlockNumberOptions = {
+  rpcUrl: string;
+  timeoutMs?: number;
+  fetchFn?: FetchLike;
+};
+
 export type FetchRpcReceiptOptions = {
   rpcUrl: string;
   txHash: string;
@@ -270,6 +276,15 @@ export const fetchRpcReceipt = async ({
     timeoutMs,
   );
   return normalizeRpcReceipt(receipt);
+};
+
+export const fetchRpcLatestBlockNumber = async ({
+  rpcUrl,
+  timeoutMs = 30_000,
+  fetchFn = fetch,
+}: FetchRpcLatestBlockNumberOptions): Promise<number> => {
+  const blockNumber = await rpcCall<string>(rpcUrl, "eth_blockNumber", [], fetchFn, timeoutMs);
+  return toNumber(blockNumber, "eth_blockNumber");
 };
 
 export const fetchRpcBlockRange = async ({

@@ -13,6 +13,7 @@ import {
   assertRpcFixtureConsistency,
   type FetchLike,
   fetchRpcBlockRange,
+  fetchRpcLatestBlockNumber,
   fetchRpcReceipt,
   normalizeRpcTransaction,
   type RpcBlockWithTransactionsPayload,
@@ -27,6 +28,10 @@ type RunRpcRangeIngestOptions = {
   timeoutMs?: number;
   fetchFn?: FetchLike;
   database?: AppDatabase;
+};
+
+type RunRpcLatestRangeIngestOptions = Omit<RunRpcRangeIngestOptions, "fromBlock" | "toBlock"> & {
+  latestBlocks: number;
 };
 
 export type RpcRangeIngestResult = {
@@ -51,10 +56,14 @@ const AUTHORIZATION_SELECTORS = new Set(
   ),
 );
 
-const readArg = (name: string) => {
-  const index = process.argv.indexOf(name);
+type RpcRangeIngestCliOptions =
+  | { mode: "latest"; latestBlocks: number; maxBlocks: number }
+  | { mode: "range"; fromBlock: number; toBlock: number; maxBlocks: number };
+
+const readArg = (name: string, argv = process.argv) => {
+  const index = argv.indexOf(name);
   if (index === -1) return null;
-  return process.argv[index + 1] ?? null;
+  return argv[index + 1] ?? null;
 };
 
 const parseBlockNumber = (value: string | null, name: string) => {
@@ -70,6 +79,14 @@ const parseMaxBlocks = (value: string | null) => {
   const parsed = Number(value);
   if (!Number.isSafeInteger(parsed) || parsed < 1)
     throw new Error("--max-blocks must be a positive integer");
+  return parsed;
+};
+
+const parseLatestBlocks = (value: string | null) => {
+  if (value == null) return null;
+  const parsed = Number(value);
+  if (!Number.isSafeInteger(parsed) || parsed < 1)
+    throw new Error("--latest-blocks must be a positive integer");
   return parsed;
 };
 
@@ -197,15 +214,75 @@ export const runRpcRangeIngest = async ({
   return { runId: recordIngestionRun(result, database), ...result };
 };
 
+export const runRpcLatestRangeIngest = async ({
+  rpcUrl,
+  latestBlocks,
+  maxBlocks = 100,
+  timeoutMs = 30_000,
+  fetchFn,
+  database = db,
+}: RunRpcLatestRangeIngestOptions): Promise<RpcRangeIngestResult> => {
+  if (!Number.isSafeInteger(latestBlocks) || latestBlocks < 1)
+    throw new Error(`latestBlocks must be a positive safe integer: ${latestBlocks}`);
+
+  const latestBlock = await fetchRpcLatestBlockNumber({ rpcUrl, timeoutMs, fetchFn });
+  const fromBlock = Math.max(0, latestBlock - latestBlocks + 1);
+
+  return runRpcRangeIngest({
+    rpcUrl,
+    fromBlock,
+    toBlock: latestBlock,
+    maxBlocks,
+    timeoutMs,
+    fetchFn,
+    database,
+  });
+};
+
+export const resolveRpcRangeIngestCliOptions = (argv = process.argv): RpcRangeIngestCliOptions => {
+  const maxBlocks = parseMaxBlocks(readArg("--max-blocks", argv));
+  const latestBlocks = parseLatestBlocks(readArg("--latest-blocks", argv));
+  const fromBlockArg = readArg("--from-block", argv);
+  const toBlockArg = readArg("--to-block", argv);
+
+  if (latestBlocks != null) {
+    if (fromBlockArg != null || toBlockArg != null)
+      throw new Error("--latest-blocks cannot be combined with --from-block or --to-block");
+    return { mode: "latest", latestBlocks, maxBlocks };
+  }
+
+  if (fromBlockArg == null && toBlockArg == null) {
+    return { mode: "latest", latestBlocks: maxBlocks, maxBlocks };
+  }
+
+  if (fromBlockArg == null || toBlockArg == null)
+    throw new Error("--from-block and --to-block must be provided together");
+
+  return {
+    mode: "range",
+    fromBlock: parseBlockNumber(fromBlockArg, "--from-block"),
+    toBlock: parseBlockNumber(toBlockArg, "--to-block"),
+    maxBlocks,
+  };
+};
+
 export const runRpcRangeIngestFromCli = async () => {
-  const fromBlock = parseBlockNumber(readArg("--from-block"), "--from-block");
-  const toBlock = parseBlockNumber(readArg("--to-block"), "--to-block");
-  const maxBlocks = parseMaxBlocks(readArg("--max-blocks"));
+  const options = resolveRpcRangeIngestCliOptions();
+
+  if (options.mode === "latest") {
+    return runRpcLatestRangeIngest({
+      rpcUrl: resolveBaseRpcUrl(),
+      latestBlocks: options.latestBlocks,
+      maxBlocks: options.maxBlocks,
+      timeoutMs: resolveRpcRequestTimeoutMs(),
+    });
+  }
+
   return runRpcRangeIngest({
     rpcUrl: resolveBaseRpcUrl(),
-    fromBlock,
-    toBlock,
-    maxBlocks,
+    fromBlock: options.fromBlock,
+    toBlock: options.toBlock,
+    maxBlocks: options.maxBlocks,
     timeoutMs: resolveRpcRequestTimeoutMs(),
   });
 };

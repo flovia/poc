@@ -62,7 +62,12 @@ import {
   validateFixtureManifest,
 } from "../lib/schema";
 import { runIngest } from "../scripts/ingest/ingest-fixtures";
-import { isRpcRangeCandidate, runRpcRangeIngest } from "../scripts/ingest/ingest-rpc-range";
+import {
+  isRpcRangeCandidate,
+  resolveRpcRangeIngestCliOptions,
+  runRpcLatestRangeIngest,
+  runRpcRangeIngest,
+} from "../scripts/ingest/ingest-rpc-range";
 import { runRpcTxIngest } from "../scripts/ingest/ingest-rpc-tx";
 
 const fixtureRoot = path.resolve(import.meta.dir, "..", "fixtures");
@@ -1011,5 +1016,60 @@ describe("RPC range ingest", () => {
       }),
     ).rejects.toThrow("RPC range too large");
     expect(calls).toHaveLength(0);
+  });
+
+  test("scans the latest n blocks by resolving eth_blockNumber", async () => {
+    const calls: Array<{ method: string; params: unknown[] }> = [];
+    const latestBlock = 100;
+
+    const result = await runRpcLatestRangeIngest({
+      rpcUrl: "https://example.invalid",
+      latestBlocks: 3,
+      fetchFn: async (_url, init) => {
+        const body = JSON.parse(String(init?.body)) as { method: string; params: unknown[] };
+        calls.push({ method: body.method, params: body.params });
+
+        if (body.method === "eth_blockNumber") {
+          return new Response(JSON.stringify({ jsonrpc: "2.0", id: 1, result: "0x64" }), {
+            status: 200,
+          });
+        }
+        if (body.method === "eth_chainId") {
+          return new Response(JSON.stringify({ jsonrpc: "2.0", id: 1, result: "0x2105" }), {
+            status: 200,
+          });
+        }
+        return new Response(
+          JSON.stringify({
+            jsonrpc: "2.0",
+            id: 1,
+            result: { number: body.params[0], timestamp: "0x1", transactions: [] },
+          }),
+          { status: 200 },
+        );
+      },
+    });
+
+    expect(result.fromBlock).toBe(latestBlock - 2);
+    expect(result.toBlock).toBe(latestBlock);
+    expect(result.scannedBlocks).toBe(3);
+    expect(
+      calls.filter((call) => call.method === "eth_getBlockByNumber").map((call) => call.params),
+    ).toEqual([
+      ["0x62", true],
+      ["0x63", true],
+      ["0x64", true],
+    ]);
+  });
+
+  test("defaults to the latest max-blocks range when from/to are omitted", () => {
+    expect(resolveRpcRangeIngestCliOptions(["bun", "ingest-rpc-range.ts"])).toEqual({
+      mode: "latest",
+      latestBlocks: 100,
+      maxBlocks: 100,
+    });
+    expect(
+      resolveRpcRangeIngestCliOptions(["bun", "ingest-rpc-range.ts", "--max-blocks", "1000"]),
+    ).toEqual({ mode: "latest", latestBlocks: 1000, maxBlocks: 1000 });
   });
 });
