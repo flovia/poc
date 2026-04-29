@@ -2,7 +2,7 @@
 
 ### Requirement: BFF は Phase B customer list を返す
 
-システムは `GET /customers` に対して、Phase B canonical contract に従う customer list projection を read-only に返さなければならない。
+システムは `GET /customers` に対して、Phase B canonical contract に従う customer list projection を read-only に返すことを MUST とする。
 
 #### Scenario: customer list を取得する
 
@@ -17,7 +17,7 @@
 
 ### Requirement: BFF は Phase B customer profile を返す
 
-システムは `GET /customers/:address/profile` に対して、指定 wallet の customer profile projection を read-only に返さなければならない。
+システムは `GET /customers/:address/profile` に対して、指定 wallet の customer profile projection を read-only に返すことを MUST とする。
 
 #### Scenario: 既知 wallet の profile を取得する
 
@@ -32,7 +32,7 @@
 
 ### Requirement: BFF は Phase B wallet usage graph を返す
 
-システムは `GET /wallet-usage-graph` に対して、payer/provider co-usage を表す nested wallet usage graph projection を read-only に返さなければならない。
+システムは `GET /wallet-usage-graph` に対して、payer/provider co-usage を表す nested wallet usage graph projection を read-only に返すことを MUST とする。
 
 #### Scenario: wallet usage graph を取得する
 
@@ -42,7 +42,7 @@
 
 ### Requirement: demo と future SDK 想定値は product API response に内包する
 
-システムは demo label と future SDK telemetry 想定値を raw endpoint として公開せず、Phase B product API の projection 内に含めなければならない。
+システムは demo label と future SDK telemetry 想定値を raw endpoint として公開せず、Phase B product API の projection 内に含めることを MUST とする。
 
 #### Scenario: future SDK field を profile に含める
 
@@ -56,7 +56,7 @@
 
 ### Requirement: BFF response は provenance を保持する
 
-システムは `onchain_fact`、`demo_label`、`future_sdk_field`、`derived_insight` の違いを response 上で失わないようにしなければならない。
+システムは `onchain_fact`、`demo_label`、`future_sdk_field`、`derived_insight` の違いを response 上で失わないことを MUST とする。
 
 #### Scenario: derived insight を返す
 
@@ -70,7 +70,7 @@
 
 ### Requirement: BFF は read-only endpoint として振る舞う
 
-システムは Phase B BFF endpoint を read-only とし、GET 以外の method で product read を変更してはならない。
+システムは Phase B BFF endpoint を read-only とし、GET 以外の method で product read を変更しないことを MUST とする。
 
 #### Scenario: 非 GET method を呼び出す
 
@@ -79,7 +79,7 @@
 
 ### Requirement: BFF は request path で live source を呼ばない
 
-システムは Phase B product endpoint の request handling 中に live CDP、Bitquery、RPC、または SDK collector を呼び出してはならない。
+システムは Phase B product endpoint の request handling 中に live CDP、Bitquery、RPC、または SDK collector を呼び出さないことを MUST とする。
 
 #### Scenario: product endpoint を呼び出す
 

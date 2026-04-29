@@ -1,8 +1,8 @@
 ## MODIFIED Requirements
 
-### 要件: BFF は request ごとに外部 source を呼ばない
+### Requirement: BFF は request ごとに外部 source を呼ばない
 
-初期 market intelligence design では、BFF request handler が product read のために CDP や Bitquery を直接呼ぶことを要求しない。Phase B の demo BFF では、Phase A snapshot / projection 相当の値を prepared demo fixture または read model として扱い、`onchain_fact` として説明できる field と demo / future / derived field を区別する。
+初期 market intelligence design では、BFF request handler が product read のために CDP や Bitquery を直接呼ぶことを要求しない。Phase B の demo BFF では、Phase A snapshot / projection 相当の値を prepared demo fixture または read model として扱い、`onchain_fact` として説明できる field と demo / future / derived field を区別することを MUST とする。
 
 #### シナリオ: product read path を後から追加する
 

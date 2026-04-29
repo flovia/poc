@@ -1,3 +1,9 @@
+import {
+  getPhaseBCustomerProfileByAddress,
+  phaseBCustomerListResponse,
+  phaseBWalletUsageGraphResponse,
+} from "./data/phase-b-demo";
+
 type JsonValue = unknown;
 
 const json = (body: JsonValue, init: ResponseInit = {}) =>
@@ -9,21 +15,29 @@ const json = (body: JsonValue, init: ResponseInit = {}) =>
     },
   });
 
-const readonlyRoutes = new Set(["/", "/health"]);
+const readonlyRoutes = new Set(["/", "/health", "/customers", "/wallet-usage-graph"]);
+
+const toProfileAddress = (path: string) => {
+  const match = path.match(/^\/customers\/([^/]+)\/profile$/);
+  return match?.[1] ?? null;
+};
+
+const methodNotAllowed = () =>
+  json(
+    {
+      error: "method_not_allowed",
+      message: "The BFF only supports GET for read endpoints.",
+    },
+    { status: 405, headers: { allow: "GET" } },
+  );
 
 export const createBffHandler = () => (request: Request) => {
   const url = new URL(request.url);
   const path = url.pathname.replace(/\/$/, "") || "/";
 
   if (request.method !== "GET") {
-    if (readonlyRoutes.has(path)) {
-      return json(
-        {
-          error: "method_not_allowed",
-          message: "The BFF only supports GET for read endpoints.",
-        },
-        { status: 405, headers: { allow: "GET" } },
-      );
+    if (readonlyRoutes.has(path) || toProfileAddress(path) !== null) {
+      return methodNotAllowed();
     }
 
     return notFound(path);
@@ -34,9 +48,27 @@ export const createBffHandler = () => (request: Request) => {
       return json({ service: "flovia-bff", status: "ok" });
     case "/health":
       return json({ status: "ok", service: "flovia-bff" });
+    case "/customers":
+      return json(phaseBCustomerListResponse);
+    case "/wallet-usage-graph":
+      return json(phaseBWalletUsageGraphResponse);
     default:
-      return notFound(path);
+      break;
   }
+
+  const address = toProfileAddress(path);
+  if (address !== null) {
+    const normalizedAddress = address.toLowerCase();
+    const profile = getPhaseBCustomerProfileByAddress(normalizedAddress);
+
+    if (!profile) {
+      return notFound(path);
+    }
+
+    return json(profile);
+  }
+
+  return notFound(path);
 };
 
 const notFound = (path: string) =>
