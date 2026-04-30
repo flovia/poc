@@ -6,7 +6,7 @@ import {
   type DeFiPosition,
   type EvidenceLabel,
   type PayToActivity,
-  type PortfolioSummary,
+  type PortfolioSourceResult,
   type SourceCoverage,
   type X402ServiceCandidate,
   normalizeAsset,
@@ -15,12 +15,6 @@ import {
   paymentIdentityKey,
   validateCustomerIntelligenceResponse,
 } from "contracts";
-
-export type PortfolioSourceResult = {
-  summary?: Pick<PortfolioSummary, "totalValueUsd" | "tokenCount">;
-  positions?: Array<Omit<DeFiPosition, "provenance" | "provenanceByField">>;
-  sourceCoverage: SourceCoverage;
-};
 
 export type MatchedPayToActivity = {
   activity: PayToActivity;
@@ -179,10 +173,14 @@ export const classifyDefiActivity = (portfolio: PortfolioSourceResult) => {
       provenanceByField: { sourceCoverage: "derived_insight" },
       reasons: [
         sourceCoverage.status === "available"
-          ? derivedReason("portfolio source captured")
+          ? derivedReason(
+              portfolio.summary?.chains?.length
+                ? `portfolio source captured wallet-wide chains: ${portfolio.summary.chains.join(", ")}`
+                : "portfolio source captured",
+            )
           : derivedReason(sourceCoverage.unavailableReason ?? "portfolio source unavailable"),
       ],
-    } satisfies PortfolioSummary,
+    },
     defiPositions: positions.map(
       (position) =>
         ({

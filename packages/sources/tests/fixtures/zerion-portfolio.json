@@ -1,0 +1,19 @@
+{
+  "data": {
+    "type": "portfolio",
+    "id": "0xac5a07c44a4f971667b3df4b6551fb6991b2142d",
+    "attributes": {
+      "total": {
+        "positions": 1234.56
+      },
+      "positions_distribution_by_chain": {
+        "base": 234.56,
+        "ethereum": 1000
+      },
+      "positions_distribution_by_type": {
+        "wallet": 1000,
+        "deposited": 234.56
+      }
+    }
+  }
+}

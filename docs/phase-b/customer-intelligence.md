@@ -26,7 +26,7 @@ GET /customers/:address/intelligence
 | payer wallet / amount / timestamp / txHash | 実データ　　| Bitquery 由来の onchain fact fixture　　　　 |
 | endpoint / workflow / service label　　　　| demo / mock | `txHash -> endpointPath` の mock attribution |
 | 他 x402 provider / 他 payTo 探索　　　　　 | 部分実装　　| CLI capture で customer address 起点の outgoing transfer と CDP payment option を join する |
-| DeFi / portfolio / 資産状況　　　　　　　　| placeholder | MCP / Zerion 連携は未接続。未取得時は `unavailableReason` で表現 |
+| DeFi / portfolio / 資産状況　　　　　　　　| 部分実装　　| CLI で Zerion capture を明示した場合に取得。未取得・取得不能時は `unavailableReason` で表現 |
 | browser / E2E での demo flow 検証　　　　　| 未整備　　　| typecheck / unit test / route test 中心　　　|
 
 ## `profile` と `intelligence` の責務
@@ -119,8 +119,8 @@ customer address
   │    └─ outgoing transfer / x402 payment / payTo activity を取得
   ├─ CDP Discovery
   │    └─ payTo -> provider / service / x402 payment option を解決
-  ├─ MCP or Zerion
-  │    └─ portfolio / token balance / DeFi positions を取得
+  ├─ Zerion
+  │    └─ wallet-wide portfolio / DeFi positions を取得
   └─ SDK telemetry（将来）
        └─ endpoint request / tx hash / correlation id を紐づけ
 ```
@@ -174,7 +174,30 @@ bun --cwd apps/cli customer:intelligence -- \
   --out apps/bff/fixtures/phase-b/customer-intelligence/0x....json
 ```
 
-command 名と出力先は実装時に contract-first で確定する。
+Zerion を使う場合は `--portfolio-source zerion` を明示する。この場合だけ
+`ZERION_API_KEY` が必要になる。
+
+```sh
+bun --cwd apps/cli customer:intelligence -- \
+  --address 0x... \
+  --network base \
+  --asset USDC \
+  --from 2026-01-01T00:00:00Z \
+  --to 2026-04-29T23:59:59Z \
+  --portfolio-source zerion \
+  --out apps/bff/fixtures/phase-b/customer-intelligence/0x....json
+```
+
+Zerion 由来の portfolio / DeFi data は **customer wallet 全体**の context であり、
+Base / USDC x402 payment scope そのものではない。read model では
+`sourceCoverage.source = "portfolio"`、`sourceCoverage.provenance.sourceKind = "zerion"`
+として表現し、wallet-wide chain context は `reasons` で補足する。
+
+Zerion が成功 response として empty positions を返した場合は、取得成功かつ
+DeFi position なしとして扱う。一方、timeout、429、5xx、partial response は
+DeFi inactive の事実としては扱わず、`partial` / `unavailable` coverage として
+明示する。product payload / fixture には raw Zerion response、API key、
+Authorization header、request metadata を含めない。
 
 ## package 分割方針
 

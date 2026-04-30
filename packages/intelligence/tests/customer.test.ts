@@ -127,6 +127,50 @@ describe("customer intelligence builder", () => {
     expect(result.portfolioSummary.sourceCoverage.unavailableReason).toContain("not configured");
   });
 
+  test("classifies available Zerion portfolio positions as DeFi active", () => {
+    const result = classifyDefiActivity({
+      summary: { totalValueUsd: "1234.56", tokenCount: 2, chains: ["base", "ethereum"] },
+      positions: [
+        {
+          protocol: "Aave V3",
+          positionType: "lending",
+          valueUsd: "120.5",
+          network: "base",
+          reasons: [{ provenance: "onchain_fact", label: "Zerion position fact" }],
+        },
+      ],
+      sourceCoverage: {
+        source: "portfolio",
+        status: "available",
+        provenance: { sourceKind: "zerion", sourceName: "Zerion Portfolio API" },
+      },
+    });
+
+    expect(result.isDefiActive).toBe(true);
+    expect(result.portfolioSummary).toMatchObject({ totalValueUsd: "1234.56", tokenCount: 2 });
+    expect(result.portfolioSummary.reasons?.[0]?.label).toContain("wallet-wide chains");
+    expect(result.defiPositions[0]).toMatchObject({
+      protocol: "Aave V3",
+      positionType: "lending",
+      provenance: "onchain_fact",
+    });
+  });
+
+  test("does not classify unavailable Zerion coverage as DeFi inactive fact", () => {
+    const result = classifyDefiActivity({
+      sourceCoverage: {
+        source: "portfolio",
+        status: "unavailable",
+        unavailableReason: "Zerion request failed: 429",
+        provenance: { sourceKind: "zerion", sourceName: "Zerion Portfolio API" },
+      },
+    });
+
+    expect(result.isDefiActive).toBe(false);
+    expect(result.portfolioSummary.sourceCoverage.status).toBe("unavailable");
+    expect(result.portfolioSummary.reasons?.[0]?.label).toContain("429");
+  });
+
   test("builds a schema-valid customer intelligence projection", () => {
     const response = buildCustomerIntelligence({
       scope,
@@ -146,6 +190,47 @@ describe("customer intelligence builder", () => {
     expect(response.payToActivities).toHaveLength(1);
     expect(response.x402Services[0]?.evidence.length).toBeGreaterThan(0);
     expect(response.insights[0]?.reasons.length).toBeGreaterThan(0);
+  });
+
+  test("builds DeFi active insight from successful portfolio positions", () => {
+    const response = buildCustomerIntelligence({
+      scope,
+      transfers,
+      resources: [resource],
+      generatedAt: "2026-04-29T00:00:00Z",
+      portfolio: {
+        summary: { totalValueUsd: "1234.56", tokenCount: 1, chains: ["base"] },
+        positions: [
+          {
+            protocol: "Aave V3",
+            positionType: "lending",
+            valueUsd: "120.5",
+            network: "base",
+            evidence: [{ provenance: "onchain_fact", label: "Zerion portfolio position" }],
+          },
+        ],
+        sourceCoverage: {
+          source: "portfolio",
+          status: "available",
+          provenance: { sourceKind: "zerion", sourceName: "Zerion Portfolio API" },
+        },
+      },
+    });
+
+    expect(response.defiPositions).toHaveLength(1);
+    expect(response.insights[0]).toMatchObject({
+      key: "defi-active",
+      classification: "defi_activity",
+    });
+    expect(response.sourceCoverage).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          source: "portfolio",
+          status: "available",
+          provenance: expect.objectContaining({ sourceKind: "zerion" }),
+        }),
+      ]),
+    );
   });
 
   test("does not emit external activity insight for an empty capture", () => {

@@ -8,8 +8,10 @@ import {
   fetchBitqueryBaseUsdcAggregates,
   fetchOutgoingTransfersByCustomer,
   fetchPaymentTransfersByPayTo,
+  fetchZerionPortfolio,
   findCdpResourcesByPaymentOption,
   makeCdpDiscoveryBody,
+  normalizeZerionPortfolio,
   unavailablePortfolioSource,
 } from "../src/index";
 
@@ -350,5 +352,123 @@ describe("bitquery source client", () => {
       status: "unavailable",
       unavailableReason: "no MCP configured",
     });
+  });
+});
+
+describe("Zerion portfolio source client", () => {
+  test("normalizes portfolio summary and DeFi positions", () => {
+    const portfolio = readFixture<unknown>("zerion-portfolio.json");
+    const positions = readFixture<unknown>("zerion-positions.json");
+
+    const result = normalizeZerionPortfolio(portfolio, positions);
+
+    expect(result.sourceCoverage).toMatchObject({
+      source: "portfolio",
+      status: "available",
+      provenance: { sourceKind: "zerion", sourceName: "Zerion Portfolio API" },
+    });
+    expect(result.summary).toMatchObject({
+      totalValueUsd: "1234.56",
+      tokenCount: 2,
+      chains: ["base", "ethereum"],
+    });
+    expect(result.positions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ protocol: "Aave V3", positionType: "lending", network: "base" }),
+        expect.objectContaining({ protocol: "Uniswap V3", positionType: "lp" }),
+      ]),
+    );
+  });
+
+  test("maps successful empty Zerion positions to available zero-position coverage", () => {
+    const portfolio = readFixture<unknown>("zerion-portfolio.json");
+    const positions = readFixture<unknown>("zerion-empty-positions.json");
+
+    const result = normalizeZerionPortfolio(portfolio, positions);
+
+    expect(result.sourceCoverage.status).toBe("available");
+    expect(result.positions).toHaveLength(0);
+    expect(result.summary?.tokenCount).toBe(0);
+  });
+
+  test("maps Zerion API errors to unavailable coverage without fabricated positions", () => {
+    const error = readFixture<unknown>("zerion-error.json");
+    const result = normalizeZerionPortfolio(error, error);
+
+    expect(result.sourceCoverage).toMatchObject({
+      source: "portfolio",
+      status: "unavailable",
+    });
+    expect(result.sourceCoverage.unavailableReason).toContain("Rate Limit");
+    expect(result.positions).toBeUndefined();
+  });
+
+  test("marks single-page Zerion positions capture as partial when more pages exist", () => {
+    const portfolio = readFixture<unknown>("zerion-portfolio.json");
+    const positions = {
+      ...readFixture<Record<string, unknown>>("zerion-positions.json"),
+      links: { next: "https://api.zerion.io/v1/wallets/0xabc/positions/?page=2" },
+    };
+
+    const result = normalizeZerionPortfolio(portfolio, positions);
+
+    expect(result.sourceCoverage).toMatchObject({
+      source: "portfolio",
+      status: "partial",
+      unavailableReason: "Zerion positions pagination not fully captured",
+    });
+  });
+
+  test("fetches Zerion portfolio with explicit API key and injected fetch", async () => {
+    const portfolio = readFixture<unknown>("zerion-portfolio.json");
+    const positions = readFixture<unknown>("zerion-positions.json");
+    const calls: Array<{ url: string; authorization: string | null }> = [];
+
+    const result = await fetchZerionPortfolio({
+      address: "0xac5a07c44a4f971667b3df4b6551fb6991b2142d",
+      apiKey: "test-key",
+      fetchFn: async (url, init) => {
+        const headers = new Headers(init?.headers);
+        calls.push({ url: String(url), authorization: headers.get("authorization") });
+        return new Response(
+          JSON.stringify(String(url).includes("/positions/") ? positions : portfolio),
+        );
+      },
+    });
+
+    expect(result.sourceCoverage.status).toBe("available");
+    expect(calls).toHaveLength(2);
+    expect(calls.every((call) => call.authorization?.startsWith("Basic "))).toBe(true);
+    expect(calls.map((call) => call.url).join("\n")).toContain(
+      "filter%5Bpositions%5D=only_complex",
+    );
+    expect(calls.find((call) => call.url.includes("/portfolio"))?.url).not.toContain(
+      "filter%5Bpositions%5D",
+    );
+  });
+
+  test("maps Zerion network errors to unavailable coverage without throwing", async () => {
+    const result = await fetchZerionPortfolio({
+      address: "0xac5a07c44a4f971667b3df4b6551fb6991b2142d",
+      apiKey: "test-key",
+      fetchFn: async () => {
+        throw new Error("timeout");
+      },
+    });
+
+    expect(result.sourceCoverage).toMatchObject({
+      source: "portfolio",
+      status: "unavailable",
+    });
+    expect(result.positions).toBeUndefined();
+  });
+
+  test("requires explicit Zerion API key", async () => {
+    await expect(
+      fetchZerionPortfolio({
+        address: "0xac5a07c44a4f971667b3df4b6551fb6991b2142d",
+        apiKey: "",
+      }),
+    ).rejects.toThrow("ZERION_API_KEY is required");
   });
 });

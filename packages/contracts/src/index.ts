@@ -59,7 +59,7 @@ export const LabelSchema = z.string().min(1).nullable();
 
 export type EvmAddress = z.infer<typeof EvmAddressSchema>;
 
-export const SourceKindSchema = z.enum(["cdp_discovery", "bitquery", "derived"]);
+export const SourceKindSchema = z.enum(["cdp_discovery", "bitquery", "derived", "zerion"]);
 export type SourceKind = z.infer<typeof SourceKindSchema>;
 
 export const SourceProvenanceSchema = z
@@ -69,7 +69,6 @@ export const SourceProvenanceSchema = z
     sourceUrl: z.string().url().optional(),
     sourceId: z.string().min(1).optional(),
     fetchedAt: z.string().datetime().optional(),
-    raw: z.unknown().optional(),
   })
   .strict();
 
@@ -919,6 +918,45 @@ export const DeFiPositionSchema = withDerivedInsightReasons(
     .strict(),
 );
 export type DeFiPosition = z.infer<typeof DeFiPositionSchema>;
+
+export const PortfolioSourceSummarySchema = z
+  .object({
+    totalValueUsd: z
+      .string()
+      .regex(/^\d+(\.\d+)?$/)
+      .nullable(),
+    tokenCount: z.number().int().nonnegative(),
+    chains: z.array(z.string().min(1)).optional(),
+  })
+  .strict();
+export type PortfolioSourceSummary = z.infer<typeof PortfolioSourceSummarySchema>;
+
+export const PortfolioSourcePositionSchema = z
+  .object({
+    protocol: z.string().min(1),
+    positionType: z.enum(["lending", "lp", "staking", "other"]),
+    valueUsd: z
+      .string()
+      .regex(/^\d+(\.\d+)?$/)
+      .nullable(),
+    network: z.string().min(1),
+    evidence: z.array(CustomerIntelligenceEvidenceSchema).optional(),
+    reasons: z.array(EvidenceLabelSchema).optional(),
+  })
+  .strict();
+export type PortfolioSourcePosition = z.infer<typeof PortfolioSourcePositionSchema>;
+
+export const PortfolioSourceResultSchema = z
+  .object({
+    summary: PortfolioSourceSummarySchema.optional(),
+    positions: z.array(PortfolioSourcePositionSchema).optional(),
+    sourceCoverage: SourceCoverageSchema,
+  })
+  .strict();
+export type PortfolioSourceResult = z.infer<typeof PortfolioSourceResultSchema>;
+
+export const validatePortfolioSourceResult = (value: unknown): PortfolioSourceResult =>
+  PortfolioSourceResultSchema.parse(value);
 
 export const CustomerIntelligenceInsightSchema = withDerivedInsightReasons(
   z

@@ -3,6 +3,7 @@ import { buildCustomerIntelligence } from "intelligence";
 import {
   fetchCdpDiscoveryResources,
   fetchOutgoingTransfersByCustomer,
+  fetchZerionPortfolio,
   unavailablePortfolioSource,
 } from "sources";
 import type { FetchLike } from "sources";
@@ -29,6 +30,10 @@ export type CustomerIntelligenceCliOptions = {
   cdpFetch?: FetchLike;
   bitqueryEndpoint?: string;
   cdpEndpoint?: string;
+  portfolioSource: "none" | "zerion";
+  zerionApiKey?: string;
+  zerionFetch?: FetchLike;
+  zerionEndpoint?: string;
 };
 
 export type CustomerIntelligenceRunResult = {
@@ -57,6 +62,8 @@ const defaultOptions = (): Partial<CustomerIntelligenceCliOptions> => ({
   limit: 1000,
   cdpLimit: 100,
   bitqueryToken: process.env.BITQUERY_TOKEN,
+  portfolioSource: "none",
+  zerionApiKey: process.env.ZERION_API_KEY,
 });
 
 export const parseCustomerIntelligenceArgs = (argv: string[]): CustomerIntelligenceCliOptions => {
@@ -77,6 +84,13 @@ export const parseCustomerIntelligenceArgs = (argv: string[]): CustomerIntellige
     } else if (arg === "--cdp-all") options.cdpLimit = null;
     else if (arg === "--bitquery-endpoint") options.bitqueryEndpoint = parseArg(index++, argv);
     else if (arg === "--cdp-endpoint") options.cdpEndpoint = parseArg(index++, argv);
+    else if (arg === "--portfolio-source") {
+      const source = parseArg(index++, argv);
+      if (source !== "none" && source !== "zerion") {
+        throw new Error("--portfolio-source must be one of: none, zerion");
+      }
+      options.portfolioSource = source;
+    } else if (arg === "--zerion-endpoint") options.zerionEndpoint = parseArg(index++, argv);
   }
 
   if (!options.address) throw new Error("--address is required");
@@ -91,6 +105,13 @@ const resolveBitqueryToken = (token: string | undefined) => {
     throw new Error("BITQUERY_TOKEN is required for customer intelligence capture");
   }
   return token;
+};
+
+const resolveZerionApiKey = (apiKey: string | undefined) => {
+  if (!apiKey || apiKey.trim().length === 0) {
+    throw new Error("ZERION_API_KEY is required for Zerion portfolio capture");
+  }
+  return apiKey;
 };
 
 export const runCustomerIntelligenceCapture = async (
@@ -128,6 +149,8 @@ export const runCustomerIntelligenceCapture = async (
     reasons: [{ provenance: "derived_insight", label: "scope validation" }],
   }).scope;
   const bitqueryToken = resolveBitqueryToken(parsed.bitqueryToken);
+  const zerionApiKey =
+    parsed.portfolioSource === "zerion" ? resolveZerionApiKey(parsed.zerionApiKey) : null;
 
   const cdpResult = await fetchCdpDiscoveryResources({
     limit: parsed.cdpLimit,
@@ -145,11 +168,21 @@ export const runCustomerIntelligenceCapture = async (
     timeWindow: scope.timeWindow,
   });
 
+  const portfolio =
+    parsed.portfolioSource === "zerion"
+      ? await fetchZerionPortfolio({
+          address: scope.address,
+          apiKey: zerionApiKey ?? "",
+          fetchFn: parsed.zerionFetch,
+          endpoint: parsed.zerionEndpoint,
+        })
+      : unavailablePortfolioSource("portfolio source not configured");
+
   const response = buildCustomerIntelligence({
     scope,
     transfers,
     resources: cdpResult.resources,
-    portfolio: unavailablePortfolioSource("portfolio source not configured"),
+    portfolio,
   });
 
   const validated = validateCustomerIntelligenceFixture(response);

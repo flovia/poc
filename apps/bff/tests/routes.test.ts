@@ -259,7 +259,11 @@ describe("BFF routes", () => {
       expect.arrayContaining([
         expect.objectContaining({ source: "bitquery", status: "available" }),
         expect.objectContaining({ source: "cdp_discovery", status: "available" }),
-        expect.objectContaining({ source: "portfolio", status: "unavailable" }),
+        expect.objectContaining({
+          source: "portfolio",
+          status: expect.stringMatching(/^(available|partial)$/),
+          provenance: expect.objectContaining({ sourceKind: "zerion" }),
+        }),
       ]),
     );
     expect(parsed.provenanceByField).toMatchObject({

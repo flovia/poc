@@ -56,6 +56,34 @@ const bitqueryResponse = {
   },
 };
 
+const zerionPortfolioResponse = {
+  data: {
+    attributes: {
+      total: { positions: 1234.56 },
+      positions_distribution_by_chain: { base: 1234.56 },
+    },
+  },
+};
+
+const zerionPositionsResponse = {
+  data: [
+    {
+      attributes: {
+        name: "Aave V3 USDC",
+        protocol: "Aave V3",
+        protocol_module: "lending",
+        position_type: "deposit",
+        value: 120.5,
+      },
+      relationships: { chain: { data: { id: "base" } } },
+    },
+  ],
+};
+
+const emptyZerionPositionsResponse = { data: [] };
+
+const zerionErrorResponse = { errors: [{ title: "rate limited", detail: "try later" }] };
+
 describe("customer intelligence cli script", () => {
   test("parses capture arguments", () => {
     const parsed = parseCustomerIntelligenceArgs([
@@ -75,6 +103,10 @@ describe("customer intelligence cli script", () => {
       "10",
       "--cdp-limit",
       "5",
+      "--portfolio-source",
+      "zerion",
+      "--zerion-endpoint",
+      "https://example.test/v1",
     ]);
 
     expect(parsed).toMatchObject({
@@ -84,6 +116,8 @@ describe("customer intelligence cli script", () => {
       out: "/tmp/customer-intelligence.json",
       limit: 10,
       cdpLimit: 5,
+      portfolioSource: "zerion",
+      zerionEndpoint: "https://example.test/v1",
     });
   });
 
@@ -108,6 +142,143 @@ describe("customer intelligence cli script", () => {
       expect(result.response.customerAddress).toBe(address);
       expect(fixture.payToActivities[0]).toMatchObject({ payTo, totalAmountAtomic: "10000" });
       expect(fixture.x402Services[0]).toMatchObject({ providerName: "CoinGecko" });
+    }));
+
+  test("writes customer intelligence with mocked Zerion portfolio data", async () =>
+    withTempDir("zerion", async (directory) => {
+      const output = path.join(directory, "customer.json");
+      const result = await runCustomerIntelligenceCapture({
+        address,
+        network: "base",
+        asset: "USDC",
+        from: "2026-01-01T00:00:00Z",
+        to: "2026-04-29T23:59:59Z",
+        out: output,
+        bitqueryToken: "test-token",
+        portfolioSource: "zerion",
+        zerionApiKey: "test-zerion-key",
+        cdpFetch: async () => new Response(JSON.stringify(cdpResponse)),
+        bitqueryFetch: async () => new Response(JSON.stringify(bitqueryResponse)),
+        zerionFetch: async (url) =>
+          new Response(
+            JSON.stringify(
+              String(url).includes("/positions/")
+                ? zerionPositionsResponse
+                : zerionPortfolioResponse,
+            ),
+          ),
+      });
+
+      expect(result.response.portfolioSummary.sourceCoverage).toMatchObject({
+        source: "portfolio",
+        status: "available",
+        provenance: { sourceKind: "zerion" },
+      });
+      expect(result.response.defiPositions[0]).toMatchObject({ protocol: "Aave V3" });
+      expect(result.response.insights[0]).toMatchObject({ key: "defi-active" });
+    }));
+
+  test("writes available Zerion coverage for an empty positions result", async () =>
+    withTempDir("zerion-empty", async (directory) => {
+      const output = path.join(directory, "customer.json");
+      const result = await runCustomerIntelligenceCapture({
+        address,
+        network: "base",
+        asset: "USDC",
+        from: "2026-01-01T00:00:00Z",
+        to: "2026-04-29T23:59:59Z",
+        out: output,
+        bitqueryToken: "test-token",
+        portfolioSource: "zerion",
+        zerionApiKey: "test-zerion-key",
+        cdpFetch: async () => new Response(JSON.stringify(cdpResponse)),
+        bitqueryFetch: async () => new Response(JSON.stringify(bitqueryResponse)),
+        zerionFetch: async (url) =>
+          new Response(
+            JSON.stringify(
+              String(url).includes("/positions/")
+                ? emptyZerionPositionsResponse
+                : zerionPortfolioResponse,
+            ),
+          ),
+      });
+
+      expect(result.response.portfolioSummary.sourceCoverage.status).toBe("available");
+      expect(result.response.defiPositions).toEqual([]);
+      expect(result.response.insights[0]).toMatchObject({ key: "external-x402-activity" });
+    }));
+
+  test("writes partial Zerion coverage without fabricating positions", async () =>
+    withTempDir("zerion-partial", async (directory) => {
+      const output = path.join(directory, "customer.json");
+      const result = await runCustomerIntelligenceCapture({
+        address,
+        network: "base",
+        asset: "USDC",
+        from: "2026-01-01T00:00:00Z",
+        to: "2026-04-29T23:59:59Z",
+        out: output,
+        bitqueryToken: "test-token",
+        portfolioSource: "zerion",
+        zerionApiKey: "test-zerion-key",
+        cdpFetch: async () => new Response(JSON.stringify(cdpResponse)),
+        bitqueryFetch: async () => new Response(JSON.stringify(bitqueryResponse)),
+        zerionFetch: async (url) =>
+          String(url).includes("/positions/")
+            ? new Response(JSON.stringify(zerionErrorResponse), { status: 429 })
+            : new Response(JSON.stringify(zerionPortfolioResponse)),
+      });
+
+      expect(result.response.portfolioSummary.sourceCoverage.status).toBe("partial");
+      expect(result.response.defiPositions).toEqual([]);
+    }));
+
+  test("writes unavailable Zerion coverage when all Zerion calls fail", async () =>
+    withTempDir("zerion-unavailable", async (directory) => {
+      const output = path.join(directory, "customer.json");
+      const result = await runCustomerIntelligenceCapture({
+        address,
+        network: "base",
+        asset: "USDC",
+        from: "2026-01-01T00:00:00Z",
+        to: "2026-04-29T23:59:59Z",
+        out: output,
+        bitqueryToken: "test-token",
+        portfolioSource: "zerion",
+        zerionApiKey: "test-zerion-key",
+        cdpFetch: async () => new Response(JSON.stringify(cdpResponse)),
+        bitqueryFetch: async () => new Response(JSON.stringify(bitqueryResponse)),
+        zerionFetch: async () => new Response(JSON.stringify(zerionErrorResponse), { status: 500 }),
+      });
+
+      expect(result.response.portfolioSummary.sourceCoverage.status).toBe("unavailable");
+      expect(result.response.defiPositions).toEqual([]);
+    }));
+
+  test("fails before writing outputs when Zerion is enabled without API key", async () =>
+    withTempDir("missing-zerion", async (directory) => {
+      const output = path.join(directory, "customer.json");
+      let cdpCalls = 0;
+      await expect(
+        runCustomerIntelligenceCapture({
+          address,
+          network: "base",
+          asset: "USDC",
+          from: "2026-01-01T00:00:00Z",
+          to: "2026-04-29T23:59:59Z",
+          out: output,
+          bitqueryToken: "test-token",
+          portfolioSource: "zerion",
+          zerionApiKey: "",
+          cdpFetch: async () => {
+            cdpCalls += 1;
+            return new Response(JSON.stringify(cdpResponse));
+          },
+        }),
+      ).rejects.toThrow("ZERION_API_KEY is required");
+
+      expect(cdpCalls).toBe(0);
+      expect(fs.existsSync(output)).toBe(false);
     }));
 
   test("fails before writing outputs when bitquery token is missing", async () =>

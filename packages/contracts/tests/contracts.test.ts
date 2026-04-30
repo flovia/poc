@@ -10,6 +10,7 @@ import {
   validatePhaseBCustomerListResponse,
   validatePhaseBCustomerProfileResponse,
   validatePhaseBWalletUsageGraphResponse,
+  validatePortfolioSourceResult,
   validateRealTransactionFixture,
 } from "../src/index";
 
@@ -150,6 +151,73 @@ describe("contracts schema validation", () => {
       validateCustomerIntelligenceResponse({
         ...validCustomerIntelligence(),
         sourceCoverage: [{ source: "portfolio", status: "unavailable" }],
+      }),
+    ).toThrow();
+  });
+
+  test("accepts Zerion portfolio source provenance without raw provider payload", () => {
+    const parsed = validatePortfolioSourceResult({
+      summary: {
+        totalValueUsd: "1234.56",
+        tokenCount: 2,
+        chains: ["base", "ethereum"],
+      },
+      positions: [
+        {
+          protocol: "Aave V3",
+          positionType: "lending",
+          valueUsd: "120.5",
+          network: "base",
+          reasons: [{ provenance: "onchain_fact", label: "Zerion position fact" }],
+        },
+      ],
+      sourceCoverage: {
+        source: "portfolio",
+        status: "available",
+        provenance: {
+          sourceKind: "zerion",
+          sourceName: "Zerion Portfolio API",
+          fetchedAt: "2026-04-29T00:00:00Z",
+        },
+      },
+    });
+
+    expect(parsed.sourceCoverage.provenance?.sourceKind).toBe("zerion");
+    expect(parsed.positions?.[0]?.protocol).toBe("Aave V3");
+  });
+
+  test("rejects raw Zerion payload and secret-like fields in portfolio source result", () => {
+    expect(() =>
+      validatePortfolioSourceResult({
+        summary: { totalValueUsd: "1", tokenCount: 1 },
+        positions: [],
+        sourceCoverage: { source: "portfolio", status: "available" },
+        raw: { data: [] },
+      }),
+    ).toThrow();
+
+    expect(() =>
+      validatePortfolioSourceResult({
+        summary: { totalValueUsd: "1", tokenCount: 1 },
+        positions: [],
+        sourceCoverage: { source: "portfolio", status: "available" },
+        apiKey: "secret",
+      }),
+    ).toThrow();
+
+    expect(() =>
+      validatePortfolioSourceResult({
+        summary: { totalValueUsd: "1", tokenCount: 1 },
+        positions: [],
+        sourceCoverage: {
+          source: "portfolio",
+          status: "available",
+          provenance: {
+            sourceKind: "zerion",
+            sourceName: "Zerion Portfolio API",
+            raw: { authorization: "Basic secret" },
+          },
+        },
       }),
     ).toThrow();
   });
