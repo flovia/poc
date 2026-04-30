@@ -1,0 +1,35 @@
+{
+  "data": {
+    "items": [
+      {
+        "resourceId": "resource-1",
+        "resource": "https://orthogonal.example/search",
+        "provider": "Orthogonal",
+        "service": "Search",
+        "paymentOptions": [
+          {
+            "network": "base",
+            "asset": "USDC",
+            "amount": "1000",
+            "payTo": "0x1111111111111111111111111111111111111111",
+            "quality": {
+              "expectedTransactionCount": 9,
+              "expectedVolumeAtomic": "9000",
+              "expectedUniqueSenderCount": 2
+            }
+          },
+          {
+            "network": "polygon",
+            "asset": "USDC",
+            "amount": "500",
+            "payTo": "0x9991111111111111111111111111111111111119"
+          }
+        ]
+      }
+    ],
+    "pageInfo": {
+      "hasNextPage": true,
+      "endCursor": "cursor-1"
+    }
+  }
+}

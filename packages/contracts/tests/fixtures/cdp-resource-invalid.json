@@ -1,0 +1,20 @@
+{
+  "resourceId": "resource-invalid",
+  "resource": "https://api.example/orthogonal/search",
+  "paymentOptions": [
+    {
+      "network": "base",
+      "asset": "USDC",
+      "amount": "not-a-number",
+      "payTo": "0x0000000000000000000000000000000000000000",
+      "provenance": {
+        "sourceKind": "cdp_discovery",
+        "sourceName": "cdp-discovery"
+      }
+    }
+  ],
+  "provenance": {
+    "sourceKind": "cdp_discovery",
+    "sourceName": "cdp-discovery"
+  }
+}

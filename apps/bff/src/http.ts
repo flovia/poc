@@ -1,4 +1,9 @@
-import type { BffReadService } from "./services/read-service";
+import {
+  getPhaseBCustomerIntelligenceByAddress,
+  getPhaseBCustomerProfileByAddress,
+  phaseBCustomerListResponse,
+  phaseBWalletUsageGraphResponse,
+} from "./data/phase-b-demo";
 
 type JsonValue = unknown;
 
@@ -11,87 +16,82 @@ const json = (body: JsonValue, init: ResponseInit = {}) =>
     },
   });
 
-const readonlyRoutes = new Set([
-  "/health",
-  "/summary",
-  "/observations",
-  "/attribution-candidates",
-  "/metrics/daily",
-  "/wallets/payers",
-  "/wallets/recipients",
-  "/wallets/relayers",
-  "/wallet-usage-graph",
-  "/metrics/retention/d14",
-  "/customers",
-]);
+const readonlyRoutes = new Set(["/", "/health", "/customers", "/wallet-usage-graph"]);
 
-const mutationRoutes = new Set(["/ingest/rpc-tx", "/ingest/rpc-range", "/score", "/aggregate"]);
+const toProfileAddress = (path: string) => {
+  const match = path.match(/^\/customers\/([^/]+)\/profile$/);
+  return match?.[1] ?? null;
+};
 
-export const createBffHandler = (service: BffReadService) => (request: Request) => {
+const toIntelligenceAddress = (path: string) => {
+  const match = path.match(/^\/customers\/([^/]+)\/intelligence$/);
+  return match?.[1] ?? null;
+};
+
+const methodNotAllowed = () =>
+  json(
+    {
+      error: "method_not_allowed",
+      message: "The BFF only supports GET for read endpoints.",
+    },
+    { status: 405, headers: { allow: "GET" } },
+  );
+
+export const createBffHandler = () => (request: Request) => {
   const url = new URL(request.url);
   const path = url.pathname.replace(/\/$/, "") || "/";
 
   if (request.method !== "GET") {
-    if (isReadonlyRoute(path) || mutationRoutes.has(path)) {
-      return json(
-        {
-          error: "method_not_allowed",
-          message: "The BFF is read-only and only supports GET for read endpoints.",
-        },
-        { status: 405, headers: { allow: "GET" } },
-      );
+    if (
+      readonlyRoutes.has(path) ||
+      toProfileAddress(path) !== null ||
+      toIntelligenceAddress(path) !== null
+    ) {
+      return methodNotAllowed();
     }
 
     return notFound(path);
   }
 
   switch (path) {
+    case "/":
+      return json({ service: "flovia-bff", status: "ok" });
     case "/health":
       return json({ status: "ok", service: "flovia-bff" });
-    case "/summary":
-      return json(service.getSummary());
-    case "/observations":
-      return json(service.listObservations());
-    case "/attribution-candidates":
-      return json(service.listAttributionCandidates());
-    case "/metrics/daily":
-      return json(service.listDailyMetrics());
-    case "/wallets/payers":
-      return json(service.listPayerWallets());
-    case "/wallets/recipients":
-      return json(service.listRecipientWallets());
-    case "/wallets/relayers":
-      return json(service.listRelayerWallets());
-    case "/wallet-usage-graph":
-      return json(service.getWalletUsageGraph());
-    case "/metrics/retention/d14":
-      return json(service.getD14Retention());
     case "/customers":
-      return json(service.listCustomers());
+      return json(phaseBCustomerListResponse);
+    case "/wallet-usage-graph":
+      return json(phaseBWalletUsageGraphResponse);
     default:
-      if (path.startsWith("/customers/") && path.endsWith("/profile")) {
-        const address = decodeURIComponent(path.slice("/customers/".length, -"/profile".length));
-        const profile = service.getCustomerProfile(address);
-
-        if (profile === null) {
-          return json(
-            {
-              error: "customer_not_found",
-              message: `Customer not found: ${address}`,
-            },
-            { status: 404 },
-          );
-        }
-
-        return json(profile);
-      }
-
-      return notFound(path);
+      break;
   }
-};
 
-const isReadonlyRoute = (path: string) =>
-  readonlyRoutes.has(path) || (path.startsWith("/customers/") && path.endsWith("/profile"));
+  const address = toProfileAddress(path);
+  if (address !== null) {
+    const normalizedAddress = address.toLowerCase();
+    const profile = getPhaseBCustomerProfileByAddress(normalizedAddress);
+
+    if (!profile) {
+      return notFound(path);
+    }
+
+    return json(profile);
+  }
+
+  const intelligenceAddress = toIntelligenceAddress(path);
+  if (intelligenceAddress !== null) {
+    const normalizedAddress = intelligenceAddress.toLowerCase();
+    const intelligence = getPhaseBCustomerIntelligenceByAddress(normalizedAddress);
+
+    if (!intelligence) {
+      return notFound(path);
+    }
+
+    return json(intelligence);
+  }
+
+  return notFound(path);
+};
 
 const notFound = (path: string) =>
   json({ error: "not_found", message: `Route not found: ${path}` }, { status: 404 });

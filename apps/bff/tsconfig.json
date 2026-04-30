@@ -9,8 +9,8 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "types": ["bun"],
-    "rootDir": "..",
+    "rootDir": ".",
     "outDir": "./dist"
   },
-  "include": ["src/**/*.ts", "tests/**/*.ts", "../cli/lib/**/*.ts"]
+  "include": ["src/**/*.ts", "tests/**/*.ts"]
 }

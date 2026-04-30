@@ -1,0 +1,55 @@
+{
+  "data": [
+    {
+      "type": "positions",
+      "id": "position-aave-base",
+      "attributes": {
+        "name": "Aave V3 USDC",
+        "protocol": "Aave V3",
+        "protocol_module": "lending",
+        "position_type": "deposit",
+        "value": 120.5,
+        "updated_at": "2026-04-29T00:00:00Z",
+        "flags": {
+          "displayable": true,
+          "is_trash": false
+        }
+      },
+      "relationships": {
+        "chain": {
+          "data": {
+            "type": "chains",
+            "id": "base"
+          }
+        }
+      }
+    },
+    {
+      "type": "positions",
+      "id": "position-uniswap-ethereum",
+      "attributes": {
+        "name": "Uniswap V3 LP",
+        "protocol": "Uniswap V3",
+        "protocol_module": "liquidity_pool",
+        "position_type": "deposit",
+        "value": 300.25,
+        "updated_at": "2026-04-29T00:00:00Z",
+        "flags": {
+          "displayable": true,
+          "is_trash": false
+        }
+      },
+      "relationships": {
+        "chain": {
+          "data": {
+            "type": "chains",
+            "id": "ethereum"
+          }
+        }
+      }
+    }
+  ],
+  "links": {
+    "next": null
+  }
+}

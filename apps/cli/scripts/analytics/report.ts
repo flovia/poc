@@ -1,133 +1,64 @@
-import fs from "node:fs";
-import path from "node:path";
-import {
-  listAttributionCandidates,
-  listDailyMetrics,
-  listPayerProfiles,
-  listPaymentObservations,
-  listRecipientSummaries,
-  listRelayerSummaries,
-} from "../../lib/aggregates/summaries";
-import { buildReportSummary } from "../../lib/api/summary";
-import { buildWalletUsageGraph } from "../../lib/attribution/wallet-graph";
-import { ensureDir, env } from "../../lib/db";
+import type { MarketSnapshot } from "contracts";
 
-const buildMarkdown = (summary: Record<string, unknown>) => {
-  const observations = listPaymentObservations();
-  const candidates = listAttributionCandidates();
-  const daily = listDailyMetrics();
-  const payerProfiles = listPayerProfiles();
-  const recipientProfiles = listRecipientSummaries();
-  const relayerProfiles = listRelayerSummaries();
-  const walletGraph = buildWalletUsageGraph();
-
-  const observationLines = observations
+export const renderMarketSnapshotMarkdown = (snapshot: MarketSnapshot): string => {
+  const topResources = snapshot.summary.topResources
     .map(
-      (row) =>
-        `${row.case_id} ${row.tx_hash} payer=${row.payer_wallet} recipient=${row.recipient_wallet} amount=${row.amount_atomic}`,
+      (resource) =>
+        `- ${resource.resourceId}: tx=${resource.totalTransactionCount} rank=${resource.activityRank}`,
     )
     .join("\n");
 
-  const candidateLines = candidates
-    .map(
-      (row) =>
-        `obs=${row.observation_id} type=${row.candidate_type} matched=${row.matched_fingerprint_type}:${row.matched_fingerprint_value} confidence=${row.confidence}`,
+  const discrepancyRows = snapshot.resources.flatMap((resource) =>
+    resource.paymentOptions
+      .filter((row) => row.discrepancies.length > 0)
+      .map(
+        (row) =>
+          `${resource.resourceId} ${row.cdpPaymentOption.network}/${row.cdpPaymentOption.asset} ${row.cdpPaymentOption.payTo} -> ${row.discrepancies.length} discrepancy(s)`,
+      ),
+  );
+
+  const scopedRows = snapshot.resources
+    .flatMap((resource) =>
+      resource.paymentOptions
+        .filter((row) => row.inScope)
+        .map(
+          (row) =>
+            `- ${resource.resourceId}/${row.cdpPaymentOption.payTo} tx=${row.bitqueryAggregate.transactionCount} active=${row.isActive}`,
+        ),
     )
     .join("\n");
 
-  const dailyLines = daily
-    .map(
-      (row) =>
-        `${row.day}: observations=${row.observation_count} candidates=${row.candidate_count} total_amount=${row.total_amount_atomic}`,
-    )
-    .join("\n");
+  return `# x402 market snapshot
 
-  return `# Offline Payment Observation Report
+Generated: ${snapshot.generatedAt}
 
-Generated at ${new Date().toISOString()}
+## Scope
 
-## Counts
+${snapshot.scope.network ? `- network: ${snapshot.scope.network}` : ""}
+${snapshot.scope.asset ? `- asset: ${snapshot.scope.asset}` : ""}
 
-- Observations: ${observations.length}
-- Attribution Candidates: ${candidates.length}
-- Daily Metrics: ${daily.length}
-- Payer Profiles: ${payerProfiles.length}
-- Recipient Summaries: ${recipientProfiles.length}
-- Relayer Summaries: ${relayerProfiles.length}
-- Wallet Usage Graph Provider Wallets: ${walletGraph.providerWallets.length}
+## Summary
 
-## Scope Note
+- resources: ${snapshot.summary.totalResources}
+- scoped resources: ${snapshot.summary.scopedResources}
+- payment options: ${snapshot.summary.totalPaymentOptions}
+- scoped payment options: ${snapshot.summary.scopedPaymentOptions}
+- active resources: ${snapshot.summary.activeResources}
+- active payment options: ${snapshot.summary.activePaymentOptions}
+- discrepancies: ${snapshot.summary.discrepancyCount}
+- transactions (scoped): ${snapshot.summary.totalTransactions}
+- unique senders (scoped): ${snapshot.summary.totalUniqueSenders}
 
-This report describes payer-wallet intelligence only. It does not identify human users and excludes ENS, social, KYC, email, IP address, and other offchain identity enrichment.
+## Top resources
 
-## Observations
+${topResources || "No scoped resources"}
 
-${observationLines || "No observations"}
+## Scoped payment options
 
-## Attribution Candidates
+${scopedRows || "No scoped payment options"}
 
-${candidateLines || "No attribution candidates"}
+## Discrepancy notes
 
-## Daily Metrics
-
-${dailyLines || "No daily metrics"}
-
-## Payer Profiles
-
-${
-  payerProfiles
-    .map(
-      (row) =>
-        `${row.wallet}: observations=${row.observation_count} total_amount=${row.total_amount_atomic}`,
-    )
-    .join("\n") || "No payer profiles"
-}
-
-## Recipient Summaries
-
-${
-  recipientProfiles
-    .map(
-      (row) =>
-        `${row.wallet}: observations=${row.observation_count} total_amount=${row.total_amount_atomic}`,
-    )
-    .join("\n") || "No recipient summaries"
-}
-
-## Relayer Summaries
-
-${
-  relayerProfiles
-    .map(
-      (row) =>
-        `${row.wallet}: observations=${row.observation_count} total_amount=${row.total_amount_atomic}`,
-    )
-    .join("\n") || "No relayer summaries"
-}
+${discrepancyRows.length > 0 ? discrepancyRows.join("\n") : "No discrepancies"}
 `;
 };
-
-export const runReport = () => {
-  ensureDir(env.reportsDir);
-  const summary = buildReportSummary();
-  const summaryJsonPath = path.join(env.reportsDir, "summary.json");
-  const summaryMarkdownPath = path.join(env.reportsDir, "summary.md");
-
-  fs.writeFileSync(summaryJsonPath, JSON.stringify(summary, null, 2));
-  fs.writeFileSync(summaryMarkdownPath, buildMarkdown(summary));
-
-  return {
-    summaryJsonPath,
-    summaryMarkdownPath,
-    counts: summary.counts,
-  };
-};
-
-const main = () => {
-  const result = runReport();
-  console.log(JSON.stringify(result, null, 2));
-};
-
-if (import.meta.main) {
-  main();
-}

@@ -1,0 +1,85 @@
+{
+  "generatedAt": "2026-04-29T00:00:00.000Z",
+  "scope": {
+    "network": "base",
+    "asset": "USDC"
+  },
+  "source": {
+    "generatedBy": "x402-market-snapshot",
+    "cdp": {
+      "sourceKind": "cdp_discovery",
+      "sourceName": "cdp-discovery",
+      "fetchLimit": 10,
+      "fetchCount": 2
+    },
+    "bitquery": {
+      "sourceKind": "bitquery",
+      "sourceName": "bitquery-graphql",
+      "queriedPairs": 1
+    }
+  },
+  "summary": {
+    "totalResources": 1,
+    "scopedResources": 1,
+    "totalPaymentOptions": 2,
+    "scopedPaymentOptions": 1,
+    "activeResources": 1,
+    "activePaymentOptions": 1,
+    "discrepancyCount": 0,
+    "topResources": [
+      {
+        "resourceId": "resource-1",
+        "totalTransactionCount": 3,
+        "activityRank": 1
+      }
+    ],
+    "totalTransactions": 3,
+    "totalUniqueSenders": 2
+  },
+  "resources": [
+    {
+      "resourceId": "resource-1",
+      "resource": "https://api.example/orthogonal/search",
+      "provider": "Orthogonal",
+      "service": "Search API",
+      "isActive": true,
+      "activityRank": 1,
+      "totalTransactionCount": 3,
+      "totalVolumeAtomic": "3000000",
+      "discrepancyCount": 0,
+      "paymentOptions": [
+        {
+          "cdpPaymentOption": {
+            "network": "base",
+            "asset": "USDC",
+            "amount": "1000",
+            "payTo": "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "provenance": {
+              "sourceKind": "cdp_discovery",
+              "sourceName": "cdp-discovery"
+            },
+            "quality": {
+              "expectedTransactionCount": 2
+            }
+          },
+          "bitqueryAggregate": {
+            "network": "base",
+            "asset": "USDC",
+            "payTo": "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "transactionCount": 3,
+            "uniqueSenderCount": 2,
+            "totalVolumeAtomic": "3000000",
+            "provenance": {
+              "sourceKind": "bitquery",
+              "sourceName": "bitquery-graphql"
+            }
+          },
+          "inScope": true,
+          "isActive": true,
+          "activityRank": 1,
+          "discrepancies": []
+        }
+      ]
+    }
+  ]
+}
