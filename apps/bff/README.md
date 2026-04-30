@@ -2,7 +2,7 @@
 
 BFF は、frontend demo のための read-only product API 境界です。
 
-Phase B では、prepared demo read model を返す 3 つの product endpoint を提供します。
+Phase B では、prepared demo read model を返す read-only product endpoint を提供します。
 現在の BFF は `apps/cli` に依存せず、`packages/contracts` の Phase B contract に従う
 canonical envelope response を返します。
 
@@ -21,11 +21,12 @@ bun run verify
 - `GET /health` -> `{ status: "ok", service: "flovia-bff" }`
 - `GET /customers` -> Phase B customer list projection
 - `GET /customers/:address/profile` -> Phase B wallet profile projection
+- `GET /customers/:address/intelligence` -> Phase B customer intelligence read model
 - `GET /wallet-usage-graph` -> Phase B co-usage graph projection
 
 product endpoint の response は `docs/phase-b/api-contract.md` と `packages/contracts` の Phase B schema に従います。
-demo label や future SDK telemetry 想定値は専用 endpoint ではなく、上記 3 endpoint の
-response に内包され、`provenance` / `provenanceByField` / `reasons` で区別されます。
+demo label や future SDK telemetry 想定値は response 内の `provenance` /
+`provenanceByField` / `reasons` で区別されます。
 
 以下は Phase B 初回実装では公開しません。
 

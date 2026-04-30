@@ -597,7 +597,10 @@ Phase B のデモレスポンスには、scope フィールドが任意で含ま
 scope フィールドが省略されたことから、隠れた provider フィルタリングを
 推定してはなりません。
 
-## 5. 計画済み / 未実装エンドポイント
+## 5. 追加済み / 計画済みエンドポイント
+
+- `GET /customers/:address/intelligence`（追加済み。customer 起点の他 x402 service candidate、payTo activity、portfolio / DeFi context、derived insight を返す分析 endpoint。BFF は live external API を呼ばず、保存済み read model を返す。方針と詳細 contract は `docs/phase-b/customer-intelligence.md` を参照）
+
+## 6. 計画済み / 未実装エンドポイント
 
 - `GET /patterns`（Phase B 計画は存在するが、契約は未実装）
-- `GET /customers/:address/intelligence`（計画中。現時点の canonical Demo Read API には含めない。customer 起点の他 x402 service candidate、payTo activity、portfolio / DeFi context、derived insight を返す分析 endpoint。BFF は live external API を呼ばず、保存済み read model を返す。方針は `docs/phase-b/customer-intelligence.md` を参照）

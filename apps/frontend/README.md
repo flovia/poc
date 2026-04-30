@@ -60,7 +60,7 @@ FRONTEND_PORT=3002 docker compose up --build
 | `/setup` | Provider (pay_to) の登録・管理。localStorage に保存 |
 | `/providers/[providerId]/customers` | 当該 Provider の顧客ウォレット一覧 |
 | `/providers/[providerId]/wallet/[address]` | Wallet 360°(主役画面)。Activity Timeline + Co-usage Map + Insight stack |
-| `/providers/[providerId]/patterns` | 集約ビュー。Bubble Chart / Retention / Workflow Clusters |
+| `/providers/[providerId]/patterns` | 集約ビュー。Bubble Chart による co-usage 表示。Retention / Workflow Clusters は未実装 |
 | `/` | localStorage の最初の Provider の Customers にリダイレクト。なければ `/setup` へ |
 
 ## ディレクトリ構成

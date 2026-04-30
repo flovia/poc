@@ -2,7 +2,7 @@
 
 最終更新: 2026-04-29
 
-このドキュメントは、[`vision/`](vision/) にコピーした **PoC 開発前に固めた前提・脚本** と、現在の BFF (`apps/bff`) が提供するデータの乖離を整理し、**今の BFF で現実的に表現できる範囲** を明示するためのものです。
+このドキュメントは、[`vision/`](vision/) にコピーした **PoC 開発前に固めた前提・脚本** と、現在の BFF (`apps/bff`) が提供するデータの乖離を整理し、**今の BFF で現実的に表現できる範囲** を明示するためのものです。現行機能の正本は [current-capabilities.md](current-capabilities.md) です。
 
 参照元:
 - [00_overview.md](vision/00_overview.md) — ナラティブ / 利用者 / スコープ
@@ -64,12 +64,11 @@
 
 | 提供 | 内容 |
 | --- | --- |
-| ✅ payer wallet | アドレス、観測数、累計 atomic spend、関わった recipient 数、最終観測時刻 |
-| ✅ recipient wallet (= provider 候補) | 上記の recipient 視点版 |
-| ✅ payment observation | tx_hash, block_timestamp, amount_atomic, payer/recipient/relayer wallet |
-| ✅ attribution candidate | observation × `provider_endpoint_claim` のマッチ結果（confidence + reasons） |
-| ✅ provider_endpoint_claim | 名前、サービス名、pay_to、network、asset、roles |
-| ✅ daily_metrics | 日次の観測数・unique payers/recipients/relayers・累計金額 |
+| ✅ payer wallet | `/customers` / `/customers/:address/profile` によるアドレス、観測数、累計 atomic spend、関わった recipient 数、最終観測時刻 |
+| ✅ recipient wallet (= provider 候補) | `/wallet-usage-graph` の providerWallets と payerWallets |
+| ✅ payment observation | `/customers/:address/profile` の timeline と `/wallet-usage-graph` の observations に含まれる txHash / timestamp / amountAtomic |
+| ✅ demo attribution | prepared mock attribution fixture から生成された provider / service label、confidence、reasons |
+| ✅ customer intelligence | `/customers/:address/intelligence` の他 service candidate、payTo activity、portfolio / DeFi context、derived insight |
 | ✅ wallet usage graph | provider wallet × payer wallet の関係（observations + 他サービス候補） |
 | ✅ heuristic | freeTierProgress (PoC 線形)、activityGrowth (前後半比)、entryPointRatio (candidate と紐付いた比率)、upsellOpportunity (low/medium/high) |
 
@@ -101,8 +100,8 @@
 
 | 当初想定の属性 | BFF で取れるか | 補足 |
 | --- | --- | --- |
-| Provider.name | ✅ | `provider_endpoint_claim.provider_name`。seed-demo では Acme Price API / VectorMind AI / RouteZero DEX / SignalPort |
-| Provider.**category** | ⚠️ | claim に `service_name` (Market Data / LLM / DEX Aggregator / Notifications) として近似値あり。BFF DTO には現状未含。 |
+| Provider.name | ✅ | prepared mock attribution fixture 由来の provider label。実データではなく `demo_label` として扱う。 |
+| Provider.**category** | ⚠️ | service label として近似値あり。実データではなく `demo_label` として扱う。 |
 | Provider.pay_to addresses[] | ✅ | `pay_to_wallet` |
 | Provider.**API paths[]** | ❌ | BFF README で明示的に提供しないと宣言。 |
 | Wallet.address | ✅ | payer_wallet |
@@ -110,7 +109,7 @@
 | Wallet.first_seen_at | ✅ | `first_seen_at` |
 | Payment.tx_hash | ✅ | `tx_hash` |
 | Payment.wallet | ✅ | `payer_wallet` |
-| Payment.provider_id | ✅ | attribution candidate 経由で `entity_id` に紐づく |
+| Payment.provider_id | ✅ | mock attribution projection 経由で provider candidate に紐づく |
 | Payment.**api_path** | ❌ | BFF 非提供 |
 | Payment.**amount_usd** | ❌ | atomic string のみ。換算は BFF 射程外 |
 | Payment.timestamp | ✅ | `block_timestamp` |
@@ -124,7 +123,7 @@
 | 要素 | BFF で取れるか | 補足 |
 | --- | --- | --- |
 | 1. Free Tier Progress Bar | ✅ | `metrics.freeTierProgress` (0..1)。BFF heuristic は `spend < 3M atomic` で線形。本物の "プラン上限" は BFF にない |
-| 2. 7d Volume Sparkline | ⚠️ | `/metrics/daily` から日次の observation 数を取って sparkline 化は可能。フロントで集計が必要 |
+| 2. 7d Volume Sparkline | ❌ | 現行 BFF は時間窓集計 endpoint を公開していない。追加する場合は BFF contract 拡張が必要 |
 | 3. Upsell Opportunity Card | ⚠️ | `metrics.upsellOpportunity` (low/medium/high) はあるが、**"Pro Trading 250M" のようなプラン名や "Projected $890 MRR" は BFF 非提供**。汎用カード（heuristic 入力の表示）に置き換え |
 | 4. Workflow Summary Strip ("Price → LLM → DEX → Discord") | ⚠️ | provider 名の並びだけなら observations の順序から組める。**ただし "毎時の loop" として名前を付ける部分は heuristic が必要** |
 | 5. Entry-point Badge ("step 1 in 87% of observed loops") | ❌ | "loop の何 % で起点になっているか" は BFF にない。`metrics.entryPointRatio` は別の意味（observation のうち attribution candidate と紐付いた比率）なので置き換え不可 |
@@ -188,7 +187,7 @@
 
 | 当初ビジョン | UI 側で必要な処理 |
 | --- | --- |
-| 7d Volume Sparkline | `/metrics/daily` を取り、直近7日で日次 observation 数を bar/line に |
+| 7d Volume Sparkline | 現行 BFF だけでは不可。時間窓集計を BFF DTO に追加してから bar/line にする |
 | Workflow Summary Strip（provider の並び） | 同一 payer の observation を block_timestamp 順で並べ、time_proximity 閾値（仮に 5 分）で1サイクルに束ねる。**サイクル名は付けない**、provider 名の並びだけ表示 |
 | 簡易 Co-usage Network 図 | `/wallet-usage-graph` から payer-recipient エッジを抽出し、Force-directed で配置。当初想定の「中心=自社 / 周辺=併用先」は、フォーカス対象 wallet を中心ノードにすれば成立 |
 | 簡易 Retention 指標 | payer 別に `last_seen_at - first_seen_at >= 14 日` の割合を集計。**agent 別ではなく payer 全体の集計**にとどめる |
@@ -238,18 +237,17 @@
 
 ### 短期（BFF を変更せずに UI 強化）
 
-1. **`/metrics/daily` を使った日次 sparkline** を Customers / Wallet 360° に投入
-2. **Force-directed Network 図** を Patterns に追加（現在は散布図のみ）
-3. **Wallet 360° の Workflow Summary Strip** を、observation の time_proximity ベースで自動生成（**サイクル名は付けない**、provider 名の並びだけ）
-4. **payer-level Retention 指標** を Patterns に追加（agent 別ではなく全体）
+1. **Force-directed Network 図** を Patterns に追加（現在は散布図のみ）
+2. **Wallet 360° の Workflow Summary Strip** を、profile timeline の time_proximity ベースで自動生成（**サイクル名は付けない**、provider 名の並びだけ）
+3. **customer intelligence endpoint** を frontend に接続し、他 service candidate / portfolio context を Wallet 360° に追加
 
-これらは現在のフロントに足すだけで実装できます。当初ビジョンの **再定式化された範囲** を埋める作業です。
+これらは現行 BFF の公開 endpoint だけで検討できます。当初ビジョンの **再定式化された範囲** を埋める作業です。
 
 ### 中期（BFF 拡張が必要 / PoC スコープ判断）
 
 5. **Workflow Cluster 検出** を BFF か CLI 側に追加（同一 payer の連続 observation を time_proximity で束ね、頻出パターンを集計）。クラスタ名の自動命名はしない
 6. **時間窓集計**（直近 7d / 30d）を BFF DTO に追加。今の累計のみから差分集計に拡張
-7. **provider category** を `provider_endpoint_claim.service_name` から DTO に露出
+7. **provider category** を contract / projection に明示 field として追加
 
 ### 長期（PoC 射程変更）
 

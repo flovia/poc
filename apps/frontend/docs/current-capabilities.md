@@ -2,7 +2,7 @@
 
 最終更新: 2026-04-29
 
-このドキュメントは、現在の poc-frontend が **何を見せられて何を見せられないか** を整理したものです。実装の現状と、PoC の射程内で意図的に切り落としている領域を明示します。
+このドキュメントは、現在の `apps/frontend` が **何を見せられて何を見せられないか** を整理したものです。実装の現状と、PoC の射程内で意図的に切り落としている領域を明示します。
 
 ---
 
@@ -15,27 +15,24 @@
 [Next.js 15 App Router (poc-frontend)]
    │  Server Component が fetch (cache: no-store)
    ▼
-[Flovia BFF (apps/bff, Bun + bun:sqlite)]   ← localhost:3001
+[Flovia BFF (apps/bff, Bun)]   ← localhost:3001
    │
    ▼
-[demo.db (SQLite, seed-demo.ts で投入)]
+[prepared fixture / projection read model]
 ```
 
 - フロントエンドは **データを保持しない**。全画面が Server Component 内で BFF を叩いて DTO を取得し、そのままコンポーネントに流す。
-- BFF は **読み取り専用**。書き込み・取り込み・スコアリングは行わない（README §「対象外」）。
-- データは `apps/bff/scripts/seed-demo.ts` が `demo.db` に投入する固定セット（payer 5 / provider 4 / observation 29）。
+- BFF は **読み取り専用**。書き込み・取り込み・スコアリングは行わない。
+- データは `apps/bff/fixtures/phase-a/coingecko-transactions.json`、`apps/bff/fixtures/phase-b/mock-attribution.json`、`apps/bff/fixtures/phase-b/customer-intelligence/*.json` から module initialization 時に projection / read model 化される。
 
 ### 起動
 
 ```bash
 # BFF
-cd ../poc/apps/bff
-DATABASE_URL=./demo.db bun ./scripts/seed-demo.ts
-DATABASE_URL=./demo.db bun src/server.ts          # http://localhost:3001
+bun --filter bff start                            # http://localhost:3001
 
 # Frontend
-cd poc-frontend
-NEXT_PUBLIC_BFF_URL=http://localhost:3001 pnpm dev # http://localhost:3000
+BFF_URL=http://localhost:3001 NEXT_PUBLIC_BFF_URL=/api bun --filter frontend dev # http://localhost:3000
 ```
 
 ---
@@ -133,26 +130,15 @@ NEXT_PUBLIC_BFF_URL=http://localhost:3001 pnpm dev # http://localhost:3000
 
 ---
 
-## 3. データセット (`seed-demo.ts`)
+## 3. データセット
 
-| Payer wallet | observation | provider | 性格 |
-| --- | --- | --- | --- |
-| `0xpayer...bot1` (Trading bot α) | 12 | 4 全部 | 加速、累計 spend 6.9M atomic |
-| `0xpayer...claude` | 6 | price + vector | 安定 |
-| `0xpayer...cursor` | 4 | price のみ | 単一プロバイダ |
-| `0xpayer...n8nflow` (n8n workflow) | 5 | price + signal | 減衰、`activityGrowth = -0.33` |
-| `0xpayer...curl1` | 2 | route のみ | 一発勝負 |
+現在の BFF は SQLite seed ではなく、prepared fixture から projection を生成する。
 
-| Provider wallet | entityId | name |
-| --- | --- | --- |
-| `0xprovider...price` | acme-price | Acme Price API |
-| `0xprovider...vector` | vectormind | VectorMind AI |
-| `0xprovider...route` | routezero | RouteZero DEX |
-| `0xprovider...signal` | signalport | SignalPort |
+- real onchain fact: `apps/bff/fixtures/phase-a/coingecko-transactions.json`
+- demo attribution: `apps/bff/fixtures/phase-b/mock-attribution.json`
+- customer intelligence read model: `apps/bff/fixtures/phase-b/customer-intelligence/*.json`
 
-その他の集計テーブル（`daily_metrics` / `recipient_summaries` / `relayer_summaries` / `provider_endpoint_claims` / `attribution_candidates`）も seed が投入済み。
-
-スクリプトは再実行可能（既存 `demo.db` / `-wal` / `-shm` を削除して再投入）。
+Projection は `apps/bff/src/data/projection-builder.ts` で `txHash` join され、module initialization 時に `packages/contracts` の validator で検証される。Fixture 再生成が必要な場合は、CLI の明示的な live capture command を使う。
 
 ---
 
@@ -161,24 +147,18 @@ NEXT_PUBLIC_BFF_URL=http://localhost:3001 pnpm dev # http://localhost:3000
 | Endpoint | フロントでの利用 | 備考 |
 | --- | --- | --- |
 | `GET /health` | 未使用 | 疎通確認用 |
-| `GET /summary` | 未使用 | フロントに表示する場所がない |
-| `GET /observations` | 未使用 | 全観測 raw data |
-| `GET /attribution-candidates` | 未使用 | 候補生データ |
-| `GET /metrics/daily` | 未使用 | 7日窓 sparkline 等を作るときに使える |
-| `GET /wallets/payers` | 未使用 | `/customers` で代替 |
-| `GET /wallets/recipients` | 未使用 | recipient 視点はまだ画面化なし |
-| `GET /wallets/relayers` | 未使用 | relayer の概念が UI に無い |
 | `GET /wallet-usage-graph` | ✅ Patterns | BubbleChart の入力 |
 | `GET /customers` | ✅ Customers | テーブル + サマリー |
 | `GET /customers/:address/profile` | ✅ Wallet 360° | 全カード |
+| `GET /customers/:address/intelligence` | 未使用 | BFF は提供済み。frontend 画面には未接続 |
 
 ---
 
 ## 5. 型・データ整合性
 
-- BFF DTO のフロント側ミラーは [`lib/api/types.ts`](../lib/api/types.ts) に集約。BFF (`apps/bff/src/api/customer-dto.ts`) と一対一で対応。
+- フロント側 UI DTO は [`lib/api/types.ts`](../lib/api/types.ts) に集約し、BFF canonical response は `packages/contracts` の validator で検証してから adapter に渡す。
 - API 呼び出しは [`lib/api/client.ts`](../lib/api/client.ts) のみ。`fetch` は `cache: "no-store"` 固定、404 は profile のみ `null` を返し、それ以外は throw。
-- `pnpm typecheck` / `pnpm lint` はクリーン。
+- `bun --filter frontend typecheck` / `bun --filter frontend test` を前提にする。
 - 通貨換算は行わない。すべて atomic unit string のまま `formatAtomic`（既定 6 decimals = USDC 相当）で表示。
 - `localStorage` に保存しているのは Setup で登録した `StoredProvider[]` のみ。BFF データは保存しない。
 
@@ -216,7 +196,7 @@ PoC の射程外として **明示的に落としている**機能。BFF README 
 短期 (BFF を変更せず可能):
 - ダッシュボードトップ画面で `/summary` を表示
 - Wallet 360° に `/observations` 由来の txHash → エクスプローラリンクを追加
-- `/metrics/daily` を使った日次 sparkline (Customers 列に再投入)
+- customer intelligence endpoint を Wallet 360° に接続
 
 中期 (BFF 拡張が必要):
 - 7日 / 月次の時間窓 metrics
