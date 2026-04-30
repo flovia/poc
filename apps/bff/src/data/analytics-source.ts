@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import path from "node:path";
 import {
   type PhaseBCustomerListResponse,
   type PhaseBCustomerProfileResponse,
@@ -44,6 +45,15 @@ type GeneratedReadModelFile = Partial<{
   profilesByAddress: Record<string, unknown>;
   intelligenceByAddress: Record<string, unknown>;
 }>;
+
+const DEFAULT_GENERATED_ANALYTICS_PATH = path.join(
+  import.meta.dir,
+  "..",
+  "..",
+  "fixtures",
+  "generated",
+  "analytics.json",
+);
 
 export const fixtureAnalyticsDataSource: BffAnalyticsDataSource = {
   customers: phaseBCustomerListResponse,
@@ -93,7 +103,7 @@ export const loadGeneratedAnalyticsDataSource = (filePath: string): BffAnalytics
 };
 
 export const resolveAnalyticsDataSource = (
-  filePath = process.env.BFF_ANALYTICS_READ_MODEL_PATH,
+  filePath = process.env.BFF_ANALYTICS_READ_MODEL_PATH ?? DEFAULT_GENERATED_ANALYTICS_PATH,
 ) => {
   if (filePath && fs.existsSync(filePath)) return loadGeneratedAnalyticsDataSource(filePath);
   return fixtureAnalyticsDataSource;
