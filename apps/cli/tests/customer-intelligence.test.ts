@@ -298,6 +298,55 @@ describe("customer intelligence cli script", () => {
       }
     }));
 
+  test("batch can build customer intelligence from cached transfer facts", async () =>
+    withTempDir("batch-cached-transfers", async (directory) => {
+      const result = await runCustomerIntelligenceBatchCapture({
+        addresses: [address],
+        network: "base",
+        asset: "USDC",
+        from: "2026-01-01T00:00:00Z",
+        to: "2026-04-29T23:59:59Z",
+        outDir: directory,
+        cdpResources: [
+          {
+            resourceId: "coingecko-x402",
+            resource: "https://api.coingecko.com/api/v3/x402/simple/price",
+            provider: "CoinGecko",
+            service: "CoinGecko x402",
+            paymentOptions: [
+              {
+                network: "base",
+                asset: "USDC",
+                amount: "10000",
+                payTo,
+                provenance: { sourceKind: "cdp_discovery", sourceName: "test" },
+              },
+            ],
+            provenance: { sourceKind: "cdp_discovery", sourceName: "test" },
+          },
+        ],
+        outgoingTransfers: [
+          {
+            txHash: "0x6248880ec36541e6783ab756afdb427939f6209551b751cec5a2c97f71176d94",
+            customerAddress: address,
+            payTo,
+            amountAtomic: "10000",
+            network: "base",
+            asset: "USDC",
+            timestamp: "2026-04-29T04:11:53Z",
+            blockNumber: "299",
+            provenance: "onchain_fact",
+          },
+        ],
+        bitqueryFetch: async () => {
+          throw new Error("should not fetch Bitquery when cached transfers are provided");
+        },
+      });
+
+      expect(result.responses[0]?.payToActivities).toHaveLength(1);
+      expect(result.responses[0]?.x402Services[0]).toMatchObject({ providerName: "CoinGecko" });
+    }));
+
   test("writes partial Zerion coverage without fabricating positions", async () =>
     withTempDir("zerion-partial", async (directory) => {
       const output = path.join(directory, "customer.json");

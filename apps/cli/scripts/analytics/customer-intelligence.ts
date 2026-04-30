@@ -8,7 +8,11 @@ import {
 } from "sources";
 import type { FetchLike } from "sources";
 import { normalizeAsset, normalizeNetwork, validateCustomerIntelligenceFixture } from "contracts";
-import type { CdpResource, CustomerIntelligenceResponse } from "contracts";
+import type {
+  CdpResource,
+  CustomerIntelligenceResponse,
+  CustomerOutgoingTransferFact,
+} from "contracts";
 import { writeAtomically } from "./io";
 import { type AnalyticsStore, createAnalyticsStore } from "./store";
 
@@ -38,6 +42,7 @@ export type CustomerIntelligenceCliOptions = {
   analyticsDbPath?: string;
   analyticsStore?: AnalyticsStore;
   cdpResources?: CdpResource[];
+  outgoingTransfers?: CustomerOutgoingTransferFact[];
 };
 
 export type CustomerIntelligenceRunResult = {
@@ -171,7 +176,9 @@ export const runCustomerIntelligenceCapture = async (
     provenanceByField: { customerAddress: "onchain_fact" },
     reasons: [{ provenance: "derived_insight", label: "scope validation" }],
   }).scope;
-  const bitqueryToken = resolveBitqueryToken(parsed.bitqueryToken);
+  const bitqueryToken = parsed.outgoingTransfers
+    ? null
+    : resolveBitqueryToken(parsed.bitqueryToken);
   const zerionApiKey =
     parsed.portfolioSource === "zerion" ? resolveZerionApiKey(parsed.zerionApiKey) : null;
 
@@ -184,16 +191,18 @@ export const runCustomerIntelligenceCapture = async (
         endpoint: parsed.cdpEndpoint,
       })
     ).resources;
-  const transfers = await fetchOutgoingTransfersByCustomer({
-    network: scope.network,
-    asset: scope.asset,
-    customerAddress: scope.address,
-    token: bitqueryToken,
-    fetchFn: parsed.bitqueryFetch,
-    endpoint: parsed.bitqueryEndpoint,
-    limit: parsed.limit,
-    timeWindow: scope.timeWindow,
-  });
+  const transfers =
+    parsed.outgoingTransfers ??
+    (await fetchOutgoingTransfersByCustomer({
+      network: scope.network,
+      asset: scope.asset,
+      customerAddress: scope.address,
+      token: bitqueryToken ?? "",
+      fetchFn: parsed.bitqueryFetch,
+      endpoint: parsed.bitqueryEndpoint,
+      limit: parsed.limit,
+      timeWindow: scope.timeWindow,
+    }));
 
   const portfolio =
     parsed.portfolioSource === "zerion"
@@ -288,6 +297,7 @@ export const runCustomerIntelligenceBatchCapture = async (
           endpoint: parsed.cdpEndpoint,
         })
       ).resources;
+    const outgoingTransfers = parsed.outgoingTransfers;
 
     for (const address of parsed.addresses) {
       const usePortfolio = parsed.portfolioSource === "zerion" && remainingPortfolio > 0;
@@ -302,6 +312,9 @@ export const runCustomerIntelligenceBatchCapture = async (
         out: outputPath,
         portfolioSource: usePortfolio ? "zerion" : "none",
         cdpResources,
+        outgoingTransfers: outgoingTransfers?.filter(
+          (transfer) => transfer.customerAddress.toLowerCase() === address.toLowerCase(),
+        ),
         analyticsStore: undefined,
         analyticsDbPath: undefined,
       });

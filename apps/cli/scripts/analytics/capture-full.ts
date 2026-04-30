@@ -393,6 +393,13 @@ export const runFullCapture = async (
     log(`[capture-full] wallet-sampling: selected ${walletPlan.selected.length} wallets`);
 
     currentStage = "customer-intelligence";
+    const outgoingTransfers = store.listCustomerOutgoingTransferFacts({
+      network: options.network,
+      asset: options.asset,
+      transferRunIds,
+      timeWindow: { from: options.from, to: options.to },
+      payerWallets: walletPlan.selected.map((row) => row.address),
+    });
     const batchOptions: Partial<CustomerIntelligenceBatchOptions> &
       Pick<CustomerIntelligenceBatchOptions, "addresses" | "from" | "to"> = {
       addresses: walletPlan.selected.map((row) => row.address),
@@ -412,6 +419,7 @@ export const runFullCapture = async (
       zerionEndpoint: options.zerionEndpoint,
       bitqueryFetch: options.bitqueryFetch,
       cdpResources: marketResult.resources,
+      outgoingTransfers,
       zerionFetch: options.zerionFetch,
       analyticsStore: store,
     };

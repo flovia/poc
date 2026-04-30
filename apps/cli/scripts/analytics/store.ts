@@ -6,6 +6,7 @@ import {
   type BitqueryTransferFact,
   type CdpResource,
   type CustomerIntelligenceResponse,
+  type CustomerOutgoingTransferFact,
   normalizeAsset,
   normalizeNetwork,
   normalizePayTo,
@@ -132,6 +133,10 @@ export type WalletTransferQueryScope = {
   asset?: string;
   transferRunIds?: number[];
   timeWindow?: { from?: string; to?: string };
+};
+
+export type CustomerOutgoingTransferQueryScope = WalletTransferQueryScope & {
+  payerWallets?: string[];
 };
 
 export type SamplingPlanMetadataInput = {
@@ -861,6 +866,55 @@ export class AnalyticsStore {
         attributionMetadata: parseJson(row.attribution_json as string, {}),
       };
     });
+  }
+
+  listCustomerOutgoingTransferFacts(
+    scope: CustomerOutgoingTransferQueryScope = {},
+  ): CustomerOutgoingTransferFact[] {
+    this.initialize();
+    const network = scope.network ? normalizeNetwork(scope.network) : null;
+    const asset = scope.asset ? normalizeAsset(scope.asset) : null;
+    const transferRunIds = scope.transferRunIds ?? [];
+    const payerWallets = (scope.payerWallets ?? []).map((wallet) => normalizePayTo(wallet));
+    const transferRunFilter = transferRunIds.length
+      ? `AND source_run_id IN (${transferRunIds.map(() => "?").join(", ")})`
+      : "";
+    const payerFilter = payerWallets.length
+      ? `AND payer_wallet IN (${payerWallets.map(() => "?").join(", ")})`
+      : "";
+    const windowFromFilter = scope.timeWindow?.from ? "AND block_timestamp >= ?" : "";
+    const windowToFilter = scope.timeWindow?.to ? "AND block_timestamp <= ?" : "";
+    const params: Array<string | number | null> = [
+      network,
+      network,
+      asset,
+      asset,
+      ...transferRunIds,
+      ...payerWallets,
+      ...(scope.timeWindow?.from ? [scope.timeWindow.from] : []),
+      ...(scope.timeWindow?.to ? [scope.timeWindow.to] : []),
+    ];
+    const rows = this.db
+      .prepare(
+        `SELECT network, asset, pay_to, tx_hash, payer_wallet, amount_atomic, block_number, block_timestamp
+         FROM transfer_facts
+         WHERE (? IS NULL OR network = ?) AND (? IS NULL OR asset = ?)
+         ${transferRunFilter} ${payerFilter} ${windowFromFilter} ${windowToFilter}
+         ORDER BY block_timestamp DESC, tx_hash ASC, transfer_index ASC`,
+      )
+      .all(...params) as Array<Record<string, unknown>>;
+
+    return rows.map((row) => ({
+      txHash: row.tx_hash as string,
+      customerAddress: row.payer_wallet as string,
+      payTo: row.pay_to as string,
+      amountAtomic: String(row.amount_atomic),
+      network: row.network as string,
+      asset: row.asset as string,
+      timestamp: row.block_timestamp as string,
+      blockNumber: (row.block_number as string | null) ?? undefined,
+      provenance: "onchain_fact",
+    }));
   }
 
   readGeneratedReadModel<T>(modelKind: string, modelKey: string): T | null {
