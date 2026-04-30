@@ -1,0 +1,23 @@
+name: deploy-lightsail-main
+
+on:
+  push:
+    branches:
+      - develop
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+  packages: write
+
+concurrency:
+  group: deploy-lightsail-shared-instance
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/deploy-lightsail-shared.yml
+    with:
+      deploy_branch: main
+    secrets: inherit
