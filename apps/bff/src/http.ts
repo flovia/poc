@@ -3,6 +3,9 @@ import {
   getPhaseBCustomerProfileByAddress,
   phaseBCustomerListResponse,
   phaseBWalletUsageGraphResponse,
+  serviceAnalyticsComparisonResponse,
+  serviceAnalyticsQuadrantResponse,
+  serviceAnalyticsSummaryResponse,
 } from "./data/phase-b-demo";
 
 type JsonValue = unknown;
@@ -16,7 +19,15 @@ const json = (body: JsonValue, init: ResponseInit = {}) =>
     },
   });
 
-const readonlyRoutes = new Set(["/", "/health", "/customers", "/wallet-usage-graph"]);
+const readonlyRoutes = new Set([
+  "/",
+  "/health",
+  "/customers",
+  "/wallet-usage-graph",
+  "/analytics/services/coingecko/summary",
+  "/analytics/services/comparison",
+  "/analytics/services/quadrants",
+]);
 
 const toProfileAddress = (path: string) => {
   const match = path.match(/^\/customers\/([^/]+)\/profile$/);
@@ -62,6 +73,12 @@ export const createBffHandler = () => (request: Request) => {
       return json(phaseBCustomerListResponse);
     case "/wallet-usage-graph":
       return json(phaseBWalletUsageGraphResponse);
+    case "/analytics/services/coingecko/summary":
+      return json(serviceAnalyticsSummaryResponse);
+    case "/analytics/services/comparison":
+      return json(serviceAnalyticsComparisonResponse);
+    case "/analytics/services/quadrants":
+      return json(serviceAnalyticsQuadrantResponse);
     default:
       break;
   }

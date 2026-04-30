@@ -5,6 +5,7 @@ import {
   knownCustomerIntelligenceAddress,
   knownCustomerProfileAddress,
   phaseBCustomerListResponse,
+  serviceAnalyticsSummaryResponse,
 } from "../src/data/phase-b-demo";
 import transactionFixture from "../fixtures/phase-a/coingecko-transactions.json";
 import attributionFixture from "../fixtures/phase-b/mock-attribution.json";
@@ -16,6 +17,9 @@ import {
   validateMockEndpointAttributionFixture,
   validateCustomerIntelligenceResponse,
   validateRealTransactionFixture,
+  validateServiceAnalyticsComparisonResponse,
+  validateServiceAnalyticsQuadrantResponse,
+  validateServiceAnalyticsSummaryResponse,
 } from "contracts";
 
 const request = (path: string, init: RequestInit = {}) =>
@@ -129,6 +133,75 @@ describe("BFF routes", () => {
     expect(validatePhaseBWalletUsageGraphResponse(body).graph.providerWallets).toHaveLength(1);
   });
 
+  test("serves coingecko service summary analytics", async () => {
+    const handler = createBffHandler();
+
+    const response = handler(request("/analytics/services/coingecko/summary"));
+    const parsed = validateServiceAnalyticsSummaryResponse(await response.json());
+
+    expect(response.status).toBe(200);
+    expect(parsed.serviceId).toBe("coingecko");
+    expect(parsed.userCount).toBeGreaterThan(100);
+    expect(parsed.transactionCount).toBe(transactionFixture.facts.length);
+    expect(parsed.averageTransactionsPerUser).toBeGreaterThan(0);
+    expect(parsed.repeatUserRate).toBeGreaterThanOrEqual(0);
+    expect(parsed.topEndpoints.length).toBeGreaterThan(0);
+    expect(parsed.comparedToX402.transactionShare).toBeGreaterThan(0);
+    expect(parsed.comparedToX402.sampleBasis).toContain("prepared x402");
+    expect(parsed.comparedToX402.availableServiceCount).toBeGreaterThan(1);
+    expect(parsed.provenanceByField).toMatchObject({
+      transactionCount: "onchain_fact",
+      topEndpoints: "derived_insight",
+      comparedToX402: "derived_insight",
+    });
+    expect(parsed.topEndpoints[0]?.provenanceByField).toMatchObject({
+      transactionCount: "derived_insight",
+      userCount: "derived_insight",
+    });
+  });
+
+  test("serves x402 service comparison analytics", async () => {
+    const handler = createBffHandler();
+
+    const response = handler(request("/analytics/services/comparison"));
+    const parsed = validateServiceAnalyticsComparisonResponse(await response.json());
+
+    expect(response.status).toBe(200);
+    expect(parsed.services[0]).toMatchObject({
+      serviceId: "coingecko",
+      userCount: serviceAnalyticsSummaryResponse.userCount,
+      transactionCount: serviceAnalyticsSummaryResponse.transactionCount,
+    });
+    expect(parsed.services.length).toBeGreaterThan(1);
+    expect(new Set(parsed.services.map((service) => service.serviceId)).size).toBe(
+      parsed.services.length,
+    );
+    expect(parsed.services.some((service) => service.serviceId !== "coingecko")).toBe(true);
+    expect(parsed.services.every((service) => service.sampleBasis.length > 0)).toBe(true);
+    expect(parsed.services.every((service) => service.reasons?.length)).toBe(true);
+  });
+
+  test("serves quadrant-ready service analytics without chain tabs", async () => {
+    const handler = createBffHandler();
+
+    const response = handler(request("/analytics/services/quadrants"));
+    const body = await response.json();
+    const parsed = validateServiceAnalyticsQuadrantResponse(body);
+
+    expect(response.status).toBe(200);
+    expect(parsed.axes).toEqual({
+      x: { key: "averageTransactionsPerUser", label: "Average transactions per user" },
+      y: { key: "endpointDiversity", label: "Endpoint diversity" },
+    });
+    expect(parsed.points).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ serviceId: "coingecko", isCoinGecko: true }),
+      ]),
+    );
+    expect(JSON.stringify(body)).not.toContain('"solana"');
+    expect(JSON.stringify(body)).not.toContain('"base"');
+  });
+
   test("does not expose demo and telemetry endpoints", async () => {
     const handler = createBffHandler();
 
@@ -150,6 +223,9 @@ describe("BFF routes", () => {
       `/customers/${knownCustomerProfileAddress}/profile`,
       `/customers/${knownCustomerIntelligenceAddress}/intelligence`,
       "/wallet-usage-graph",
+      "/analytics/services/coingecko/summary",
+      "/analytics/services/comparison",
+      "/analytics/services/quadrants",
     ] as const;
 
     for (const path of paths) {
@@ -160,6 +236,16 @@ describe("BFF routes", () => {
       expect(response.headers.get("allow")).toBe("GET");
       expect(body.error).toBe("method_not_allowed");
     }
+  });
+
+  test("returns not found for unsupported analytics routes", async () => {
+    const handler = createBffHandler();
+    const response = handler(request("/analytics/services/unknown"));
+    const body = (await response.json()) as { error: string; message: string };
+
+    expect(response.status).toBe(404);
+    expect(body.error).toBe("not_found");
+    expect(body.message).toContain("/analytics/services/unknown");
   });
 
   test("validates real transaction and mock attribution fixtures", () => {
