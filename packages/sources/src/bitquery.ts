@@ -530,13 +530,20 @@ export const fetchPaymentTransfersByPayTo = async (
     if (!response.ok) throw new Error(`Bitquery request failed: ${response.status}`);
     const payload = BitqueryTransferResponseSchema.parse(await response.json());
     const rows = normalizeTransferRows(payload);
+    let skippedCount = 0;
     const page = rows.flatMap((row) => {
       try {
         return [normalizeTransfer(row)];
       } catch {
+        skippedCount += 1;
         return [];
       }
     });
+    if (rows.length > 0 && page.length === 0) {
+      throw new Error(
+        `Bitquery returned malformed transfer rows: skipped ${skippedCount}/${rows.length}`,
+      );
+    }
     transfers.push(...page);
     if (rows.length < requestLimit) break;
     offset += rows.length;
@@ -606,11 +613,13 @@ export const fetchOutgoingTransfersByCustomer = async (
     if (!response.ok) throw new Error(`Bitquery request failed: ${response.status}`);
     const payload = BitqueryTransferResponseSchema.parse(await response.json());
     const rows = normalizeTransferRows(payload);
+    let skippedCount = 0;
     const page = rows.flatMap((row) => {
       let transfer: BitqueryTransferFact;
       try {
         transfer = normalizeTransfer(row);
       } catch {
+        skippedCount += 1;
         return [];
       }
       return [
@@ -621,6 +630,11 @@ export const fetchOutgoingTransfersByCustomer = async (
         }),
       ];
     });
+    if (rows.length > 0 && page.length === 0) {
+      throw new Error(
+        `Bitquery returned malformed transfer rows: skipped ${skippedCount}/${rows.length}`,
+      );
+    }
     transfers.push(...page);
     if (rows.length < requestLimit) break;
     offset += rows.length;

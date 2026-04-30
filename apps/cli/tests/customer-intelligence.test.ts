@@ -214,6 +214,7 @@ describe("customer intelligence cli script", () => {
     withTempDir("batch", async (directory) => {
       const store = createAnalyticsStore({ mode: "memory" });
       const secondAddress = "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+      let cdpCalls = 0;
 
       try {
         const result = await runCustomerIntelligenceBatchCapture({
@@ -228,7 +229,10 @@ describe("customer intelligence cli script", () => {
           portfolioEnrichmentLimit: 1,
           zerionApiKey: "test-zerion-key",
           analyticsStore: store,
-          cdpFetch: async () => new Response(JSON.stringify(cdpResponse)),
+          cdpFetch: async () => {
+            cdpCalls += 1;
+            return new Response(JSON.stringify(cdpResponse));
+          },
           bitqueryFetch: async (_url, init) => {
             const body = JSON.parse(String(init?.body)) as {
               variables: { customerAddress: string };
@@ -273,6 +277,7 @@ describe("customer intelligence cli script", () => {
           .prepare("SELECT COUNT(*) AS count FROM customer_intelligence_snapshots")
           .get() as { count: number };
         expect(result.responses).toHaveLength(2);
+        expect(cdpCalls).toBe(1);
         expect(result.outputPaths.every((outputPath) => fs.existsSync(outputPath))).toBe(true);
         expect(snapshotCount.count).toBe(2);
         expect(store.getCaptureRun(result.analyticsRunId ?? 0)).toMatchObject({

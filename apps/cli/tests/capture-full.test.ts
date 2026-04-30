@@ -154,6 +154,19 @@ describe("full capture orchestration", () => {
       expect(fs.existsSync(path.join(directory, "payto-sampling-plan.json"))).toBe(false);
     }));
 
+  test("recomputes default read model path when called with a custom outDir", async () =>
+    withTempDir("programmatic-out-dir", async (directory) => {
+      const result = await runFullCapture({
+        analyticsDbPath: path.join(directory, "analytics.sqlite"),
+        outDir: directory,
+        dryRun: true,
+      });
+
+      expect(result.plan.outputPaths.readModels).toBe(
+        path.join(directory, "service-read-models.json"),
+      );
+    }));
+
   test("runs full capture, persists plans, applies portfolio caps, and generates read models", async () =>
     withTempDir("success", async (directory) => {
       const logs: string[] = [];

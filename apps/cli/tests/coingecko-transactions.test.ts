@@ -182,6 +182,30 @@ describe("coingecko transaction capture script", () => {
       }
     }));
 
+  test("writes empty fixtures when a sampled payTo has no transfers", async () =>
+    withFixtureTempDir("empty", async (directory) => {
+      const result = await runCoingeckoTransactionCapture({
+        limit: 2,
+        pageSize: 2,
+        bitqueryToken: "test-token",
+        transactionOutputPath: path.join(directory, "transactions.json"),
+        attributionOutputPath: path.join(directory, "attribution.json"),
+        bitqueryFetch: async () =>
+          new Response(JSON.stringify({ data: { EVM: { transfers: [] } } })),
+      });
+
+      const transactions = JSON.parse(
+        fs.readFileSync(path.join(directory, "transactions.json"), "utf8"),
+      );
+      const attribution = JSON.parse(
+        fs.readFileSync(path.join(directory, "attribution.json"), "utf8"),
+      );
+
+      expect(result.transactions.metadata.capturedCount).toBe(0);
+      expect(transactions.facts).toEqual([]);
+      expect(attribution.items).toEqual([]);
+    }));
+
   test("builds deterministic attribution for every transaction fact", () => {
     const transactions = validateRealTransactionFixture({
       generatedAt: "2026-04-29T04:15:00Z",

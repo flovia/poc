@@ -210,6 +210,9 @@ export const runFullCapture = async (
   input: Partial<FullCaptureOptions> = {},
 ): Promise<FullCaptureResult> => {
   const parsed = { ...parseFullCaptureArgs([]), ...input };
+  if (input.outDir !== undefined && input.readModelOutputPath === undefined) {
+    parsed.readModelOutputPath = resolveOutputPaths(parsed.outDir).readModels;
+  }
   const options = {
     ...parsed,
     network: normalizeNetwork(parsed.network),
@@ -246,8 +249,11 @@ export const runFullCapture = async (
   const failStage = (stage: string) => {
     stageProgress[stage] = "failed";
   };
+  let currentStage = "market-census";
+  let currentEntity: Record<string, string | number> | undefined;
 
   try {
+    currentStage = "market-census";
     const marketResult = await runMarketSnapshot({
       limit: null,
       network: options.network,
@@ -269,6 +275,7 @@ export const runFullCapture = async (
       `[capture-full] market-census: fetched ${marketResult.snapshot.summary.totalResources} resources, ${marketResult.snapshot.summary.scopedPaymentOptions} payTo rows`,
     );
 
+    currentStage = "payto-sampling";
     const payToPlan = buildPayToSamplingPlan({
       seed: options.seed,
       budget: {
@@ -314,8 +321,10 @@ export const runFullCapture = async (
     log(`[capture-full] payto-sampling: selected ${payToPlan.selected.length} payTos`);
 
     const transferRunIds: number[] = [];
+    currentStage = "payto-transfer-capture";
     for (const [index, row] of payToPlan.selected.entries()) {
       const payTo = normalizePayTo(row.payTo);
+      currentEntity = { payTo, index: index + 1, total: payToPlan.selected.length };
       const transferResult = await runPayToTransactionCapture({
         network: options.network,
         asset: options.asset,
@@ -344,8 +353,10 @@ export const runFullCapture = async (
         `[capture-full] payto-transfer-capture: ${index + 1}/${payToPlan.selected.length} ${payTo} transfers=${transferResult.transactions.facts.length}`,
       );
     }
+    currentEntity = undefined;
     completeStage("payto-transfer-capture");
 
+    currentStage = "wallet-sampling";
     const walletPlan = buildWalletSamplingPlan({
       seed: options.seed,
       transfers: store.listWalletTransferRows({
@@ -381,6 +392,7 @@ export const runFullCapture = async (
     completeStage("wallet-sampling");
     log(`[capture-full] wallet-sampling: selected ${walletPlan.selected.length} wallets`);
 
+    currentStage = "customer-intelligence";
     const batchOptions: Partial<CustomerIntelligenceBatchOptions> &
       Pick<CustomerIntelligenceBatchOptions, "addresses" | "from" | "to"> = {
       addresses: walletPlan.selected.map((row) => row.address),
@@ -399,7 +411,7 @@ export const runFullCapture = async (
       cdpEndpoint: options.cdpEndpoint,
       zerionEndpoint: options.zerionEndpoint,
       bitqueryFetch: options.bitqueryFetch,
-      cdpFetch: options.cdpFetch,
+      cdpResources: marketResult.resources,
       zerionFetch: options.zerionFetch,
       analyticsStore: store,
     };
@@ -407,6 +419,7 @@ export const runFullCapture = async (
     completeStage("customer-intelligence");
     log(`[capture-full] customer-intelligence: captured ${batchOptions.addresses.length} wallets`);
 
+    currentStage = "read-model-generation";
     generateServiceAnalyticsReadModels({
       analyticsDbPath: options.analyticsDbPath,
       outputPath: options.readModelOutputPath,
@@ -432,9 +445,8 @@ export const runFullCapture = async (
       readModelOutputPath: options.readModelOutputPath,
     };
   } catch (error) {
-    const pendingStage = plan.stages.find((stage) => stageProgress[stage] === "pending");
-    if (pendingStage) failStage(pendingStage);
-    store.failCaptureRun(fullRunId, error, { stages: stageProgress });
+    failStage(currentStage);
+    store.failCaptureRun(fullRunId, error, { stages: stageProgress, currentStage, currentEntity });
     throw error;
   } finally {
     if (store !== options.analyticsStore) store.close();
@@ -444,7 +456,7 @@ export const runFullCapture = async (
 if (import.meta.main) {
   const result = await runFullCapture({
     ...parseFullCaptureArgs(Bun.argv.slice(2)),
-    logger: console.error,
+    logger: console.info,
   });
   console.log(JSON.stringify(result, null, 2));
 }

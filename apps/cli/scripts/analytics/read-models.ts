@@ -189,28 +189,34 @@ export const generateServiceAnalyticsReadModels = (
     kind: "read_model_generation",
     parameters: { outputPath: options.outputPath ?? DEFAULT_OUTPUT },
   });
-  store.persistGeneratedReadModel({
-    modelKind: "service_summary",
-    modelKey: "coingecko",
-    payload: summary,
-    sourceRunId: runId,
-  });
-  store.persistGeneratedReadModel({
-    modelKind: "service_comparison",
-    modelKey: "default",
-    payload: comparison,
-    sourceRunId: runId,
-  });
-  store.persistGeneratedReadModel({
-    modelKind: "service_quadrants",
-    modelKey: "default",
-    payload: quadrants,
-    sourceRunId: runId,
-  });
-  writeAtomically(options.outputPath ?? DEFAULT_OUTPUT, `${JSON.stringify(output, null, 2)}\n`);
-  store.completeCaptureRun(runId, { sqlite: "available", readModels: Object.keys(output) });
-  store.close();
-  return { ...output, outputPath: options.outputPath ?? DEFAULT_OUTPUT, analyticsRunId: runId };
+  try {
+    store.persistGeneratedReadModel({
+      modelKind: "service_summary",
+      modelKey: "coingecko",
+      payload: summary,
+      sourceRunId: runId,
+    });
+    store.persistGeneratedReadModel({
+      modelKind: "service_comparison",
+      modelKey: "default",
+      payload: comparison,
+      sourceRunId: runId,
+    });
+    store.persistGeneratedReadModel({
+      modelKind: "service_quadrants",
+      modelKey: "default",
+      payload: quadrants,
+      sourceRunId: runId,
+    });
+    writeAtomically(options.outputPath ?? DEFAULT_OUTPUT, `${JSON.stringify(output, null, 2)}\n`);
+    store.completeCaptureRun(runId, { sqlite: "available", readModels: Object.keys(output) });
+    return { ...output, outputPath: options.outputPath ?? DEFAULT_OUTPUT, analyticsRunId: runId };
+  } catch (error) {
+    store.failCaptureRun(runId, error, { sqlite: "partial_or_failed" });
+    throw error;
+  } finally {
+    store.close();
+  }
 };
 
 if (import.meta.main) {

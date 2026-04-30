@@ -8,7 +8,7 @@ import {
 } from "sources";
 import type { FetchLike } from "sources";
 import { normalizeAsset, normalizeNetwork, validateCustomerIntelligenceFixture } from "contracts";
-import type { CustomerIntelligenceResponse } from "contracts";
+import type { CdpResource, CustomerIntelligenceResponse } from "contracts";
 import { writeAtomically } from "./io";
 import { type AnalyticsStore, createAnalyticsStore } from "./store";
 
@@ -37,6 +37,7 @@ export type CustomerIntelligenceCliOptions = {
   zerionEndpoint?: string;
   analyticsDbPath?: string;
   analyticsStore?: AnalyticsStore;
+  cdpResources?: CdpResource[];
 };
 
 export type CustomerIntelligenceRunResult = {
@@ -174,11 +175,15 @@ export const runCustomerIntelligenceCapture = async (
   const zerionApiKey =
     parsed.portfolioSource === "zerion" ? resolveZerionApiKey(parsed.zerionApiKey) : null;
 
-  const cdpResult = await fetchCdpDiscoveryResources({
-    limit: parsed.cdpLimit,
-    fetchFn: parsed.cdpFetch,
-    endpoint: parsed.cdpEndpoint,
-  });
+  const cdpResources =
+    parsed.cdpResources ??
+    (
+      await fetchCdpDiscoveryResources({
+        limit: parsed.cdpLimit,
+        fetchFn: parsed.cdpFetch,
+        endpoint: parsed.cdpEndpoint,
+      })
+    ).resources;
   const transfers = await fetchOutgoingTransfersByCustomer({
     network: scope.network,
     asset: scope.asset,
@@ -203,7 +208,7 @@ export const runCustomerIntelligenceCapture = async (
   const response = buildCustomerIntelligence({
     scope,
     transfers,
-    resources: cdpResult.resources,
+    resources: cdpResources,
     portfolio,
   });
 
@@ -274,6 +279,15 @@ export const runCustomerIntelligenceBatchCapture = async (
       parsed.portfolioSource === "zerion"
         ? (parsed.portfolioEnrichmentLimit ?? parsed.addresses.length)
         : 0;
+    const cdpResources =
+      parsed.cdpResources ??
+      (
+        await fetchCdpDiscoveryResources({
+          limit: parsed.cdpLimit,
+          fetchFn: parsed.cdpFetch,
+          endpoint: parsed.cdpEndpoint,
+        })
+      ).resources;
 
     for (const address of parsed.addresses) {
       const usePortfolio = parsed.portfolioSource === "zerion" && remainingPortfolio > 0;
@@ -287,6 +301,7 @@ export const runCustomerIntelligenceBatchCapture = async (
         address,
         out: outputPath,
         portfolioSource: usePortfolio ? "zerion" : "none",
+        cdpResources,
         analyticsStore: undefined,
         analyticsDbPath: undefined,
       });

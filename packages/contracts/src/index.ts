@@ -363,7 +363,7 @@ export const RealTransactionFixtureSchema = z
         source: SourceProvenanceSchema,
       })
       .strict(),
-    facts: z.array(RealTransactionFactSchema).min(1),
+    facts: z.array(RealTransactionFactSchema),
   })
   .strict()
   .superRefine((value, ctx) => {
@@ -415,7 +415,7 @@ export const MockEndpointAttributionFixtureSchema = z
   .object({
     generatedAt: z.string().datetime(),
     source: SourceProvenanceSchema.extend({ sourceKind: z.literal("derived") }),
-    items: z.array(MockEndpointAttributionItemSchema).min(1),
+    items: z.array(MockEndpointAttributionItemSchema),
   })
   .strict()
   .superRefine((value, ctx) => {

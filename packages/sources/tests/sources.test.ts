@@ -355,6 +355,41 @@ describe("bitquery source client", () => {
     expect(calls[0]).toMatchObject({ limit: 1500, offset: 0 });
   });
 
+  test("rejects Bitquery transfer pages when every returned row is malformed", async () => {
+    await expect(
+      fetchPaymentTransfersByPayTo({
+        network: "base",
+        asset: "USDC",
+        payTo: "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
+        token: "test-token",
+        limit: 1,
+        fetchFn: async () =>
+          new Response(
+            JSON.stringify({
+              data: {
+                EVM: {
+                  transfers: [
+                    {
+                      Transfer: {
+                        Sender: "not-an-address",
+                        Receiver: "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
+                        Amount: "0.01",
+                      },
+                      Block: { Time: "2026-04-29T04:11:53Z", Number: "299" },
+                      Transaction: {
+                        Hash: "0x6248880ec36541e6783ab756afdb427939f6209551b751cec5a2c97f71176d94",
+                      },
+                    },
+                  ],
+                },
+              },
+            }),
+            { status: 200 },
+          ),
+      }),
+    ).rejects.toThrow("Bitquery returned malformed transfer rows");
+  });
+
   test("parses paginated outgoing transfers by customer", async () => {
     const pages = [
       readFixture<unknown>("bitquery-transfers-page-1.json"),

@@ -52,6 +52,7 @@ type RunResult = {
   snapshotPath: string;
   summaryPath: string;
   analyticsRunId?: number;
+  resources: Awaited<ReturnType<typeof fetchCdpDiscoveryResources>>["resources"];
 };
 
 const parseArg = (index: number, args: string[]): string | undefined => args[index + 1];
@@ -232,6 +233,7 @@ export const runMarketSnapshot = async (options: Partial<CliOptions> = {}): Prom
       snapshotPath: parsed.jsonOutputPath,
       summaryPath: parsed.markdownOutputPath,
       analyticsRunId,
+      resources: cdpResult.resources,
     };
   } catch (error) {
     if (analyticsStore && analyticsRunId !== undefined) {
