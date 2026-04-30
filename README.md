@@ -1,6 +1,6 @@
 # 🌊 Flovia
 
-> Mapping the Machine Payable Web with x402 and Solana signals.
+> Turn x402 / MPP payments into decisions.
 
 <p align="center">
   <strong>x402 × MPP × Solana × Customer Intelligence</strong>
@@ -154,79 +154,3 @@ Or run BFF and frontend together:
 ```sh
 docker compose up --build
 ```
-
----
-
-## 🔎 Generate intelligence
-
-CLI pipeline commands are available from the `apps/cli` workspace.
-
-```sh
-bun --cwd apps/cli market:snapshot -- --limit 100 --network base --asset USDC
-bun --cwd apps/cli market:snapshot -- --all
-bun --cwd apps/cli customer:intelligence -- --address 0x... --network base --asset USDC
-bun --cwd apps/cli coingecko:transactions -- --from 2026-01-01T00:00:00Z --to 2026-04-29T23:59:59Z
-```
-
-`market:snapshot` requires `BITQUERY_TOKEN` when scoped payment options need Bitquery activity. By default, it writes:
-
-- `apps/cli/reports/x402-market-snapshot.json`
-- `apps/cli/reports/x402-market-summary.md`
-
-Without `--all`, the result is capped by `X402_MARKET_FETCH_LIMIT` (default: 100). This cap is intentionally conservative, so pass `--all` explicitly if needed.
-
-`customer:intelligence` and `coingecko:transactions` regenerate fixtures / read models using live Bitquery and CDP Discovery. They are not included in normal `verify` runs. See `apps/cli/scripts/README.md` for details.
-
----
-
-## 🌐 BFF / frontend
-
-The BFF does not call live CDP / Bitquery / RPC / SDK collector methods on the request path. It returns deterministic fixture / read models from `apps/bff/src/data/phase-b-demo.ts`.
-
-Main endpoints:
-
-| Endpoint | Description |
-| --- | --- |
-| `GET /` / `GET /health` | API health check |
-| `GET /customers` | Known customer list |
-| `GET /customers/:address/profile` | Customer profile |
-| `GET /customers/:address/intelligence` | Customer intelligence |
-| `GET /wallet-usage-graph` | Wallet / app usage graph |
-
-The frontend fetches the BFF from Server Components. You can override the target with `BFF_URL` (default: `http://localhost:3001`) and `NEXT_PUBLIC_BFF_URL` (default: `/api`).
-
-```sh
-bun --filter bff start
-BFF_URL=http://localhost:3001 NEXT_PUBLIC_BFF_URL=/api bun --filter frontend dev
-```
-
-API contracts are based on `docs/phase-b/api-contract.md` and the Phase B schema in `packages/contracts`.
-
----
-
-## 🔒 Verification policy
-
-```sh
-bun run verify
-```
-
-The default verification path is intentionally offline-only. It must pass without:
-
-- wallet access
-- paid APIs
-- live RPC calls
-
-Live verification is explicit and opt-in through commands such as `market:snapshot`.
-
----
-
-## 🛠️ Tech stack
-
-- Bun workspaces
-- TypeScript 6
-- Zod contracts
-- Next.js 15
-- React 19
-- CDP x402 Discovery
-- Bitquery
-- Biome
