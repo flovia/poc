@@ -25,7 +25,9 @@ export type PayToCensusRow = ScopedPaymentSink & {
   latestBlockTimestamp?: string;
   mappingPattern?: MappingPattern;
   serviceId?: string;
+  serviceName?: string;
   resourceCount?: number;
+  endpointCount?: number;
 };
 
 export type PayToSamplingPlanInput = {

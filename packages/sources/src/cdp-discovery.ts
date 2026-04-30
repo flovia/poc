@@ -199,7 +199,13 @@ export const fetchCdpDiscoveryPage = async (
   const pageInfo = asRecord(data?.pageInfo);
   const pagination = asRecord(data?.pagination);
 
-  const resources = items.map((item) => toResource(item, endpoint));
+  const resources = items.flatMap((item) => {
+    try {
+      return [toResource(item, endpoint)];
+    } catch {
+      return [];
+    }
+  });
   const total = typeof pagination?.total === "number" ? pagination.total : null;
   const cursorOffset = cursor === null ? 0 : Number(cursor);
   const responseOffset =

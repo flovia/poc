@@ -201,4 +201,99 @@ describe("analytics store", () => {
       store.close();
     }
   });
+
+  test("reads payTo census rows with aggregate activity and attribution metadata", () => {
+    const store = createAnalyticsStore({ mode: "memory" });
+    try {
+      const payTo = "0x1111111111111111111111111111111111111111";
+      const runId = store.beginCaptureRun({ kind: "cdp_census" });
+      store.persistCdpResources([resource("r1", payTo)], runId);
+      store.persistPayToAggregates([aggregate(payTo)], runId);
+      store.detectAndPersistMappingPatterns();
+
+      const rows = store.listPayToCensusRows({ network: "base", asset: "USDC" });
+
+      expect(rows).toHaveLength(1);
+      expect(rows[0]).toMatchObject({
+        payTo,
+        transactionCount: 7,
+        uniqueSenderCount: 3,
+        totalVolumeAtomic: "70000",
+        mappingPattern: "one_payto_one_endpoint",
+        endpointAttributionStatus: "direct_payto_endpoint",
+        endpointCount: 1,
+        resourceCount: 1,
+        serviceId: "svc",
+        serviceName: "test service",
+      });
+      expect(rows[0].attributionMetadata).toEqual({ source: "cdp_payment_options" });
+    } finally {
+      store.close();
+    }
+  });
+
+  test("reads wallet transfer rows with service identity and bundled-payTo signal", () => {
+    const store = createAnalyticsStore({ mode: "memory" });
+    try {
+      const payTo = "0x2222222222222222222222222222222222222222";
+      store.persistCdpResources([
+        resource("bundle-a", payTo, "https://coingecko.example/a", "CoinGecko"),
+        resource("bundle-b", payTo, "https://coingecko.example/b", "CoinGecko"),
+      ]);
+      store.detectAndPersistMappingPatterns();
+      store.persistTransferFacts([
+        {
+          network: "base",
+          asset: "USDC",
+          payTo,
+          txHash: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          payerWallet: "0x3333333333333333333333333333333333333333",
+          amountAtomic: "1000",
+          blockTimestamp: "2026-01-02T00:00:00.000Z",
+        },
+      ]);
+
+      const rows = store.listWalletTransferRows({ network: "base", asset: "USDC" });
+
+      expect(rows).toEqual([
+        expect.objectContaining({
+          payerWallet: "0x3333333333333333333333333333333333333333",
+          payTo,
+          serviceId: "coingecko",
+          serviceName: "test service",
+          amountAtomic: "1000",
+          blockTimestamp: "2026-01-02T00:00:00.000Z",
+          isCoingecko: true,
+          isBundledPayTo: true,
+        }),
+      ]);
+    } finally {
+      store.close();
+    }
+  });
+
+  test("persists sampling plan metadata as generated analytics records", () => {
+    const store = createAnalyticsStore({ mode: "memory" });
+    try {
+      const runId = store.beginCaptureRun({ kind: "full_capture" });
+      store.persistSamplingPlanMetadata({
+        planKind: "payto",
+        planKey: "base:usdc:test",
+        payload: { selected: ["0x1"] },
+        parameters: { seed: "test" },
+        selectedEntities: ["0x1"],
+        sourceRunId: runId,
+        generatedAt: "2026-01-01T00:00:00.000Z",
+      });
+
+      expect(store.readGeneratedReadModel("sampling_plan_payto", "base:usdc:test")).toMatchObject({
+        planKind: "payto",
+        parameters: { seed: "test" },
+        selectedEntities: ["0x1"],
+        sourceRunId: runId,
+      });
+    } finally {
+      store.close();
+    }
+  });
 });

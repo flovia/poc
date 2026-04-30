@@ -87,6 +87,7 @@ const BitqueryTransferResponseSchema = z
 const toIntegerString = (value: string | number | undefined, label: string): string => {
   if (value == null) return "0";
   const text = `${value}`;
+  if (text.trim().length === 0) return "0";
   if (!/^\d+$/.test(text)) {
     throw new Error(`bitquery ${label} must be a non-negative integer string`);
   }
@@ -96,6 +97,7 @@ const toIntegerString = (value: string | number | undefined, label: string): str
 const decimalToAtomic = (value: string | number | undefined, decimals = 6): string => {
   if (value == null) return "0";
   const text = `${value}`;
+  if (text.trim().length === 0) return "0";
   if (/^\d+$/.test(text)) return `${text}${"0".repeat(decimals)}`.replace(/^0+(?=\d)/, "");
   const match = /^(\d+)\.(\d+)$/.exec(text);
   if (!match) throw new Error("bitquery volume must be a decimal or integer string");
@@ -133,7 +135,9 @@ const normalizeAggregate = (row: {
     fetchedAt: new Date().toISOString(),
   });
   const latestTransfer =
-    row.latest && isTransactionHash(row.latest.txHash)
+    row.latest &&
+    isTransactionHash(row.latest.txHash) &&
+    /^0x[a-f0-9]{40}$/i.test(row.latest.sender)
       ? {
           txHash: row.latest.txHash,
           sender: row.latest.sender,
@@ -320,16 +324,23 @@ const normalizeBitqueryRows = (payload: z.infer<typeof BitqueryResponseSchema>) 
       txCount: readPath(row, ["txCount"]) as string | number | undefined,
       senderCount: readPath(row, ["uniqueSenders"]) as string | number | undefined,
       volume: readPath(row, ["volumeUSDC"]) as string | number | undefined,
-      latest: latest
-        ? {
-            txHash: String(readPath(latest, ["Transaction", "Hash"])),
-            sender: String(readPath(latest, ["Transfer", "Sender"])),
-            recipient: payTo,
-            amountAtomic: readPath(latest, ["Transfer", "Amount"]) as string | number,
-            blockTimestamp: readPath(latest, ["Block", "Time"]) as string | undefined,
-            blockNumber: String(readPath(latest, ["Block", "Number"]) ?? ""),
-          }
-        : undefined,
+      latest:
+        latest && typeof readPath(latest, ["Transaction", "Hash"]) === "string"
+          ? {
+              txHash: readPath(latest, ["Transaction", "Hash"]) as string,
+              sender:
+                typeof readPath(latest, ["Transfer", "Sender"]) === "string"
+                  ? (readPath(latest, ["Transfer", "Sender"]) as string)
+                  : "",
+              recipient: payTo,
+              amountAtomic: readPath(latest, ["Transfer", "Amount"]) as string | number,
+              blockTimestamp: readPath(latest, ["Block", "Time"]) as string | undefined,
+              blockNumber:
+                typeof readPath(latest, ["Block", "Number"]) === "string"
+                  ? (readPath(latest, ["Block", "Number"]) as string)
+                  : undefined,
+            }
+          : undefined,
     };
   });
 };
@@ -595,13 +606,21 @@ export const fetchOutgoingTransfersByCustomer = async (
     if (!response.ok) throw new Error(`Bitquery request failed: ${response.status}`);
     const payload = BitqueryTransferResponseSchema.parse(await response.json());
     const rows = normalizeTransferRows(payload);
-    const page = rows.map((row) =>
-      toCustomerOutgoingTransfer(normalizeTransfer(row), {
-        network: options.network,
-        asset: options.asset,
-        customerAddress: options.customerAddress,
-      }),
-    );
+    const page = rows.flatMap((row) => {
+      let transfer: BitqueryTransferFact;
+      try {
+        transfer = normalizeTransfer(row);
+      } catch {
+        return [];
+      }
+      return [
+        toCustomerOutgoingTransfer(transfer, {
+          network: options.network,
+          asset: options.asset,
+          customerAddress: options.customerAddress,
+        }),
+      ];
+    });
     transfers.push(...page);
     if (rows.length < requestLimit) break;
     offset += rows.length;

@@ -26,6 +26,7 @@ export type CaptureRunKind =
   | "payto_transfer_capture"
   | "customer_intelligence_capture"
   | "read_model_generation"
+  | "full_capture"
   | "test";
 
 export type CaptureRunInput = {
@@ -86,6 +87,45 @@ export type GeneratedReadModelInput = {
   payload: unknown;
   sourceRunId?: number;
   provenance?: Record<string, unknown>;
+  generatedAt?: string;
+};
+
+export type PayToCensusQueryRow = ScopedPaymentSink & {
+  transactionCount: number;
+  uniqueSenderCount: number;
+  totalVolumeAtomic: string;
+  latestBlockTimestamp?: string;
+  mappingPattern: MappingPattern;
+  endpointAttributionStatus: EndpointAttributionStatus;
+  attributionConfidence: number;
+  attributionMetadata: Record<string, unknown>;
+  serviceId?: string;
+  serviceName?: string;
+  endpointCount: number;
+  resourceCount: number;
+};
+
+export type WalletTransferQueryRow = {
+  payerWallet: string;
+  payTo: string;
+  network: string;
+  asset: string;
+  serviceId?: string;
+  serviceName?: string;
+  amountAtomic: string;
+  blockTimestamp: string;
+  isCoingecko: boolean;
+  isBundledPayTo: boolean;
+  attributionMetadata: Record<string, unknown>;
+};
+
+export type SamplingPlanMetadataInput = {
+  planKind: "payto" | "wallet" | string;
+  planKey: string;
+  payload: unknown;
+  parameters?: Record<string, unknown>;
+  selectedEntities?: unknown[];
+  sourceRunId?: number;
   generatedAt?: string;
 };
 
@@ -637,6 +677,135 @@ export class AnalyticsStore {
         toJson(input.provenance ?? {}),
         input.sourceRunId ?? null,
       );
+  }
+
+  persistSamplingPlanMetadata(input: SamplingPlanMetadataInput) {
+    const generatedAt = input.generatedAt ?? new Date().toISOString();
+    this.persistGeneratedReadModel({
+      modelKind: `sampling_plan_${input.planKind}`,
+      modelKey: input.planKey,
+      generatedAt,
+      sourceRunId: input.sourceRunId,
+      provenance: {
+        planKind: input.planKind,
+        planKey: input.planKey,
+        generatedAt,
+        parameters: input.parameters ?? {},
+        selectedCount: input.selectedEntities?.length ?? null,
+      },
+      payload: {
+        planKind: input.planKind,
+        planKey: input.planKey,
+        generatedAt,
+        parameters: input.parameters ?? {},
+        selectedEntities: input.selectedEntities ?? [],
+        sourceRunId: input.sourceRunId ?? null,
+        plan: input.payload,
+      },
+    });
+  }
+
+  listPayToCensusRows(scope: { network?: string; asset?: string } = {}): PayToCensusQueryRow[] {
+    this.initialize();
+    const network = scope.network ? normalizeNetwork(scope.network) : null;
+    const asset = scope.asset ? normalizeAsset(scope.asset) : null;
+    const rows = this.db
+      .prepare(
+        `SELECT
+           ps.network,
+           ps.asset,
+           ps.pay_to,
+           COALESCE(MAX(pa.transaction_count), 0) AS transaction_count,
+           COALESCE(MAX(pa.unique_sender_count), 0) AS unique_sender_count,
+           COALESCE(MAX(pa.total_volume_atomic), '0') AS total_volume_atomic,
+           MAX(pa.latest_block_timestamp) AS latest_block_timestamp,
+           COALESCE(ea.mapping_pattern, 'unresolved_payto') AS mapping_pattern,
+           COALESCE(ea.endpoint_attribution_status, 'unresolved_payto') AS endpoint_attribution_status,
+           COALESCE(ea.confidence, 0) AS confidence,
+           COALESCE(ea.provenance_json, '{}') AS attribution_json,
+           COALESCE(ea.resource_count, 0) AS resource_count,
+           COUNT(DISTINCT sc.resource_id) AS endpoint_count,
+           MIN(sc.service_key) AS service_id,
+           MIN(COALESCE(sc.service, sc.provider, sc.domain)) AS service_name
+         FROM payment_sinks ps
+         LEFT JOIN payto_aggregates pa ON pa.sink_key = ps.sink_key
+         LEFT JOIN endpoint_attribution ea ON ea.sink_key = ps.sink_key
+         LEFT JOIN service_candidates sc ON sc.sink_key = ps.sink_key
+         WHERE (? IS NULL OR ps.network = ?) AND (? IS NULL OR ps.asset = ?)
+         GROUP BY ps.sink_key
+         ORDER BY transaction_count DESC, ps.pay_to ASC`,
+      )
+      .all(network, network, asset, asset) as Array<Record<string, unknown>>;
+
+    return rows.map((row) => ({
+      network: row.network as string,
+      asset: row.asset as string,
+      payTo: row.pay_to as string,
+      transactionCount: Number(row.transaction_count ?? 0),
+      uniqueSenderCount: Number(row.unique_sender_count ?? 0),
+      totalVolumeAtomic: String(row.total_volume_atomic ?? "0"),
+      latestBlockTimestamp: (row.latest_block_timestamp as string | null) ?? undefined,
+      mappingPattern: row.mapping_pattern as MappingPattern,
+      endpointAttributionStatus: row.endpoint_attribution_status as EndpointAttributionStatus,
+      attributionConfidence: Number(row.confidence ?? 0),
+      attributionMetadata: parseJson(row.attribution_json as string, {}),
+      serviceId: (row.service_id as string | null) ?? undefined,
+      serviceName: (row.service_name as string | null) ?? undefined,
+      endpointCount: Number(row.endpoint_count ?? 0),
+      resourceCount: Number(row.resource_count ?? 0),
+    }));
+  }
+
+  listWalletTransferRows(
+    scope: { network?: string; asset?: string } = {},
+  ): WalletTransferQueryRow[] {
+    this.initialize();
+    const network = scope.network ? normalizeNetwork(scope.network) : null;
+    const asset = scope.asset ? normalizeAsset(scope.asset) : null;
+    const rows = this.db
+      .prepare(
+        `SELECT
+           tf.network,
+           tf.asset,
+           tf.pay_to,
+           tf.payer_wallet,
+           tf.amount_atomic,
+           tf.block_timestamp,
+           COALESCE(ea.mapping_pattern, 'unresolved_payto') AS mapping_pattern,
+           COALESCE(ea.endpoint_attribution_status, 'unresolved_payto') AS endpoint_attribution_status,
+           COALESCE(ea.provenance_json, '{}') AS attribution_json,
+           MIN(sc.service_key) AS service_id,
+           MIN(COALESCE(sc.service, sc.provider, sc.domain)) AS service_name
+         FROM transfer_facts tf
+         LEFT JOIN payment_sinks ps ON ps.network = tf.network AND ps.asset = tf.asset AND ps.pay_to = tf.pay_to
+         LEFT JOIN endpoint_attribution ea ON ea.sink_key = ps.sink_key
+         LEFT JOIN service_candidates sc ON sc.sink_key = ps.sink_key
+         WHERE (? IS NULL OR tf.network = ?) AND (? IS NULL OR tf.asset = ?)
+         GROUP BY tf.id
+         ORDER BY tf.block_timestamp DESC, tf.tx_hash ASC, tf.transfer_index ASC`,
+      )
+      .all(network, network, asset, asset) as Array<Record<string, unknown>>;
+
+    return rows.map((row) => {
+      const serviceText = `${row.service_id ?? ""} ${row.service_name ?? ""}`.toLowerCase();
+      const mappingPattern = row.mapping_pattern as MappingPattern;
+      const endpointStatus = row.endpoint_attribution_status as EndpointAttributionStatus;
+      return {
+        network: row.network as string,
+        asset: row.asset as string,
+        payTo: row.pay_to as string,
+        payerWallet: row.payer_wallet as string,
+        amountAtomic: String(row.amount_atomic),
+        blockTimestamp: row.block_timestamp as string,
+        serviceId: (row.service_id as string | null) ?? undefined,
+        serviceName: (row.service_name as string | null) ?? undefined,
+        isCoingecko: serviceText.includes("coingecko"),
+        isBundledPayTo:
+          mappingPattern === "one_payto_many_endpoints" ||
+          endpointStatus === "bundled_payto_unknown_endpoint",
+        attributionMetadata: parseJson(row.attribution_json as string, {}),
+      };
+    });
   }
 
   readGeneratedReadModel<T>(modelKind: string, modelKey: string): T | null {

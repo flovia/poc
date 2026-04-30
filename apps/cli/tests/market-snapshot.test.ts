@@ -209,6 +209,68 @@ describe("market snapshot cli script", () => {
       }
     }));
 
+  test("tolerates partial real-source rows while keeping verification offline", async () =>
+    withFixtureTempDir("partial-source-rows", async (directory) => {
+      const store = createAnalyticsStore({ mode: "memory" });
+      const payTo = "0x1111111111111111111111111111111111111111";
+      try {
+        const result = await runMarketSnapshot({
+          network: "base",
+          asset: "USDC",
+          limit: null,
+          bitqueryToken: "test-token",
+          analyticsStore: store,
+          jsonOutputPath: path.join(directory, "snapshot.json"),
+          markdownOutputPath: path.join(directory, "summary.md"),
+          cdpFetch: async () =>
+            new Response(
+              JSON.stringify({
+                data: {
+                  items: [
+                    { resourceId: "missing-options", resource: "https://missing.example" },
+                    ...buildCdpDiscoveryResponse("base", "USDC", payTo).data.items,
+                    ...buildCdpDiscoveryResponse("base", "USDC", payTo).data.items,
+                  ],
+                  pageInfo: { hasNextPage: false, endCursor: null },
+                },
+              }),
+            ),
+          bitqueryFetch: async () =>
+            new Response(
+              JSON.stringify({
+                data: {
+                  EVM: {
+                    byRecipient: [
+                      {
+                        Transfer: { Receiver: payTo },
+                        txCount: "",
+                        uniqueSenders: undefined,
+                        volumeUSDC: undefined,
+                      },
+                    ],
+                    latestByRecipient: [
+                      {
+                        Transfer: { Receiver: payTo },
+                        Block: {},
+                        Transaction: { Hash: "not-a-valid-hash" },
+                      },
+                    ],
+                  },
+                },
+              }),
+            ),
+        });
+
+        expect(result.snapshot.summary.totalResources).toBe(2);
+        expect(result.snapshot.summary.scopedPaymentOptions).toBe(2);
+        expect(store.listPayToCensusRows({ network: "base", asset: "USDC" })).toEqual([
+          expect.objectContaining({ payTo, transactionCount: 0, endpointCount: 1 }),
+        ]);
+      } finally {
+        store.close();
+      }
+    }));
+
   test("fails before writing outputs when bitquery token is missing", async () =>
     withFixtureTempDir("missing-token", async (directory) => {
       const originalToken = process.env.BITQUERY_TOKEN;

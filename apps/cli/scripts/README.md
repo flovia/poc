@@ -28,6 +28,10 @@ This directory stores scripts used by the CLI from `apps/cli`.
   - Generates BFF service summary, comparison, and quadrant read models from the local SQLite analytics store
   - Preserves sample basis, coverage, endpoint attribution status, attribution confidence, and provenance
   - Writes an ignored generated read-model JSON file that the BFF can read through `BFF_ANALYTICS_READ_MODEL_PATH`
+- `analytics/capture-full.ts`
+  - Orchestrates market census, payTo sampling, bounded payTo transfer capture, wallet sampling, customer intelligence batch capture, and BFF service read-model generation
+  - Writes auditable payTo and wallet sampling plans under ignored generated analytics paths and persists plan metadata in SQLite
+  - Records a top-level `full_capture` run plus child stage runs, source coverage, stage progress, and failure details
 
 The legacy self-implemented acquisition / probe / onchain pipeline
 is stored on the `v0-self-implemented-x402` branch. It is intentionally not included in this branch.
@@ -132,20 +136,48 @@ Serve those read models in the BFF without live external calls:
 BFF_ANALYTICS_READ_MODEL_PATH=apps/cli/reports/service-read-models/analytics.json bun --cwd apps/bff start
 ```
 
+Run a dry plan for the full offline analytics capture without live source calls:
+
+```sh
+bun --cwd apps/cli analytics:capture-full -- \
+  --analytics-db data/analytics/analytics.sqlite \
+  --network base \
+  --asset USDC \
+  --from 2026-01-01T00:00:00Z \
+  --to 2026-04-29T23:59:59Z \
+  --payto-budget 25 \
+  --wallet-budget 100 \
+  --per-payto-limit 500 \
+  --slice-days 14 \
+  --out-dir data/analytics/generated/capture-full \
+  --read-model-output reports/service-read-models/analytics.json \
+  --seed capture-full-v1 \
+  --dry-run
+```
+
+Run the live full capture when `BITQUERY_TOKEN` is available. Add `--portfolio-source zerion --portfolio-limit 25` only when `ZERION_API_KEY` is available and portfolio enrichment is intended.
+
+Recommended first-pass budgets are `--payto-budget 25`, `--wallet-budget 100`, `--per-payto-limit 500`, and `--slice-days 14`. Increase budgets only after inspecting source coverage and generated plan outputs.
+
+Full-capture generated outputs are private-by-default: SQLite DBs, sampling plans, raw payTo transfer captures, customer intelligence snapshots, and service read models should remain under ignored paths such as `data/analytics/generated/**` or `reports/service-read-models/**`. Hand generated read models to the BFF with `BFF_ANALYTICS_READ_MODEL_PATH`.
+
+First-version limitations: execution is sequential, fail-fast, non-resumable, and has no concurrency controls. Re-run after fixing failures; partial generated outputs are preserved for diagnosis but are not treated as committed source artifacts.
+
 ## Generated data policy
 
 Generated analytics data is private-by-default and ignored by git. Do not commit local SQLite databases (`*.db`, `*.sqlite`, WAL/SHM files), raw transfer facts, customer intelligence captures, portfolio enrichment output, cross-service overlap data, or large service read models. Commit only schemas, migrations, collectors, samplers, synthetic fixtures, docs, and tests. Normal `bun run verify` remains offline and does not require generated analytics data.
 
 ## Offline analytics pipeline
 
-1. `market:snapshot --all --analytics-db ...` captures CDP resources/payment options and Bitquery aggregate census.
-2. Payment sinks are deduplicated by `network`, `asset`, and normalized `payTo`; mapping patterns are classified as direct endpoint, bundled payTo, many-payTos-one-service, or unresolved.
-3. `buildPayToSamplingPlan` produces deterministic sampled `payTo` selections from activity tiers, mapping patterns, mandatory CoinGecko payTos, and long-tail rows.
-4. `coingecko:transactions` with arbitrary `--provider-id` / `--pay-to` captures sampled transfer facts and can time-slice high-volume payTos.
-5. `buildWalletSamplingPlan` selects sampled wallets from coingecko repeat/high-spend, one-shot, peer, cross-service, bundled-payTo, recent, and random long-tail strata.
-6. `runCustomerIntelligenceBatchCapture` captures sampled wallet intelligence with explicit portfolio enrichment caps and source coverage.
-7. `analytics:read-models` builds BFF service summary, comparison, and quadrant payloads from SQLite.
-8. The BFF reads `BFF_ANALYTICS_READ_MODEL_PATH` when present, otherwise falls back to small committed fixtures during migration. Request handlers do not call CDP, Bitquery, RPC, CoinGecko, Zerion, or other live services.
+1. `analytics:capture-full` can run the entire flow below, or each script can be run manually for debugging.
+2. `market:snapshot --all --analytics-db ...` captures CDP resources/payment options and Bitquery aggregate census.
+3. Payment sinks are deduplicated by `network`, `asset`, and normalized `payTo`; mapping patterns are classified as direct endpoint, bundled payTo, many-payTos-one-service, or unresolved.
+4. `buildPayToSamplingPlan` produces deterministic sampled `payTo` selections from activity tiers, mapping patterns, mandatory CoinGecko payTos, and long-tail rows.
+5. `coingecko:transactions` with arbitrary `--provider-id` / `--pay-to` captures sampled transfer facts and can time-slice high-volume payTos.
+6. `buildWalletSamplingPlan` selects sampled wallets from coingecko repeat/high-spend, one-shot, peer, cross-service, bundled-payTo, recent, and random long-tail strata.
+7. `runCustomerIntelligenceBatchCapture` captures sampled wallet intelligence with explicit portfolio enrichment caps and source coverage.
+8. `analytics:read-models` builds BFF service summary, comparison, and quadrant payloads from SQLite.
+9. The BFF reads `BFF_ANALYTICS_READ_MODEL_PATH` when present, otherwise falls back to small committed fixtures during migration. Request handlers do not call CDP, Bitquery, RPC, CoinGecko, Zerion, or other live services.
 
 ## Architecture
 
