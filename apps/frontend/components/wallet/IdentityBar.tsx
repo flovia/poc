@@ -1,16 +1,53 @@
 import { FreeTierBar } from "@/components/ui/FreeTierBar";
 import { Icon } from "@/components/ui/Icon";
 import type { CustomerIdentityDto, CustomerMetricsDto } from "@/lib/api/types";
+import type { DashboardMode } from "@/lib/data-mode";
+import type { SdkExtras } from "@/lib/sdk-fixtures/types";
 import { formatAtomic, formatGrowth, formatRatioPct } from "@/lib/format";
 import { KPI } from "./KPI";
+import { Sparkline7d } from "./Sparkline7d";
 
 type IdentityBarProps = {
   customer: CustomerIdentityDto;
   metrics: CustomerMetricsDto;
+  dataMode: DashboardMode;
+  sdkExtras: SdkExtras | null;
 };
 
-export function IdentityBar({ customer, metrics }: IdentityBarProps) {
-  const freeTierPct = Math.round(metrics.freeTierProgress * 100);
+function formatUsd(value: number): string {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(value);
+}
+
+function formatGrowthFromRatio(ratio: number): string {
+  const pct = Math.round(ratio * 100);
+  const sign = pct > 0 ? "+" : "";
+  return `${sign}${pct}%`;
+}
+
+export function IdentityBar({ customer, metrics, dataMode, sdkExtras }: IdentityBarProps) {
+  const isSdkConnected = dataMode === "sdkConnected" && sdkExtras !== null;
+  const hasSdkUpsell = isSdkConnected && sdkExtras!.upsell !== null; // 主役のみ
+  const freeTierPct = Math.round(
+    (isSdkConnected && hasSdkUpsell
+      ? sdkExtras!.freeTierProgress
+      : metrics.freeTierProgress) * 100,
+  );
+  const totalSpendDisplay =
+    isSdkConnected && hasSdkUpsell
+      ? formatUsd(sdkExtras!.totalSpendUsd)
+      : formatAtomic(metrics.spendAtomic);
+  const totalSpendSub =
+    isSdkConnected && hasSdkUpsell ? "USD · SDK preview (mock)" : "atomic units (USDC*)";
+  const growthDisplay =
+    isSdkConnected && hasSdkUpsell
+      ? formatGrowthFromRatio(sdkExtras!.growth7d)
+      : formatGrowth(metrics.activityGrowth);
+  const growthSub =
+    isSdkConnected && hasSdkUpsell ? "7-day volume vs. prior week" : "later vs. earlier observations";
   return (
     <div
       className="card"
@@ -67,26 +104,37 @@ export function IdentityBar({ customer, metrics }: IdentityBarProps) {
               flexWrap: "wrap",
             }}
           >
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontWeight: 500 }}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
               <Icon.bolt width="12" height="12" style={{ color: "var(--teal)" }} />
               {customer.label ?? "Payer wallet"}
             </span>
-            <span style={{ color: "var(--text-mute)" }}>|</span>
-            <span style={{ fontSize: 11, color: "var(--text-3)", display: "flex", alignItems: "center", gap: 6 }}>
-              <span style={{ textTransform: "uppercase", fontSize: 9, fontWeight: 600, letterSpacing: "0.05em", color: "var(--text-mute)" }}>Provenance</span>
-              Role: <span style={{ color: "var(--text-1)", fontWeight: 500 }}>{customer.role}</span> · Basis: <span style={{ color: "var(--text-1)", fontWeight: 500 }}>{customer.identityBasis}</span>
+            {isSdkConnected && sdkExtras?.agentType && (
+              <span
+                data-testid="sdk-agent-badge"
+                style={{
+                  fontSize: 11,
+                  fontWeight: 600,
+                  padding: "2px 8px",
+                  borderRadius: 3,
+                  background: "var(--sdk-purple)",
+                  color: "#FFFFFF",
+                  letterSpacing: "0.02em",
+                }}
+              >
+                {sdkExtras.agentType}
+              </span>
+            )}
+            <span style={{ color: "var(--text-mute)" }}>·</span>
+            <span style={{ fontSize: 11, color: "var(--text-3)" }}>
+              role: {customer.role} · basis: {customer.identityBasis}
             </span>
           </div>
           <div
             style={{
-              marginTop: 10,
-              padding: "8px 10px",
-              background: "#F8FAFC",
-              borderRadius: 6,
-              border: "1px dashed var(--line-strong)",
+              marginTop: 8,
               fontSize: 11,
-              color: "var(--text-2)",
-              maxWidth: 460,
+              color: "var(--text-mute)",
+              maxWidth: 420,
               lineHeight: 1.5,
             }}
           >
@@ -99,19 +147,31 @@ export function IdentityBar({ customer, metrics }: IdentityBarProps) {
           <KPI
             label="Total spend"
             big
-            value={formatAtomic(metrics.spendAtomic)}
-            sub="atomic units (USDC*)"
+            value={totalSpendDisplay}
+            sub={totalSpendSub}
             hue="default"
           />
           <KPI
             label="Activity growth"
             big
-            value={formatGrowth(metrics.activityGrowth)}
-            sub="later vs. earlier observations"
+            value={
+              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                <span
+                  className="mono"
+                  style={{ fontSize: 22, fontWeight: 600, color: "var(--mesh-blue)" }}
+                >
+                  {growthDisplay}
+                </span>
+                {isSdkConnected && hasSdkUpsell && sdkExtras!.sparkline7d.length > 0 && (
+                  <Sparkline7d points={sdkExtras!.sparkline7d} width={140} height={36} />
+                )}
+              </div>
+            }
+            sub={growthSub}
             hue="blue"
           />
           <KPI
-            label="Free tier"
+            label="Spend progress"
             value={
               <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 2 }}>
                 <span
@@ -127,7 +187,7 @@ export function IdentityBar({ customer, metrics }: IdentityBarProps) {
                 <FreeTierBar pct={freeTierPct} height={6} />
               </div>
             }
-            sub="freeTierProgress heuristic"
+            sub="PoC heuristic: linear progress to 3M atomic units"
             hue={freeTierPct >= 80 ? "warn" : "default"}
           />
         </div>
