@@ -1,0 +1,93 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+require_env() {
+  local key="$1"
+
+  if [ -z "${!key:-}" ]; then
+    echo "Missing required env: ${key}" >&2
+    exit 1
+  fi
+}
+
+upsert_env_var() {
+  local env_file="$1"
+  local key="$2"
+  local value="$3"
+  local temp_file
+
+  temp_file="$(mktemp)"
+
+  awk -v key="$key" -v value="$value" '
+    BEGIN { updated = 0 }
+    index($0, key "=") == 1 {
+      print key "=" value
+      updated = 1
+      next
+    }
+    { print }
+    END {
+      if (!updated) {
+        print key "=" value
+      }
+    }
+  ' "$env_file" > "$temp_file"
+
+  mv "$temp_file" "$env_file"
+}
+
+require_env DEPLOY_BRANCH
+require_env DEPLOY_GIT_SHA
+require_env BFF_IMAGE_REPOSITORY
+require_env GHCR_USERNAME
+require_env GHCR_TOKEN
+
+case "$DEPLOY_BRANCH" in
+  main)
+    service_name="main-bff"
+    image_tag_key="MAIN_BFF_IMAGE_TAG"
+    ;;
+  develop)
+    service_name="develop-bff"
+    image_tag_key="DEVELOP_BFF_IMAGE_TAG"
+    ;;
+  *)
+    echo "Unsupported branch: ${DEPLOY_BRANCH}" >&2
+    exit 1
+    ;;
+esac
+
+apps_root="$HOME/apps"
+stack_root="${apps_root}/lightsail-stack"
+stack_compose_file="${stack_root}/docker-compose.lightsail.yml"
+stack_env_file="${stack_root}/.env"
+stack_nginx_dir="${stack_root}/deploy/nginx"
+stack_nginx_config="${stack_nginx_dir}/lightsail-bff.conf"
+main_data_dir="${apps_root}/main/data"
+develop_data_dir="${apps_root}/develop/data"
+
+mkdir -p \
+  "$stack_root" \
+  "$stack_nginx_dir" \
+  "$main_data_dir/reports" \
+  "$develop_data_dir/reports"
+
+install -m 644 docker-compose.lightsail.yml "$stack_compose_file"
+install -m 644 deploy/nginx/lightsail-bff.conf "$stack_nginx_config"
+
+touch "$stack_env_file"
+
+upsert_env_var "$stack_env_file" COMPOSE_PROJECT_NAME "flovia-lightsail"
+upsert_env_var "$stack_env_file" BFF_IMAGE_REPOSITORY "$BFF_IMAGE_REPOSITORY"
+upsert_env_var "$stack_env_file" MAIN_FLOVIA_DATA_DIR "$main_data_dir"
+upsert_env_var "$stack_env_file" DEVELOP_FLOVIA_DATA_DIR "$develop_data_dir"
+upsert_env_var "$stack_env_file" BFF_DATA_MOUNT_PATH "/data"
+upsert_env_var "$stack_env_file" NGINX_PORT "80"
+upsert_env_var "$stack_env_file" "$image_tag_key" "$DEPLOY_GIT_SHA"
+
+printf '%s\n' "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USERNAME" --password-stdin
+docker compose --env-file "$stack_env_file" -f "$stack_compose_file" config >/dev/null
+docker compose --env-file "$stack_env_file" -f "$stack_compose_file" pull "$service_name" nginx
+docker compose --env-file "$stack_env_file" -f "$stack_compose_file" up -d --remove-orphans "$service_name" nginx
+docker logout ghcr.io >/dev/null 2>&1 || true
