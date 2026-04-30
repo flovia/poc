@@ -229,6 +229,7 @@ export const runFullCapture = async (
 
   if (options.dryRun) return { dryRun: true, plan, stageProgress };
   credentialCheck(options);
+  const runGeneratedAt = new Date().toISOString();
   log(`[capture-full] started ${options.network} ${options.asset} ${options.from}..${options.to}`);
 
   const store = options.analyticsStore ?? createAnalyticsStore({ path: options.analyticsDbPath });
@@ -310,6 +311,7 @@ export const runFullCapture = async (
       mandatoryPayTos: [
         { network: options.network, asset: options.asset, payTo: DEFAULT_COINGECKO_PAYTO },
       ],
+      generatedAt: runGeneratedAt,
     });
     writeAtomically(plan.outputPaths.payToPlan, `${JSON.stringify(payToPlan, null, 2)}\n`);
     store.persistSamplingPlanMetadata({
@@ -397,6 +399,7 @@ export const runFullCapture = async (
       },
       caps: { total: options.walletBudget, portfolioEnrichment: options.portfolioLimit },
       portfolioPolicy: options.portfolioSource === "zerion" ? "capped" : "disabled",
+      generatedAt: runGeneratedAt,
     });
     writeAtomically(plan.outputPaths.walletPlan, `${JSON.stringify(walletPlan, null, 2)}\n`);
     store.persistSamplingPlanMetadata({
@@ -442,7 +445,10 @@ export const runFullCapture = async (
       zerionFetch: options.zerionFetch,
       analyticsStore: store,
     };
-    if (batchOptions.addresses.length > 0) await runCustomerIntelligenceBatchCapture(batchOptions);
+    const customerResult =
+      batchOptions.addresses.length > 0
+        ? await runCustomerIntelligenceBatchCapture(batchOptions)
+        : undefined;
     completeStage("customer-intelligence");
     log(`[capture-full] customer-intelligence: captured ${batchOptions.addresses.length} wallets`);
 
@@ -451,6 +457,9 @@ export const runFullCapture = async (
       analyticsDbPath: options.analyticsDbPath,
       outputPath: options.readModelOutputPath,
       aggregateRunIds: marketRunIds,
+      customerRunIds:
+        customerResult?.analyticsRunId === undefined ? [] : [customerResult.analyticsRunId],
+      generatedAt: runGeneratedAt,
     });
     completeStage("read-model-generation");
     log(`[capture-full] read-model-generation: wrote ${options.readModelOutputPath}`);

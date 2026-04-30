@@ -90,4 +90,32 @@ describe("wallet sampling", () => {
 
     expect(plan.selected).toHaveLength(3);
   });
+
+  test("uses auditable generatedAt without changing deterministic selection", () => {
+    const input = {
+      seed: "timestamp-seed",
+      transfers: [
+        transfer("0x1111111111111111111111111111111111111111", "coingecko", "1000"),
+        transfer("0x2222222222222222222222222222222222222222", "peer", "2000", {
+          isCoingecko: false,
+        }),
+      ],
+      budget: { total: 2, recent_user: 1, random_long_tail_user: 1 },
+      caps: { total: 2 },
+    };
+
+    const explicit = buildWalletSamplingPlan({
+      ...input,
+      generatedAt: "2026-04-30T00:00:00.000Z",
+    });
+    const otherTimestamp = buildWalletSamplingPlan({
+      ...input,
+      generatedAt: "2026-05-01T00:00:00.000Z",
+    });
+    const defaultTimestamp = buildWalletSamplingPlan(input);
+
+    expect(explicit.generatedAt).toBe("2026-04-30T00:00:00.000Z");
+    expect(defaultTimestamp.generatedAt).not.toBe("1970-01-01T00:00:00.000Z");
+    expect(otherTimestamp.selected).toEqual(explicit.selected);
+  });
 });

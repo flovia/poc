@@ -35,6 +35,7 @@ export type PayToSamplingPlanInput = {
   budget: PayToSamplingBudget;
   census: PayToCensusRow[];
   mandatoryPayTos?: ScopedPaymentSink[];
+  generatedAt?: string;
 };
 
 export type PayToSample = PayToCensusRow & {
@@ -89,6 +90,7 @@ export type WalletSamplingPlanInput = {
   budget: WalletSamplingBudget;
   caps: WalletSamplingCaps;
   portfolioPolicy?: "disabled" | "capped";
+  generatedAt?: string;
 };
 
 export type WalletSample = {
@@ -254,7 +256,7 @@ export const buildPayToSamplingPlan = (input: PayToSamplingPlanInput): PayToSamp
   }
 
   return {
-    generatedAt: new Date(0).toISOString(),
+    generatedAt: input.generatedAt ?? new Date().toISOString(),
     seed: input.seed,
     budget: input.budget,
     candidateCount: census.length,
@@ -380,7 +382,7 @@ export const buildWalletSamplingPlan = (input: WalletSamplingPlanInput): WalletS
   }
 
   return {
-    generatedAt: new Date(0).toISOString(),
+    generatedAt: input.generatedAt ?? new Date().toISOString(),
     seed: input.seed,
     budget: input.budget,
     caps: input.caps,

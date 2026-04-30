@@ -206,6 +206,20 @@ describe("full capture orchestration", () => {
       expect(fs.existsSync(path.join(directory, "payto-sampling-plan.json"))).toBe(true);
       expect(fs.existsSync(path.join(directory, "wallet-sampling-plan.json"))).toBe(true);
       expect(fs.existsSync(path.join(directory, "read-models.json"))).toBe(true);
+      const payToPlan = JSON.parse(
+        fs.readFileSync(path.join(directory, "payto-sampling-plan.json"), "utf8"),
+      ) as { generatedAt: string };
+      const walletPlan = JSON.parse(
+        fs.readFileSync(path.join(directory, "wallet-sampling-plan.json"), "utf8"),
+      ) as { generatedAt: string };
+      const readModels = JSON.parse(
+        fs.readFileSync(path.join(directory, "read-models.json"), "utf8"),
+      ) as {
+        serviceSummary: { generatedAt: string };
+      };
+      expect(payToPlan.generatedAt).not.toBe("1970-01-01T00:00:00.000Z");
+      expect(walletPlan.generatedAt).toBe(payToPlan.generatedAt);
+      expect(readModels.serviceSummary.generatedAt).toBe(payToPlan.generatedAt);
       expect(logs).toContain(
         "[capture-full] started base USDC 2026-01-01T00:00:00.000Z..2026-04-29T23:59:59.000Z",
       );

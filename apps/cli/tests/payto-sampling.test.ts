@@ -99,4 +99,29 @@ describe("payTo sampling", () => {
 
     expect(plan.selected).toHaveLength(3);
   });
+
+  test("uses auditable generatedAt without changing deterministic selection", () => {
+    const input = {
+      seed: "timestamp-seed",
+      census: [
+        sink("0x0000000000000000000000000000000000000001", 1),
+        sink("0x0000000000000000000000000000000000000002", 2),
+      ],
+      budget: { total: 2 },
+    };
+
+    const explicit = buildPayToSamplingPlan({
+      ...input,
+      generatedAt: "2026-04-30T00:00:00.000Z",
+    });
+    const otherTimestamp = buildPayToSamplingPlan({
+      ...input,
+      generatedAt: "2026-05-01T00:00:00.000Z",
+    });
+    const defaultTimestamp = buildPayToSamplingPlan(input);
+
+    expect(explicit.generatedAt).toBe("2026-04-30T00:00:00.000Z");
+    expect(defaultTimestamp.generatedAt).not.toBe("1970-01-01T00:00:00.000Z");
+    expect(otherTimestamp.selected).toEqual(explicit.selected);
+  });
 });
