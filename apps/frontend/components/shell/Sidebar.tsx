@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
@@ -141,7 +142,14 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
   return (
     <aside className="sidebar">
       <div className="brand">
-        <div className="brand-mark" />
+        <Image
+          className="brand-mark"
+          src="/logo.jpg"
+          alt=""
+          width={44}
+          height={44}
+          priority
+        />
         <div className="brand-name">
           Flovia<em>x402 co-usage</em>
         </div>
