@@ -1,8 +1,8 @@
 # Flovia BFF
 
-The BFF is a read-only product API boundary for the frontend demo.
+The BFF is a read-only demo API boundary for the frontend demo.
 
-In Phase B, it provides a read-only product endpoint that returns prepared demo read models.
+In Phase B, it provides read-only demo endpoints that return prepared read models.
 The current BFF does not depend on `apps/cli` and returns responses in a canonical envelope that follows the Phase B contract in `packages/contracts`.
 
 ## Commands
@@ -26,7 +26,7 @@ bun run verify
 - `GET /analytics/services/comparison` -> coingecko and public x402 peer service comparison
 - `GET /analytics/services/quadrants` -> quadrant-ready service comparison data using average transactions per user vs endpoint diversity
 
-The product endpoint responses follow `docs/phase-b/api-contract.md` and the Phase B schema in `packages/contracts`.
+The demo endpoint responses follow `docs/phase-b/api-contract.md` and the Phase B schema in `packages/contracts`.
 Demo labels and expected future SDK telemetry fields are distinguished by `provenance` / `provenanceByField` / `reasons` in responses.
 
 The following endpoints are not exposed in the initial Phase B implementation.
@@ -49,4 +49,4 @@ The policy is not to issue live CDP / Bitquery / RPC / SDK collector calls per u
 
 ## Read-only policy
 
-Product endpoints accept GET only. Non-GET methods do not perform write operations and return an error response aligned with the read-only policy.
+Demo endpoints accept GET only. Non-GET methods do not perform write operations and return an error response aligned with the read-only policy.

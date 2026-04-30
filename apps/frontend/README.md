@@ -25,7 +25,7 @@ The PoC BFF returns only customer projections at payer wallet level and does not
 
 #### BFF startup and demo data
 
-BFF lives in the same monorepo at `apps/bff`. On request path it does not call live RPC / external services, and returns prepared fixtures / projections as a read-only product API.
+BFF lives in the same monorepo at `apps/bff`. On request path it does not call live RPC / external services, and returns prepared fixtures / projections as a read-only demo API.
 
 ```bash
 bun install
