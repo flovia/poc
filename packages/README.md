@@ -1,10 +1,10 @@
 # packages
 
-このディレクトリには、x402 マーケットインテリジェンスの中核ロジックを置きます。
+This directory holds the core logic for x402 market intelligence.
 
-`apps/cli` と `apps/bff` は実行入口です。ドメインロジック、外部 API 連携、スナップショット生成の判断は `packages/*` に寄せます。
+`apps/cli` and `apps/bff` are entrypoints. Domain logic, external API integration, and snapshot generation decisions are delegated to `packages/*`.
 
-## 依存方向
+## Dependency direction
 
 ```text
 apps/cli ─┐
@@ -12,57 +12,57 @@ apps/cli ─┐
 apps/bff ─┘
 ```
 
-ルール:
+Rules:
 
-- `apps/*` から `packages/*` への import は OK
-- `packages/*` から `apps/*` への import は禁止
-- `apps/bff` から `apps/cli` への import も禁止
+- imports from `apps/*` to `packages/*` are allowed
+- imports from `packages/*` to `apps/*` are forbidden
+- imports from `apps/bff` to `apps/cli` are also forbidden
 
-## パッケージ
+## Packages
 
 ### `contracts`
 
-共有 contract を定義します。
+Defines shared contracts.
 
-- Zod schema
-- TypeScript 型
-- 正規化済み CDP resource / payment option
+- Zod schemas
+- TypeScript types
+- normalized CDP resource / payment option
 - Bitquery aggregate
 - market snapshot DTO
-- network / asset / payTo の正規化 helper
+- network / asset / payTo normalization helpers
 
 ### `sources`
 
-外部 source との接続を担当します。
+Handles external source connections.
 
 - CDP x402 Discovery client
 - Bitquery GraphQL client
 - pagination
-- response parse
-- contracts への正規化
+- response parsing
+- normalization into contracts
 
-ここでは ranking や scoring は行いません。
+No ranking or scoring is done here.
 
 ### `intelligence`
 
-分析ロジックを担当します。
+Handles analysis logic.
 
-- CDP resource と Bitquery activity の join
+- CDP resource and Bitquery activity join
 - scope filtering
-- active resource 判定
+- active resource determination
 - ranking
 - discrepancy detection
-- market snapshot 生成
+- market snapshot generation
 
-## 方針
+## Policy
 
-この branch では CDP + Bitquery を primary source とします。
+This branch uses CDP + Bitquery as the primary source.
 
-旧 self-implemented discovery / probe / onchain attribution 基盤は `v0-self-implemented-x402` branch に保存済みで、この `packages` 構成には含めません。
+The legacy self-implemented discovery / probe / onchain attribution baseline is stored on the `v0-self-implemented-x402` branch and is not included in this `packages` structure.
 
-## 検証
+## Verification
 
-各 package は個別に検証できます。
+Each package can be verified individually.
 
 ```bash
 cd packages/contracts && bun run typecheck && bun test
@@ -70,7 +70,7 @@ cd packages/sources && bun run typecheck && bun test
 cd packages/intelligence && bun run typecheck && bun test
 ```
 
-通常は repository root でまとめて実行します。
+Usually run together from the repository root.
 
 ```bash
 bun run verify

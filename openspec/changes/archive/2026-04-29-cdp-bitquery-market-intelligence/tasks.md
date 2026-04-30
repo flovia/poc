@@ -1,38 +1,38 @@
-## 1. Workspace と contracts
+## 1. Workspace and contracts
 
-- [x] 1.1 Bun / TypeScript package metadata を持つ `packages/contracts`、`packages/sources`、`packages/intelligence` workspace package を作成する。
-- [x] 1.2 `packages/contracts` に正規化済み CDP resource / payment option schema を定義する。
-- [x] 1.3 `packages/contracts` に Bitquery aggregate、latest-transfer、market resource、discrepancy、market snapshot schema を定義する。
-- [x] 1.4 contract parsing と invalid input failure の fixture-based test を追加する。
+- [x] 1.1 Create Bun / TypeScript workspace packages: `packages/contracts`, `packages/sources`, `packages/intelligence`.
+- [x] 1.2 Define normalized CDP resource / payment option schema in `packages/contracts`.
+- [x] 1.3 Define Bitquery aggregate, latest-transfer, market resource, discrepancy, and market snapshot schema in `packages/contracts`.
+- [x] 1.4 Add fixture-based tests for contract parsing and invalid input failure.
 
 ## 2. Source clients
 
-- [x] 2.1 pagination と configurable limit handling を持つ CDP Discovery client を `packages/sources` に実装する。
-- [x] 2.2 source provenance と relevant quality field を保持しながら、CDP Discovery response を contract 型に正規化する。
-- [x] 2.3 `BITQUERY_TOKEN` を configuration または explicit option から読む Bitquery GraphQL client を `packages/sources` に実装する。
-- [x] 2.4 `payTo` ごとに group された payment option 向けの Base USDC aggregate query を実装する。
-- [x] 2.5 recorded fixture と mocked fetch response を使った source client test を追加する。
+- [x] 2.1 Implement CDP Discovery client in `packages/sources` with pagination and configurable limit handling.
+- [x] 2.2 Implement CDP Discovery response normalization while preserving source provenance and relevant quality fields into contract types.
+- [x] 2.3 Implement Bitquery GraphQL client in `packages/sources` reading `BITQUERY_TOKEN` from config or explicit option.
+- [x] 2.4 Implement Base USDC aggregate query for payment options grouped by `payTo`.
+- [x] 2.5 Add source client tests using recorded fixture and mocked fetch responses.
 
 ## 3. Market intelligence
 
-- [x] 3.1 要求された network / asset scope の payment option filtering を実装する。
-- [x] 3.2 正規化済み CDP payment option と Bitquery aggregate を network、asset、`payTo` で結合する。
-- [x] 3.3 source value を捨てずに active resource indicator、ranking field、discrepancy indicator を計算する。
-- [x] 3.4 resource、payment option、aggregate、summary metrics、generated timestamp、source metadata を含む market snapshot object を構築する。
-- [x] 3.5 join、zero-activity payment option、metric discrepancy の intelligence test を追加する。
+- [x] 3.1 Implement payment option filtering by requested network / asset.
+- [x] 3.2 Join normalized CDP payment options and Bitquery aggregates by network, asset, and `payTo`.
+- [x] 3.3 Calculate active resource indicator, ranking fields, and discrepancy indicators without discarding source values.
+- [x] 3.4 Build market snapshot object with resource, payment option, aggregate, summary metrics, generated timestamp, and source metadata.
+- [x] 3.5 Add intelligence tests for join, zero-activity payment options, and metric discrepancy.
 
 ## 4. CLI report generation
 
-- [x] 4.1 package function 経由で x402 market snapshot を生成する CLI entrypoint を追加する。
-- [x] 4.2 resource limit、network、asset、JSON output path、Markdown output path の CLI option を追加する。
-- [x] 4.3 validated snapshot shape で `reports/x402-market-snapshot.json` を書き出す。
-- [x] 4.4 high-level count、top resources、discrepancy notes を持つ `reports/x402-market-summary.md` を書き出す。
-- [x] 4.5 Bitquery credential 不足時に明確な error を返し、誤解を招く partial activity report を出さないようにする。
+- [x] 4.1 Add CLI entrypoint to generate x402 market snapshot through package function.
+- [x] 4.2 Add CLI options for resource limit, network, asset, JSON output path, and Markdown output path.
+- [x] 4.3 Write validated snapshot shape to `reports/x402-market-snapshot.json`.
+- [x] 4.4 Write `reports/x402-market-summary.md` with high-level count, top resources, and discrepancy notes.
+- [x] 4.5 Return clear error when Bitquery credential is missing so misleading partial activity report is not produced.
 
-## 5. Integration と verification
+## 5. Integration and verification
 
-- [x] 5.1 package export を追加し、新しい CLI snapshot command 向けに workspace script を更新する。
-- [x] 5.2 live CDP / Bitquery verification を default offline `bun run verify` path から分離する。
-- [x] 5.3 新しい package と CLI report generation の targeted test を実行する。
-- [x] 5.4 root `bun run verify` を実行し、regression を修正する。
-- [x] 5.5 self-implemented probe workflow の legacy status と新しい CDP + Bitquery primary path を文書化する。
+- [x] 5.1 Add package exports and update workspace scripts for new CLI snapshot command.
+- [x] 5.2 Separate live CDP / Bitquery verification from default offline `bun run verify` path.
+- [x] 5.3 Run targeted tests for new packages and CLI report generation.
+- [x] 5.4 Run root `bun run verify` and fix regressions.
+- [x] 5.5 Document legacy status of self-implemented probe workflow and new CDP + Bitquery primary path.

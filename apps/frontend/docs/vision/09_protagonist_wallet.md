@@ -1,37 +1,37 @@
 ---
-name: 主役ウォレット プロファイル
-description: デモで使う架空ウォレット 1 体の人格 + Activity Timeline サンプル + 併用 Provider
+name: Hero wallet profile
+description: Fictional one-wallet persona + Activity Timeline sample + co-used Providers
 type: project
 ---
 
-# 主役ウォレット プロファイル
+# Hero wallet profile
 
-> 最終更新: 2026-04-28
-> 出典: [Codex 提案](/tmp/flovia-codex-review/demo_script.md)
-> 目的: デモ脚本 ([08_demo_script.md](08_demo_script.md)) の主役ウォレットを具体化、モックデータの叩き台
+> Last updated: 2026-04-28
+> Source: [Codex proposal](/tmp/flovia-codex-review/demo_script.md)
+> Purpose: Concretize the hero wallet used in the demo script ([08_demo_script.md](08_demo_script.md)) and define mock seed data
 
-## ★ 基本プロファイル
+## ★ Core profile
 
-| 項目 | 値 |
+| Item | Value |
 |---|---|
-| ウォレットアドレス | `0x7A91...C4E8` (masking 表示) |
-| アクティブ期間 | 2026-03-31 〜 2026-04-28 (約 28 日) |
-| 推定エージェント種別 (UA family) | `Self-hosted DeFi Trading Bot` |
-| 役割の解釈 | 価格取得 → LLM 分析 → DEX 執行 → Discord 通知、を毎時回す 24h bot |
+| Wallet address | `0x7A91...C4E8` (masked display) |
+| Active period | 2026-03-31 〜 2026-04-28 (about 28 days) |
+| Estimated agent type (UA family) | `Self-hosted DeFi Trading Bot` |
+| Interpretation | Repeating hourly 24h bot: price pull → LLM analysis → DEX execution → Discord notification |
 
-### 利用パターンの規則性
+### Usage regularity
 
-- 毎時 `00-03 分` に価格 API を呼ぶ
-- その 1〜2 分後に LLM API
-- シグナル発生時のみ 1〜5 分以内に DEX aggregator
-- 取引有無にかかわらず最後に Discord 通知
-- 直近 7 日でこのサイクル頻度と金額が増加
+- Call price API around `00-03` minutes every hour
+- 1–2 minutes later call LLM API
+- On signal, call DEX aggregator within 1–5 minutes
+- Always send a final Discord notification regardless of whether a trade executed
+- In the last 7 days both cycle frequency and amount increased
 
-## ★ Activity Timeline サンプル (12 行)
+## ★ Activity Timeline sample (12 rows)
 
-デモでは下記 12 行を、上から下へ追うだけで物語が分かる並び。
+The demo story is understandable by reading these 12 rows top-to-bottom.
 
-| 時刻 | Provider | API パス | 金額 |
+| Time | Provider | API path | Amount |
 |---|---|---|---|
 | 2026-04-28 09:00 | **Your Price API** | `/v1/price/history?pair=ETH-USD&window=1h` | `$0.018` |
 | 2026-04-28 09:01 | VectorMind AI | `/v1/responses` | `$0.031` |
@@ -46,45 +46,45 @@ type: project
 | 2026-04-28 11:02 | RouteZero DEX | `/quote-and-swap` | `$0.211` |
 | 2026-04-28 11:03 | SignalPort | `/api/messages` | `$0.004` |
 
-### 物語として見せるポイント
+### Storytelling points
 
-- 9 時台は通常運転
-- 10 時台で対象ペア数が増え、価格 API の単価も上がる
-- 11 時台では市場データの粒度が上がり、DEX 執行額も伸びる
-- **規則性は維持したまま、強度だけが増えている**
-- つまり「壊れた bot」ではなく **「伸びている bot」** であり、アップセル対象として質が高い
+- 9 AM is normal operation
+- At 10 AM pair count increases and price API unit value rises
+- At 11 AM data granularity rises and DEX execution amount grows
+- **The pattern remains stable; only intensity increases**
+- Therefore this is not a broken bot but a **growing bot**, high quality for upsell
 
-## ★ 併用 Provider 6 社 (架空名)
+## ★ Six co-used providers (fictional names)
 
-| 架空名 | 種別 | このウォレットでの役割 |
+| Name | Type | Role for this wallet |
 |---|---|---|
-| **VectorMind AI** | LLM API | 市場要約、売買判断文生成 |
-| **RouteZero DEX** | DEX Aggregator | ルーティングと約定 |
-| **SignalPort** | Discord / Notification API | 取引通知 |
-| **VaultLayer** | Wallet / Policy API | 署名ポリシー、実行制御 |
-| **StreamDelta** | On-chain / Mempool Data API | 執行前の補助シグナル |
-| **LedgerLake** | Analytics / Logging API | bot パフォーマンス記録 |
+| **VectorMind AI** | LLM API | Market summarization and trade judgment text generation |
+| **RouteZero DEX** | DEX Aggregator | Routing and settlement |
+| **SignalPort** | Discord / Notification API | Trade notification |
+| **VaultLayer** | Wallet / Policy API | Signature policy and execution control |
+| **StreamDelta** | On-chain / Mempool Data API | Auxiliary signal before execution |
+| **LedgerLake** | Analytics / Logging API | Bot performance logging |
 
-これらの架空名は **デモのリアリティ** を担保するため、ドキュメント全体で統一して使う。
+These fictional names are used consistently across the whole doc for demo realism.
 
-## ★ 自社視点の数値
+## ★ Internal metrics
 
-| 項目 | 値 |
+| Item | Value |
 |---|---|
-| 今月の自社 API 支出 | `$3,840` |
-| 直近 7 日の利用成長率 | `+184%` |
-| 月初比 req 成長 | `3.1x` |
-| 無料枠到達状況 | `92%` |
-| 推定今月着地 | `無料枠超過 + 従量課金開始直前` |
+| Monthly spend on own API | `$3,840` |
+| 7d usage growth | `+184%` |
+| req growth vs start of month | `3.1x` |
+| Free-tier progress | `92%` |
+| Estimated month-end landing | `over free tier, near pay-as-you-go start` |
 
-### 推奨アクション
+### Recommended actions
 
-- 高頻度 bot 向け有料プランを提案
-- **低遅延 SLA** と **higher rate limit** を主訴求
+- Propose a paid plan for high-frequency bots
+- Primary value props: **low-latency SLA** and **higher rate limit**
 
-## ★ Insight Card 文言例
+## ★ Insight card copy examples
 
-デモ画面で表示する短文。**英語で計測感を出す** (Codex 提案)。
+Short statements shown on demo screen. **Keep them in English with measurable wording** (Codex proposal).
 
 ```
 This wallet uses your API as the first step in an hourly trading loop.

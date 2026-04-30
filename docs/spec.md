@@ -1,45 +1,56 @@
-# Flovia PoC のあるべき姿
+# Desired state of the Flovia PoC
 
-この文書は、`docs/overview.md`、`../poc-frontend/docs/vision`、現行 `apps/cli` / `packages` / `apps/bff` の実装構成をもとに、PoC と repository の目指す姿を再定義するものです。
+This document redefines the PoC and repository direction based on
+`docs/overview.md`, `../poc-frontend/docs/vision`, and the current
+`apps/cli` / `packages` / `apps/bff` implementation.
 
-## 1. PoC の再定義
+## 1. Re-defining the PoC
 
-Flovia PoC は、x402 payment ecosystem を **onchain-first に観測し、API provider が自分の顧客 wallet と周辺利用を理解するための market intelligence product** です。
+Flovia PoC is a market intelligence product for x402 providers to understand
+their customers' wallets and surrounding product usage through
+**onchain-first observation**.
 
-PoC では、この構想を次のように段階化します。
+The PoC is phased as follows.
 
 ```text
 PoC scope
   Phase A: data foundation
-    apps/cli + packages で market snapshot / intelligence 基盤を作る
+    Build market snapshot / intelligence foundation with apps/cli + packages
 
   Phase B: demo BFF
-    demo data / snapshot / projection を BFF が返し、
-    frontend で partner desire に沿った product 体験を検証する
+    Return demo data / snapshot / projection from BFF
+    and validate a partner-driven product experience in frontend
 
 Future scope
   Phase C: SDK telemetry integration
-    provider middleware で API request telemetry を取得し、
-    onchain settlement と紐付ける
+    Collect API request telemetry via provider middleware
+    and correlate it with onchain settlement
 ```
 
-つまり、今の PoC は SDK telemetry 統合そのものではなく、**Phase A の data foundation と Phase B の demo BFF によって、SDK 統合後に成立させたい product 体験を先に検証するもの** と位置付けます。SDK telemetry 統合は Phase C 以降の将来拡張です。
+In other words, the current PoC is positioned as validating the product
+experience we want to enable after SDK telemetry integration through **Phase A data
+foundation + Phase B demo BFF**. SDK telemetry integration itself is a future
+extension in Phase C and beyond.
 
-## 2. Product としてのあるべき姿
+## 2. Desired product shape
 
 ### 2.1 Core value
 
-Flovia が提供する価値は、API provider に対して次を見せることです。
+Flovia provides visibility into:
 
-- 自分の `pay_to` / recipient に支払っている payer wallet は誰か
-- その payer wallet は他にどの x402-like product / recipient / provider candidate を使っているか
-- どの settlement pattern、relayer、facilitator、middleman candidate が使われているか
-- 自社顧客と他 product の co-usage から、どの wallet が upsell / partnership / retention signal を持つか
-- onchain だけで言えることと、SDK telemetry が必要なことを confidence 付きで分離すること
+- Which payer wallets are paying the provider's `pay_to` / recipient
+- Which other x402-like products, recipients, and provider candidates those payer
+  wallets use
+- Which settlement patterns, relayers, facilitators, and middlemen are used
+- Which wallets carry upsell, partnership, and retention signals based on
+  co-usage across the provider and other products
+- Confidence-based separation of what can be said from onchain data alone and
+  what requires SDK telemetry
 
 ### 2.2 Partner demo goal
 
-この PoC は、partner に product vision を見せるための demo です。partner から受け取った desire は次です。
+This PoC is a demo for partner-facing product vision. We received the following
+desire from partners.
 
 ```text
 where the user is coming from, and use case if possible
@@ -51,78 +62,97 @@ why this matters:
   improve the API or x402 offerings
 ```
 
-したがって Phase B の demo BFF / frontend では、実データとして endpoint telemetry を取得できていなくても、**partner が見たい意思決定体験**を demo data で表現します。
+Therefore, in Phase B demo BFF / frontend, we show the partner's required
+decision-making experience using demo data even when endpoint telemetry cannot be
+obtained as live data.
 
-| Partner が見たいもの | Phase B demo での表現 | 実データ化に必要なもの |
+| Partner asks for | Representation in Phase B demo | Needed for live data |
 | --- | --- | --- |
-| where user is coming from | source / medium candidate、referrer-like label、campaign-like label を demo data として表示 | SDK telemetry、provider attribution data、referrer / campaign metadata |
-| use case | workflow / use case candidate を demo label として表示 | request path、resource、request context、provider-side event |
-| endpoints they use | endpoint candidate と usage frequency を demo projection として表示 | SDK middleware による endpoint-level request telemetry |
-| frequency | payment frequency / wallet activity は data foundation で表現し、endpoint frequency は demo label として表現 | onchain frequency + SDK request frequency |
-| GTM / marketing double-down | source / medium × payer quality × co-usage の仮説を表示 | attribution data と conversion / usage data |
-| suitable endpoint / use case for x402 / Agents | endpoint / use case ranking を demo insight として表示 | endpoint usage、payment conversion、agent/workflow signal |
+| where user is coming from | Display `source / medium candidate`, `referrer-like label`, and
+`campaign-like label` as demo data | SDK telemetry, provider attribution data,
+referrer / campaign metadata |
+| use case | Display `workflow / use case candidate` as demo label | request path,
+resource, request context, provider-side event |
+| endpoints they use | Display `endpoint candidate` and usage frequency as demo
+projection | SDK middleware endpoint-level request telemetry |
+| frequency | Show payment frequency / wallet activity from data foundation,
+and endpoint frequency as demo label | onchain frequency + SDK request
+frequency |
+| GTM / marketing focus | Show hypotheses for `source / medium × payer quality ×
+co-usage` | attribution data and conversion / usage data |
+| suitable endpoint / use case for x402 / Agents | Show `endpoint / use case`
+ranking as demo insight | endpoint usage, payment conversion, agent/workflow signal |
 
-重要なのは、Phase B で **partner desire に対する product answer を見せる**ことです。一方で、source / medium、endpoint usage、use case attribution は onchain-only では取得できないため、PoC 内では `demo label` または `future SDK telemetry field` と明示します。
+The key in Phase B is to show a **product answer** for partner needs. At the same
+time, because source/medium, endpoint usage, and use-case attribution cannot be
+obtained from onchain-only data, the PoC explicitly marks them as `demo label`
+or `future SDK telemetry field`.
 
-### 2.3 PoC で守る制約
+### 2.3 PoC constraints
 
-PoC は、最初からすべてを実データで解決しません。
+The PoC does not attempt to solve everything as live data from day one.
 
-- HTTP telemetry は現時点では前提にしない
-- BFF は request ごとに live CDP / Bitquery / RPC を叩かない
-- BFF は prepared demo data、snapshot、projection を返す read-only product API とする
-- endpoint / workflow / agent type / plan / MRR などは demo label または future SDK field として扱う
-- onchain-only で確信できるものと、推定・演出・将来拡張を明確に分ける
+- HTTP telemetry is not a baseline assumption yet.
+- BFF does not call live CDP / Bitquery / RPC per request.
+- BFF is a read-only product API returning prepared demo data, snapshots, and
+  projections.
+- endpoint / workflow / agent type / plan / MRR are treated as demo label or
+  future SDK field.
+- Clearly separate what is certain from onchain-only data and what is inference,
+  narrative, or future extension.
 
 ### 2.4 Product narrative
 
-デモで伝えるべき物語は、従来の「一般的な API analytics」ではなく、次の流れです。
+The demo narrative should not be generic “API analytics.” It follows this flow:
 
 ```text
-1. API provider が自社の pay_to を登録する
-2. Flovia が payer wallet と settlement activity を検出する
-3. 顧客 wallet 一覧から、重要 wallet を選ぶ
-4. Wallet 360° で、その wallet の支払い履歴と co-usage を見る
-5. Patterns で、自社顧客が他に使う product cluster を俯瞰する
-6. provider は、source / medium、use case、endpoint frequency、retention / upsell / partnership の仮説を得る
+1. API provider registers their own pay_to
+2. Flovia detects payer wallets and settlement activity
+3. Selects important wallets from customer wallet list
+4. In Wallet 360°, view that wallet payment history and co-usage
+5. In Patterns, inspect customer-level product clusters at a glance
+6. Provider gains hypotheses for source/medium, use case, endpoint frequency,
+   retention, upsell, and partnership
 ```
 
-旧 vision の 4 画面構成は維持します。
+We keep the original 4-screen structure.
 
-| 画面　　　　　　　| 役割　　　　　　　　　　　| 現 PoC での位置付け　　　　　　　　　　　　　　　　　　　　　 |
+| Screen | Role | Position in current PoC |
 | -------------------| ---------------------------| ---------------------------------------------------------------|
-| Setup　　　　　　 | provider の `pay_to` 登録 | demo data の entry point。将来は SDK / provider config と接続 |
-| My Customers　　　| payer wallet 一覧　　　　 | BFF demo API から返す customer projection を表示　　　　　　　|
-| Wallet 360°　　　 | wallet 単位の理解　　　　 | timeline / co-usage / insight を主役化　　　　　　　　　　　　|
-| Co-usage Patterns | market 俯瞰　　　　　　　 | payer overlap と product candidate cluster を可視化　　　　　 |
+| Setup              | register provider `pay_to` | entry point of demo data; connects to SDK/provider config in
+future |
+| My Customers       | payer wallet list | displays customer projection returned from BFF demo API |
+| Wallet 360°        | wallet-level understanding | prioritizes timeline / co-usage / insight |
+| Co-usage Patterns  | market overview | visualizes payer overlap and product candidate clusters |
 
-## 3. BFF のあるべき姿
+## 3. Desired shape of BFF
 
-### 3.1 役割
+### 3.1 Role
 
-BFF は frontend demo のための **product API boundary** です。
+BFF is the **product API boundary** for the frontend demo.
 
-現時点の BFF は最小 HTTP app ですが、あるべき姿では次を担います。
+While the current BFF is a minimal HTTP app, the intended responsibilities are:
 
-- frontend が直接 `apps/cli` や `packages/sources` に依存しないための境界
-- demo data / generated snapshot / projection の read-only 配信
-- UI が必要とする shape への変換
-- live source と demo source を差し替え可能にする adapter 境界
-- 将来 SDK telemetry が入った後も壊れにくい API contract の維持
+- a boundary so frontend does not depend directly on `apps/cli` or
+  `packages/sources`
+- read-only delivery of demo data and generated snapshots/projections
+- transformation into shapes required by UI
+- adapter boundary to enable switching between live sources and demo sources
+- stable API contracts even after future SDK telemetry integration
 
-### 3.2 BFF がしないこと
+### 3.2 What BFF does not do
 
-BFF は collector でも batch job runner でもありません。
+BFF is neither a collector nor a batch job runner.
 
-- user request ごとに CDP / Bitquery / RPC を呼ばない
-- heavy aggregation や scoring を request path に置かない
-- `apps/cli` の内部実装を import しない
-- source-specific DTO をそのまま frontend に漏らさない
-- write operation を持たない
+- Does not call CDP / Bitquery / RPC per user request
+- Does not place heavy aggregation or scoring on request path
+- Does not import internal implementations from `apps/cli`
+- Does not leak source-specific DTOs to frontend directly
+- Does not support write operations
 
 ### 3.3 BFF data source
 
-当面は demo data を返します。
+For now it returns demo data.
 
 ```text
 prepared demo dataset
@@ -133,7 +163,8 @@ prepared demo dataset
   -> /patterns
 ```
 
-将来は CLI が生成した snapshot、永続化 projection、SDK telemetry を取り込んだ read model に差し替えます。
+In the future, it will be replaced with snapshot generated by CLI,
+persisted projection store, and SDK telemetry-based read model.
 
 ```text
 apps/cli batch output
@@ -142,9 +173,10 @@ apps/cli batch output
   -> frontend
 ```
 
-## 4. Data foundation のあるべき姿
+## 4. Desired shape of data foundation
 
-データ収集基盤は一掃され、現在は `apps/cli` と `packages` に再構築されています。この方向を repository の標準とします。
+The data collection foundation was rebuilt and is now standardized around
+`apps/cli` and `packages`. This is the repository baseline.
 
 ```text
 apps/cli
@@ -154,24 +186,28 @@ apps/cli
   -> JSON / Markdown report
 ```
 
-### 4.1 packages の責務
+### 4.1 Package responsibilities
 
-| Package                 | 責務　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　 | 持たない責務　　　　　　　　　　　 |
+| Package                 | Responsibilities | Non-responsibilities |
 | -------------------------| --------------------------------------------------------------------------| ------------------------------------|
-| `packages/contracts`    | Zod schema、TypeScript 型、正規化 helper、DTO contract　　　　　　　　　 | source fetch、ranking、UI shape　　|
-| `packages/sources`      | CDP Discovery、Bitquery、pagination、response parse、contract への正規化 | scoring、ranking、product decision |
-| `packages/intelligence` | scope filtering、join、active 判定、ranking、discrepancy、snapshot 生成　| external API call、HTTP serving　　|
+| `packages/contracts`    | Zod schema, TypeScript types, normalization helpers, DTO contract | source fetch, ranking, UI shape |
+| `packages/sources`      | CDP Discovery, Bitquery, pagination, response parse, normalization to
+contract | scoring, ranking, product decision |
+| `packages/intelligence` | scope filtering, join, active wallet detection, ranking,
+discrepancy, snapshot generation | external API call, HTTP serving |
 
-### 4.2 apps の責務
+### 4.2 App responsibilities
 
-| App        | 責務　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　 |
+| App        | Responsibilities |
 | ------------| ------------------------------------------------------------------------------|
-| `apps/cli` | batch orchestration、引数処理、sources と intelligence の接続、report 出力　 |
-| `apps/bff` | read-only product API、demo data / projection 配信、frontend 向け shape 変換 |
+| `apps/cli` | batch orchestration, argument handling, source-intelligence wiring,
+report output |
+| `apps/bff` | read-only product API, delivery of demo data / projections, shape
+conversion for frontend |
 
-### 4.3 依存方向
+### 4.3 Dependency direction
 
-依存方向は固定します。
+Dependency direction is fixed.
 
 ```text
 apps/cli ─┐
@@ -182,17 +218,17 @@ packages/sources ─────▶ packages/contracts
 packages/intelligence ▶ packages/contracts
 ```
 
-禁止事項は次です。
+Forbidden imports:
 
-- `packages/*` から `apps/*` への import
-- `packages/sources` から `packages/intelligence` への import
-- `packages/intelligence` から `packages/sources` への import
-- `apps/bff` から `apps/cli` への import
-- frontend / BFF が external source implementation に直接依存すること
+- `packages/*` importing `apps/*`
+- `packages/sources` importing `packages/intelligence`
+- `packages/intelligence` importing `packages/sources`
+- `apps/bff` importing `apps/cli`
+- frontend/BFF direct dependency on external source implementations
 
-## 5. Data model の再整理
+## 5. Data model rework
 
-### 5.1 現 PoC で扱う data layers
+### 5.1 Current PoC data layers
 
 ```text
 source facts
@@ -223,9 +259,10 @@ product API shapes
   patterns
 ```
 
-### 5.2 将来 SDK telemetry で増える data
+### 5.2 Data added by future SDK telemetry
 
-SDK / middleware integration は将来層です。追加される情報は onchain data と区別して扱います。
+SDK/middleware integration is in a future layer. New fields are handled separately
+from onchain data.
 
 ```text
 provider_id
@@ -243,7 +280,8 @@ pay_to
 payer
 ```
 
-これにより、現在は demo / weak inference でしか表現できない次が強くなります。
+This enables stronger representation for values currently expressed as demo or
+weak inference.
 
 - endpoint attribution
 - workflow sequence
@@ -254,31 +292,33 @@ payer
 
 ### 5.3 Phase B data provenance
 
-Phase B の product API shapes は、data provenance を明示して扱います。特に frontend demo では、実データに見える値と demo / future field が混ざりやすいため、BFF response では field の由来を区別します。
+Phase B product API shapes explicitly carry provenance. In frontend demos, live
+data and demo/future fields can appear side-by-side, so BFF responses distinguish
+origins per field.
 
-| Provenance         | 意味　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　| 例　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　| Phase B での扱い　　　　　　　　　　　　　　　　　　　　　　　|
+| Provenance | Meaning | Examples | Phase B handling |
 | --------------------| -------------------------------------------------------------------------------------------| ---------------------------------------------------------------------------------------------------------| ---------------------------------------------------------------|
-| `onchain_fact`     | Phase A の source facts / normalized contracts / intelligence projection から説明できる値 | `pay_to`, payer wallet, network, asset, payment frequency, active 判定, co-usage　　　　　　　　　　　　| 実データ由来として扱う　　　　　　　　　　　　　　　　　　　　|
-| `demo_label`       | partner demo の意思決定体験を表現するために fixture として用意する値　　　　　　　　　　　| source / medium candidate, referrer-like label, campaign-like label, workflow / use case candidate　　　| 実データではなく demo data と明示する　　　　　　　　　　　　 |
-| `future_sdk_field` | SDK telemetry 統合後に実データ化する想定の値　　　　　　　　　　　　　　　　　　　　　　　| endpoint candidate, endpoint usage frequency, request path, workflow sequence, provider-specific funnel | 現時点では実データではない　　　　　　　　　　　　　　　　　　|
-| `derived_insight`  | 複数の値から作る insight / hypothesis　　　　　　　　　　　　　　　　　　　　　　　　　　 | retention / upsell / partnership insight, GTM double-down hypothesis　　　　　　　　　　　　　　　　　　| 根拠に demo / future field が含まれる場合は実データ扱いしない |
+| `onchain_fact`     | Values explainable from Phase A source facts / normalized contracts / intelligence projection | `pay_to`, payer wallet, network, asset, payment frequency, active flags, co-usage | Treat as live-data-derived |
+| `demo_label`       | Values prepared as fixtures to express decision-making for partner demo | source / medium candidate, referrer-like label, campaign-like label, workflow / use case candidate | Explicitly marked as demo data |
+| `future_sdk_field` | Values expected to become live after SDK telemetry integration | endpoint candidate, endpoint usage frequency, request path, workflow sequence, provider-specific funnel | Not live data today |
+| `derived_insight`  | Insight / hypothesis built from multiple signals | retention / upsell / partnership insights, GTM double-down hypotheses | Not treated as live data when reasons include demo/future fields |
 
-Phase A に依存する実データは次です。
+Phase A dependency for live data:
 
 - CDP resource / payment option
 - Bitquery payTo aggregate
 - network / asset / `pay_to`
 - payer wallet / customer wallet
 - payment activity / payment frequency
-- active wallet 判定
+- active wallet determination
 - market snapshot
 - customer wallet projection
 - wallet profile projection
 - co-usage graph projection
 - product / resource candidate cluster
-- confidence / evidence のうち onchain facts に基づく部分
+- confidence / evidence components based on onchain facts
 
-Phase A だけでは実データ化できない値は次です。
+Values not fully backed by Phase A alone:
 
 - source / medium candidate
 - referrer-like label
@@ -289,33 +329,35 @@ Phase A だけでは実データ化できない値は次です。
 - endpoint attribution
 - workflow sequence
 - agent type inference
-- activation / retention loop の provider-specific な解釈
+- provider-specific activation / retention loop interpretation
 - provider-specific funnel
 - plan / monetization context
 
-Phase B の BFF は、request path で live CDP / Bitquery / RPC を呼びません。実データ由来の値も、prepared demo dataset、fixture、または Phase A snapshot 相当の read model として返します。
+Phase B BFF does not call live CDP / Bitquery / RPC on the request path. Live-data
+origin values are returned as prepared demo dataset, fixture, or Phase A
+snapshot-equivalent read model.
 
-## 6. Repository のあるべき姿
+## 6. Desired repository shape
 
-### 6.1 原則
+### 6.1 Principles
 
-- contract-first にする
-- source adapter と intelligence logic を分離する
-- CLI は batch orchestration、BFF は read API に限定する
-- demo data は再生成可能な fixture / seed として管理する
-- generated reports、DB、`.env`、`dist` は repository に含めない
-- live verification は通常の `verify` に混ぜない
-- import boundary は prompt ではなく script / linter / ast-grep で検査する
+- contract-first
+- separate source adapters and intelligence logic
+- CLI focuses on batch orchestration, BFF on read API only
+- manage demo data as reproducible fixtures/seeds
+- do not commit generated reports, DBs, `.env`, or `dist`
+- keep live verification out of standard `verify`
+- verify import boundaries via script/linter/ast-grep, not prompts
 
-### 6.2 推奨構成
+### 6.2 Recommended structure
 
 ```text
 docs/
   overview.md
   desired-state.md
   phase-b/
-    api-contract.md              # Phase B BFF contract を置く場合
-    demo-data.md                 # Phase B demo dataset の意味論を置く場合
+    api-contract.md              # where Phase B BFF contracts live
+    demo-data.md                 # where Phase B demo dataset semantics live
 
 packages/
   contracts/
@@ -332,60 +374,64 @@ apps/
     src/
       http.ts
       server.ts
-      routes/                    # endpoint が増えたら分離
+      routes/                    # split as endpoint count grows
       data/                      # demo read model adapter
-      projections/               # UI 向け変換
+      projections/               # UI-facing conversion
     tests/
 ```
 
-### 6.3 BFF 拡張時の順序
+### 6.3 BFF expansion order
 
-BFF は実装を急いで太らせず、次の順で拡張します。
+BFF should be expanded in the following order without overloading implementation:
 
-1. frontend が必要な API contract を `packages/contracts` または `apps/bff` 内の境界として定義する
-2. demo dataset の fixture を用意する
-3. BFF route は fixture / projection を read-only に返す
-4. frontend の 4 画面が demo flow を完走できるようにする
-5. CLI snapshot から同じ projection を生成できるか検証する
-6. SDK telemetry が入る場合は、新 source として追加し、既存 projection contract を壊さない
+1. Define required API contracts as `packages/contracts` or `apps/bff` boundary.
+2. Prepare fixture-driven demo dataset.
+3. Return fixture/projection in BFF routes as read-only.
+4. Enable the 4 frontend screens to complete demo flow.
+5. Verify CLI snapshots can generate the same projection.
+6. If SDK telemetry is added, introduce it as a new source without breaking existing
+   projection contracts.
 
-## 7. PoC scope の再定義
+## 7. Re-defining PoC scope
 
-### 7.1 今やること
+### 7.1 What we do now
 
-- `apps/cli` と `packages` による market snapshot pipeline を安定させる
-- BFF に demo data read model を追加する
-- frontend vision の 4 画面に必要な API shape を返す
-- Wallet 360° と Co-usage Patterns を demo の主役にする
-- onchain-only / demo label / future SDK field の区別を文書化する
+- stabilize the market snapshot pipeline in `apps/cli` and `packages`
+- add demo data read model to BFF
+- return API shapes required by all 4 `apps/frontend` screens
+- make Wallet 360° and Co-usage Patterns the demo highlights
+- document the separation of onchain-only, demo label, and future SDK fields
 
-### 7.2 今やらないこと
+### 7.2 What we do not do now
 
-- BFF request path での live CDP / Bitquery / RPC call
-- SDK middleware の本実装
-- endpoint / workflow / MRR の実データ推定
+- live CDP / Bitquery / RPC calls on BFF request path
+- implementing real SDK middleware
+- live estimation of endpoint / workflow / MRR data
 - Solana parser
-- provider dashboard の認証・課金・本番 multi tenant 化
+- authentication, billing, and production multi-tenancy for provider dashboard
 
-### 7.3 将来やること
+### 7.3 Future work
 
-- SDK / middleware で API request と settlement tx を紐付ける
-- generated snapshot を BFF read model に変換する
-- onchain observation、catalog join、payer wallet profile を強化する
-- confidence scoring を UI に明示する
-- provider-specific customer intelligence に拡張する
+- link API requests and settlement transactions via SDK / middleware
+- transform generated snapshots into BFF read model
+- strengthen onchain observation, catalog join, payer wallet profile
+- explicitly surface confidence scoring in UI
+- extend to provider-specific customer intelligence
 
-## 8. 成功条件
+## 8. Success criteria
 
-PoC としての成功条件は次です。
+Success criteria for the PoC are:
 
-- frontend demo が 3 分で product value を説明できる
-- BFF が demo data によって 4 画面を安定して支える
-- data foundation が `contracts / sources / intelligence` に分離されている
-- `bun run verify` が offline で通る
-- live source の有無に関係なく、demo と tests が再現可能である
-- onchain-only で言えること、demo data で演出していること、SDK telemetry が必要なことが混ざらない
+- frontend demo explains product value within three minutes
+- BFF consistently supports four screens with demo data
+- data foundation remains separated into `contracts / sources / intelligence`
+- offline `bun run verify` passes
+- demo and tests are reproducible regardless of live source availability
+- no mixing of onchain-only facts, demo-layer presentation, and SDK telemetry
+  requirements
 
-## 9. 一文での位置付け
+## 9. One-line position
 
-Flovia PoC は、SDK telemetry 統合後の provider intelligence product を見据えつつ、現段階では **再構築した CLI/packages data foundation と BFF demo data によって、payer wallet co-usage と x402 market intelligence の体験価値を検証する PoC** である。
+Flovia PoC validates payer-wallet co-usage and x402 market intelligence value by
+using a rebuilt CLI/packages data foundation and BFF demo data while planning
+toward a provider intelligence product after SDK telemetry integration.

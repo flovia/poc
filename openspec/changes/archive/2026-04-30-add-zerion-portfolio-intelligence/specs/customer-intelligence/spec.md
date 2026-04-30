@@ -1,56 +1,70 @@
 ## ADDED Requirements
 
-### Requirement: Zerion portfolio source は customer intelligence を拡張できる
-システムは customer intelligence capture で Zerion portfolio source が明示的に有効化された場合、Zerion 由来の portfolio summary と DeFi positions を正規化し、customer intelligence read model に反映することを MUST とする。
+### Requirement: Zerion portfolio source can extend customer intelligence
 
-#### Scenario: Zerion portfolio capture が成功する
-- **WHEN** operator が Zerion capture を有効にし、有効な `ZERION_API_KEY` で customer intelligence capture command を実行する
-- **THEN** システムは Zerion response を repository-owned portfolio summary / DeFi position DTO に正規化する
-- **THEN** customer intelligence response は portfolio source coverage を `available` とし、Zerion provenance を保持する
+The system MUST normalize Zerion-derived portfolio summary and DeFi positions and reflect them in customer intelligence read model when Zerion portfolio source is explicitly enabled in capture.
 
-#### Scenario: Zerion が DeFi positions を返す
-- **WHEN** Zerion source が protocol position facts を返す
-- **THEN** response は `defiPositions` に protocol、position type、value、network、provenance、evidence または reasons を含める
-- **THEN** システムは DeFi active classification を derived insight として扱い、raw source fact と区別する
+#### Scenario: Zerion portfolio capture succeeds
 
-### Requirement: Zerion unavailable / partial source を明示する
-システムは Zerion capture が未有効、未設定、または一部失敗した場合、portfolio / DeFi context を捏造せず、source coverage と unavailable / partial reason を表現することを MUST とする。
+- **WHEN** operator enables Zerion capture and runs customer intelligence capture command with valid `ZERION_API_KEY`
+- **THEN** system normalizes Zerion response into repository-owned portfolio summary and DeFi position DTOs
+- **THEN** customer intelligence response marks portfolio source coverage as `available` and retains Zerion provenance
 
-#### Scenario: Zerion capture が無効である
-- **WHEN** operator が Zerion capture を有効にせず customer intelligence capture command を実行する
-- **THEN** response は既存通り valid customer intelligence read model を生成する
-- **THEN** portfolio source coverage は unavailable reason を持ち、BFF request path で live Zerion を呼ばない
+#### Scenario: Zerion returns DeFi positions
 
-#### Scenario: Zerion credential が不足している
-- **WHEN** operator が Zerion capture を有効にしているが `ZERION_API_KEY` がない
-- **THEN** command は明確な configuration error で失敗する
-- **THEN** システムは partial read model を成功扱いで書き出さない
+- **WHEN** Zerion source returns protocol position facts
+- **THEN** response includes `protocol`, `position type`, `value`, `network`, `provenance`, and evidence or reasons in `defiPositions`
+- **THEN** system treats DeFi active classification as derived insight and distinguishes it from raw source facts
 
-#### Scenario: Zerion source が一時的に失敗する
-- **WHEN** Zerion API が timeout、rate limit、または server error を返す
-- **THEN** システムは DeFi inactive と断定せず、portfolio source coverage を partial または unavailable として理由を保持する
+### Requirement: Expose Zerion unavailable / partial source
 
-### Requirement: Zerion data は default verification を live にしない
-システムは Zerion integration の unit / CLI tests を fixture または mocked fetch で検証し、default `bun run verify` で live Zerion access や credential を要求しないことを MUST とする。
+The system MUST not fabricate portfolio / DeFi context if Zerion is disabled, unset, or partially failed; it must represent source coverage and unavailable / partial reasons.
 
-#### Scenario: root verify を実行する
-- **WHEN** developer が root で `bun run verify` を実行する
-- **THEN** システムは `ZERION_API_KEY` を要求せず、offline fixture / mocked response に基づいて検証できる
+#### Scenario: Zerion capture is disabled
 
-#### Scenario: live Zerion capture を検証する
-- **WHEN** operator が live Zerion portfolio capture を実行する
-- **THEN** システムは default verify とは別の explicit command path で credential と external source availability を要求する
+- **WHEN** operator runs customer intelligence capture command without enabling Zerion capture
+- **THEN** system generates a valid customer intelligence read model as before
+- **THEN** portfolio source coverage includes unavailable reason, and BFF request path does not call live Zerion
 
-#### Scenario: live Zerion capture 結果を prepared fixture に反映する
-- **WHEN** operator が `.env` の `ZERION_API_KEY` を使って対象 wallet の portfolio / DeFi 情報を取得し、customer intelligence read model JSON を生成する
-- **THEN** 生成された read model は customer intelligence schema で検証できる
-- **THEN** prepared fixture に反映する場合も raw Zerion response、API key、auth header、request metadata を含まない
-- **THEN** BFF は更新済み prepared fixture を offline route test で検証できる
+#### Scenario: Zerion credentials are missing
 
-### Requirement: Zerion raw response は product payload に露出しない
-システムは Zerion provider 固有の raw response を BFF product API response として公開せず、正規化済み portfolio summary、DeFi positions、source coverage、provenance、evidence に変換することを MUST とする。
+- **WHEN** operator enables Zerion capture but `ZERION_API_KEY` is missing
+- **THEN** command fails with a clear configuration error
+- **THEN** system does not emit successful partial read model
 
-#### Scenario: BFF が customer intelligence を返す
-- **WHEN** client が `GET /customers/:address/intelligence` を呼び出す
-- **THEN** response は prepared read model の正規化済み portfolio / DeFi field を返す
-- **THEN** response は Zerion raw JSON、API key、auth header、request metadata を含まない
+#### Scenario: Zerion source fails temporarily
+
+- **WHEN** Zerion API returns timeout, rate limit, or server error
+- **THEN** system does not force DeFi inactive
+- **THEN** portfolio source coverage is partial or unavailable with reason retained
+
+### Requirement: Zerion data must not make default verification live
+
+The system MUST validate Zerion integration with unit / CLI tests via fixtures or mocked fetch and must not require live Zerion access or credentials during default `bun run verify`.
+
+#### Scenario: Run root verify
+
+- **WHEN** developer runs `bun run verify` at repository root
+- **THEN** system verifies without requiring `ZERION_API_KEY`, based on offline fixtures / mocked responses
+
+#### Scenario: Validate live Zerion capture
+
+- **WHEN** operator runs live Zerion portfolio capture
+- **THEN** system requires credentials and external source availability via explicit command path separate from default verify
+
+#### Scenario: Reflect live Zerion capture in prepared fixture
+
+- **WHEN** operator generates customer intelligence read model JSON using target wallet portfolio / DeFi information with `.env` `ZERION_API_KEY`
+- **THEN** generated read model validates against customer intelligence schema
+- **THEN** prepared fixture updates do not include raw Zerion response, API key, auth header, or request metadata
+- **THEN** BFF can validate updated prepared fixture with offline route tests
+
+### Requirement: Zerion raw response is not exposed in product payload
+
+The system MUST convert Zerion provider-specific raw response into normalized portfolio summary, DeFi positions, source coverage, provenance, and evidence, and must not expose raw Zerion response in BFF product API.
+
+#### Scenario: BFF returns customer intelligence
+
+- **WHEN** client calls `GET /customers/:address/intelligence`
+- **THEN** response returns normalized portfolio / DeFi fields from prepared read model
+- **THEN** response does not include raw Zerion JSON, API key, auth header, or request metadata

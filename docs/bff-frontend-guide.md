@@ -1,12 +1,15 @@
-# BFF frontend 導入ガイド
+# BFF Frontend Onboarding Guide
 
-このドキュメントは、frontend 技術者が `apps/bff` を開発環境へ導入し、画面実装から利用するためのガイドです。
+This document is a guide for frontend engineers to run `apps/bff` in development
+and use it from screen implementation.
 
-## BFF の役割
+## Role of BFF
 
-`apps/bff` は frontend 向けの read-only product API 境界です。
+`apps/bff` is a read-only product API boundary for frontend.
 
-frontend は chain、SDK、DB、fixture に直接依存せず、BFF の endpoint と `packages/contracts` に定義された API contract を境界として扱います。
+The frontend treats the BFF endpoint and API contracts defined in
+`packages/contracts` as a boundary, and does not depend directly on chain,
+SDK, DB, or fixtures.
 
 ```mermaid
 flowchart LR
@@ -15,13 +18,14 @@ flowchart LR
     BFF --> ReadModel["prepared read model"]
 ```
 
-## 前提
+## Prerequisites
 
-- root で `bun install` 済みであること
-- BFF は Bun で起動すること
-- 通常の frontend 開発では live RPC や外部 service への request fan-out を前提にしないこと
+- `bun install` already run at repo root
+- BFF is started using Bun
+- Regular frontend development should not assume fan-out requests to live RPC or
+  external services
 
-関連する主な場所:
+Main related locations:
 
 ```txt
 apps/bff/README.md
@@ -31,49 +35,49 @@ packages/contracts
 docs/phase-b/api-contract.md
 ```
 
-## 起動方法
+## How to start
 
-root から起動する場合:
+From repository root:
 
 ```bash
 bun --filter bff start
 ```
 
-`apps/bff` 直下で起動する場合:
+From within `apps/bff`:
 
 ```bash
 bun run start
 ```
 
-デフォルトでは `3001` port で起動します。
+Default port is `3001`.
 
 ```txt
 http://localhost:3001
 ```
 
-port を変える場合は `PORT` を指定します。
+To change the port, set `PORT`:
 
 ```bash
 PORT=3002 bun --filter bff start
 ```
 
-## frontend 側の設定
+## Frontend configuration
 
-frontend app では BFF の base URL を環境変数で管理してください。
+Manage the BFF base URL with environment variables in the frontend app.
 
-Vite 例:
+Vite example:
 
 ```env
 VITE_BFF_BASE_URL=http://localhost:3001
 ```
 
-Next.js 例:
+Next.js example:
 
 ```env
 NEXT_PUBLIC_BFF_BASE_URL=http://localhost:3001
 ```
 
-API client 例:
+API client example:
 
 ```ts
 const BFF_BASE_URL = process.env.NEXT_PUBLIC_BFF_BASE_URL ?? "http://localhost:3001";
@@ -89,7 +93,7 @@ export async function fetchCustomers() {
 }
 ```
 
-## 利用できる endpoint
+## Available endpoints
 
 ### Health check
 
@@ -97,7 +101,7 @@ export async function fetchCustomers() {
 GET /health
 ```
 
-BFF が起動しているか確認するための endpoint です。
+Health check endpoint to verify BFF is running.
 
 ### Customer list
 
@@ -105,7 +109,7 @@ BFF が起動しているか確認するための endpoint です。
 GET /customers
 ```
 
-顧客一覧を返します。顧客一覧画面や dashboard の入口で利用します。
+Returns customer list and is used for the customers list screen and dashboard entry.
 
 ### Customer profile
 
@@ -113,7 +117,8 @@ GET /customers
 GET /customers/:address/profile
 ```
 
-wallet address に紐づく customer profile を返します。address の照合は BFF 側で正規化されます。
+Returns customer profile bound to wallet address. Address normalization is performed
+on BFF side.
 
 ### Wallet usage graph
 
@@ -121,72 +126,77 @@ wallet address に紐づく customer profile を返します。address の照合
 GET /wallet-usage-graph
 ```
 
-wallet と provider の利用関係を表す graph payload を返します。
+Returns a graph payload showing wallet-to-provider usage relationships.
 
 ## API contract
 
-BFF の product endpoint は `packages/contracts` に定義された API contract に従います。
+BFF product endpoints follow the API contract defined in
+`packages/contracts`.
 
-frontend は `apps/bff/src/data/*` の fixture 構造に直接依存せず、BFF endpoint の response と contract を境界として扱ってください。
+Frontend should treat BFF endpoint responses and contract as boundaries, and should
+not depend directly on fixture structure under `apps/bff/src/data/*`.
 
-詳細な DTO 構造は `docs/phase-b/api-contract.md` を参照してください。
+See `docs/phase-b/api-contract.md` for detailed DTO structures.
 
-## Read-only 制約
+## Read-only constraints
 
-BFF の product endpoint は GET のみを受け付けます。
+BFF product endpoints accept only GET.
 
-- `GET` は成功時に JSON response を返します
-- 非 GET method は `405 method_not_allowed` を返します
-- 存在しない route は `404 not_found` を返します
+- `GET` returns JSON response on success
+- non-GET methods return `405 method_not_allowed`
+- unknown routes return `404 not_found`
 
-frontend からは POST、PUT、PATCH、DELETE を呼び出さないでください。
+Frontend must not call POST, PUT, PATCH, or DELETE.
 
-## 開発時の注意点
+## Development notes
 
-- frontend は BFF の endpoint と API contract に依存する
-- frontend は `apps/bff/src/data/` 配下の内部 read model に直接依存しない
-- payload 形状を変更する場合は `packages/contracts` と `docs/phase-b/api-contract.md` を先に確認する
-- 通常の `verify` に live RPC や外部 service 依存の検証を混ぜない
-- 画面側では `response.ok` を確認し、404 / 405 / network error を扱う
+- Frontend depends on BFF endpoints and API contract.
+- Frontend does not depend directly on internals under
+  `apps/bff/src/data/`.
+- Before changing payload shape, confirm `packages/contracts` and
+  `docs/phase-b/api-contract.md` first.
+- Do not include live RPC or external service checks in normal `verify` flow.
+- On frontend screens, check `response.ok`, and handle `404 / 405 / network`
+  errors.
 
-## 検証
+## Verification
 
-repository root で全体検証を実行します。
+Run full verification from repository root.
 
 ```bash
 bun run verify
 ```
 
-BFF 単体を確認する場合:
+To verify only BFF:
 
 ```bash
 bun --filter bff verify
 ```
 
-test のみ実行する場合:
+To run tests only:
 
 ```bash
 bun --filter bff test
 ```
 
-## よくあるトラブル
+## Common issues
 
-### `fetch failed` または connection error
+### `fetch failed` or connection error
 
-- BFF が起動しているか確認してください
-- frontend の base URL が `http://localhost:3001` を向いているか確認してください
-- `PORT` を変更している場合は frontend 側の環境変数も合わせてください
+- Confirm BFF is running.
+- Confirm frontend base URL points to `http://localhost:3001`.
+- If `PORT` is changed, align frontend environment variable as well.
 
 ### `404 not_found`
 
-- endpoint path が正しいか確認してください
-- customer profile の場合は address が demo data に存在するか確認してください
+- Confirm endpoint path is correct.
+- For customer profile, confirm the address exists in demo data.
 
 ### `405 method_not_allowed`
 
-- GET 以外で呼び出していないか確認してください
+- Confirm you are not calling non-GET methods.
 
-## 関連ドキュメント
+## Related documents
 
 - `apps/bff/README.md`
 - `docs/phase-b/api-contract.md`

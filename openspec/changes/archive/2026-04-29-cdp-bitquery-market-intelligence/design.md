@@ -1,48 +1,48 @@
-## 背景
+## Background
 
-現在の repository は Bun workspace で、`apps/cli` が主な PoC 実装、`apps/bff` が read API surface です。
-既存実装は、endpoint discovery、dry-run probe、paid probe、onchain scan、attribution / fingerprint logic など、self-managed な x402 acquisition を中心に構築されていました。
+This repository is a Bun workspace where `apps/cli` is the primary PoC implementation and `apps/bff` is the read API surface.
+Existing implementation was originally built around self-managed x402 acquisition logic such as endpoint discovery, dry-run probe, paid probe, onchain scan, and attribution / fingerprint.
 
-今回の pivot では repository を x402-specific のまま保ちつつ、default data path を変更します。
-CDP x402 Discovery が resource / payment-option metadata を提供し、Bitquery GraphQL が観測済み payment activity を提供します。
-self-implemented pipeline は `v0-self-implemented-x402` branch に残し、将来 optional verification として再導入できますが、この change の main path ではありません。
+In this pivot, the repository remains x402-specific while changing the default data path.
+CDP x402 Discovery provides resource / payment-option metadata, and Bitquery GraphQL provides observed payment activity.
+The `v0-self-implemented-x402` pipeline is kept on its branch and can be reintroduced later as optional verification, but is not the main path for this change.
 
-## 目標 / 対象外
+## Goals / Non-Goals
 
-**目標:**
+**Goals:**
 
-- shared domain logic を `packages/` 配下に置き、`apps/cli` と `apps/bff` は薄い entrypoint として扱う。
-- external response を repository-owned contract に正規化する CDP / Bitquery source client を追加する。
-- CDP resource / payment option と Bitquery transfer aggregate を結合して market snapshot を構築する。
-- CLI command から deterministic な JSON / Markdown report を生成する。
-- 可能な範囲で既存の Bun workspace、Docker、TypeScript、Biome、verification foundation を維持する。
+- Put shared domain logic under `packages/`, with `apps/cli` and `apps/bff` as thin entrypoints.
+- Add CDP / Bitquery source clients that normalize external responses into repository-owned contracts.
+- Build market snapshot by combining CDP resources / payment options with Bitquery transfer aggregates.
+- Generate deterministic JSON / Markdown reports from CLI command.
+- Preserve Bun workspace, Docker, TypeScript, Biome, and verification foundations where feasible.
 
-**対象外:**
+**Non-Goals:**
 
-- 初期実装では DB persistence を行わない。
-- 初期実装では BFF rewrite を行わない。
-- BFF request handler から live CDP / Bitquery call を発行しない。
-- default market snapshot の一部として dry-run / paid probe を実行しない。
-- 新しい architecture と衝突する場合、旧 CLI command internals の維持を目的にしない。
+- No DB persistence in initial implementation.
+- No BFF rewrite in initial implementation.
+- No live CDP / Bitquery call from BFF request handler.
+- Do not run dry-run / paid probe as part of default market snapshot.
+- Do not retain old CLI command internals when architecture diverges if that conflicts with this new direction.
 
-## 決定事項
+## Decisions
 
-### package name に prefix を付けない
+### Do not add `x402-` prefix to package names
 
-この repository は x402-specific なので、package name に `x402-` prefix は付けません。初期 package は次の通りです。
+This repository is x402-specific, so package names will not use `x402-` prefix. Initial packages are:
 
-- `packages/contracts`: Zod schema、共有 TypeScript type、正規化済み model、DTO。
-- `packages/sources`: CDP Discovery / Bitquery GraphQL client と response normalization。
-- `packages/intelligence`: join、ranking、discrepancy detection、summary data、market snapshot construction。
+- `packages/contracts`: Zod schemas, shared TypeScript types, normalized models, DTOs.
+- `packages/sources`: CDP Discovery / Bitquery GraphQL clients and response normalization.
+- `packages/intelligence`: join, ranking, discrepancy detection, summary data, market snapshot construction.
 
-`packages/store` は、snapshot model が DB persistence を正当化できるほど安定するまで延期します。
+`packages/store` is deferred until snapshot model stabilizes enough to justify persistence.
 
-検討した代替案: `packages/x402-contracts`、`packages/x402-sources`、`packages/x402-intelligence`。
-x402-only repository では冗長なので採用しませんでした。
+Alternative considered and rejected: `packages/x402-contracts`, `packages/x402-sources`, `packages/x402-intelligence`.
+This was unnecessary verbosity for an x402-only repository.
 
-### app は薄く保つ
+### Keep apps thin
 
-CLI と BFF はどちらも package に依存し、互いには依存しません。
+Both CLI and BFF depend on packages and do not depend on each other.
 
 ```text
 apps/cli ─┐
@@ -50,47 +50,47 @@ apps/cli ─┐
 apps/bff ─┘
 ```
 
-package code は `apps/*` から import してはいけません。これにより、現在の PoC 形状が CLI implementation detail を BFF に hard-code することを防ぎます。
+Package code must not be imported from `apps/*`. This avoids hardcoding current CLI implementation details into BFF.
 
-### CLI snapshot output から始める
+### Start from CLI snapshot output
 
-最初の実装 target は、次のファイルを書き出す CLI command です。
+First implementation target is a CLI command that writes:
 
 - `reports/x402-market-snapshot.json`
 - `reports/x402-market-summary.md`
 
-これにより、CDP / Bitquery の data shape が検証される前に persistence や BFF read model を早期設計しすぎることを避けます。
+This avoids over-designing persistence or BFF read model before data shape is validated.
 
-### CDP と Bitquery を primary source として扱う
+### Treat CDP and Bitquery as primary sources
 
-CDP Discovery は resource metadata、payment option、`payTo`、asset、amount、network、quality field の source です。
-Bitquery GraphQL は transaction count、unique sender、volume、latest observed payment data など transfer activity の source です。
+CDP Discovery is source of resource metadata, payment options, `payTo`, asset, amount, network, and quality fields.
+Bitquery GraphQL is source of transfer activity such as transaction count, unique sender count, volume, and latest observed payment data.
 
-snapshot builder は、主に network、asset、`payTo` による正規化済み payment option を join key として使います。
+The snapshot builder uses normalized payment options as join keys by `network`, `asset`, and `payTo`.
 
-### BFF request handler で live external call を避ける
+### Avoid live external calls in BFF request handlers
 
-BFF は将来的に snapshot、projection、または stored data を読みます。
-初期 design では、incoming product request ごとに Bitquery call を発行しません。user-facing latency と reliability を external API cost / rate limit に結合しないためです。
+BFF will read from snapshot, projection, or stored data.
+Initial design does not issue Bitquery calls per incoming product request, keeping user-facing latency and reliability decoupled from external API cost / rate limits.
 
-## リスク / トレードオフ
+## Risks / Trade-offs
 
-- CDP / Bitquery schema が変化する可能性がある → `packages/contracts` 経由で正規化し、regression test 用 raw fixture を保持する。
-- Bitquery query cost は payTo count とともに増える可能性がある → batch request し、Base USDC から始め、CLI に limit を公開する。
-- CDP quality metrics と Bitquery transfer metrics が正確に一致しない可能性がある → hard error ではなく first-class snapshot field として discrepancy を追跡する。
-- probe を省略すると live endpoint verification を失う → default dependency ではなく optional future mode として残す。
-- DB persistence を延期すると BFF の有用性は初期段階で限定される → report file を最初の stable contract とし、snapshot shape が証明されてから `packages/store` を追加する。
+- CDP / Bitquery schema may change: normalize through `packages/contracts` and keep raw fixtures for regression tests.
+- Bitquery query cost may scale with `payTo` count: use batched requests, start with Base USDC, and expose limit in CLI.
+- CDP quality and Bitquery transfer metrics may differ: treat discrepancy as first-class snapshot field rather than hard error.
+- Skipping probes loses live endpoint verification: keep optional future mode rather than default dependency.
+- Deferring DB persistence limits BFF utility early; use report files as first stable contract and add `packages/store` once snapshot shape is proven.
 
-## 移行計画
+## Migration Plan
 
-1. 現在の self-implemented pipeline を `v0-self-implemented-x402` に隔離する。
-2. pivot branch に contracts、sources、intelligence の shared package を追加する。
-3. 旧 database や BFF を変更せず、新しい source path を実行する CLI snapshot command を追加する。
-4. fixture と、default offline `verify` path 外の live-only command で検証する。
-5. snapshot model が安定してから `packages/store` と BFF read endpoint を追加する。
+1. Isolate existing self-implemented pipeline in `v0-self-implemented-x402`.
+2. Add shared packages for contracts, sources, and intelligence to pivot branch.
+3. Add new CLI snapshot command for the new source path without changing old DB or BFF.
+4. Verify with fixture and live-only commands outside default offline `verify` path.
+5. Add `packages/store` and BFF read endpoint after snapshot model stabilizes.
 
-## 未決事項
+## Open Questions
 
-- routine local run 向けの default CDP page size と maximum resource limit はどれにするか。
-- 最初の Bitquery implementation は aggregate のみを取得するか、payment option ごとに小さな latest-transfer sample も保存するか。
-- Base path が安定した後、最初の follow-up で Base USDC 以外にどの network を含めるか。
+- Which default CDP page size and maximum resource limit should be used for routine local runs?
+- Should initial Bitquery implementation fetch only aggregate or also store small latest-transfer samples by payment option?
+- After Base path stabilizes, which additional network should first follow-up include beyond Base USDC?

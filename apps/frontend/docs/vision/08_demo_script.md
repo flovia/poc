@@ -1,93 +1,93 @@
 ---
-name: 3 分間デモ脚本
-description: 主役ウォレット 1 体を辿る 3 分のナレーション脚本
+name: 3-minute demo script
+description: 3-minute narration tracking one hero wallet
 type: project
 ---
 
-# 3 分間デモ脚本
+# 3-minute demo script
 
-> 最終更新: 2026-04-28
-> 出典: [Codex 提案](/tmp/flovia-codex-review/demo_script.md)
-> 目的: CoinGecko / Nansen 系の Manager 層に「契約したい」と思わせる
+> Last updated: 2026-04-28
+> Source: [Codex proposal](/tmp/flovia-codex-review/demo_script.md)
+> Goal: Make CoinGecko / Nansen-style Manager stakeholders want to contract with us
 
-## ★ オーディエンス前提
+## ★ Audience assumptions
 
-- **対象**: 暗号資産データ API 提供企業の Manager クラス (CoinGecko / Nansen 想定)
-- **ロール**: ビジネス判断者 (PM / Growth)、契約判断のキーパーソン
-- **目的**: 「これは欲しい」と思わせて契約に繋げる
+- **Target**: Manager-level stakeholders in crypto data API providers (CoinGecko / Nansen assumed)
+- **Role**: Business decision makers (PM / Growth), contract decision owners
+- **Objective**: Make them feel "this is what we need" and move toward contracting
 
-## ★ デモのクライマックス (2 つに絞る)
+## ★ Demo climaxes (reduced to 2)
 
-| # | 種別 | タイミング | 内容 |
+| # | Type | Timing | Purpose |
 |---|---|---|---|
-| **a** | 理解の獲得 | 1:32〜1:48 | 「うちの API が顧客ワークフローの起点に組み込まれている」と気付く |
-| **b** | 売上機会の発見 | 2:24〜2:42 | 「誰に・何を・なぜ今売るべきか」が即座に分かる |
+| **a** | Insight gain | 1:32–1:48 | Notice that our API is embedded as a workflow entry point |
+| **b** | Revenue opportunity discovery | 2:24–2:42 | Instantly answer who / what / why to sell now |
 
 ---
 
-## ★ シーン別脚本 (合計 180 秒)
+## ★ Scene-by-scene script (total 180 sec)
 
-### Scene 1 — 導入 (0:00-0:18)
+### Scene 1 — Introduction (0:00-0:18)
 
-- **画面**: `/setup` の登録済み `pay_to` 一覧 (事前登録済み状態)
-- **ナレーション**:
-  > 「Flovia は、x402 の支払い先アドレスだけで、自社 API を使っているウォレットの行動全体を見える化します。今日は価格データ API を提供している事業者として、この 1 本の `pay_to` を起点に、顧客理解と売上機会がどう変わるかをお見せします。」
-- **画面操作**: 既登録の `pay_to` 行を軽くホバー → そのまま My Customers へ遷移
-- **演出**: hover で薄い Teal ライン、画面切替 180ms フェード
-- **感情**: 「導入が軽い」「難しい連携なしで始められる」
+- **Screen**: Registered `pay_to` list on `/setup` (pre-registered state)
+- **Narration**:
+  > "Flovia visualizes all wallet behavior using only your x402 pay_to address. Today, as a price-data API provider, we'll show how this single `pay_to` becomes a full view of customer understanding and revenue opportunities."
+- **Interaction**: Hover a pre-registered `pay_to` row → immediately transition to My Customers
+- **Motion**: thin Teal line on hover, 180ms fade between screens
+- **Emotion**: "Onboarding feels light", "can start without heavy integration"
 
-### Scene 2 — 一覧から主役を選ぶ (0:18-0:42)
+### Scene 2 — Select hero from list (0:18-0:42)
 
-- **画面**: `/providers/[id]/customers` のテーブル
-- **ナレーション**:
-  > 「ここが、自社 API を使っている顧客ウォレットの一覧です。今日はこの 1 件を見ます。24 時間動いている DeFi の自動取引 bot です。直近 7 日でアクティビティが急増していて、しかも無料枠の上限に近づいています。つまり、理解すべき顧客であると同時に、今まさに商談価値が高い顧客です。」
-- **画面操作**: 主役ウォレット行を強調 (`Status: Growth Potential`, `Free tier 92%`, `7d +184%`) → クリック
-- **演出**: 行 hover で右矢印 4px 移動、クリック時に左端インジケータが光る
-- **感情**: 「ただの一覧ではなく、優先順位づけに使えそう」
+- **Screen**: Customers table at `/providers/[id]/customers`
+- **Narration**:
+  > "This is the list of wallets using our API. Today we'll inspect this one. It is a DeFi auto-trading bot that has become very active in the last 7 days, and it is also close to the free-tier cap. That means it is both a customer to understand and a high-value opportunity right now."
+- **Interaction**: Emphasize hero row (`Status: Growth Potential`, `Free tier 92%`, `7d +184%`) → click
+- **Motion**: row hover moves right arrow 4px; click lights left-edge indicator
+- **Emotion**: "Not just a list, but a prioritized operation screen"
 
-### Scene 3 — Identity bar で要約把握 (0:42-1:08)
+### Scene 3 — Read summary in identity bar (0:42-1:08)
 
-- **画面**: Wallet 360° の Identity bar 上部サマリ
-- **ナレーション**:
-  > 「個別ウォレットを開くと、まず事業判断に必要な要約だけが見えます。アクティブ期間、推定エージェント種別、今月の支出、そして無料枠までの進捗です。重要なのは、単に "使っている" ではなく、"どのくらい事業化しうる顧客か" が最初に分かることです。」
-- **画面操作**: `Monthly spend` / `7d growth` / `Free tier progress` を左から順にホバー
-- **演出**: 数値だけ Mono で明るく、ホバーカード背景に薄い青グロー
-- **感情**: 「このまま CS や Growth の運用に使える」
+- **Screen**: Wallet 360° identity bar top summary
+- **Narration**:
+  > "Opening an individual wallet first shows only the summary needed for business decisions: active period, estimated agent type, spend this month, and free-tier progress. The key point is that this view tells us how commercially tractable this customer is, not just that it is active."
+- **Interaction**: Hover `Monthly spend` / `7d growth` / `Free tier progress` from left to right
+- **Motion**: values glow brighter in Mono, with subtle blue glow on hover card
+- **Emotion**: "This is immediately usable by CS/Growth teams"
 
-### Scene 4 — Activity Timeline (クライマックス a) (1:08-1:48)
+### Scene 4 — Activity Timeline (climax a) (1:08-1:48)
 
-- **画面**: Wallet 360° の Activity Timeline (主役領域)
-- **ナレーション**:
-  > 「ここが Flovia の本質です。このウォレットは、毎時ほぼ同じ流れで動いています。まず価格 API を叩く。次に LLM で分析する。条件を満たしたら DEX aggregator で執行する。最後に Discord に通知する。つまり、うちの API は単発で使われているのではなく、自動売買ワークフローの起点に組み込まれている。これが初めて、ログではなく顧客の仕事として見えます。」
-- **画面操作**: タイムラインを上から下にゆっくりスクロール → 自社行ホバー → LLM / DEX / Discord 行を順に指す
-- **演出**: 同一時間帯 4 行を薄い縦ガイドで束ねる、自社行のみ Teal hairline、関連行に順次 subtle highlight
-- **🎯 クライマックス a (1:32-1:48)**:
-  > **「API の利用ログ」が「顧客ワークフローの理解」に変わる瞬間**
+- **Screen**: Activity Timeline on Wallet 360° (hero area)
+- **Narration**:
+  > "This is the core of Flovia. This wallet runs in a consistent pattern every hour. First it calls a price API, then analyzes with an LLM, executes through a DEX aggregator when conditions are met, and finally posts to Discord. So our API is not used in isolation; it is embedded as the entry point in an automated trading workflow. For the first time, it looks like a customer's work, not just logs."
+- **Interaction**: Slowly scroll timeline top to bottom → hover own-provider row → point to LLM / DEX / Discord rows in order
+- **Motion**: bundle four rows in the same time slot with a subtle vertical guide, own-provider rows get Teal hairline, and related rows get sequential subtle highlights
+- **🎯 Climax a (1:32-1:48)**:
+  > **The moment where "API usage log" becomes "understanding customer workflow"**
 
-### Scene 5 — Co-usage Map で構造補強 (1:48-2:14)
+### Scene 5 — Structural reinforcement with co-usage map (1:48-2:14)
 
-- **画面**: Wallet 360° の Co-usage Map と Insight cards
-- **ナレーション**:
-  > 「下のマップは、その時系列の理解を構造で補強します。価格データ、LLM、DEX、通知が強く結ばれている。しかもこの bot は、その中でも価格データ API を毎回の起点として使っている。Flovia は "どこで一緒に使われているか" を、感覚ではなく再現性のある形で示します。」
-- **画面操作**: 中心ノードから LLM / DEX / Discord への線を順にホバー → Insight card 1 枚を開く
-- **演出**: ホバーリンクのみ輝度アップ、他は減光、Insight card は 180ms フェード
-- **感情**: 「これはパートナー戦略や GTM に使える」
+- **Screen**: Wallet 360° Co-usage Map + insight cards
+- **Narration**:
+  > "The map below reinforces that sequence structurally. Price data, LLM, DEX, and notifications are tightly connected. In this wallet, the price API is consistently used as the recurring entry point. Flovia shows not a feeling, but reproducible evidence of where APIs are co-used."
+- **Interaction**: Hover lines from center node to LLM / DEX / Discord in order, then open one insight card
+- **Motion**: only hovered links increase brightness; others are muted; insight cards fade in 180ms
+- **Emotion**: "This is usable for partner strategy and GTM"
 
-### Scene 6 — Upsell Insight (クライマックス b) (2:14-2:42)
+### Scene 6 — Upsell insight (climax b) (2:14-2:42)
 
-- **画面**: Wallet 360° の Insight cards、特に **Upsell Opportunity Card**
-- **ナレーション**:
-  > 「ここで売上機会です。このウォレットは直近 7 日で取引量が急増し、無料枠を 92% まで使っています。しかもワークフロー上、遅延や上限到達がそのまま取引機会の損失になります。なので、この顧客には "上位プラン" ではなく、"高頻度 bot 向けの低遅延・高クォータプラン" を提案すべきだと分かる。Flovia は、誰に何を売るべきかまで会話を進めます。」
-- **画面操作**: `Free tier progress` バーをホバー → `Upsell Opportunity` カードをクリック
-- **演出**: 進捗バーの 92% 部分が静かに発光、カード内に `Suggested next plan: Pro Trading 250M` 等を表示
-- **🎯 クライマックス b (2:24-2:42)**:
-  > **「誰に、何を、なぜ今売るべきか」が即座に分かる瞬間**
+- **Screen**: Wallet 360° insight cards, especially **Upsell Opportunity Card**
+- **Narration**:
+  > "This is the revenue opportunity. In the last 7 days this wallet's volume surged, and it is 92% through the free tier. On the workflow path, latency and quota overflow would directly become transaction loss. So for this customer we should propose a 'high-frequency bot plan' with low latency and high quota, not just a generic higher-tier plan. Flovia carries us all the way to deciding who should buy what and why."
+- **Interaction**: Hover `Free tier progress` bar → click **Upsell Opportunity** card
+- **Motion**: the 92% portion of progress bar softly glows; card shows items like `Suggested next plan: Pro Trading 250M`
+- **🎯 Climax b (2:24-2:42)**:
+  > **The moment it becomes instantly clear "who to sell to, what to sell, why now"**
 
-### Scene 7 — Patterns で全体像 (2:42-3:00)
+### Scene 7 — Close with patterns (2:42-3:00)
 
-- **画面**: `/providers/[id]/patterns` の Bubble Chart を短く見せて締める
-- **ナレーション**:
-  > 「最後に個別ではなく全体です。Flovia は 1 ウォレットの発見を、顧客群全体のパターンに引き上げられます。つまり、顧客理解、パートナー仮説、アップセル機会が、同じデータ基盤の上で繋がる。x402 の可視化を、単なる観測ではなく、売上につながる判断ツールにする。それが Flovia です。」
-- **画面操作**: 右上の高頻度クラスタをホバーして終了
-- **演出**: バブル hover のみ、長く留まらない
-- **感情**: 「単発の面白機能ではなく、事業に効くプロダクトだ」
+- **Screen**: Briefly show Bubble Chart on `/providers/[id]/patterns` to close
+- **Narration**:
+  > "Finally, this is not only individual-level. Flovia can lift one wallet discovery into population-level patterns. Customer understanding, partner hypotheses, and upsell opportunities are connected on one data foundation. That is how x402 visualization becomes a decision tool tied to revenue, not just observation. That is Flovia."
+- **Interaction**: Hover top-right high-frequency cluster and finish
+- **Motion**: brief bubble hover only
+- **Emotion**: "Not a one-off feature, but a real business product"

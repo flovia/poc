@@ -1,52 +1,51 @@
-# Phase B デモデータポリシー
+# Phase B Demo Data Policy
 
-このドキュメントでは、Phase B のレスポンス向けにデモデータと provenance ラベルを
-どのように作成・管理するかを定義します。
+This document defines how to create and manage demo data and provenance labels
+for Phase B responses.
 
-## 1. Canonical 契約ポリシー
+## 1. Canonical contract policy
 
-Phase B のデモレスポンスは、`docs/phase-b/api-contract.md` で定義された
-canonical 契約に一致している必要があります。
+Phase B demo responses must match the canonical contract defined in
+`docs/phase-b/api-contract.md`.
 
-フロントエンド移行時の想定:
+Frontend migration assumption:
 
-- 現在のフロントエンドコードは、配列／直接 DTO 形式や古い命名を前提にしている
-  場合があります。
-- canonical ペイロードは envelope+scope 形状、nullable labels、ISO タイムスタンプ、
-  provenance メタデータ付きのネストされたウォレットグラフを使用します。
-- 契約検証を緩めるのではなく、アダプター側で移行してください。
+- current frontend code may still assume array/direct DTO forms or legacy naming
+- canonical payloads use envelope + scope shape, nullable labels, ISO timestamps,
+  and nested wallet graphs with provenance metadata
+- do not relax contract validation; migrate in the adapter layer instead
 
-## 2. Provenance カテゴリ（必須セット）
+## 2. Required provenance categories
 
-次のいずれかを使用してください。
+Use exactly one of the following:
 
 - `onchain_fact`
 - `demo_label`
 - `future_sdk_field`
 - `derived_insight`
 
-## 3. ラベリング規則
+## 3. Labeling rules
 
 ### 3.1 `onchain_fact`
 
-オンチェーン投影と決定的なスコアリングで説明可能な値に使用します。
+Use for values explainable by onchain projections and deterministic scoring.
 
-- pay_to / recipient と network / asset
-- 観測済み payer ウォレットと件数
-- トランザクション活動量および頻度
-- provider overlap / co-usage 数値
+- pay_to / recipient and network / asset
+- observed payer wallets and counts
+- transaction activity and frequency
+- provider overlap / co-usage numbers
 
 ### 3.2 `demo_label`
 
-現在は直接検証できないデモ用途の値に使用します。
+Use for values required for demo purpose that cannot be directly validated now.
 
-- ソース / medium candidate
-- workflow / use-case の candidate ラベル
-- endpoint candidate ラベル
+- source / medium candidate
+- workflow / use-case candidate labels
+- endpoint candidate labels
 
 ### 3.3 `future_sdk_field`
 
-Phase C 以降のテレメトリ向けに設けるプレースホルダーフィールドに使用します。
+Use for placeholder fields planned for future telemetry in Phase C.
 
 - endpoint attribution
 - workflow sequence
@@ -54,30 +53,29 @@ Phase C 以降のテレメトリ向けに設けるプレースホルダーフィ
 
 ### 3.4 `derived_insight`
 
-複数シグナルを組み合わせた推定仮説に使用します。
+Use for estimated hypotheses combining multiple signals.
 
-- retention / upsell / partnership の仮説
-- co-usage パターンのストーリー
+- retention / upsell / partnership hypotheses
+- co-usage pattern story
 
-`derived_insight` を使用する場合、`reasons` を付与して利用側が入力を追跡できる
-ようにしてください。
+When using `derived_insight`, include `reasons` so consumers can trace inputs.
 
 ## 4. Endpoint attribution gap
 
-Phase B demo では、CoinGecko のような API provider に対して、顧客 wallet の利用状況や
-co-usage pattern を見せます。
+Phase B demo presents customer wallet usage and co-usage patterns for API
+providers like CoinGecko.
 
-理想的には、provider の各 endpoint への request と、その request に紐づくオンチェーン決済
-transaction を対応付けることで、endpoint 単位の利用分析を行います。
+In an ideal state, endpoint-level usage analysis is done by linking each request
+to its onchain settlement transaction.
 
-ただし、現時点では SDK / middleware が未実装であり、利用できる実データは主にオンチェーン
-transaction だけです。
+However, SDK/middleware is not yet implemented; only onchain transaction data is
+available today.
 
-### 4.1 問題
+### 4.1 Problem
 
-CoinGecko には demo 上で扱いたい endpoint が複数あります。
+CoinGecko has multiple x402 endpoints relevant to demo.
 
-現在の demo で扱う CoinGecko x402 endpoint は次の 5 つです。
+Current demo includes the following five CoinGecko x402 endpoints:
 
 ```text
 GET /api/v3/x402/onchain/simple/networks/{id}/token_price/{address}
@@ -87,8 +85,9 @@ GET /api/v3/x402/onchain/networks/{id}/tokens/{address}
 GET /api/v3/x402/simple/price
 ```
 
-しかし、これらの endpoint に対する支払いが同じ `payTo` に集約される場合、public/onchain data
-だけでは、どの transaction がどの endpoint request に対応しているかを判定できません。
+When payments to these endpoints are aggregated by the same `payTo`, public/onchain
+data alone cannot determine which specific transaction maps to which endpoint
+request.
 
 ```text
 endpoint A ┐
@@ -98,7 +97,7 @@ endpoint D ┤
 endpoint E ┘
 ```
 
-### 4.2 オンチェーンだけで分かること
+### 4.2 What can be known from onchain only
 
 - payer wallet
 - recipient / `payTo`
@@ -110,20 +109,20 @@ endpoint E ┘
 - payment activity / payment frequency
 - provider-level spend
 
-### 4.3 オンチェーンだけでは分からないこと
+### 4.3 What cannot be known from onchain alone
 
-- どの endpoint を叩いたか
-- どの request がどの transaction に対応するか
+- which endpoint was called
+- which request maps to which transaction
 - endpoint usage frequency
 - workflow / use case
 - request sequence
 - endpoint-level attribution
 - endpoint-level retention / upsell signal
 
-### 4.4 理想型
+### 4.4 Target state
 
-最終的な product では、SDK を middleware 的に導入し、API request と payment transaction を
-紐づけます。
+In the final product, SDK is introduced as middleware and request and payment
+transaction are correlated.
 
 ```text
 user / agent
@@ -146,28 +145,29 @@ user / agent
        └─ block timestamp
 ```
 
-この状態では、wallet ごとの endpoint usage、endpoint ごとの利用頻度、request sequence、
-workflow、retention / upsell / partnership insight を実データとして分析できます。
+In this state, endpoint usage per wallet, endpoint-level frequency, request
+sequence, workflow, and retention / upsell / partnership insight can be analyzed
+as live data.
 
-### 4.5 Phase B demo での仮置き
+### 4.5 Demo placeholder approach in Phase B
 
-Phase B では frontend demo の意思決定体験を成立させるため、endpoint attribution を
-mock / demo label として補います。
+To complete frontend decision-making in demo, endpoint attribution is filled with
+mock/demo labels.
 
-具体的には、次のような仮置きを用意します。
+Specifically, placeholders include:
 
-- `txHash -> endpointPath` の mock attribution
-- `endpointPath -> workflowLabel` の demo label
-- endpoint usage frequency の仮集計
-- request sequence / agent behavior の仮ストーリー
-- retention / upsell / partnership insight の仮説
+- `txHash -> endpointPath` mock attribution
+- `endpointPath -> workflowLabel` demo label
+- heuristic endpoint usage frequency
+- request sequence / agent behavior placeholder story
+- retention / upsell / partnership hypothetical insight
 
-ただし、これらは実データではありません。BFF response 上では `demo_label`、
-`future_sdk_field`、または `derived_insight` として明示してください。
+These are not live data and must be explicitly flagged in BFF responses as either
+`demo_label`, `future_sdk_field`, or `derived_insight`.
 
-### 4.6 レイヤー分離
+### 4.6 Layer separation
 
-Phase B demo data は、次の 3 レイヤーを混ぜずに管理します。
+Phase B demo data is managed by separating these three layers.
 
 ```text
 real onchain layer
@@ -193,14 +193,15 @@ derived demo insight layer
   - co-usage story
 ```
 
-この分離により、demo 上では endpoint-level insight を見せつつ、「オンチェーンだけで endpoint が
-分かる」と誤解されることを避けます。
+This separation prevents the demo from implying that endpoint-level insight is
+determinable from onchain-only data.
 
-### 4.7 将来の SDK 置き換え
+### 4.7 Future SDK replacement
 
-将来 SDK / middleware を導入した場合、mock attribution layer は実 telemetry に置き換えます。
+When SDK/middleware is introduced, mock attribution layer will be replaced with
+actual telemetry.
 
-想定される telemetry は次の通りです。
+Expected telemetry includes:
 
 - request id
 - provider id
@@ -213,27 +214,27 @@ derived demo insight layer
 - correlation id
 - request metadata
 
-置き換え後は、`endpointPath` や `endpointUsageFrequency` を demo label ではなく、SDK 由来の
-実データとして扱えるようになります。
+After replacement, `endpointPath` and `endpointUsageFrequency` can be treated
+as SDK-derived live data, not demo labels.
 
-### 4.8 現時点の設計結論
+### 4.8 Current design conclusion
 
-現在の BFF が deterministic demo read model を返すのは、Phase B demo を成立させるための
-仮置きです。
+Returning a deterministic demo read model from current BFF is a temporary setup
+to support Phase B demo.
 
-ただし、今の demo read model は Phase A snapshot から生成されておらず、BFF runtime も
-Phase A の `sources` / `intelligence` を呼んでいません。
+However, the current demo read model is not generated from Phase A snapshot, and
+BFF runtime does not call `sources` / `intelligence`.
 
-そのため、次の段階では以下を明確に分ける必要があります。
+Next, we need to separate clearly:
 
-1. Phase A 由来の onchain facts
-2. Phase B demo 用の mock endpoint attribution
-3. 将来 SDK に置き換える future telemetry fields
-4. それらを組み合わせた derived insights
+1. Phase A derived onchain facts
+2. Phase B mock endpoint attribution
+3. future telemetry fields for eventual SDK replacement
+4. derived insights that combine those layers
 
-### 4.9 実装済み capture / projection flow
+### 4.9 Current capture / projection flow implemented
 
-現時点の CoinGecko Base USDC 観測値は次の通りです。
+Current observed CoinGecko Base USDC values are:
 
 ```text
 payTo: 0x110cdbba7fe6434ec4ce3464cc523942ad6fb784
@@ -244,25 +245,32 @@ latestSender: 0xac5a07c44a4f971667b3df4b6551fb6991b2142d
 latestBlockTimestamp: 2026-04-29T04:11:53Z
 ```
 
-現在の fixture capture は 2026-01-01 から 2026-04-29 までを対象に、`requestedLimit: 5000` で 1908 件の unique valid transaction facts を保存しています。
+Current fixture capture targets `2026-01-01` to `2026-04-29`, saving 1,908 unique
+valid transaction facts with `requestedLimit: 5000`.
 
-実装上のファイル配置は次の通りです。
+Implementation file layout:
 
 - `packages/sources/src/bitquery.ts`
-  - `fetchPaymentTransfersByPayTo()` が `network`、`asset`、`payTo`、time window、limit を受け取り、Bitquery の transfer list を pagination しながら取得します。default limit は 1000 件で、明示 limit では 1000 件超も許可します。
+  - `fetchPaymentTransfersByPayTo()` accepts `network`, `asset`, `payTo`, time
+    window, and limit; it paginates Bitquery transfer list retrieval. Default limit
+    is 1,000, with explicit limit allowing over 1,000.
 - `apps/bff/fixtures/phase-a/coingecko-transactions.json`
-  - real onchain transaction fact fixture です。
-  - `txHash`、`payerWallet`、`payTo`、`amount`、`asset`、`network`、`timestamp` は `onchain_fact` として扱います。
-  - `requestedLimit`、`capturedCount`、`timeWindow`、`source` を metadata として保持します。
+  - real onchain transaction fact fixture.
+  - `txHash`, `payerWallet`, `payTo`, `amount`, `asset`, `network`, `timestamp`
+    are `onchain_fact`.
+  - `requestedLimit`, `capturedCount`, `timeWindow`, `source` are kept as metadata.
 - `apps/bff/fixtures/phase-b/mock-attribution.json`
-  - `txHash -> endpointPath / endpointName / workflowLabel` の mock attribution fixture です。
-  - 現在は real transaction fact 全件に対して、5 endpoint を deterministic に割り当てています。
-  - endpoint / workflow は `demo_label` または `future_sdk_field` として扱います。
+  - mock attribution fixture of `txHash -> endpointPath / endpointName /
+    workflowLabel`.
+  - currently assigns deterministically across all real transaction facts for
+    5 endpoints.
+  - endpoint and workflow are treated as `demo_label` or `future_sdk_field`.
 - `apps/bff/src/data/projection-builder.ts`
-  - real tx fact と mock attribution を `txHash` で join し、Phase B customer list / profile / wallet usage graph projection を生成します。
-  - 生成結果は `packages/contracts` の Phase B validator で検証されます。
+  - joins real tx fact and mock attribution by `txHash` and generates Phase B
+    customer list / profile / wallet usage graph projection.
+  - generated results are validated by Phase B validator in `packages/contracts`.
 
-fixture を再生成する正式 command は次です。
+Official command to regenerate fixtures:
 
 ```sh
 bun --cwd apps/cli coingecko:transactions -- \
@@ -272,77 +280,78 @@ bun --cwd apps/cli coingecko:transactions -- \
   --page-size 100
 ```
 
-この command は live Bitquery を使うため、offline verification 用の `bun run verify` には含めません。
+This command uses live Bitquery and is therefore excluded from offline
+verification in `bun run verify`.
 
-BFF request path では CDP、Bitquery、RPC、SDK collector を呼びません。保存済み fixture から生成された projection のみを read-only に返します。
+BFF request path does not call CDP, Bitquery, RPC, or SDK collector. It returns only
+projections generated from saved fixtures in read-only mode.
 
-## 5. フィールドレベルの provenance
+## 5. Field-level provenance
 
-複合オブジェクト（事実ベースと推定／デモ値が混在するもの）では:
+For composite objects that mix fact-based and inferred/demo values:
 
-- 利用側でフィールド単位の区別が必要な場合、
-  `provenanceByField: Record<string, DataProvenance>` を追加します。
-- トップレベル `provenance` は集約された source 判定として保持します。
+- if consumers need field-level distinction, add
+  `provenanceByField: Record<string, DataProvenance>`.
+- Keep aggregated source-level `provenance` as a single judgment.
 
-対象例は、顧客一覧アイテム、プロフィール identity/metrics/provider エントリ、
-グラフの入れ子ノードです。
+Examples include customer list items, profile identity/metrics/provider entries,
+and nested graph nodes.
 
-## 6. Evidence / reason ポリシー
+## 6. Evidence / reason policy
 
-- `reasons` / `evidence` の各項目は `EvidenceLabel` の形に一致している必要があります。
-  - `provenance` は許可された値のみ
-  - `label` は空でないこと
-  - `description` は任意
-  - `sourceFields` は任意
-- デモフィールドと機密性が高い derived フィールドには、実務上可能なら
-  `reasons` / `evidence` を含めます。
-- `derived_insight` では `reasons` は非空である必要があります。
+- Every item in `reasons` / `evidence` must match `EvidenceLabel` shape:
+  - `provenance` uses only allowed values
+  - `label` is non-empty
+  - `description` optional
+  - `sourceFields` optional
+- For demo fields and high-sensitivity derived fields, include `reasons` /
+  `evidence` when practical.
+- `reasons` is mandatory for `derived_insight`.
 
-## 7. Atomic 金額ポリシー
+## 7. Atomic amount policy
 
-Atomic 単位で表現される金額は、すべて次を満たす必要があります。
+Atomic amounts must satisfy all of:
 
-- 文字列
-- 数字のみ (`^[0-9]+$`)
+- string
+- digits only (`^[0-9]+$`)
 
-以下に適用します。
+Applies to:
 
 - `spendAtomic`
 - `totalSpendAtomic`
 - `averageSpendAtomic`
 - `sharedSpendAtomic`
 
-`-`、`+`、小数点、桁区切りカンマは無効で、拒否対象です。
+`,` `-`, `+`, and decimal points are invalid and should be rejected.
 
-## 8. アドレスポリシー
+## 8. Address policy
 
-- Phase B 契約の `address`、`payToWallet`、`payTo` フィールドは、
-  正規化された小文字の Base/EVM アドレスを使用します。
-- `EvmAddressSchema` を使い、不正な形式は拒否してください。
+- Phase B `address`, `payToWallet`, and `payTo` fields use normalized lowercase
+  Base/EVM addresses.
+- Use `EvmAddressSchema` to reject invalid formats.
 
-## 9. Scope ポリシー
+## 9. Scope policy
 
-レスポンス envelope には次を含める場合があります。
+Response envelopes may include:
 
 - `providerId`
 - `network`
 - `asset`
 - `payTo`
 
-省略された場合、ペイロードは有効なグローバル／デモデータです。
+If omitted, the payload is valid global/demo data.
 
-scope フィールドが存在しない状態を根拠に、隠れた provider スコープを
-主張してはいけません。
+Do not use omitted scope as justification for hidden provider scope.
 
-## 10. 移行チェックリスト
+## 10. Migration checklist
 
-- デモフィクスチャは明示的かつ決定論的に保つ。
-- スナップショットの安定性のため、`generatedAt` を決定論的に維持する。
-- `provenance` と必要に応じて `provenanceByField` で、混在フィールドに
-  provenance 付与を追加する。
-- 不明な場合は nullable label（`label: null`）を明示的に含める。
-- 新規生成デモペイロードと移行アダプターの数値レガシーフィールドでは
-  ISO タイムスタンプを使用する。
-- endpoint attribution はオンチェーン fact と混ぜず、mock attribution layer として
-  分離する。
-- `txHash -> endpointPath` の仮紐づけは、将来 SDK telemetry で置き換える前提を明示する。
+- Keep demo fixtures explicit and deterministic.
+- Keep `generatedAt` deterministic for snapshot stability.
+- Use `provenance` and `provenanceByField` where needed to assign provenance to
+  mixed fields.
+- Explicitly include nullable labels (`label: null`) when unknown.
+- Use ISO timestamps in new generated demo payloads and migration adapters.
+- Keep endpoint attribution separate from onchain facts as a mock attribution
+  layer.
+- Make it explicit that `txHash -> endpointPath` placeholder linking is expected
+  to be replaced by future SDK telemetry.

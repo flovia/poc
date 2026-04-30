@@ -1,73 +1,73 @@
 ## ADDED Requirements
 
-### Requirement: CoinGecko payTo transaction facts を保存する
+### Requirement: Persist CoinGecko payTo transaction facts
 
-システムは CoinGecko の `payTo` に紐づく transaction を取得した場合、Phase B projection 生成に再利用できる transaction fact として保存することを MUST とする。
+The system MUST save transaction facts from CoinGecko by `payTo` as reusable data for Phase B projection generation.
 
-初期対象として、CDP Discovery snapshot で観測済みの Base USDC `payTo` `0x110cdbba7fe6434ec4ce3464cc523942ad6fb784` を扱う。capture は default 1000 transfers を要求し、明示 limit で 1000 件超も取得できる。取得できた件数を metadata として保存する。
+Initial target is the observed Base USDC `payTo` from CDP Discovery snapshot: `0x110cdbba7fe6434ec4ce3464cc523942ad6fb784`. Capture must request default 1000 transfers and support explicit request limits above 1000. Retrieved count is stored as metadata.
 
-#### Scenario: transaction fact を保存する
+#### Scenario: Persist transaction fact
 
-- **WHEN** source が CoinGecko `payTo` に一致する transaction を取得する
-- **THEN** システムは `txHash`、`payerWallet`、`payTo`、`amount`、`asset`、`network`、`timestamp` を保存する
-- **THEN** 保存された fact は `onchain_fact` として扱える
+- **WHEN** source retrieves a transaction matching CoinGecko `payTo`
+- **THEN** the system stores `txHash`, `payerWallet`, `payTo`, `amount`, `asset`, `network`, and `timestamp`
+- **THEN** saved fact is usable as `onchain_fact`
 
-#### Scenario: capture metadata を保存する
+#### Scenario: Persist capture metadata
 
-- **WHEN** source が CoinGecko `payTo` に一致する transfer list を取得する
-- **THEN** システムは `requestedLimit`、`capturedCount`、`timeWindow`、`source` を metadata として保存する
-- **THEN** `capturedCount` が `requestedLimit` 未満でも、取得済み facts が schema を満たす場合は有効な fixture として扱う
+- **WHEN** source retrieves transfer list matching CoinGecko `payTo`
+- **THEN** the system stores `requestedLimit`, `capturedCount`, `timeWindow`, and `source` as metadata
+- **THEN** even if `capturedCount` is less than `requestedLimit`, fixture remains valid if schema is satisfied
 
-#### Scenario: request path では取得しない
+#### Scenario: No source capture in request path
 
-- **WHEN** BFF product endpoint が呼び出される
-- **THEN** システムは CoinGecko transaction fact を live source から取得しない
+- **WHEN** a Phase B product endpoint is called
+- **THEN** the system does not fetch CoinGecko transaction fact from live source
 
-### Requirement: sources package は payTo transfer list を取得する
+### Requirement: packages source adapter fetches payTo transfer list
 
-システムは `packages/sources` の source adapter として、指定された `network`、`asset`、`payTo` に一致する transfer list を取得できることを MUST とする。
+The system MUST be able to fetch a transfer list as a `packages/sources` source adapter for specified `network`, `asset`, and `payTo`.
 
-#### Scenario: payTo transfer list を最大 1000 件取得する
+#### Scenario: Fetch up to 1000 payTo transfer list
 
-- **WHEN** caller が `network`、`asset`、`payTo`、time window、limit を指定して transfer list を要求する
-- **THEN** source adapter は `txHash`、`sender`、`recipient`、`amountAtomic`、`blockNumber`、`blockTimestamp` を含む transfer facts を返す
-- **THEN** 初期実装では `limit` の default は 1000 とし、明示 limit で 1000 件超も取得できる
-- **THEN** 返された transfer facts は projection generation の `onchain_fact` として扱える
+- **WHEN** caller requests transfer list with `network`, `asset`, `payTo`, time window, and limit
+- **THEN** source adapter returns transfer facts including `txHash`, `sender`, `recipient`, `amountAtomic`, `blockNumber`, and `blockTimestamp`
+- **THEN** initial implementation defaults `limit` to 1000 and supports explicit limits above 1000
+- **THEN** returned transfer facts are usable as `onchain_fact` in projection generation
 
-#### Scenario: source pagination を扱う
+#### Scenario: Handle source pagination
 
-- **WHEN** source API が一度に 1000 件を返せない
-- **THEN** source adapter は source API の制約に従って pagination し、最大 1000 件まで transfer facts を取得する
-- **THEN** pagination 後の実取得件数を `capturedCount` として記録する
+- **WHEN** source API cannot return 1000 results in a single response
+- **THEN** source adapter paginates per API constraints and collects up to 1000 transfer facts
+- **THEN** actual captured count after pagination is recorded as `capturedCount`
 
-#### Scenario: aggregate と transfer list の責務を分ける
+#### Scenario: Separate aggregate and transfer list responsibilities
 
-- **WHEN** caller が market snapshot aggregate を要求する
-- **THEN** システムは既存の aggregate response を維持する
-- **WHEN** caller が Phase B projection 用の transaction facts を要求する
-- **THEN** システムは aggregate ではなく transfer list response を返す
+- **WHEN** caller requests market snapshot aggregate
+- **THEN** system preserves existing aggregate response
+- **WHEN** caller requests transaction facts for Phase B projection
+- **THEN** system returns transfer list response instead of aggregate
 
-### Requirement: mock attribution は txHash で transaction fact に join する
+### Requirement: Join mock attribution to transaction facts by txHash
 
-システムは Phase B projection 生成時に、mock endpoint attribution を `txHash` で real transaction fact に join することを MUST とする。
+The system MUST join mock endpoint attribution to real transaction facts by `txHash` when generating Phase B projection.
 
-#### Scenario: txHash が一致する attribution を join する
+#### Scenario: Join matching txHash attribution
 
-- **WHEN** transaction fact と mock attribution item が同じ `txHash` を持つ
-- **THEN** projection builder は onchain fields と endpoint attribution fields を同じ projection record に結合する
-- **THEN** onchain fields と attribution fields の provenance を混同しない
+- **WHEN** transaction fact and mock attribution item share same `txHash`
+- **THEN** projection builder combines onchain fields and endpoint attribution fields into same projection record
+- **THEN** provenance of onchain fields and attribution fields must not be mixed
 
-#### Scenario: txHash が一致しない attribution を扱う
+#### Scenario: Unmatched txHash attribution
 
-- **WHEN** mock attribution item の `txHash` が transaction facts に存在しない
-- **THEN** projection builder は schema validation または明確な generation error で失敗する
+- **WHEN** a mock attribution item references `txHash` not present in transaction facts
+- **THEN** projection builder must fail via schema validation or clear generation error
 
-### Requirement: projection generation は offline verification と分離する
+### Requirement: Separate projection generation from offline verification
 
-システムは live source を必要とする transaction capture と、offline verification 可能な projection validation を分離することを MUST とする。
+The system MUST separate live source transaction capture from offline-verifiable projection validation.
 
-#### Scenario: offline verify を実行する
+#### Scenario: Run offline verification
 
-- **WHEN** operator が `bun run verify` を実行する
-- **THEN** システムは保存済み fixture / projection と contract validation を使って検証する
-- **THEN** live CDP、Bitquery、RPC、または external service call を要求しない
+- **WHEN** an operator runs `bun run verify`
+- **THEN** system verifies with saved fixture / projection and contract validation
+- **THEN** does not require live CDP, Bitquery, RPC, or other external service calls

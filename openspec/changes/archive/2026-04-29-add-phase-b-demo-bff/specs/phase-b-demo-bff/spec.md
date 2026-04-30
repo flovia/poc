@@ -1,88 +1,88 @@
 ## ADDED Requirements
 
-### Requirement: BFF は Phase B customer list を返す
+### Requirement: BFF must return Phase B customer list
 
-システムは `GET /customers` に対して、Phase B canonical contract に従う customer list projection を read-only に返すことを MUST とする。
+The system MUST return a read-only Phase B customer list projection in response to `GET /customers`, following the Phase B canonical contract.
 
-#### Scenario: customer list を取得する
+#### Scenario: Fetch customer list
 
-- **WHEN** client が `GET /customers` を呼び出す
-- **THEN** システムは `200` を返し、`generatedAt`、`generatedFrom`、`customerCount`、`customers`、`provenance` を含む envelope response を返す
-- **THEN** response は `packages/contracts` の Phase B customer list schema で検証できる
+- **WHEN** a client calls `GET /customers`
+- **THEN** the system returns `200` with an envelope response containing `generatedAt`, `generatedFrom`, `customerCount`, `customers`, and `provenance`
+- **THEN** the response validates against the Phase B customer list schema in `packages/contracts`
 
-#### Scenario: customer count が一覧件数と一致する
+#### Scenario: Customer count matches list length
 
-- **WHEN** client が `GET /customers` を呼び出す
-- **THEN** response の `customerCount` は `customers.length` と一致する
+- **WHEN** a client calls `GET /customers`
+- **THEN** `customerCount` equals `customers.length` in the response
 
-### Requirement: BFF は Phase B customer profile を返す
+### Requirement: BFF must return Phase B customer profile
 
-システムは `GET /customers/:address/profile` に対して、指定 wallet の customer profile projection を read-only に返すことを MUST とする。
+The system MUST return a read-only customer profile projection for a specified wallet in response to `GET /customers/:address/profile`.
 
-#### Scenario: 既知 wallet の profile を取得する
+#### Scenario: Fetch profile for known wallet
 
-- **WHEN** client が fixture に存在する wallet address で `GET /customers/:address/profile` を呼び出す
-- **THEN** システムは `200` を返し、`profile.identity`、`profile.metrics`、`profile.providers`、`profile.timeline`、`profile.insights` を含む response を返す
-- **THEN** response は `packages/contracts` の Phase B customer profile schema で検証できる
+- **WHEN** a client calls `GET /customers/:address/profile` with a wallet address that exists in fixtures
+- **THEN** the system returns `200` with profile fields including `profile.identity`, `profile.metrics`, `profile.providers`, `profile.timeline`, and `profile.insights`
+- **THEN** response validates against the Phase B customer profile schema in `packages/contracts`
 
-#### Scenario: 未知 wallet の profile を取得する
+#### Scenario: Fetch profile for unknown wallet
 
-- **WHEN** client が fixture に存在しない wallet address で `GET /customers/:address/profile` を呼び出す
-- **THEN** システムは `404` を返す
+- **WHEN** a client calls `GET /customers/:address/profile` with a wallet address that does not exist in fixtures
+- **THEN** the system returns `404`
 
-### Requirement: BFF は Phase B wallet usage graph を返す
+### Requirement: BFF must return Phase B wallet usage graph
 
-システムは `GET /wallet-usage-graph` に対して、payer/provider co-usage を表す nested wallet usage graph projection を read-only に返すことを MUST とする。
+The system MUST return a read-only nested wallet usage graph projection representing payer/provider co-usage in response to `GET /wallet-usage-graph`.
 
-#### Scenario: wallet usage graph を取得する
+#### Scenario: Fetch wallet usage graph
 
-- **WHEN** client が `GET /wallet-usage-graph` を呼び出す
-- **THEN** システムは `200` を返し、`graph.providerWallets[].payerWallets[]` に edge / evidence の関係を保持した response を返す
-- **THEN** response は `packages/contracts` の Phase B wallet usage graph schema で検証できる
+- **WHEN** a client calls `GET /wallet-usage-graph`
+- **THEN** the system returns `200` and an edge/evidence relationship in `graph.providerWallets[].payerWallets[]`
+- **THEN** the response validates against the Phase B wallet usage graph schema in `packages/contracts`
 
-### Requirement: demo と future SDK 想定値は product API response に内包する
+### Requirement: Product API responses embed demo and future SDK expectations
 
-システムは demo label と future SDK telemetry 想定値を raw endpoint として公開せず、Phase B product API の projection 内に含めることを MUST とする。
+The system MUST NOT expose demo labels or future SDK telemetry assumptions as separate raw endpoints; they must be included in the three Phase B product API projections.
 
-#### Scenario: future SDK field を profile に含める
+#### Scenario: future SDK field is included in profile
 
-- **WHEN** customer profile response が endpoint usage、workflow、use case、request path 相当の値を含む
-- **THEN** システムはその値を `future_sdk_field` または `demo_label` として区別できる provenance metadata とともに返す
+- **WHEN** a customer profile response contains endpoint usage, workflow, or request-path values
+- **THEN** the system returns those values with provenance metadata distinguishing `future_sdk_field` or `demo_label`
 
-#### Scenario: raw demo endpoint は提供しない
+#### Scenario: raw demo endpoint is not provided
 
-- **WHEN** client が `/demo-data`、`/sdk-events`、または `/telemetry` を呼び出す
-- **THEN** システムは Phase B 初回実装では product API として扱わず、既存の not found response を返す
+- **WHEN** a client calls `/demo-data`, `/sdk-events`, or `/telemetry`
+- **THEN** the system does not treat these as product APIs in the initial Phase B and returns an existing not-found response
 
-### Requirement: BFF response は provenance を保持する
+### Requirement: BFF response preserves provenance
 
-システムは `onchain_fact`、`demo_label`、`future_sdk_field`、`derived_insight` の違いを response 上で失わないことを MUST とする。
+The system MUST preserve the distinction between `onchain_fact`, `demo_label`, `future_sdk_field`, and `derived_insight` in responses.
 
-#### Scenario: derived insight を返す
+#### Scenario: Return derived insight
 
-- **WHEN** response が `derived_insight` の値または object を含む
-- **THEN** システムは空でない `reasons` を含め、利用側が仮説の根拠を追跡できるようにする
+- **WHEN** a response includes `derived_insight` values or objects
+- **THEN** the system includes non-empty `reasons` so consumers can trace the supporting evidence
 
-#### Scenario: mixed object を返す
+#### Scenario: Return mixed object values
 
-- **WHEN** object 内に onchain fact と demo / future / derived の値が混在する
-- **THEN** システムは必要に応じて `provenanceByField` を含め、field 単位の出所を区別できるようにする
+- **WHEN** an object contains mixed onchain fact and demo / future / derived values
+- **THEN** the system includes `provenanceByField` as needed so field-level sources are distinguishable
 
-### Requirement: BFF は read-only endpoint として振る舞う
+### Requirement: BFF behaves as read-only endpoints
 
-システムは Phase B BFF endpoint を read-only とし、GET 以外の method で product read を変更しないことを MUST とする。
+The system MUST operate Phase B BFF endpoints as read-only and must not modify product reads via non-GET methods.
 
-#### Scenario: 非 GET method を呼び出す
+#### Scenario: Call non-GET method
 
-- **WHEN** client が Phase B product endpoint に対して POST、PUT、PATCH、DELETE のいずれかを呼び出す
-- **THEN** システムは write operation を実行せず、read-only 方針に沿った error response を返す
+- **WHEN** a client calls POST, PUT, PATCH, or DELETE against a Phase B product endpoint
+- **THEN** the system does not perform write operations and returns a read-only error response
 
-### Requirement: BFF は request path で live source を呼ばない
+### Requirement: BFF does not call live source in request path
 
-システムは Phase B product endpoint の request handling 中に live CDP、Bitquery、RPC、または SDK collector を呼び出さないことを MUST とする。
+The system MUST not call live CDP, Bitquery, RPC, or SDK collector during Phase B product endpoint request handling.
 
-#### Scenario: product endpoint を呼び出す
+#### Scenario: Call product endpoint
 
-- **WHEN** client が `GET /customers`、`GET /customers/:address/profile`、または `GET /wallet-usage-graph` を呼び出す
-- **THEN** システムは prepared demo fixture / read model から response を生成する
-- **THEN** システムは external source request を発行しない
+- **WHEN** a client calls `GET /customers`, `GET /customers/:address/profile`, or `GET /wallet-usage-graph`
+- **THEN** the system generates response from prepared demo fixture / read model
+- **THEN** the system does not issue external source requests

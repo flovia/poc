@@ -1,15 +1,16 @@
 ## MODIFIED Requirements
 
-### Requirement: BFF は request ごとに外部 source を呼ばない
+### Requirement: BFF must not call external sources per request
 
-初期 market intelligence design では、BFF request handler が product read のために CDP や Bitquery を直接呼ぶことを要求しない。Phase B の demo BFF では、Phase A snapshot / projection 相当の値を prepared demo fixture または read model として扱い、`onchain_fact` として説明できる field と demo / future / derived field を区別することを MUST とする。
+In the initial market intelligence design, the BFF request handler MUST NOT call CDP or Bitquery directly for product reads. The Phase B demo BFF must treat Phase A snapshot / projection-equivalent values as prepared demo fixtures or read models, and distinguish fields explainable as `onchain_fact` from demo / future / derived fields.
 
-#### シナリオ: product read path を後から追加する
+#### Scenario: add market intelligence endpoint after this change
 
-- **条件** この change の後に BFF market intelligence endpoint を実装する
-- **結果** endpoint は user request ごとに live Bitquery GraphQL call を発行せず、生成済み snapshot、projection、保存済み data、または prepared demo read model を読む
+- **WHEN** a BFF market intelligence endpoint is implemented after this change
+- **THEN** the endpoint does not issue live Bitquery GraphQL calls for each user request
+- **THEN** it reads generated snapshot, projection, stored data, or prepared demo read model
 
-#### シナリオ: Phase B read model が Phase A 相当の値を含む
+#### Scenario: Phase B read model includes Phase A-equivalent values
 
-- **条件** Phase B BFF response が wallet、pay_to、payment frequency、co-usage など Phase A snapshot / projection 相当の値を含む
-- **結果** システムはそれらを request path で再取得せず、prepared demo read model 内の `onchain_fact` として返す
+- **WHEN** a Phase B BFF response includes Phase A snapshot / projection-equivalent values such as wallet, `pay_to`, payment frequency, and co-usage
+- **THEN** the system returns those values as `onchain_fact` from prepared demo read model and does not re-fetch them in the request path

@@ -1,67 +1,85 @@
 ## ADDED Requirements
 
-### Requirement: Customer intelligence contract を提供する
-システムは customer address を起点にした intelligence response contract を提供し、customer identity、capture scope、x402 service candidates、payTo activities、portfolio summary、DeFi positions、insights、provenance、reasons を表現できることを MUST とする。
+### Requirement: Provide a customer intelligence contract
 
-#### Scenario: valid customer intelligence response を検証する
-- **WHEN** customer intelligence read model が `customerAddress`、`scope`、`x402Services`、`payToActivities`、`portfolioSummary`、`defiPositions`、`insights`、`provenanceByField`、`reasons` を含む
-- **THEN** response は `packages/contracts` の customer intelligence schema で検証できる
+The system MUST provide an intelligence response contract keyed by customer address that can represent customer identity, capture scope, x402 service candidates, payTo activities, portfolio summary, DeFi positions, insights, provenance, and reasons.
 
-#### Scenario: capture scope を保持する
-- **WHEN** customer intelligence read model が CLI capture から生成される
-- **THEN** response は normalized lowercase customer address、network、asset、time window を metadata として保持する
+#### Scenario: Validate a valid customer intelligence response
 
-### Requirement: x402 service candidate は evidence と confidence を保持する
-システムは customer の outgoing payment fact と payment option metadata から x402 service candidate を作る場合、candidate を derived insight として扱い、confidence、reasons、evidence を保持することを MUST とする。
+- **WHEN** customer intelligence read model includes `customerAddress`, `scope`, `x402Services`, `payToActivities`, `portfolioSummary`, `defiPositions`, `insights`, `provenanceByField`, and `reasons`
+- **THEN** response can be validated with the customer intelligence schema in `packages/contracts`
 
-#### Scenario: payTo が CDP payment option に一致する
-- **WHEN** customer の outgoing transfer recipient が CDP payment option の `payTo`、network、asset と一致する
-- **THEN** システムは service candidate に payment option identity、observed transfer metrics、confidence、evidence を含める
+#### Scenario: Preserve capture scope
 
-#### Scenario: service identity が確定できない
-- **WHEN** outgoing transfer は存在するが CDP payment option metadata に一致しない
-- **THEN** システムは確定 service name を捏造せず、payTo activity evidence と unresolved reason を保持する
+- **WHEN** customer intelligence read model is generated from CLI capture
+- **THEN** response keeps normalized lowercase customer address, network, asset, and time window as metadata
 
-### Requirement: payTo activity を customer 起点で集計する
-システムは customer address の outgoing transfer fact を payTo、network、asset、time window で集計し、transaction count、spend amount、latest activity、tx evidence を返すことを MUST とする。
+### Requirement: x402 service candidates keep confidence and evidence
 
-#### Scenario: 同一 payTo に複数 payment がある
-- **WHEN** customer が同じ network / asset / payTo に複数回支払っている
-- **THEN** システムは payTo activity を一つに集計し、count、total amount、latest timestamp、tx hash evidence を保持する
+The system MUST retain confidence, reasons, and evidence when creating x402 service candidates from customer outgoing payment facts and payment option metadata. Such candidates are treated as derived insights.
 
-#### Scenario: time window 外の payment がある
-- **WHEN** outgoing transfer が capture time window 外にある
-- **THEN** システムはその transfer を該当 read model の payTo activity aggregation から除外する
+#### Scenario: payTo matches a CDP payment option
 
-### Requirement: portfolio / DeFi context は source coverage を表現する
-システムは portfolio summary と DeFi positions を customer intelligence response に含める場合、raw source fact と derived classification を区別し、source coverage または unavailable reason を表現することを MUST とする。
+- **WHEN** the customer outgoing transfer recipient matches the CDP payment option `payTo`, `network`, and `asset`
+- **THEN** the system includes payment option identity, observed transfer metrics, confidence, and evidence in the service candidate
 
-#### Scenario: portfolio source が取得済み
-- **WHEN** portfolio source が token balance または DeFi position fact を返す
-- **THEN** response は portfolio summary、DeFi positions、source provenance、derived DeFi activity classification を区別して返す
+#### Scenario: Service identity cannot be resolved
 
-#### Scenario: portfolio source が未取得
-- **WHEN** portfolio / DeFi source が capture されていない、または利用できない
-- **THEN** response は BFF request path で live source を呼ばず、section の unavailable reason または source coverage を返す
+- **WHEN** an outgoing transfer exists but does not match CDP payment option metadata
+- **THEN** the system must not fabricate a resolved service name and must retain payTo activity evidence with unresolved reason
 
-### Requirement: CLI は customer intelligence read model を生成する
-システムは customer address、network、asset、time window、output path を受け取り、external source fact を取得し、customer intelligence read model JSON を生成する CLI capture command を提供することを MUST とする。
+### Requirement: Aggregate payTo activity by customer
 
-#### Scenario: capture command が成功する
-- **WHEN** operator が有効な source configuration と output path で customer intelligence capture command を実行する
-- **THEN** システムは customer intelligence fixture / read model JSON を出力し、contract validation に成功する
+The system MUST aggregate customer address outgoing transfer facts by payTo, network, asset, and time window and return transaction count, spend amount, latest activity, and tx evidence.
 
-#### Scenario: 必須 credential がない
-- **WHEN** operator が live source capture に必要な credential なしで command を実行する
-- **THEN** システムは明確な configuration error で失敗し、誤解を招く partial read model を成功扱いで書き出さない
+#### Scenario: Multiple payments for the same payTo
 
-### Requirement: Default verification は offline を維持する
-システムは customer intelligence の live source capture を通常の verify path に混ぜず、default verification を offline で再現可能に保つことを MUST とする。
+- **WHEN** the customer pays multiple times to the same network / asset / payTo
+- **THEN** the system aggregates payTo activity into one entry and preserves count, total amount, latest timestamp, and tx hash evidence
 
-#### Scenario: root verify を実行する
-- **WHEN** developer が root で `bun run verify` を実行する
-- **THEN** システムは live Bitquery、CDP、Zerion、MCP、RPC access を要求せず、fixture / unit / route test に基づいて検証できる
+#### Scenario: Payment outside capture window
 
-#### Scenario: live source を検証する
-- **WHEN** operator が live customer intelligence capture を検証する
-- **THEN** システムは default verify とは別 command で credential と external source availability を要求する
+- **WHEN** an outgoing transfer is outside the capture time window
+- **THEN** the system excludes that transfer from the corresponding read model payTo activity aggregation
+
+### Requirement: Portfolio / DeFi context expresses source coverage
+
+When including portfolio summary and DeFi positions in customer intelligence response, the system MUST distinguish raw source facts from derived classification and express source coverage or unavailable reason.
+
+#### Scenario: Portfolio source is available
+
+- **WHEN** portfolio source returns token balance or DeFi position fact
+- **THEN** response returns portfolio summary, DeFi positions, source provenance, and derived DeFi activity classification distinctly
+
+#### Scenario: Portfolio source is not captured
+
+- **WHEN** portfolio / DeFi source has not been captured or is unavailable
+- **THEN** response returns an unavailable reason or source coverage and does not call live source in BFF request path
+
+### Requirement: CLI generates customer intelligence read model
+
+The system MUST provide a CLI capture command that accepts customer address, network, asset, time window, and output path, fetches external source facts, and generates customer intelligence read model JSON.
+
+#### Scenario: Capture command succeeds
+
+- **WHEN** operator runs customer intelligence capture command with valid source configuration and output path
+- **THEN** system outputs customer intelligence fixture / read model JSON and passes contract validation
+
+#### Scenario: Missing required credentials
+
+- **WHEN** operator runs command without credentials required for live source capture
+- **THEN** system fails with a clear configuration error and does not emit a successful partial read model
+
+### Requirement: Keep default verification offline
+
+The system MUST keep customer intelligence live source capture out of normal verify flow and preserve default verification as offline-reproducible.
+
+#### Scenario: Run root verify
+
+- **WHEN** a developer runs `bun run verify` at repository root
+- **THEN** system can be verified using fixture / unit / route tests without requiring live Bitquery, CDP, Zerion, MCP, or RPC access
+
+#### Scenario: Validate live source capture
+
+- **WHEN** operator validates live customer intelligence capture
+- **THEN** system requests credentials and external source availability in a separate command path from default verify

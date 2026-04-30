@@ -1,157 +1,157 @@
 ## Purpose
 
-Customer intelligence は customer address を起点に、x402 service candidates、payTo activity、portfolio / DeFi context、insights、provenance を read model として提供する。
+Customer intelligence provides read-model data keyed by customer address, including x402 service candidates, payTo activity, portfolio / DeFi context, insights, and provenance.
 
 ## Requirements
 
-### Requirement: Customer intelligence contract を提供する
+### Requirement: Provide a customer intelligence contract
 
-システムは customer address を起点にした intelligence response contract を提供し、customer identity、capture scope、x402 service candidates、payTo activities、portfolio summary、DeFi positions、insights、provenance、reasons を表現できることを MUST とする。
+The system MUST provide a customer intelligence response contract keyed by customer address that can represent customer identity, capture scope, x402 service candidates, payTo activities, portfolio summary, DeFi positions, insights, provenance, and reasons.
 
-#### Scenario: valid customer intelligence response を検証する
+#### Scenario: Validate a valid customer intelligence response
 
-- **WHEN** customer intelligence read model が `customerAddress`、`scope`、`x402Services`、`payToActivities`、`portfolioSummary`、`defiPositions`、`insights`、`provenanceByField`、`reasons` を含む
-- **THEN** response は `packages/contracts` の customer intelligence schema で検証できる
+- **WHEN** a customer intelligence read model contains `customerAddress`, `scope`, `x402Services`, `payToActivities`, `portfolioSummary`, `defiPositions`, `insights`, `provenanceByField`, and `reasons`
+- **THEN** the response can be validated against the customer intelligence schema in `packages/contracts`
 
-#### Scenario: capture scope を保持する
+#### Scenario: Preserve capture scope
 
-- **WHEN** customer intelligence read model が CLI capture から生成される
-- **THEN** response は normalized lowercase customer address、network、asset、time window を metadata として保持する
+- **WHEN** the customer intelligence read model is generated from CLI capture
+- **THEN** the response retains normalized lowercase customer address, network, asset, and time window as metadata
 
-### Requirement: x402 service candidate は evidence と confidence を保持する
+### Requirement: x402 service candidate MUST include evidence and confidence
 
-システムは customer の outgoing payment fact と payment option metadata から x402 service candidate を作る場合、candidate を derived insight として扱い、confidence、reasons、evidence を保持することを MUST とする。
+The system MUST treat an x402 service candidate created from customer outgoing payment facts and payment option metadata as a derived insight and retain confidence, reasons, and evidence.
 
-#### Scenario: payTo が CDP payment option に一致する
+#### Scenario: payTo matches a CDP payment option
 
-- **WHEN** customer の outgoing transfer recipient が CDP payment option の `payTo`、network、asset と一致する
-- **THEN** システムは service candidate に payment option identity、observed transfer metrics、confidence、evidence を含める
+- **WHEN** a customer outgoing transfer recipient matches the CDP payment option `payTo`, `network`, and `asset`
+- **THEN** the system includes payment option identity, observed transfer metrics, confidence, and evidence in the service candidate
 
-#### Scenario: service identity が確定できない
+#### Scenario: Service identity cannot be resolved
 
-- **WHEN** outgoing transfer は存在するが CDP payment option metadata に一致しない
-- **THEN** システムは確定 service name を捏造せず、payTo activity evidence と unresolved reason を保持する
+- **WHEN** an outgoing transfer exists but does not match CDP payment option metadata
+- **THEN** the system must not fabricate a confirmed service name and must retain payTo activity evidence and an unresolved reason
 
-### Requirement: payTo activity を customer 起点で集計する
+### Requirement: Aggregate payTo activity by customer
 
-システムは customer address の outgoing transfer fact を payTo、network、asset、time window で集計し、transaction count、spend amount、latest activity、tx evidence を返すことを MUST とする。
+The system MUST aggregate customer address outgoing transfer facts by payTo, network, asset, and time window and return transaction count, spend amount, latest activity, and transaction evidence.
 
-#### Scenario: 同一 payTo に複数 payment がある
+#### Scenario: Multiple payments exist for the same payTo
 
-- **WHEN** customer が同じ network / asset / payTo に複数回支払っている
-- **THEN** システムは payTo activity を一つに集計し、count、total amount、latest timestamp、tx hash evidence を保持する
+- **WHEN** the customer pays to the same network / asset / payTo multiple times
+- **THEN** the system aggregates payTo activity into one entry and preserves count, total amount, latest timestamp, and tx hash evidence
 
-#### Scenario: time window 外の payment がある
+#### Scenario: Payment exists outside the time window
 
-- **WHEN** outgoing transfer が capture time window 外にある
-- **THEN** システムはその transfer を該当 read model の payTo activity aggregation から除外する
+- **WHEN** an outgoing transfer is outside the capture time window
+- **THEN** the system excludes that transfer from the corresponding read model payTo activity aggregation
 
-### Requirement: portfolio / DeFi context は source coverage を表現する
+### Requirement: Portfolio / DeFi context must represent source coverage
 
-システムは portfolio summary と DeFi positions を customer intelligence response に含める場合、raw source fact と derived classification を区別し、source coverage または unavailable reason を表現することを MUST とする。
+When the customer intelligence response includes portfolio summary and DeFi positions, the system MUST distinguish raw source facts from derived classification and express source coverage or an unavailable reason.
 
-#### Scenario: portfolio source が取得済み
+#### Scenario: Portfolio source is available
 
-- **WHEN** portfolio source が token balance または DeFi position fact を返す
-- **THEN** response は portfolio summary、DeFi positions、source provenance、derived DeFi activity classification を区別して返す
+- **WHEN** portfolio source returns token balance or DeFi position facts
+- **THEN** the response returns portfolio summary, DeFi positions, source provenance, and derived DeFi activity classification as distinct fields
 
-#### Scenario: portfolio source が未取得
+#### Scenario: Portfolio source is not captured
 
-- **WHEN** portfolio / DeFi source が capture されていない、または利用できない
-- **THEN** response は BFF request path で live source を呼ばず、section の unavailable reason または source coverage を返す
+- **WHEN** portfolio / DeFi source is not captured or is unavailable
+- **THEN** the response must not call a live source in the BFF request path and must return an unavailable reason or source coverage for that section
 
-### Requirement: Zerion portfolio source は customer intelligence を拡張できる
+### Requirement: Zerion portfolio source can enrich customer intelligence
 
-システムは customer intelligence capture で Zerion portfolio source が明示的に有効化された場合、Zerion 由来の portfolio summary と DeFi positions を正規化し、customer intelligence read model に反映することを MUST とする。
+The system MUST normalize Zerion-derived portfolio summary and DeFi positions and reflect them in the customer intelligence read model when Zerion portfolio source is explicitly enabled for customer intelligence capture.
 
-#### Scenario: Zerion portfolio capture が成功する
+#### Scenario: Zerion portfolio capture succeeds
 
-- **WHEN** operator が Zerion capture を有効にし、有効な `ZERION_API_KEY` で customer intelligence capture command を実行する
-- **THEN** システムは Zerion response を repository-owned portfolio summary / DeFi position DTO に正規化する
-- **THEN** customer intelligence response は portfolio source coverage を `available` とし、Zerion provenance を保持する
+- **WHEN** the operator enables Zerion capture and runs the customer intelligence capture command with a valid `ZERION_API_KEY`
+- **THEN** the system normalizes the Zerion response into repository-owned portfolio summary / DeFi position DTOs
+- **THEN** the customer intelligence response sets portfolio source coverage to `available` and retains Zerion provenance
 
-#### Scenario: Zerion が DeFi positions を返す
+#### Scenario: Zerion returns DeFi positions
 
-- **WHEN** Zerion source が protocol position facts を返す
-- **THEN** response は `defiPositions` に protocol、position type、value、network、provenance、evidence または reasons を含める
-- **THEN** システムは DeFi active classification を derived insight として扱い、raw source fact と区別する
+- **WHEN** the Zerion source returns protocol position facts
+- **THEN** the response includes protocol, position type, value, network, provenance, and evidence or reasons in `defiPositions`
+- **THEN** the system treats DeFi active classification as a derived insight and distinguishes it from raw source facts
 
-### Requirement: Zerion unavailable / partial source を明示する
+### Requirement: Express Zerion unavailable / partial source states
 
-システムは Zerion capture が未有効、未設定、または一部失敗した場合、portfolio / DeFi context を捏造せず、source coverage と unavailable / partial reason を表現することを MUST とする。
+The system MUST not fabricate portfolio / DeFi context and must represent source coverage and unavailable / partial reason when Zerion capture is disabled, unconfigured, or partially failing.
 
-#### Scenario: Zerion capture が無効である
+#### Scenario: Zerion capture is disabled
 
-- **WHEN** operator が Zerion capture を有効にせず customer intelligence capture command を実行する
-- **THEN** response は既存通り valid customer intelligence read model を生成する
-- **THEN** portfolio source coverage は unavailable reason を持ち、BFF request path で live Zerion を呼ばない
+- **WHEN** the operator runs customer intelligence capture command without enabling Zerion capture
+- **THEN** the response still generates a valid customer intelligence read model as before
+- **THEN** portfolio source coverage includes an unavailable reason and live Zerion is not called in the BFF request path
 
-#### Scenario: Zerion credential が不足している
+#### Scenario: Zerion credential is missing
 
-- **WHEN** operator が Zerion capture を有効にしているが `ZERION_API_KEY` がない
-- **THEN** command は明確な configuration error で失敗する
-- **THEN** システムは partial read model を成功扱いで書き出さない
+- **WHEN** the operator enables Zerion capture but `ZERION_API_KEY` is missing
+- **THEN** the command fails with a clear configuration error
+- **THEN** the system must not write a partial read model as successful
 
-#### Scenario: Zerion source が一時的に失敗する
+#### Scenario: Zerion source temporarily fails
 
-- **WHEN** Zerion API が timeout、rate limit、または server error を返す
-- **THEN** システムは DeFi inactive と断定せず、portfolio source coverage を partial または unavailable として理由を保持する
+- **WHEN** the Zerion API returns timeout, rate limit, or server error
+- **THEN** the system does not conclude DeFi is inactive and must retain a reason as partial or unavailable source coverage
 
-### Requirement: CLI は customer intelligence read model を生成する
+### Requirement: CLI generates customer intelligence read model
 
-システムは customer address、network、asset、time window、output path を受け取り、external source fact を取得し、customer intelligence read model JSON を生成する CLI capture command を提供することを MUST とする。
+The system MUST provide a CLI capture command that accepts customer address, network, asset, time window, and output path, fetches external source facts, and generates customer intelligence read model JSON.
 
-#### Scenario: capture command が成功する
+#### Scenario: Capture command succeeds
 
-- **WHEN** operator が有効な source configuration と output path で customer intelligence capture command を実行する
-- **THEN** システムは customer intelligence fixture / read model JSON を出力し、contract validation に成功する
+- **WHEN** the operator runs the customer intelligence capture command with a valid source configuration and output path
+- **THEN** the system writes customer intelligence fixture / read model JSON and passes contract validation
 
-#### Scenario: 必須 credential がない
+#### Scenario: Required credential is missing
 
-- **WHEN** operator が live source capture に必要な credential なしで command を実行する
-- **THEN** システムは明確な configuration error で失敗し、誤解を招く partial read model を成功扱いで書き出さない
+- **WHEN** the operator runs the command without required credentials for live source capture
+- **THEN** the system fails with a clear configuration error and does not write a confusing partial read model as successful
 
-### Requirement: Default verification は offline を維持する
+### Requirement: Default verification stays offline
 
-システムは customer intelligence の live source capture を通常の verify path に混ぜず、default verification を offline で再現可能に保つことを MUST とする。
+The system MUST keep customer intelligence live source capture out of the normal verify path and preserve reproducible offline default verification.
 
-#### Scenario: root verify を実行する
+#### Scenario: Run root verify
 
-- **WHEN** developer が root で `bun run verify` を実行する
-- **THEN** システムは live Bitquery、CDP、Zerion、MCP、RPC access を要求せず、fixture / unit / route test に基づいて検証できる
+- **WHEN** a developer runs `bun run verify` at repo root
+- **THEN** the system verifies using fixture / unit / route tests and does not require live Bitquery, CDP, Zerion, MCP, or RPC access
 
-#### Scenario: live source を検証する
+#### Scenario: Verify live source capture
 
-- **WHEN** operator が live customer intelligence capture を検証する
-- **THEN** システムは default verify とは別 command で credential と external source availability を要求する
+- **WHEN** the operator validates live customer intelligence capture
+- **THEN** the system requires credentials and external source availability through a command path separate from default verify
 
-### Requirement: Zerion data は default verification を live にしない
+### Requirement: Zerion data must not make default verification live
 
-システムは Zerion integration の unit / CLI tests を fixture または mocked fetch で検証し、default `bun run verify` で live Zerion access や credential を要求しないことを MUST とする。
+The system MUST validate Zerion integration through unit / CLI tests using fixtures or mocked fetch and must not require live Zerion access or credentials in default `bun run verify`.
 
-#### Scenario: root verify を実行する
+#### Scenario: Run root verify
 
-- **WHEN** developer が root で `bun run verify` を実行する
-- **THEN** システムは `ZERION_API_KEY` を要求せず、offline fixture / mocked response に基づいて検証できる
+- **WHEN** a developer runs `bun run verify` at repo root
+- **THEN** the system verifies from offline fixtures / mocked responses and does not require `ZERION_API_KEY`
 
-#### Scenario: live Zerion capture を検証する
+#### Scenario: Verify live Zerion capture
 
-- **WHEN** operator が live Zerion portfolio capture を実行する
-- **THEN** システムは default verify とは別の explicit command path で credential と external source availability を要求する
+- **WHEN** the operator runs live Zerion portfolio capture
+- **THEN** the system requires credentials and external source availability through an explicit command path separate from default verify
 
-#### Scenario: live Zerion capture 結果を prepared fixture に反映する
+#### Scenario: Populate prepared fixture from live Zerion capture result
 
-- **WHEN** operator が `.env` の `ZERION_API_KEY` を使って対象 wallet の portfolio / DeFi 情報を取得し、customer intelligence read model JSON を生成する
-- **THEN** 生成された read model は customer intelligence schema で検証できる
-- **THEN** prepared fixture に反映する場合も raw Zerion response、API key、auth header、request metadata を含まない
-- **THEN** BFF は更新済み prepared fixture を offline route test で検証できる
+- **WHEN** the operator uses the `.env` `ZERION_API_KEY` to retrieve target wallet portfolio / DeFi information and generate customer intelligence read model JSON
+- **THEN** the generated read model validates against the customer intelligence schema
+- **THEN** even when copied into a prepared fixture, raw Zerion response, API key, auth header, and request metadata are excluded
+- **THEN** the BFF can verify the updated prepared fixture in an offline route test
 
-### Requirement: Zerion raw response は product payload に露出しない
+### Requirement: Zerion raw response is not exposed in product payload
 
-システムは Zerion provider 固有の raw response を BFF product API response として公開せず、正規化済み portfolio summary、DeFi positions、source coverage、provenance、evidence に変換することを MUST とする。
+The system MUST not expose Zerion-provider-specific raw responses as BFF product API output, and must convert them into normalized portfolio summary, DeFi positions, source coverage, provenance, and evidence fields.
 
-#### Scenario: BFF が customer intelligence を返す
+#### Scenario: BFF returns customer intelligence
 
-- **WHEN** client が `GET /customers/:address/intelligence` を呼び出す
-- **THEN** response は prepared read model の正規化済み portfolio / DeFi field を返す
-- **THEN** response は Zerion raw JSON、API key、auth header、request metadata を含まない
+- **WHEN** a client calls `GET /customers/:address/intelligence`
+- **THEN** the response returns normalized portfolio / DeFi fields from the prepared read model
+- **THEN** the response does not include Zerion raw JSON, API key, auth header, or request metadata

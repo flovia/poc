@@ -1,62 +1,62 @@
 ## Context
 
-Phase A では `apps/cli` と `packages/*` による market snapshot / intelligence 基盤が整っている。一方、Phase B の frontend demo は、4 画面のうち Setup を除く 3 画面が BFF API に依存する想定だが、現状の `apps/bff` は `/` と `/health` のみを返す最小 HTTP app である。
+Phase A has completed market snapshot and intelligence foundations in `apps/cli` and `packages/*`. On the other hand, the Phase B frontend demo expects four screens (three of which depend on the BFF API), but the current `apps/bff` only returns `/` and `/health` in a minimal HTTP app.
 
-`../poc-frontend` は過去 BFF DTO に合わせている可能性があり、現在の shape をそのまま canonical contract として固定するのは危険である。そのため、実装は `packages/contracts` に置く Phase B canonical schema を基準にし、frontend 連携では必要に応じて adapter / migration を行う。
+`../poc-frontend` may already be aligned to the old BFF DTO shape, so fixing that shape as the canonical contract would be risky. Therefore, implementation uses the canonical Phase B schema in `packages/contracts` and applies adapter/migration for frontend integration as needed.
 
-Phase B の response には、Phase A 由来の実データ相当、手書き demo label、将来 SDK telemetry で実データ化する想定値、そこから作る仮説が混在する。これらは `provenance` / `provenanceByField` / `reasons` で区別する。
+Phase B responses mix Phase A-like factual data, hand-written demo labels, future SDK telemetry assumptions, and derived hypotheses. These are distinguished with `provenance`, `provenanceByField`, and `reasons`.
 
 ## Goals / Non-Goals
 
 **Goals:**
 
-- `GET /customers`、`GET /customers/:address/profile`、`GET /wallet-usage-graph` を read-only BFF endpoint として実装する。
-- 各 endpoint は `packages/contracts` の Phase B schema で検証可能な canonical envelope response を返す。
-- demo / future SDK 想定値を専用 raw endpoint ではなく、3 つの product API response に内包する。
-- prepared demo fixture / read model だけを読み、request path で live CDP / Bitquery / RPC を呼ばない。
-- BFF route test で status、not found、method handling、contract validation を検証する。
+- Implement `GET /customers`, `GET /customers/:address/profile`, and `GET /wallet-usage-graph` as read-only BFF endpoints.
+- Each endpoint returns a canonical envelope response that validates against Phase B schemas in `packages/contracts`.
+- Include demo / future SDK expected values in the three product API responses rather than separate raw endpoints.
+- Read only prepared demo fixture / read model and do not call live CDP / Bitquery / RPC in request path.
+- Validate route behaviors for status, not found, method handling, and contract validation in BFF route tests.
 
 **Non-Goals:**
 
-- SDK middleware / telemetry collector の実装。
-- live RPC、live CDP、live Bitquery を BFF request path に組み込むこと。
-- `GET /demo-data`、`GET /sdk-events`、`GET /telemetry` の追加。
-- 初回実装での `GET /patterns` / `GET /summary` 追加。
-- 認証、課金、本番 multi tenant 化。
-- frontend repository の大規模改修。
+- Implement SDK middleware / telemetry collector.
+- Add live CDP / Bitquery / RPC calls in the BFF request path.
+- Add `GET /demo-data`, `GET /sdk-events`, `GET /telemetry`.
+- Add `GET /patterns` / `GET /summary` in initial implementation.
+- Add authentication, billing, or production-ready multi-tenanting.
+- Large refactor of the frontend repository.
 
 ## Decisions
 
-### 1. 3 つの product API に demo / future SDK 想定値を内包する
+### 1. Include demo / future SDK values in 3 product APIs
 
-`/demo-data` や `/sdk-events` を作るのではなく、frontend の意思決定体験に必要な projection として `GET /customers`、`GET /customers/:address/profile`、`GET /wallet-usage-graph` に内包する。
+Instead of adding `/demo-data` or `/sdk-events`, include those projections in `GET /customers`, `GET /customers/:address/profile`, and `GET /wallet-usage-graph`, which match frontend decision workflow needs.
 
-代替案は raw demo endpoint を作ることだが、Phase B の BFF は raw viewer ではなく product API boundary であるため採用しない。
+Alternative: add raw demo endpoints. This was not chosen because the Phase B BFF should act as a product API boundary rather than a raw data viewer.
 
-### 2. canonical envelope response を採用する
+### 2. Adopt canonical envelope response
 
-各 endpoint は `generatedAt`、`generatedFrom`、`scope`、`provenance` などを持つ envelope response を返す。現 frontend が直接配列や過去 DTO を期待していても、BFF contract は canonical shape を基準にする。
+Each endpoint returns an envelope response containing `generatedAt`, `generatedFrom`, `scope`, `provenance`, and related fields. Even if existing frontend expects arrays or old DTOs directly, BFF contract remains canonical.
 
-代替案は frontend の現 DTO をそのまま BFF contract にすることだが、過去 BFF に合わせた暫定実装を固定化するリスクがあるため採用しない。
+Alternative: set frontend current DTO as BFF contract, which was rejected due risk of locking in temporary backward compatibility to prior BFF behavior.
 
-### 3. fixture は TypeScript read model として管理する
+### 3. Manage fixture as TypeScript read model
 
-初回は `apps/bff/src/data/phase-b-demo.ts` に deterministic な fixture を置き、schema validator で検証してから route で返す。JSON だけにすると型補完や共通定数の利用が弱くなるため、まずは TypeScript fixture を優先する。
+Initially, place deterministic fixtures in `apps/bff/src/data/phase-b-demo.ts` and validate with schema validators before returning in routes. A pure TypeScript fixture is preferred initially because JSON-only fixtures weaken type safety and shared constant reuse.
 
-必要になれば後続で JSON seed + loader へ分離できる。
+A JSON seed + loader split can be done later if needed.
 
-### 4. BFF は `packages/contracts` を利用し、`apps/cli` を import しない
+### 4. BFF uses `packages/contracts` but does not import `apps/cli`
 
-BFF は product API boundary として contract schema / validator は使うが、CLI の orchestration や source adapter 実装には依存しない。Phase A snapshot 相当の値は fixture / read model として扱う。
+The BFF remains a product API boundary and uses contract schema / validators from `packages/contracts`, without depending on CLI orchestration or source adapters. Values equivalent to Phase A snapshot are treated as fixture / read model data.
 
-### 5. provider scoping は response `scope` に留める
+### 5. Keep provider scoping in response `scope`
 
-初回実装では `providerId` query/header filtering を導入しない。必要な scope は response envelope に任意で含める。scope が省略された response は global/unscoped demo data として扱う。
+Do not introduce `providerId` query/header filtering in initial implementation. Include needed scope in response envelope as optional values. Missing scope is treated as global / unscoped demo data.
 
 ## Risks / Trade-offs
 
-- [Risk] frontend が現在期待する shape と canonical response が一致しない → BFF 実装後、frontend 側に adapter を追加して段階的に移行する。
-- [Risk] provenance を細かくしすぎると fixture 作成が重くなる → demo/future/derived に見える重要 field を中心に `provenanceByField` と `reasons` を付ける。
-- [Risk] fixture が実データのように見える → `docs/phase-b/demo-data.md` の分類に従い、`demo_label` / `future_sdk_field` / `derived_insight` を明示する。
-- [Risk] `customerCount` と `customers.length` などの不整合 → contract schema と BFF tests で検証する。
-- [Risk] BFF route が肥大化する → route handler は request parsing と response dispatch に限定し、fixture/read model は `data` または `routes` 配下に分離する。
+- [Risk] Response shape expected by frontend may differ from canonical response. Add response adapters on the frontend side after BFF implementation and migrate incrementally.
+- [Risk] Overly detailed provenance can make fixture creation heavy; add `provenanceByField` and `reasons` around fields that appear as demo / future / derived.
+- [Risk] Fixtures may look too much like real data. Explicitly mark `demo_label` / `future_sdk_field` / `derived_insight` per `docs/phase-b/demo-data.md` classification.
+- [Risk] Inconsistencies such as `customerCount` vs `customers.length`; prevent via contract schema and BFF tests.
+- [Risk] BFF route bloat. Keep route handlers limited to request parsing and response dispatch, with fixture/read model logic in `data` or `routes`.

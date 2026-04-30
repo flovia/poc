@@ -1,67 +1,67 @@
 ---
-name: 可視化方針
-description: ネットワーク図 / Sankey / バブルの使い分けと選定理由
+name: Visualization policy
+description: Selection logic for network graph, timeline, and bubble chart
 type: project
 ---
 
-# 可視化方針
+# Visualization policy
 
-> 最終更新: 2026-04-28
+> Last updated: 2026-04-28
 
-## ★ 採用した 3 つの可視化
+## ★ Three adopted visualizations
 
-| 可視化 | 配置 | 主張 |
+| Visualization | Placement | Claim |
 |---|---|---|
-| Activity Timeline (時系列リスト) | 画面2 主役 | **どの順番で・いつ・どの API を叩いたか** |
-| ネットワーク図 (Force-directed) | 画面2 補助 | エコシステムの**構造** |
-| バブルチャート | 画面3 メイン | 戦略的**重要度ランキング** |
+| Activity Timeline (time-series list) | Main area of screen 2 | **Which API was called, in what order, and at what time** |
+| Network graph (Force-directed) | Supporting area of screen 2 | The **structure** of the ecosystem |
+| Bubble chart | Main area of screen 3 | Strategic **importance ranking** |
 
-**変更点**: Sankey は採用見送り。「意図解釈はせず、時系列を素直に見せる」方針に基づき、Activity Timeline (時系列リスト) で代替する。
+**Change**: Sankey was not adopted. Based on the policy of avoiding intent inference and showing raw sequence directly, we replace it with the Activity Timeline.
 
-## ★ 各可視化の特徴
+## ★ Characteristics by visualization
 
-### ネットワーク図 (Force-directed graph)
+### Network graph (Force-directed graph)
 
-ノード (API Provider) が点で配置され、併用関係が線で繋がる。よく使われるペアは線が太く・距離が近くなる。
+Provider nodes are placed as points; co-usage relationships are drawn as edges. Frequent pairs become thicker lines and shorter distances.
 
-- **強み**: エコシステム構造が一目で見える / クラスタが自然に浮かび上がる / **デモ映え最強**
-- **弱み**: 定量比較が苦手 / ノードが多いとごちゃつく
-- **何が分かる**: "うちはこの 5 つの API と密結合"
+- **Strengths**: ecosystem structure is immediately visible, clusters appear naturally, and it is strongest for visual impact
+- **Weaknesses**: weak at direct quantitative comparison, becomes cluttered with many nodes
+- **What you can read**: "This API has a tight coupling with these 5 APIs"
 
-### Activity Timeline (時系列リスト)
+### Activity Timeline (time-series list)
 
-時刻順に各 x402 リクエストを並べる。各行: 時刻 / Provider / API パス / 金額。
+All x402 requests are ordered by timestamp. Each row shows Time / Provider / API path / Amount.
 
-- **強み**: 「いつ・どの順番で叩いたか」が一切の解釈なしに伝わる / 実装が軽い / フィルタが効かせやすい
-- **弱み**: 量的サマリは見えない (Co-usage Map で補完)
-- **何が分かる**: "このウォレットの x402 利用履歴の素データ"
+- **Strengths**: conveys "when and in what order it was called" without interpretation, lightweight to implement, easy to filter
+- **Weaknesses**: does not show aggregate metrics directly (compensated by Co-usage Map)
+- **What you can read**: "raw usage history for this wallet"
 
-### (参考) Sankey 図 — PoC では不採用
+### (Reference) Sankey chart — not adopted in PoC
 
-時系列タイムラインで代替できると判断し見送り。Phase 2 で「ワークフロー集約ビュー」として再検討の余地あり。
+Not adopted because the sequence timeline can provide equivalent insight. It can be reconsidered in Phase 2 as a workflow aggregation view.
 
-### バブルチャート
+### Bubble chart
 
-2 軸の散布図 + サイズ。X 軸 = 併用頻度, Y 軸 = リテンション率 / 単価, バブルサイズ = ウォレット数。
+A 2D scatter with bubble size. X-axis = co-usage frequency, Y-axis = retention rate / price per request, bubble size = wallet count.
 
-- **強み**: 2 軸 + サイズの 3 変数を同時に / 戦略示唆を出しやすい
-- **弱み**: 関係性 (どれとどれが繋がっている) は見えない
-- **何が分かる**: "右上の Provider と提携すべき"
+- **Strengths**: supports 3 dimensions (2 axes + size), easy to surface strategic implications
+- **Weaknesses**: does not show explicit pairwise relationships
+- **What you can read**: "partner with this provider first"
 
-## ★ なぜこの組み合わせか
+## ★ Why this combination
 
-ストーリーが綺麗に繋がる:
+The flow is coherent:
 
-1. Activity Timeline で素データを見せる ("画像生成 → 保存 → 通知の順で叩いている")
-2. ネットワーク図で構造的に補強 ("うちは Storage A・Notify B と密接に使われている")
-3. バブルで戦略示唆を出す ("Storage A は提携優先度トップ")
+1. Show raw data with Activity Timeline: "price generation → storage → notification in this order"
+2. Reinforce with network graph: "it is used closely with Storage A and Notify B"
+3. Derive strategy with bubble chart: "Storage A is the top partner candidate"
 
-**意図解釈はしない**方針。AI による行動分析や予測は PoC スコープ外。
+We keep the rule: **no intent inference**. AI behavioral interpretation or prediction is out of PoC scope.
 
-## ★ 実装候補ライブラリ
+## ★ Candidate libraries for implementation
 
-PoC の段階では確定させない。実装に入る際に検討。
+Not finalized in PoC. Will be decided when implementation starts.
 
-- Activity Timeline: 自作 (テーブル + 仮想スクロール) / TanStack Table
-- ネットワーク図: react-force-graph / visx / D3 直接 / cytoscape.js
-- バブル: Recharts / visx / Tremor
+- Activity Timeline: custom (table + virtualized scroll) / TanStack Table
+- Network graph: react-force-graph / visx / direct D3 / cytoscape.js
+- Bubble chart: Recharts / visx / Tremor

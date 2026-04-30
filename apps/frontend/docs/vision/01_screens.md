@@ -1,31 +1,32 @@
 ---
-name: PoC 画面構成
-description: 画面一覧・レイアウト方針・ナビゲーション・遷移パターン・デモストーリー
+name: PoC screen architecture
+description: Screen list, layout policy, navigation, transition patterns, and demo story
 type: project
 ---
 
-# PoC 画面構成
+# PoC screen architecture
 
-> 最終更新: 2026-04-28
+> Last updated: 2026-04-28
 
-## ★ アクセスモデル (再掲)
+## ★ Access model (reiterated)
 
-**完全フラット** — すべての Provider ページが誰でも見える。認証なし。
-ユーザーが入力した `pay_to` は **localStorage** に保存し、簡単に切替・削除できる。
+**Fully flat** — all Provider pages are publicly visible. No authentication.
 
-## ★ 画面一覧
+User-entered `pay_to` values are saved to **localStorage**, and can be switched or deleted quickly.
 
-| # | 画面名 | パス (案) | 役割 |
+## ★ Screen list
+
+| # | Screen | Path (proposal) | Role |
 |---|---|---|---|
-| 0 | **Setup / Onboarding** | `/setup` | 初回。`pay_to` アドレス登録 |
-| 1 | **My Customers** | `/providers/[providerId]/customers` | 当該 Provider の顧客ウォレット一覧 |
-| 2 | **Wallet 360°** | `/providers/[providerId]/wallet/[address]` | 個別ウォレット詳細 (主役画面) |
-| 3 | **Co-usage Patterns** | `/providers/[providerId]/patterns` | 集約ビュー (戦略示唆) |
-| - | (Provider 一覧) | `/providers` | 公開ディレクトリ (オプション) |
+| 0 | **Setup / Onboarding** | `/setup` | First-time entry. Register `pay_to` |
+| 1 | **My Customers** | `/providers/[providerId]/customers` | Customer wallet list for that Provider |
+| 2 | **Wallet 360°** | `/providers/[providerId]/wallet/[address]` | Individual wallet detail (hero screen) |
+| 3 | **Co-usage Patterns** | `/providers/[providerId]/patterns` | Aggregated view (strategy hints) |
+| - | (Provider index) | `/providers` | Public directory (optional) |
 
-## ★ ナビゲーション構造
+## ★ Navigation structure
 
-### サイドバー (固定表示)
+### Sidebar (always visible)
 
 ```
 ┌─────────────────┐
@@ -38,48 +39,48 @@ type: project
 │ Currently       │
 │ viewing:        │
 │ 🟢 Acme Image   │
-│    API   [▼]    │ ← 登録済 pay_to から切替
+│    API   [▼]    │ ← switch from registered pay_to list
 └─────────────────┘
 ```
 
-### Provider セレクター (サイドバー下部 + ヘッダー)
+### Provider selector (sidebar bottom + header)
 
-- localStorage に保存した `pay_to` 一覧から選択
-- セレクター内の各エントリに **削除ボタン (×)** を表示
-- 「+ Add new pay_to」 → Setup 画面へ
+- Choose from locally stored `pay_to` list
+- Show **delete button (×)** for each selector entry
+- "+ Add new pay_to" → go to Setup
 
-## ★ 画面遷移パターン
+## ★ Transition patterns
 
-| 起点 | アクション | 遷移先 |
+| Source | Action | Destination |
 |---|---|---|
-| Customers の行 | クリック | Wallet 360° (同 Provider 内) |
-| Wallet 360° の併用 Provider タグ | クリック | **他社 Provider の My Customers** |
-| Wallet 360° の Co-usage Map ノード | クリック | **該当 Provider の My Customers** |
-| Insight カードの Provider 言及 | クリック | 該当 Provider の My Customers |
-| Provider セレクター | 選択 | 同じ画面種別を選択 Provider で開き直す |
+| Customer row on Customers | click | Wallet 360° (same Provider) |
+| Co-used Provider tag on Wallet 360° | click | **My Customers for another Provider** |
+| Co-usage Map node on Wallet 360° | click | **My Customers for the clicked Provider** |
+| Provider mention in an Insight card | click | My Customers for that Provider |
+| Provider selector | choose | reopen same screen type with selected Provider |
 
-「他社 Provider のページ」も特別扱いせず、同じ URL 構造で開く (= フラット)。
+Even a different Provider page is opened with the same URL structure (= flat routing).
 
 ---
 
-## ★ 画面0: Setup / Onboarding
+## ★ Screen 0: Setup / Onboarding
 
-### 初回フロー
+### First-time flow
 
 ```
 ┌──────────────────────────────────────────────┐
 │  Welcome to Flovia                            │
 │                                               │
-│  あなたの API の pay_to アドレスを登録すると、  │
-│  x402 経由の顧客ウォレットを可視化できます       │
+│  Register your API's pay_to address and        │
+│  visualize the wallets using x402 payments.    │
 │                                               │
 │  ┌──────────────────────────────────────┐    │
-│  │ Provider Name (任意)                  │    │
+│  │ Provider Name (optional)             │    │
 │  │ [Acme Image API                    ]  │    │
 │  │                                       │    │
 │  │ Mode:                                 │    │
-│  │ (●) Simple — pay_to 1 つだけ          │    │
-│  │ ( ) Advanced — API パスごとに pay_to  │    │
+│  │ (●) Simple — only one pay_to           │    │
+│  │ ( ) Advanced — pay_to per API path     │    │
 │  │                                       │    │
 │  │ pay_to address                        │    │
 │  │ [0x...                              ] │    │
@@ -89,38 +90,38 @@ type: project
 └──────────────────────────────────────────────┘
 ```
 
-### 詳細仕様
+### Detailed spec
 
-- **Simple モード**: `pay_to` 1 つだけ入力。Provider 全体で 1 アドレスの顧客向け
-- **Advanced モード**: API パス + `pay_to` のペアを複数登録。パスごとに別アドレスを使う顧客向け
+- **Simple mode**: register only one `pay_to` (one customer-level address for the entire Provider)
+- **Advanced mode**: register multiple API path + `pay_to` pairs. Separate addresses per path for customers with per-endpoint routing
   ```
   API path: /v1/generate     → pay_to: 0xabc...
   API path: /v1/upload       → pay_to: 0xdef...
   [+ Add another path]
   ```
-- 登録後は localStorage に保存 → サイドバーの Provider セレクターに表示
-- 「Save & Continue」で My Customers (`/providers/[providerId]/customers`) に遷移
-- **データ準備中状態**: 登録直後はモック上 "集計中..." のスケルトンを 1〜2 秒見せてからデータ表示 (リッチ感演出)
+- After registration, save to localStorage and show in Provider selector in sidebar
+- Clicking **Save & Continue** navigates to My Customers (`/providers/[providerId]/customers`)
+- **Preparing data state**: after save, show mock "aggregating..." skeleton for 1–2 seconds before showing data (for richness)
 
-### 設定画面 (登録後の管理)
+### Post-registration setup mode
 
-`/setup` を再度開くと管理モードになる:
+Reopening `/setup` enters manage mode:
 
-- 登録済み `pay_to` の一覧
-- 各エントリの編集 / 削除ボタン
-- 新規追加 (別 Provider として複数登録可)
+- list of registered `pay_to`
+- edit/delete button per entry
+- add new Provider as separate entries
 
 ---
 
-## ★ 画面1: My Customers
+## ★ Screen 1: My Customers
 
-自社 (or 任意 Provider) の API を叩いているウォレット一覧。エントリ画面。
+Wallet list for the current (or selected) Provider API.
 
-### 構成要素
+### Components
 
 ```
 ┌────────────────────────────────────────────────────────────────────┐
-│ Acme Image API — Customers                       [期間: 30d ▼]    │
+│ Acme Image API — Customers                       [Period: 30d ▼]  │
 ├────────────────────────────────────────────────────────────────────┤
 │ Filter: [Agent ▼] [Endpoint ▼] [Sort: Revenue ▼]                  │
 ├────────────────────────────────────────────────────────────────────┤
@@ -139,54 +140,54 @@ type: project
 └────────────────────────────────────────────────────────────────────┘
 ```
 
-### カラム
+### Columns
 
 - **Wallet** (masking: `0x1234...abcd`)
-- **Agent** (Claude Code / Cursor / 自作 bot 等)
-- **Revenue** (当該 Provider での売上 USD)
-- **Used Endpoints** (上位 3 個)
-- **Co-used with** (併用 Provider TOP3 をミニタグ)
-- **Status バッジ** (Loyal / Growth Potential / Cohort maturing 等)
+- **Agent** (Claude Code / Cursor / custom bot, etc.)
+- **Revenue** (USD sales from this Provider)
+- **Used Endpoints** (top 3)
+- **Co-used with** (top 3 co-used Provider mini tags)
+- **Status badge** (Loyal / Growth Potential / Cohort maturing, etc.)
 
-### 遷移
+### Transitions
 
-- 行クリック → Wallet 360°
-- 併用タグクリック → 該当 Provider の My Customers
-- Sort: Revenue / Co-usage 度 / Retention / 直近活動
+- row click → Wallet 360°
+- co-used tag click → My Customers for that Provider
+- Sort by: Revenue / Co-usage score / Retention / recent activity
 
 ---
 
-## ★ 画面2: Wallet 360° (デモの主役)
+## ★ Screen 2: Wallet 360° (Demo hero)
 
-個別ウォレットの全体像。**Activity Timeline を主役で固定** (Co-usage Map は補強役)。
-詳細: [10_design_review.md](10_design_review.md) / 主役判断は D14 で確定。
+Whole view for a single wallet. **Activity Timeline is fixed as hero** (Co-usage Map is supporting).
+Details: [10_design_review.md](10_design_review.md) and D14 decision records.
 
-### 要素の優先順位 (デモ脚本に基づく)
+### Element priority (demo script-driven)
 
-| 優先度 | 要素 |
+| Priority | Element |
 |---|---|
-| 1 | **Identity bar** の business summary (Monthly spend / 7d growth / Free tier progress / **Entry-point Badge**) |
-| 2 | **Activity Timeline** (主役) + Workflow Summary Strip |
-| 3 | **Upsell Opportunity Card** (Insight stack 内) |
-| 4 | Co-usage Map (証拠補強) |
-| 5 | その他 Insight cards |
+| 1 | **Identity bar** business summary (Monthly spend / 7d growth / Free tier progress / **Entry-point Badge**) |
+| 2 | **Activity Timeline** (hero) + Workflow Summary Strip |
+| 3 | **Upsell Opportunity Card** (within insight stack) |
+| 4 | Co-usage Map (evidence reinforcement) |
+| 5 | Other insight cards |
 
-### クリティカル UI 要素 (デモ脚本必須)
+### Critical UI elements (must be in demo script)
 
-1. **Free Tier Progress Bar** — Identity bar に配置。80% 超で発光
-2. **7d Volume Sparkline** — `7d growth` 数値の横、急増を一目で
-3. **Upsell Opportunity Card** — `Recommended plan` / `Why now` / `Projected monthly expansion`
-4. **Workflow Summary Strip** — Timeline 上部に `Price API → LLM → DEX → Discord` を 1 行で
+1. **Free Tier Progress Bar** — located in identity bar. Glows above 80%
+2. **7d Volume Sparkline** — beside `7d growth` to show rapid increase at a glance
+3. **Upsell Opportunity Card** — includes `Recommended plan` / `Why now` / `Projected monthly expansion`
+4. **Workflow Summary Strip** — one-line `Price API → LLM → DEX → Discord` above timeline
 5. **Entry-point Badge** — `Your API is step 1 in 87% of observed loops`
 
-### レイアウト
+### Layout
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
 │ Wallet  0x1234...abcd  🟢 Claude Code                         │
 │ Total spent: $3,420   Active: 28d   First seen: 2026-03-30   │
 ├──────────────────────────────────────────────────────────────┤
-│ ★ Activity Timeline (主役)                                    │
+│ ★ Activity Timeline (hero)                                    │
 │ ─────────────────────────────────────────────────────────    │
 │ 2026-04-27 14:23  [Acme Image API]   /v1/generate    $0.05  │
 │ 2026-04-27 14:24  [Storage A]        /upload         $0.01  │
@@ -196,82 +197,88 @@ type: project
 │ ...                                                          │
 │ [Load more] [Filter by Provider ▼]                           │
 ├──────────────────────────────┬───────────────────────────────┤
-│ Co-usage Map (ネットワーク図) │ Insight Cards                  │
-│                              │ ────────────                   │
-│   [Acme]                     │ • Storage A と併用率 82%        │
-│    │  ╲                      │ • Notify B との連続実行多数      │
-│    │   ╲                     │ • 平日昼間に活動集中             │
-│   [Storage A]──[Notify B]    │ • 直近 7 日で利用増加傾向         │
-│                              │                                │
+│ Co-usage Map (network)      │ Insight Cards                  │
+│                             │ ────────────                   │
+│   [Acme]                    │ • 82% co-usage with Storage A  │
+│    │  ╲                     │ • frequent chained calls w/      │
+│    │   ╲                    │   Notify B                      │
+│    [Storage A]──[Notify B]    │ • activity concentrates in      │
+│                              │   weekdays                     │
+│                              │ • recent 7d volume increasing │
 └──────────────────────────────┴───────────────────────────────┘
 ```
 
-### 上部: ウォレットサマリ
+### Top summary
 
-- アドレス (masking)
-- 総 x402 支出
-- アクティブ期間 (first_seen 〜 last_seen)
-- エージェント種別
+- Masked address
+- total x402 spend
+- active period (`first_seen` → `last_seen`)
+- agent type
 
-### 主役: Activity Timeline
+### Hero: Activity Timeline
 
-- **時系列に各 x402 リクエストを並べる**
-- 各行: 時刻 / Provider / API パス / 金額
-- 自社 Provider 行はハイライト (色違い or 太字)
-- フィルタ: Provider 別、期間別
-- 意図解釈はしない (「どの順番で・どの x402 リクエストをいつ使ったか」を素直に見せる)
+- **Place each x402 request on time order**
+- each row: time / Provider / API path / amount
+- highlight self Provider rows (color difference or bold)
+- filters: by Provider and period
+- avoid intent interpretation; just show exactly "which API calls were used, when, and in what order"
 
-### 中央左: Co-usage Map (補助)
+### Center-left: Co-usage Map (supporting)
 
-- Force-directed ネットワーク図
-- 中心 = 当該 Provider, 周辺 = 併用先
-- 線の太さ = 併用頻度
-- ノードクリック → 該当 Provider の My Customers へ遷移
+- Force-directed network graph
+- center = target Provider, surround = co-usage peers
+- line weight = co-usage frequency
+- clicking node navigates to that Provider's My Customers
 
-### 中央右: Insight Cards
+### Center-right: Insight Cards
 
-- 自動生成風の固定文言で OK (PoC はテンプレ)
-- フェードインアニメーション
-- 例: 「Storage A と併用率 82%」「平日昼間に活動集中」
+- static scripted language is fine for PoC (templates acceptable)
+- fade-in animation
+- e.g. "82% co-usage with Storage A", "activity concentrates during weekdays"
 
-### 削除した要素
+### Removed element
 
-- **Sankey は削除** (時系列タイムラインで代替できる)
+- **Sankey removed** (replaced by timeline sequence)
 
-### Activity Timeline の視覚補助 (脚本要件)
+### Activity Timeline visual support (script requirements)
 
-- 同一ワークフローの 4 行 (Price → LLM → DEX → Discord) を **薄い縦ガイドで束ねる** (Workflow Grouping)
-- 自社行のみ Teal hairline で強調
-- これにより a (理解の獲得) の理解速度が決まる
+- Bundle four rows in same workflow (Price → LLM → DEX → Discord) with a **subtle vertical guide** (Workflow Grouping)
+- emphasize only self rows with a Teal hairline
+- this controls comprehension speed for climax **a**
 
 ---
 
-## ★ 画面3: Co-usage Patterns (集約ビュー)
+## ★ Screen 3: Co-usage Patterns (aggregate view)
 
-全顧客ウォレットを集約した、戦略示唆ボード。
+Overview board of all customer wallets to derive strategic implications.
 
-### 構成要素
+### Components
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
 │ Co-usage Patterns — Acme Image API                           │
 ├──────────────────────────────────────────────────────────────┤
-│ ★ Bubble Chart                                                │
-│  リテンション率                                                 │
-│   高 │       ●Storage A                                       │
-│      │    ●Notify B                                           │
-│      │  ●Auth C       ●Random D                               │
-│   低 └────────────────────────────                            │
-│      低     併用頻度    高                                     │
+│ ★ Bubble Chart                                               │
+│  retention rate                                              │
+│    High    ● Storage A                                       │
+│      ●Storage B                                             │
+│    Mid     ●Storage C    ●Random F                          │
+│      │              ●Notify B                                │
+│      ●Notify A                                              │
+│     ●Auth B         ●Route C                                │
+│      │   Storage E                                           │
+│      │                                                    ●Video A│
+│   Low└────────────────────────────                            │
+│      Low    co-usage frequency   High                            │
 │                                                              │
-│  → 右上 = 戦略的に重要な併用先 (パートナー候補)                 │
+│  → top-right = strategically important co-usage peers (partner target) │
 ├──────────────────────────────────────────────────────────────┤
 │ Workflow Clusters                                            │
 │ • Cluster 1: Image gen → Storage → Notify  (52% of wallets)  │
 │ • Cluster 2: Image gen → Auth → Storage    (28%)             │
 │ • Cluster 3: Image gen → Data API          (15%)             │
 ├──────────────────────────────────────────────────────────────┤
-│ Retention by Agent (サブナラティブ)                           │
+│ Retention by Agent (secondary narrative)                     │
 │  Claude Code  ████████████ 86%                               │
 │  Cursor       ████████ 59%                                   │
 │  curl         ██ 14%                                         │
@@ -280,42 +287,42 @@ type: project
 
 ---
 
-## ★ デモストーリー (3 分)
+## ★ Demo story (3 minutes)
 
-1. **Setup** で `pay_to` 入力 (デモ用に事前登録済みでもOK)
-2. **My Customers** を開く
-   - 「ロイヤルなウォレットを 1 つピック」
-   - 併用 Provider タグで「あ、このウォレット他社でも色々使ってる」と気付く
-3. **Wallet 360°** にドリル
-   - **Activity Timeline** を見せる → 「画像生成 → 保存 → 通知の順で叩いてる」と時系列で分かる
-   - Co-usage Map で構造的に確認
-   - Insight カードで補強
-4. **Co-usage Patterns** で全体像
-   - バブルで「Storage A は提携優先度トップ」
-   - Workflow Clusters で「3 種類のワークフローパターン」
-   - Retention で「健全な顧客基盤」
-
----
-
-## ★ リッチ感の演出
-
-| 要素 | 演出 |
-|---|---|
-| 画面開いた瞬間 | サマリ数値のカウントアップアニメーション |
-| Co-usage Map | フェードイン → ノードがフォースで配置される |
-| Insight カード | 順番にフェードイン (stagger) |
-| ローディング | スケルトンスクリーン (リッチ感) |
-| 初回 Setup 後 | "集計中..." 表示 1〜2 秒 → データ表示 |
-
-ライブ感 (リアルタイム決済フィード等) は PoC では入れない。
+1. Input `pay_to` on **Setup** (pre-registered is OK for demo)
+2. Open **My Customers**
+   - pick one "loyal" wallet
+   - co-used Provider tags reveal "this wallet is used broadly across providers"
+3. Drill into **Wallet 360°**
+   - show **Activity Timeline** so order is clear: called as price → storage → notification
+   - validate structure with Co-usage Map
+   - reinforce with insight cards
+4. View **Co-usage Patterns** as overall picture
+   - bubble: "Storage A is top partner priority"
+   - workflow clusters: "three workflow patterns"
+   - retention: "healthy customer base"
 
 ---
 
-## ★ 状態 (空 / ローディング / エラー)
+## ★ Richness of presentation
 
-| 状態 | 表現 |
+| Element | Motion |
 |---|---|
-| ローディング (通常) | スケルトンスクリーン |
-| データ準備中 (初回 Setup 直後) | "集計中..." メッセージ + プログレス風表示 |
-| 空 (該当データなし) | 「まだ x402 リクエストがありません」+ Setup へのリンク |
-| エラー | (PoC ではモックなので最小限。"データ取得に失敗しました" 表示のみ) |
+| screen open | count-up animation on summary numbers |
+| Co-usage Map | fade-in → nodes land via force placement |
+| insight cards | staggered fade-in |
+| loading | skeleton screen (richness) |
+| post-Setup first open | "aggregating..." for 1–2 seconds → data render |
+
+Real-time feeds (transaction feed, live stream) are not included in PoC.
+
+---
+
+## ★ States (empty / loading / error)
+
+| State | expression |
+|---|---|
+| loading (normal) | skeleton screen |
+| preparing data (immediately after first Setup) | "aggregating..." message + progress-like indicator |
+| empty (no data) | "No x402 requests yet" + link to Setup |
+| error | (mock-first PoC) minimal: show only "Failed to fetch data" |

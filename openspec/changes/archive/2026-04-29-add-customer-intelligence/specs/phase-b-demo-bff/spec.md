@@ -1,35 +1,43 @@
 ## ADDED Requirements
 
-### Requirement: BFF は Phase B customer intelligence を返す
-システムは `GET /customers/:address/intelligence` に対して、指定 customer の prepared customer intelligence read model を read-only に返すことを MUST とする。
+### Requirement: BFF returns Phase B customer intelligence
 
-#### Scenario: 既知 customer の intelligence を取得する
-- **WHEN** client が fixture に存在する customer address で `GET /customers/:address/intelligence` を呼び出す
-- **THEN** システムは `200` を返し、customer intelligence response schema で検証できる payload を返す
+The system MUST return a prepared customer intelligence read model as read-only for `GET /customers/:address/intelligence`.
 
-#### Scenario: 未取得 customer の intelligence を取得する
-- **WHEN** client が fixture に存在しない customer address で `GET /customers/:address/intelligence` を呼び出す
-- **THEN** システムは `404` を返す
+#### Scenario: Fetch intelligence for known customer
 
-#### Scenario: customer address を正規化する
-- **WHEN** client が mixed-case の EVM address で `GET /customers/:address/intelligence` を呼び出す
-- **THEN** システムは lowercase normalized address で read model を検索する
+- **WHEN** a client calls `GET /customers/:address/intelligence` with a customer address that exists in fixtures
+- **THEN** system returns `200` and a payload that validates against the customer intelligence response schema
 
-### Requirement: Customer intelligence BFF は request path で live source を呼ばない
-システムは `GET /customers/:address/intelligence` の request handling 中に live CDP、Bitquery、Zerion、MCP、RPC、または SDK collector を呼び出さないことを MUST とする。
+#### Scenario: Fetch intelligence for uncaptured customer
 
-#### Scenario: intelligence endpoint を呼び出す
-- **WHEN** client が `GET /customers/:address/intelligence` を呼び出す
-- **THEN** システムは prepared customer intelligence read model から response を生成する
-- **THEN** システムは external source request を発行しない
+- **WHEN** a client calls `GET /customers/:address/intelligence` with a customer address not in fixtures
+- **THEN** system returns `404`
 
-### Requirement: Customer intelligence response は provenance を保持する
-システムは customer intelligence response 内で `onchain_fact`、`derived_insight`、`demo_label`、`future_sdk_field` の違いを失わないことを MUST とする。
+#### Scenario: Normalize customer address
 
-#### Scenario: derived service candidate を返す
-- **WHEN** customer intelligence response が x402 service candidate または cross-provider affinity insight を含む
-- **THEN** システムは空でない reasons または evidence を含め、利用側が仮説の根拠を追跡できるようにする
+- **WHEN** a client calls `GET /customers/:address/intelligence` with a mixed-case EVM address
+- **THEN** system looks up the read model with lowercase-normalized address
 
-#### Scenario: future SDK attribution が未実装である
-- **WHEN** customer intelligence response が endpoint attribution、request sequence、correlation id に相当する値を扱う
-- **THEN** システムはそれらを実 fact として返さず、未実装または future SDK telemetry 対象として区別する
+### Requirement: Customer intelligence BFF does not call live source in request path
+
+The system MUST not call live CDP, Bitquery, Zerion, MCP, RPC, or SDK collector during `GET /customers/:address/intelligence` request handling.
+
+### Scenario: Call intelligence endpoint
+
+- **WHEN** a client calls `GET /customers/:address/intelligence`
+- **THEN** the system generates the response from prepared customer intelligence read model
+- **THEN** no external source request is issued
+
+### Requirement: Customer intelligence response preserves provenance
+The system MUST preserve the distinction between `onchain_fact`, `derived_insight`, `demo_label`, and `future_sdk_field` in customer intelligence responses.
+
+#### Scenario: Return derived service candidate
+
+- **WHEN** customer intelligence response includes an x402 service candidate or cross-provider affinity insight
+- **THEN** the system includes non-empty reasons or evidence so consumers can trace hypothesis evidence
+
+#### Scenario: future SDK attribution is unimplemented
+
+- **WHEN** customer intelligence response includes values corresponding to endpoint attribution, request sequence, or correlation id
+- **THEN** the system does not return them as true facts and distinguishes them as unimplemented or future SDK telemetry targets

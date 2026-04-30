@@ -1,31 +1,37 @@
-# Flovia PoC Frontend — 現状ケイパビリティ
+# Flovia PoC Frontend — Current Capabilities
 
-最終更新: 2026-04-29
+Last updated: 2026-04-29
 
-このドキュメントは、現在の `apps/frontend` が **何を見せられて何を見せられないか** を整理したものです。実装の現状と、PoC の射程内で意図的に切り落としている領域を明示します。
+This document summarizes what `apps/frontend` currently **can show and what it cannot**.
+It clarifies the implementation status and the areas intentionally omitted within the
+PoC scope.
 
 ---
 
-## 1. 全体アーキテクチャ
+## 1. Overall architecture
 
 ```
 [Browser]
-   │
+   |
    ▼
 [Next.js 15 App Router (poc-frontend)]
-   │  Server Component が fetch (cache: no-store)
+   │  Server Component fetches (cache: no-store)
    ▼
 [Flovia BFF (apps/bff, Bun)]   ← localhost:3001
-   │
+   |
    ▼
 [prepared fixture / projection read model]
 ```
 
-- フロントエンドは **データを保持しない**。全画面が Server Component 内で BFF を叩いて DTO を取得し、そのままコンポーネントに流す。
-- BFF は **読み取り専用**。書き込み・取り込み・スコアリングは行わない。
-- データは `apps/bff/fixtures/phase-a/coingecko-transactions.json`、`apps/bff/fixtures/phase-b/mock-attribution.json`、`apps/bff/fixtures/phase-b/customer-intelligence/*.json` から module initialization 時に projection / read model 化される。
+- The frontend does **not hold state**. All screens fetch DTOs from BFF inside Server
+  Components and pass them directly into components.
+- BFF is **read-only** and performs no writes, ingestion, or scoring.
+- Data is projected into a read model at module initialization from
+  `apps/bff/fixtures/phase-a/coingecko-transactions.json`,
+  `apps/bff/fixtures/phase-b/mock-attribution.json`, and
+  `apps/bff/fixtures/phase-b/customer-intelligence/*.json`.
 
-### 起動
+### Startup
 
 ```bash
 # BFF
@@ -37,172 +43,198 @@ BFF_URL=http://localhost:3001 NEXT_PUBLIC_BFF_URL=/api bun --filter frontend dev
 
 ---
 
-## 2. 画面別: 何が見えるか
+## 2. Screen-level: what is visible
 
 ### 2.1 `/setup`
 
-| 内容 | 状態 |
+| Item | Status |
 | --- | --- |
-| プロバイダ名・mode（simple / advanced）・pay_to の登録フォーム | ✅ 動作 |
-| simple モード: 単一 pay_to を保存 | ✅ |
-| advanced モード: API path × pay_to 複数行を保存 | ✅ |
-| バリデーション (pay_to 必須 / advanced は最低1行) | ✅ |
-| localStorage への永続化 (`flovia:providers`) | ✅ |
-| 初回訪問時の demo 3 プロバイダ seed (`acme-price` / `lumen-vec` / `halonet`) | ✅ |
-| 保存済みプロバイダの一覧表示・削除 (確認ダイアログ付き) | ✅ |
+| Provider name / mode (`simple` / `advanced`) and `pay_to` registration form | ✅ working |
+| `simple` mode: store one `pay_to` | ✅ |
+| `advanced` mode: store multiple rows of `API path × pay_to` | ✅ |
+| Validation (`pay_to` required / minimum one row in `advanced`) | ✅ |
+| Persistence to localStorage (`flovia:providers`) | ✅ |
+| Demo 3-provider seed on first visit (`acme-price` / `lumen-vec` / `halonet`) | ✅ |
+| Display and delete saved providers (with confirmation dialog) | ✅ |
 
-**注意**: Setup で登録した `providerId` は **サイドバー上の表示識別子**にすぎず、BFF 側のデータスコープには影響しません。BFF はプロバイダ単位の絞り込み API を持ちません。
+**Note**: `providerId` registered in Setup is only a **display identifier** in the
+sidebar and does not affect BFF data scope. BFF has no provider-level filtering API.
 
 ---
 
-### 2.2 `/providers/[providerId]/customers` — Customers 一覧
+### 2.2 `/providers/[providerId]/customers` — Customers list
 
-[CustomersPage](../app/providers/%5BproviderId%5D/customers/page.tsx) が `GET /customers` を呼び、[`CustomerListItemDto[]`](../lib/api/types.ts) を [`CustomersTable`](../components/customers/CustomersTable.tsx) に渡します。
+[CustomersPage](../app/providers/%5BproviderId%5D/customers/page.tsx) calls `GET /customers`, passes
+[`CustomerListItemDto[]`](../lib/api/types.ts) to
+[`CustomersTable`](../components/customers/CustomersTable.tsx).
 
-#### 表示できる列
-| 列 | DTO フィールド | 備考 |
+#### Displayable columns
+
+| Column | DTO field | Notes |
 | --- | --- | --- |
 | Wallet | `address` | payer wallet address |
-| Spend (atomic) | `spendAtomic` | 6 decimals 仮定で `formatAtomic` 整形 |
-| Observations | `observationCount` | 観測されたオンチェーン支払い件数 |
-| Providers | `providerCount` | この payer が支払った recipient wallet の異なり数 |
-| Activity growth | `activityGrowth` | 観測列の前半/後半比（BFF heuristic） |
-| Last seen | `lastSeenAt` | unix sec → ISO 文字列 |
-| Upsell | `upsellOpportunity` | `low` / `medium` / `high` を `UpsellPill` で表示 |
+| Spend (atomic) | `spendAtomic` | formatted with `formatAtomic`, assuming 6 decimals |
+| Observations | `observationCount` | observed on-chain payment count |
+| Providers | `providerCount` | distinct recipient wallets this payer paid |
+| Activity growth | `activityGrowth` | first-half / second-half observation ratio (BFF heuristic) |
+| Last seen | `lastSeenAt` | unix sec → ISO string |
+| Upsell | `upsellOpportunity` | displayed as `low` / `medium` / `high` using `UpsellPill` |
 
-#### サマリーチップ
-- Wallets 総数
-- 累積 Spend (atomic)
-- High-upsell 件数 (`upsellOpportunity = high`)
+#### Summary chips
+- Total wallets
+- Cumulative spend (atomic)
+- High-upsell count (`upsellOpportunity = high`)
 
-#### 制限
-- **検索ボックス・Sort・Upsell フィルタは UI のみ（PoC: not wired）**。クリックしても効かない。
-- 行クリックで Wallet 360° に遷移するナビゲーションは動作する。
+#### Limits
+- **Search box / Sort / Upsell filter are UI-only (PoC: not wired)**. They do not execute.
+- Row click navigation to Wallet 360° works.
 
 ---
 
 ### 2.3 `/providers/[providerId]/wallet/[address]` — Wallet 360°
 
-[WalletPage](../app/providers/%5BproviderId%5D/wallet/%5Baddress%5D/page.tsx) が `GET /customers/:address/profile` を呼び、[`CustomerProfileDto`](../lib/api/types.ts) を [`WalletScreen`](../components/wallet/WalletScreen.tsx) に渡します。404 時は専用エラー画面を表示。
+[WalletPage](../app/providers/%5BproviderId%5D/wallet/%5Baddress%5D/page.tsx) calls
+`GET /customers/:address/profile`, passes [`CustomerProfileDto`](../lib/api/types.ts)
+to [`WalletScreen`](../components/wallet/WalletScreen.tsx). A dedicated error screen is
+shown on 404.
 
-#### IdentityBar (上段)
-- payer wallet address (mono フォントで全長表示) + コピー UI
-- `customer.label` （現状の seed では常に `null` → "Payer wallet" 表示）
+#### IdentityBar (top)
+- payer wallet address (full length in mono font) + copy UI
+- `customer.label` (currently always `null` in seed, shown as "Payer wallet")
 - `customer.role` / `customer.identityBasis`
-- `customer.caveat`（"wallet-address based and do not claim verified human identity"）
-- KPI: Total spend (atomic) / Activity growth (%) / Free tier progress (% + バー)
-- Entry-point ratio: `metrics.entryPointRatio` を「観測のうち attribution candidate と一致した比率」として表示
+- `customer.caveat` (`"wallet-address based and do not claim verified human identity"`)
+- KPIs: Total spend (atomic) / Activity growth (%) / Free tier progress (% + bar)
+- Entry-point ratio: `metrics.entryPointRatio` shown as share of observations linked to
+  an attribution candidate
 
-#### ActivityTimeline (左)
-- `profile.timeline[]` を時系列に列挙
-- イベント種別: `payment` / `provider_usage` / `growth` / `upsell_signal` をバッジで色分け
-- 各行: timestamp / 種別 / title + description / providerId / txHash / amount (atomic)
+#### ActivityTimeline (left)
+- list `profile.timeline[]` in chronological order
+- event types `payment` / `provider_usage` / `growth` / `upsell_signal` are color-coded by badge
+- each row: timestamp / type / title + description / providerId / txHash / amount (atomic)
 
-#### 右カラム
-1. **UpsellCard** — `metrics.upsellOpportunity` をヘッドライン化。Heuristic 入力 (free-tier / activity growth / entry-point ratio / spend atomic) を一覧。「PoC-grade で production analytics ではない」旨の注記入り。
-2. **ProviderUsageList** — `profile.providers[]` を表示（providerId / payTo 短縮 / tx 数 / 最終観測時刻 / spend atomic）。ソート順は BFF が tx 数降順 + 名前昇順。
-3. **InsightsList** — `profile.insights[]` を `severity` 別 (info / opportunity / warning) に表示。
+#### Right column
+1. **UpsellCard** — promotes `metrics.upsellOpportunity` as the headline and lists
+   heuristic inputs (`free-tier` / `activity growth` / `entry-point ratio` / `spend atomic`).
+   Includes a note that this is **PoC-grade and not production analytics**.
+2. **ProviderUsageList** — displays `profile.providers[]` (`providerId` / shortened payTo / tx count /
+   last observed time / spend atomic). Sort order is BFF-defined as tx count descending
+   then name ascending.
+3. **InsightsList** — shows `profile.insights[]` grouped by `severity` (`info` / `opportunity` / `warning`).
 
-#### 制限
-- 月次 / 7日窓のような **時間窓集計が無い**（BFF は累計のみ）。"Monthly spend" は廃止して "Total spend" 表示に。
-- "API path"（`/v1/price/history` 等）の概念は無い（BFF は endpoint URL を提供しない）。
-- agent 種別（"Claude Code" / "Cursor" 等）の概念は無い。
+#### Limits
+- No **windowed aggregation** such as monthly or 7-day windows (BFF only provides cumulative values).
+  "Monthly spend" is replaced by "Total spend."
+- No concept of "API path" (for example `/v1/price/history`); BFF does not provide endpoint URLs.
+- No concept of agent type (`"Claude Code"` / `"Cursor"`, etc.).
 
 ---
 
 ### 2.4 `/providers/[providerId]/patterns` — Co-usage Patterns
 
-[PatternsPage](../app/providers/%5BproviderId%5D/patterns/page.tsx) が `GET /wallet-usage-graph` を呼び、[`WalletUsageGraphDto`](../lib/api/types.ts) を [`PatternsScreen`](../components/patterns/PatternsScreen.tsx) で散布図に変換します。
+[PatternsPage](../app/providers/%5BproviderId%5D/patterns/page.tsx) calls
+`GET /wallet-usage-graph`, converts [`WalletUsageGraphDto`](../lib/api/types.ts) into
+a scatter plot in [`PatternsScreen`](../components/patterns/PatternsScreen.tsx).
 
 #### BubbleChart
-- 各バブル = recipient wallet（provider）
-- X軸: ユニーク payer wallet 数（最大値で正規化）
-- Y軸: 平均 observation 数 / payer（最大値で正規化）
-- 半径: payer wallet 数に比例
-- 配色: 右上ほど teal（"partnership candidate"）、左下ほど slate
-- バブルクリック → `/providers/[providerId]/customers?co-used=<payTo>` に遷移（クエリ自体は現状 UI に効かない）
-- グラフ上部に `identityFieldsExcluded` 配列を表示（BFF が除外している identity-bearing field 一覧）
+- each bubble = recipient wallet (provider)
+- X-axis: number of unique payer wallets (normalized by maximum)
+- Y-axis: average observations per payer (normalized by maximum)
+- radius: proportional to payer wallet count
+- color: teal toward upper-right ("partnership candidate"), slate toward lower-left
+- bubble click navigates to `/providers/[providerId]/customers?co-used=<payTo>` (the query itself is not used by current UI behavior)
+- displays `identityFieldsExcluded` at chart top (list of identity-bearing fields excluded by BFF)
 
-#### 制限（BFF が原理的に提供しない領域）
-- ❌ "Workflow clusters" (Hourly trading loop 等の workflow 名+割合) — 観測列の時系列クラスタリングが BFF にない
-- ❌ "Retention by agent" — agent type が BFF にない
-- これらは UI から削除済み。
+#### Limits (not representable by BFF by design)
+- ❌ "Workflow clusters" (workflow name + ratio, e.g. hourly trading loop) — no
+  observation sequence clustering in BFF.
+- ❌ "Retention by agent" — agent type is not present in BFF.
+- These items have already been removed from the UI.
 
 ---
 
-## 3. データセット
+## 3. Dataset
 
-現在の BFF は SQLite seed ではなく、prepared fixture から projection を生成する。
+Current BFF builds projections from prepared fixtures, not an SQLite seed.
 
 - real onchain fact: `apps/bff/fixtures/phase-a/coingecko-transactions.json`
 - demo attribution: `apps/bff/fixtures/phase-b/mock-attribution.json`
 - customer intelligence read model: `apps/bff/fixtures/phase-b/customer-intelligence/*.json`
 
-Projection は `apps/bff/src/data/projection-builder.ts` で `txHash` join され、module initialization 時に `packages/contracts` の validator で検証される。Fixture 再生成が必要な場合は、CLI の明示的な live capture command を使う。
+Projections are `txHash` joined in `apps/bff/src/data/projection-builder.ts` and
+validated with `packages/contracts` validators during module initialization. If fixture
+regen is needed, run the CLI live-capture command explicitly.
 
 ---
 
-## 4. BFF エンドポイントとフロントの利用状況
+## 4. BFF endpoints and frontend usage
 
-| Endpoint | フロントでの利用 | 備考 |
+| Endpoint | Frontend usage | Notes |
 | --- | --- | --- |
-| `GET /health` | 未使用 | 疎通確認用 |
-| `GET /wallet-usage-graph` | ✅ Patterns | BubbleChart の入力 |
-| `GET /customers` | ✅ Customers | テーブル + サマリー |
-| `GET /customers/:address/profile` | ✅ Wallet 360° | 全カード |
-| `GET /customers/:address/intelligence` | 未使用 | BFF は提供済み。frontend 画面には未接続 |
+| `GET /health` | unused | connectivity check |
+| `GET /wallet-usage-graph` | ✅ Patterns | BubbleChart input |
+| `GET /customers` | ✅ Customers | table + summary |
+| `GET /customers/:address/profile` | ✅ Wallet 360° | all cards |
+| `GET /customers/:address/intelligence` | unused | provided by BFF, not connected to frontend screens |
 
 ---
 
-## 5. 型・データ整合性
+## 5. Types and data consistency
 
-- フロント側 UI DTO は [`lib/api/types.ts`](../lib/api/types.ts) に集約し、BFF canonical response は `packages/contracts` の validator で検証してから adapter に渡す。
-- API 呼び出しは [`lib/api/client.ts`](../lib/api/client.ts) のみ。`fetch` は `cache: "no-store"` 固定、404 は profile のみ `null` を返し、それ以外は throw。
-- `bun --filter frontend typecheck` / `bun --filter frontend test` を前提にする。
-- 通貨換算は行わない。すべて atomic unit string のまま `formatAtomic`（既定 6 decimals = USDC 相当）で表示。
-- `localStorage` に保存しているのは Setup で登録した `StoredProvider[]` のみ。BFF データは保存しない。
+- Frontend UI DTOs are centralized in [`lib/api/types.ts`](../lib/api/types.ts). BFF
+  canonical responses are validated with the `packages/contracts` validator before being
+  passed to adapters.
+- API calls are only through [`lib/api/client.ts`](../lib/api/client.ts). `fetch` is
+  fixed to `cache: "no-store"`; only profile 404 returns `null`, all other errors throw.
+- Assumes `bun --filter frontend typecheck` / `bun --filter frontend test`.
+- No currency conversion; all values remain atomic unit strings and are shown via
+  `formatAtomic` (default 6 decimals = USDC-equivalent).
+- Only setup-registered `StoredProvider[]` is stored in `localStorage`; BFF data is not stored.
 
 ---
 
-## 6. 意図的に提供していないこと
+## 6. Intentionally not provided
 
-PoC の射程外として **明示的に落としている**機能。BFF README と整合する。
+These are explicitly excluded outside the PoC scope, consistent with BFF README.
 
-| 機能 | 理由 |
+| Feature | Reason |
 | --- | --- |
-| Agent 種別の表示・フィルタ | BFF は agent type / human user 推論を行わない |
-| API path / endpoint URL の表示 | BFF は endpoint URL を将来の enrichment source 待ちとして提供しない |
-| Workflow cluster (hourly loop 等) | 観測列のクラスタリング処理が BFF / CLI に無い |
-| Retention by agent | 上記理由 |
-| 通貨換算 (USD 表示) | BFF は atomic unit のまま返すと宣言 |
-| 7日 / 月次の時間窓集計 | BFF が累計のみを返す |
-| 検索 / Sort / Filter の実動作 | UI のみ。BFF にクエリ受付がない |
-| プロバイダ単位の customer スコープ分割 | BFF は payer wallet 全体集計のみ |
-| 書き込み系操作 (取り込み・スコアリング) | BFF が読み取り専用 |
+| Agent-type display / filtering | BFF does not infer agent type / human user |
+| API path / endpoint URL display | BFF does not provide endpoint URL as an enrichment source |
+| Workflow cluster (hourly loop, etc.) | BFF / CLI does not support observation-sequence clustering |
+| Retention by agent | same reason as above |
+| Currency conversion (USD display) | BFF returns atomic units only |
+| 7-day / monthly window aggregation | BFF returns cumulative values only |
+| Search / Sort / Filter active behavior | UI only; BFF has no query parameters |
+| Provider-level customer scope split | BFF only aggregates across payer wallets |
+| Write operations (ingestion / scoring) | BFF is read-only |
 
 ---
 
-## 7. 既知の留保
+## 7. Known caveats
 
-- **TopBar の "LIVE" / "Updated 2m ago" / "Last 30d" はダミー文言**。BFF に live 状態の概念がない。
-- **Toolbar の Search / Sort / Upsell セレクタは PoC: not wired**。
-- **Wallet 360° の "Free tier progress" は BFF heuristic** (`spend < 3M atomic` で線形)。production analytics ではない。
-- **Entry-point ratio の意味が UI から分かりづらい**。"観測のうち attribution candidate と紐付いたものの比率" であり、"hourly loop の最初に登場する割合" ではない（BFF heuristic）。
+- **TopBar labels like "LIVE" / "Updated 2m ago" / "Last 30d" are placeholders**.
+  BFF has no live-status concept.
+- **Toolbar Search / Sort / Upsell selectors are PoC: not wired**.
+- **Wallet 360° "Free tier progress" is a BFF heuristic** (`spend < 3M atomic`, linear).
+  This is not production analytics.
+- **The meaning of entry-point ratio is not obvious from UI copy**. It is the ratio of
+  observations linked to attribution candidates, not the share of being the first step of
+  an hourly loop (BFF heuristic).
 
 ---
 
-## 8. 拡張余地
+## 8. Extendability
 
-短期 (BFF を変更せず可能):
-- ダッシュボードトップ画面で `/summary` を表示
-- Wallet 360° に `/observations` 由来の txHash → エクスプローラリンクを追加
-- customer intelligence endpoint を Wallet 360° に接続
+Short term (possible without changing BFF):
+- Show `/summary` on dashboard top screen
+- Add explorer links from `txHash` in Wallet 360° sourced from `/observations`
+- Connect customer intelligence endpoint to Wallet 360°
 
-中期 (BFF 拡張が必要):
-- 7日 / 月次の時間窓 metrics
-- 観測列の workflow clustering
-- `/customers` クエリパラメータ（filter / sort / search）
+Mid term (requires BFF extension):
+- 7-day / monthly window metrics
+- observation-sequence workflow clustering
+- query parameters for `/customers` (`filter` / `sort` / `search`)
 
-長期 (BFF の射程変更が必要):
-- agent type 推論ソースの追加
-- 通貨換算（rate provider との連携）
+Long term (requires BFF scope change):
+- Add an agent-type inference source
+- Currency conversion integration with a rate provider

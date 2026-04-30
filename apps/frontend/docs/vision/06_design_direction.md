@@ -1,135 +1,137 @@
 ---
-name: デザイン方向
-description: ハイブリッド方針 (Precision Graph shell + Ambient Mesh 主役画面) の確定
+name: Design direction
+description: Finalized hybrid direction (Precision Graph shell + Ambient Mesh hero screens)
 type: project
 ---
 
-# デザイン方向
+# Design direction
 
-> 最終更新: 2026-04-28
-> 決定根拠: [Codex 相談ログ](/tmp/flovia-codex-review/design_directions.md)
+> Last updated: 2026-04-28
+> Decision basis: [Codex consultation log](/tmp/flovia-codex-review/design_directions.md)
 
-## ★ 採用方針: ハイブリッド
+## ★ Adopted policy: hybrid
 
-**UI shell は "Precision Graph" / 主役画面は "Ambient Mesh"** の組み合わせ。
+**UI shell follows Precision Graph** and **hero screens use Ambient Mesh**.
 
-| 適用範囲 | 採用案 | 理由 |
+| Scope | Chosen approach | Reason |
 |---|---|---|
-| **UI shell** (サイドバー, ヘッダー, テーブル, Setup, Card 共通スタイル) | Precision Graph | 端正・信頼感・実装難度低 |
-| **主役画面のビジュアル** (Wallet 360° の Co-usage Map / Co-usage Patterns のバブル) | Ambient Mesh | ネットワーク性・デモ映え・Flovia の独自性 |
+| **UI shell** (sidebar, header, tables, Setup, shared card styles) | Precision Graph | clean, trustworthy, lower implementation cost |
+| **Hero screen visuals** (Wallet 360° co-usage map / Co-usage Patterns bubble) | Ambient Mesh | network-like presence and demo impact, distinct brand feel |
 
-### なぜハイブリッドか
+### Why hybrid
 
-- **案1 (Precision Graph) 単独**: 堅実だが Flovia の独自性 (= ネットワーク発見の驚き) が出にくい
-- **案3 (Ambient Mesh) 単独**: 美しいが演出過多で crypto 風に振れるリスク + 実装難度高
-- **ハイブリッド**: 定型 UI は端正に素早く、デモの "見せ場" だけ Ambient Mesh の世界観で映えさせる → コスト/効果バランスが最適
+- **Precision Graph only**: stable but weak on Flovia-specific distinctiveness (network discovery feel)
+- **Ambient Mesh only**: attractive but high risk of looking crypto-heavy and harder to implement
+- **Hybrid**: consistent standard UI with standout visual treatments only where needed, best cost/benefit
 
 ---
 
-## ★ 配色パレット (確定)
+## ★ Final color palette
 
-UI shell ベース (Precision Graph) を採用し、主役画面で Ambient Mesh のアクセント (深ネイビー + 青発光) を局所的に重ねる。
+Keep Precision Graph shell as baseline and overlay Ambient Mesh accents (deep navy + blue glow)
+on hero screens only.
 
-### Light Mode
+### Light mode
 
-| 用途 | HEX |
+| Purpose | HEX |
 |---|---|
 | Primary (text on bg) | `#0F172A` |
 | Secondary | `#334155` |
 | Background | `#F8FAFC` |
 | Accent | `#14B8A6` (Teal) |
 | Text | `#0B1220` |
-| **Mesh accent** (主役画面用) | `#2563EB` (Blue) |
+| **Mesh accent** (hero use) | `#2563EB` (Blue) |
 
-### Dark Mode
+### Dark mode
 
-| 用途 | HEX |
+| Purpose | HEX |
 |---|---|
 | Primary | `#E2E8F0` |
 | Secondary | `#94A3B8` |
 | Background | `#020617` (UI shell) |
-| **Background (主役画面)** | `#0A0F1E` (深ネイビー) |
+| **Background (hero)** | `#0A0F1E` (deep navy) |
 | Accent | `#2DD4BF` (Teal) |
-| **Mesh accent** | `#60A5FA` (青発光) |
+| **Mesh accent** | `#60A5FA` (blue glow) |
 | Text | `#F8FAFC` |
 
-ダークモードを **デモ既定** とする (デモ映え重視)。ライトモードも実装はするが二次優先。
+Dark mode is set as **default** for demo impact.
 
 ---
 
-## ★ タイポグラフィ
+## ★ Typography
 
-- **見出し**: `Geist Sans` (28〜36px, weight 600〜700, 字間やや詰め)
-- **本文**: `Geist Sans` (14〜15px)
-- **数値 / 軸ラベル / 計測値**: `Geist Mono` (限定使用で "計測感" を演出)
+- **Headings**: `Geist Sans` (28–36px, weight 600–700, slightly tightened letter spacing)
+- **Body**: `Geist Sans` (14–15px)
+- **Numbers / axis labels / metrics**: `Geist Mono` (limited use for numeric clarity)
 
-主役画面 (Wallet 360° / Patterns) で **見出しのみ `Space Grotesk`** を使い、未来感を局所的に出すかは実装時に判断 (PoC ではまず Geist 統一で開始)。
-
----
-
-## ★ レイアウト原則
-
-- 12 カラム、最大幅 **1440px**
-- サイドバー幅 **264px** (固定)
-- 余白は **8pt ベース**、主要セクション間 24〜32px
-- 密度は **中高** (情報量があるのに静か)
-- Wallet 360° は **「左 タイムライン / 中央 ネットワーク / 右 インサイト」の 3 ペイン**
-- 主役画面は **背景にネガティブスペース** を取り、Mesh の世界観を活かす
+Use `Space Grotesk` only for headings on hero screens (Wallet 360° / Patterns) depending on
+implementation; PoC starts with Geist unified.
 
 ---
 
-## ★ コンポーネント方針
+## ★ Layout principles
 
-| 要素 | 方針 |
+- 12-column layout, max width **1440px**
+- Sidebar width **264px** fixed
+- 8pt spacing system; main section spacing 24–32px
+- High density while keeping a calm presentation
+- Wallet 360° uses **3 panes**: left timeline / center network / right insight
+- Hero screens keep negative space in background to support the mesh style
+
+---
+
+## ★ Component policy
+
+| Element | Policy |
 |---|---|
-| ベース | **shadcn/ui** |
-| 可視化 | 自作 (D3 / visx / react-force-graph 等を実装時に選定) |
-| カード角丸 | **16px** (UI shell), **18px** (主役画面で半透明グラス感) |
-| 影 | 極小 (UI shell) / 半透明オーラ (主役画面) |
-| ボタン | 基本 トーナル / ゴースト、CTA のみソリッド Accent |
-| テーブル | 行高やや低め、列整列を厳密に |
-| アニメーション | UI shell 150〜220ms (速く短く) / 主役画面 250〜400ms (ambient motion) |
+| Base | **shadcn/ui** |
+| Visualization | custom (choose among D3 / visx / react-force-graph at implementation time) |
+| Card radius | **16px** (UI shell), **18px** (hero screens with translucent glass look) |
+| Shadows | subtle in UI shell / translucent aura on hero screens |
+| Buttons | mostly tonal / ghost, CTA as solid accent |
+| Tables | tighter row height, strict alignment |
+| Animation | UI shell 150–220ms, hero screens 250–400ms (ambient motion) |
 
 ---
 
-## ★ 可視化の世界観
+## ★ Visualization atmosphere
 
-### Activity Timeline (UI shell 寄り)
-- 時系列リスト、Mono フォントで時刻 / 金額を整列
-- 自社 Provider 行は Teal で hairline highlight
+### Activity Timeline (UI shell leaning)
+- list view with mono-aligned time/amount
+- self-provider rows highlighted with Teal hairline
 
-### Co-usage Map (Ambient Mesh 主役)
-- 深ネイビー背景 (`#0A0F1E`)
-- ノードはグレースケール、**重要ノードのみ青発光** (`#60A5FA`)
-- リンクは半透明、重要経路は輝度アップ
-- ノードがフォースで配置される ambient motion
+### Co-usage Map (Ambient Mesh hero)
+- deep navy background (`#0A0F1E`)
+- nodes in grayscale, **important nodes only** in blue glow (`#60A5FA`)
+- links semi-transparent, with stronger brightness on highlighted paths
+- nodes laid out with force-based ambient motion
 
-### Bubble Chart (Co-usage Patterns / Ambient Mesh 主役)
-- 青〜シアンの連続色グラデ
-- クラスタには薄いオーラ
-- ホバーでバブル拡大 + ツールチップ
-
----
-
-## ★ 参考にした既存 SaaS
-
-- **Stripe Dashboard** — 金融的信頼感、サイドバー構造
-- **Vercel Dashboard / Geist** — 高コントラストで静かなダーク UI
-- **Linear** — 密度の高い情報を上品に見せるバランス
-- (主役画面のみ) **Vercel / Geist のグラフィック演出** — ネットワーク表現
+### Bubble Chart (Co-usage Patterns hero)
+- blue-cyan color gradient
+- thin aura on cluster groups
+- hover to expand bubble + tooltip
 
 ---
 
-## ★ 避けるもの
+## ★ Existing SaaS references
 
-- 安っぽい crypto 感 (ネオングリーン, 過剰なグラデ, blockchain アイコン乱用)
-- 過度なアニメーション (= プロダクト感の毀損)
-- 装飾としての絵文字 / イラスト
+- **Stripe Dashboard** — trust through sidebar structure
+- **Vercel Dashboard / Geist** — high-contrast calm dark UI
+- **Linear** — dense information delivered elegantly
+- (hero screens only) **Vercel / Geist graphic style** — for network expression
 
 ---
 
-## ★ 次ステップ
+## ★ Exclusions
 
-1. Codex に **各画面のムードボード指示書** を依頼
-2. Codex に **shadcn/ui ベースの初期コンポーネントセット** を提案させる
-3. プロジェクト雛形 (Next.js セットアップ) に進む
+- cheap crypto motifs (neon green, too many gradients, blockchain icon spam)
+- excessive animation that hurts product feel
+- decorative emojis or illustrations
+
+---
+
+## ★ Next steps
+
+1. Ask Codex for per-screen moodboard instructions
+2. Ask Codex for initial shadcn/ui component set
+3. Move into Next.js project scaffold

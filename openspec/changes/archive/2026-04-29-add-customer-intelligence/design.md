@@ -1,83 +1,83 @@
 ## Context
 
-Phase B demo BFF は `GET /customers`、`GET /customers/:address/profile`、`GET /wallet-usage-graph` を prepared fixture / read model から read-only に返している。現在の profile は CoinGecko x402 `payTo` 周辺の onchain fact と demo attribution を組み合わせた Wallet 360° 表示であり、customer address 起点の外部 x402 service 探索、portfolio / DeFi context、cross-provider affinity までは扱わない。
+Phase B demo BFF currently returns `GET /customers`, `GET /customers/:address/profile`, and `GET /wallet-usage-graph` from prepared fixture / read model as read-only responses. The current profile is a Wallet 360° view that combines CoinGecko x402 `payTo`-adjacent onchain facts with demo attribution, and it does not cover customer-address-centric external x402 service discovery, portfolio / DeFi context, or cross-provider affinity.
 
-customer intelligence は外部 API の rate limit、retry、認証、live source availability に影響されやすいため、BFF request path では live source を呼ばない。Phase B では CLI / offline capture で read model JSON を生成し、BFF は保存済み read model を contract validation したうえで返す。
+Customer intelligence is sensitive to external API rate limits, retries, authentication, and live source availability, so BFF must not call live sources in the request path. In Phase B, customer intelligence read model JSON is generated through CLI / offline capture, and BFF returns saved read models after contract validation.
 
 ## Goals / Non-Goals
 
 **Goals:**
 
-- `GET /customers/:address/intelligence` の contract-first な response / fixture schema を定義する。
-- customer address、network、asset、time window を read model metadata として保持する。
-- x402 service candidate、payTo activity、portfolio summary、DeFi position、insight、evidence / provenance を分離して表現する。
-- CLI / offline capture で external source fact を取得し、`packages/intelligence` で集計・join・score する。
-- BFF は prepared read model を read-only に返し、default verification は offline のまま維持する。
+1. Define a contract-first response and fixture schema for `GET /customers/:address/intelligence`.
+2. Keep customer address, network, asset, and time window as read model metadata.
+3. Represent x402 service candidates, payTo activity, portfolio summary, DeFi positions, insights, evidence, and provenance distinctly.
+4. Retrieve external source facts with CLI / offline capture and aggregate / join / score in `packages/intelligence`.
+5. Return prepared read models as read-only from BFF and keep default verification offline.
 
 **Non-Goals:**
 
-- BFF request path から Bitquery、CDP、Zerion、MCP、RPC を直接呼ばない。
-- endpoint-level attribution、request sequence、correlation id、agent behavior をこの change で実 telemetry として扱わない。
-- `profile` response に customer intelligence payload を統合しない。
-- 初期実装で multi-chain / multi-asset の live query orchestration を一般化しない。scope は metadata で明示し、初期値は Base / USDC を想定する。
+- Do not call Bitquery, CDP, Zerion, MCP, or RPC directly from BFF request path.
+- Do not treat endpoint-level attribution, request sequence, correlation id, or agent behavior as real telemetry in this change.
+- Do not merge customer intelligence payload into the `profile` response.
+- Do not generalize multi-chain / multi-asset live query orchestration in the initial implementation. Keep scope explicit in metadata and assume Base / USDC as initial default.
 
 ## Decisions
 
-### 1. `profile` ではなく `intelligence` endpoint を追加する
+### 1. Add an `intelligence` endpoint instead of extending `profile`
 
-`profile` は Wallet 360° の基本表示に限定し、重い探索・外部 API 由来・更新頻度が異なる情報は `GET /customers/:address/intelligence` に分離する。
+`profile` is limited to a core Wallet 360° display. Heavier discovery, external API-derived, and differently refreshed information is separated into `GET /customers/:address/intelligence`.
 
-- 採用理由: UI / BFF が軽量な profile read と分析 read を別々に扱える。customer intelligence の partial source や unavailable reason を profile contract に漏らさずに済む。
-- 代替案: `profile.insights` を拡張する。短期的には簡単だが、provenance、portfolio、DeFi、external service candidate が肥大化し、profile の責務が曖昧になるため採用しない。
+- Rationale: UI / BFF can treat lightweight profile read and analytical read separately. This also avoids leaking customer intelligence partial sources or unavailable reasons into the profile contract.
+- Alternative: Extend `profile.insights`. This is easier short-term, but would bloat provenance, portfolio, DeFi, and external service candidate handling and blur profile responsibilities.
 
-### 2. Live capture と BFF read path を分離する
+### 2. Separate live capture and BFF read path
 
-external source access は `apps/cli` の customer intelligence capture に閉じ、BFF は generated read model JSON を読む。
+Constrain external source access to customer intelligence capture in `apps/cli`; BFF reads generated read model JSON.
 
-- 採用理由: 通常の `bun run verify` を offline に保てる。rate limit、credential、retry、partial source failure を request path から切り離せる。
-- 代替案: BFF route で live source を call する。demo の応答安定性と検証再現性を損なうため採用しない。
+- Rationale: keeps normal `bun run verify` offline and separates rate limit, credential, retry, and partial source failure risks from request path.
+- Alternative: Call live source in BFF route, which would hurt demo response stability and reproducibility of verification.
 
-### 3. Package 責務を contracts / sources / intelligence / app に分離する
+### 3. Separate package responsibilities for contracts / sources / intelligence / apps
 
-`packages/contracts` は schema と provenance contract、`packages/sources` は external source の fetch / normalize、`packages/intelligence` は集計・join・score、`apps/cli` は orchestration と file write、`apps/bff` は read-only serving を担当する。
+`packages/contracts` owns schemas and provenance contracts, `packages/sources` fetches / normalizes external sources, `packages/intelligence` performs aggregation / join / scoring, `apps/cli` handles orchestration and file write, and `apps/bff` serves read-only endpoints.
 
-- 採用理由: source adapter と projection logic を CLI に閉じ込めず、contract-first でテスト可能にする。`packages/sources` が `packages/intelligence` に依存しないことで外部 fact の取得と分析 logic を分離できる。
-- 代替案: CLI に全 logic を実装する。PoC 速度は出るが、BFF / tests / future job から再利用しづらくなるため採用しない。
+- Rationale: keeps source adapters and projection logic out of CLI-only paths and preserves contract-first testing. Because `packages/sources` does not depend on `packages/intelligence`, source fact collection and analysis logic remain separate and reusable.
+- Alternative: Implement all logic in CLI. This may move quickly in PoC but is hard to reuse in BFF, tests, or future jobs.
 
-### 4. Provenance と evidence を必須の設計要素にする
+### 4. Make provenance and evidence first-class design elements
 
-response は `onchain_fact`、`derived_insight`、`demo_label`、`future_sdk_field` の違いを保持し、derived insight は空でない `reasons` または `evidence` を持つ。
+Responses must preserve the distinction between `onchain_fact`, `derived_insight`, `demo_label`, and `future_sdk_field`. Derived insights must include non-empty `reasons` or `evidence`.
 
-- 採用理由: endpoint / workflow / service label には demo / future telemetry placeholder が混在するため、利用側が実 fact と仮説を区別できる必要がある。
-- 代替案: flat な business DTO だけを返す。demo では見やすいが、事実と推測の境界が消えるため採用しない。
+- Rationale: endpoint / workflow / service labels mix demo and future telemetry placeholders, so consumers must distinguish facts from hypotheses.
+- Alternative: Return only flat business DTOs. This is easier to read in demo but removes fact/hypothesis boundaries.
 
-### 5. 未取得 customer は初期実装では 404 とする
+### 5. Return 404 for uncaptured customers in initial implementation
 
-`GET /customers/:address/intelligence` は matching read model がない場合に `404` を返す。
+`GET /customers/:address/intelligence` returns `404` when no matching read model exists.
 
-- 採用理由: `GET /customers/:address/profile` の未知 wallet の挙動と揃い、capture 済みか未取得かを明確にできる。
-- 代替案: 空の valid response を返す。partial source と未取得の区別が曖昧になるため初期実装では採用しない。
+- Rationale: aligns with unknown-wallet behavior in `GET /customers/:address/profile`, making captured vs uncaptured state explicit.
+- Alternative: Return an empty valid response, which blurs the distinction between partial source and uncaptured and is not accepted in initial implementation.
 
 ## Risks / Trade-offs
 
-- [Risk] CDP / Bitquery / portfolio source の一部が未取得でも payload が必要になる → `sourceCoverage`、`unavailableReason`、`reasons` で section 単位の状態を表現する。
-- [Risk] service candidate の confidence が過剰に確定的に見える → `confidence` と `evidence` を必須化し、candidate は derived insight として扱う。
-- [Risk] fixture が demo 固有 label に依存しすぎる → demo label は provenance で区別し、contract は source fact / derived insight を中心に設計する。
-- [Risk] 初期 schema が portfolio / DeFi を過剰設計する → 初期は summary / positions の最小 contract に留め、raw source response は直接公開しない。
-- [Risk] CLI live command が default verify に混ざる → live capture / verification command は通常の `bun run verify` から分離する。
+- [Risk] Even when portions of CDP / Bitquery / portfolio source are missing, payloads are still needed. Represent section-level state with `sourceCoverage`, `unavailableReason`, and `reasons`.
+- [Risk] Service candidate confidence may appear overly deterministic. Make `confidence` and `evidence` mandatory and treat candidates as derived insights.
+- [Risk] Over-reliance on demo-only labels in fixtures. Distinguish labels with provenance and keep contracts centered on source facts / derived insights.
+- [Risk] Overbuilding initial schema for portfolio / DeFi. Start with minimal summary / positions contract and do not expose raw source responses directly.
+- [Risk] Live CLI command enters default verify path. Keep live capture and verification commands separate from normal `bun run verify`.
 
 ## Migration Plan
 
-1. `packages/contracts` に customer intelligence schema と fixture validation を追加する。
-2. `packages/intelligence` に pure function の aggregation / matching / scoring / projection builder を追加する。
-3. `apps/bff/fixtures/phase-b/customer-intelligence/` に prepared read model fixture を追加する。
-4. `apps/bff` に read-only route を追加し、known address は `200`、unknown address は `404` を返す。
-5. `apps/cli` に offline capture command を追加する。live external source command は default verify に含めない。
-6. Tests と route validation を追加し、最後に root で `bun run verify` を実行する。
+1. Add customer intelligence schema and fixture validation to `packages/contracts`.
+2. Add pure-function aggregation / matching / scoring / projection builder to `packages/intelligence`.
+3. Add prepared read model fixture under `apps/bff/fixtures/phase-b/customer-intelligence/`.
+4. Add a read-only route in `apps/bff` that returns `200` for known addresses and `404` for unknown.
+5. Add offline capture command in `apps/cli`; do not include live external source command in default verify.
+6. Add tests and route validation, then run `bun run verify` at repo root.
 
-Rollback は route registration と fixture 参照を外すことで可能。contract / intelligence package の追加は既存 endpoint と分離されるため、既存 Phase B response への影響は限定的にする。
+Rollback is possible by removing route registration and fixture references. Contract / intelligence package additions are separated from existing endpoints, so impact on existing Phase B responses is limited.
 
 ## Open Questions
 
-- Zerion / MCP adapter のどちらを初期 portfolio source とするかは実装時の利用可能な credential / MCP に依存する。初期 contract は source が unavailable でも valid response を表現できるようにする。
-- CDP Discovery metadata で service identity が解決できない `payTo` を unknown candidate として返すか、activity のみに留めるかは scoring 実装時に fixture と合わせて決める。
+- Which initial portfolio source to use, Zerion or MCP, depends on available credentials / MCP at implementation time. The initial contract should support valid responses even when source is unavailable.
+- For CDP Discovery metadata where a service identity cannot be resolved for a `payTo`, decide whether to return it as an unknown candidate or keep only activity when scoring implementation is finalized with fixtures.

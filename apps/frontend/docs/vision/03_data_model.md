@@ -1,30 +1,31 @@
 ---
-name: データモデル方針
-description: モック JSON の粒度方針と未確定事項
+name: Data model policy
+description: Granularity policy for mock JSON and unresolved items
 type: project
 ---
 
-# データモデル方針
+# Data model policy
 
-> 最終更新: 2026-04-28
-> ステータス: 方針のみ確定。具体的なスキーマ設計は次ステップで詰める
+> Last updated: 2026-04-28
+> Status: policy only, schema finalized in a later step
 
-## ★ クライアント側データ (localStorage)
+## ★ Client-side data (localStorage)
 
-ユーザーが入力する pay_to は **すべてブラウザの localStorage に保存**。サーバー側保存はしない (PoC では認証もないため)。
+All user-entered `pay_to` values are saved to browser `localStorage`; no server-side storage
+in PoC (no auth).
 
-### 保存内容 (想定)
+### Expected shape
 
 ```ts
 type StoredProvider = {
-  providerId: string;          // 内部生成 (slug or uuid)
-  name: string;                 // 任意の Provider 名
+  providerId: string;          // internal ID (slug or uuid)
+  name: string;                // optional provider name
   mode: 'simple' | 'advanced';
-  // simple モード:
-  payTo?: string;               // 単一アドレス
-  // advanced モード:
+  // simple mode:
+  payTo?: string;              // one address
+  // advanced mode:
   paths?: Array<{
-    apiPath: string;            // 例: '/v1/generate'
+    apiPath: string;           // e.g. '/v1/generate'
     payTo: string;
   }>;
   createdAt: string;
@@ -34,61 +35,65 @@ type StoredProvider = {
 type StoredProviders = StoredProvider[];
 ```
 
-### 操作
+### Operations
 
-- 追加: Setup 画面から
-- 切替: サイドバー / ヘッダーの Provider セレクター
-- 削除: セレクター内の各エントリの × ボタン (即削除、確認ダイアログあり)
-- 編集: Setup 画面で再編集
+- add: from Setup page
+- switch: provider selector in sidebar/header
+- delete: × button in selector with confirmation dialog
+- edit: via Setup page
 
-## ★ 確定した方針
+## ★ Confirmed policy
 
-### 受取アドレスの粒度 — 両対応
+### Recipient address granularity — support both
 
-顧客 (API Provider) によって、x402 の受取アドレス設定が異なる:
+Customers (API providers) differ in x402 recipient configuration:
 
-- **ケースA**: API パスごとに別々の `pay_to` アドレス
-- **ケースB**: Provider 全体で 1 つの `pay_to` アドレス
+- **Case A**: different `pay_to` addresses per API path
+- **Case B**: one `pay_to` address for the entire provider
 
-PoC モックは**両ケースを再現**する。
+PoC mocks should represent both cases.
 
-### 識別ロジック
+### Identification logic
 
-- **ケースA** の場合: `pay_to` アドレスから API パスを一意に逆引き可能
-- **ケースB** の場合: `pay_to` は Provider までしか特定できない。API パスは x402 リクエストの resource metadata (URL 等) から補完
+- **Case A**: reverse-derive API path from unique `pay_to` address
+- **Case B**: only provider can be identified from `pay_to`; API path is augmented from
+  x402 request resource metadata (URL etc.)
 
-### データソース (本番想定)
+### Data source (production intent)
 
-| 用途 | ソース |
+| Purpose | Source |
 |---|---|
-| x402 tx の横断観測 | x402 facilitator 公開 aggregated データ |
-| Provider 識別 (`pay_to` → 名前) | x402bazaar のディレクトリ |
-| API パス特定 | (ケースA) `pay_to` で逆引き / (ケースB) resource metadata |
+| Cross-observation of x402 tx | x402 facilitator public aggregated data |
+| Provider identification (`pay_to` → name) | x402bazaar directory |
+| API path resolution | (Case A) reverse-lookup by `pay_to`; (Case B) resource metadata |
 
-PoC ではすべてモック JSON で再現。
+PoC uses all mock JSON.
 
-## ★ 想定エンティティ (叩き台)
+## ★ Target entities (draft)
 
-次ステップで詳細設計する際の出発点。
+Starting point for next-step detailed design.
 
-| エンティティ | 主な属性 (想定) |
+| Entity | Main attributes (assumed) |
 |---|---|
 | Provider | provider_id, name, category, pay_to addresses[], API paths[] |
-| Wallet | address, agent_type (Claude Code / Cursor 等), first_seen_at |
+| Wallet | address, agent_type (Claude Code / Cursor etc.), first_seen_at |
 | Payment | tx_hash, wallet, provider_id, api_path, amount_usd, timestamp |
 | Co-usage Edge | wallet, provider_a, provider_b, frequency, time_proximity |
 | Workflow Pattern | pattern_id, sequence[provider_id, ...], wallet_count |
 
-## ★ デモ用モックデータの基準
+## ★ Mock data criteria for demo
 
-主役ウォレット 1 体の具体的なデータ ([09_protagonist_wallet.md](09_protagonist_wallet.md)) を**デモ用モックの中心**として実装する。併用 Provider 名 (VectorMind AI / RouteZero DEX / SignalPort / VaultLayer / StreamDelta / LedgerLake) は**ドキュメント全体で統一**。
+Implement with protagonist wallet ([09_protagonist_wallet.md](09_protagonist_wallet.md)) as
+the center of the demo dataset. Co-used provider names (VectorMind AI / RouteZero DEX /
+SignalPort / VaultLayer / StreamDelta / LedgerLake) must be consistent across all docs.
 
-その他の "脇役" ウォレット (My Customers の他の行 / Patterns のクラスタ等) は、主役の世界観と矛盾しない範囲で複数生成。
+Other supporting wallets (other rows in My Customers, cluster nodes in Patterns) should be
+generated in multiple quantities while remaining consistent with the protagonist's world.
 
-## ★ 未確定事項
+## ★ Open items
 
-- API カテゴリの分類体系 (Storage / Compute / Data / Payment / etc. の MECE な定義)
-- 時系列的近接度 (= "同セッション") の定義 (5 分以内? 1 時間以内? wallet ごとのアクティブ window?)
-- モックデータの規模感 (何 wallet × 何 Provider × 何 tx でリッチ感が出るか)
-- リテンション窓 (D14 を踏襲するか PoC では別の見せ方をするか)
-- Insight カードの自動生成ロジック (PoC は固定文言で OK か, テンプレ生成か)
+- API category taxonomy (MECE definition for Storage / Compute / Data / Payment, etc.)
+- Time-proximity definition for sessions (within 5 minutes? 1 hour? wallet-level active window?)
+- Mock data scale (wallets × providers × tx) for sufficient richness
+- Retention window (continue with D14 or use another PoC view)
+- Insight card auto-generation logic (fixed strings for PoC or templated generation)

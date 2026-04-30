@@ -1,93 +1,99 @@
 ---
-name: Flovia PoC 全体概要
-description: 投資家/顧客デモ用 PoC ダッシュボードのナラティブ・スコープ・技術スタック
+name: Flovia PoC Overall Overview
+description: Narrative, scope, and tech stack for an investor/customer demo PoC dashboard
 type: project
 ---
 
-# Flovia PoC — 全体概要
+# Flovia PoC — Overview
 
-> 最終更新: 2026-04-28
-> 目的: PoC 開発の出発点。決まった前提を 1 枚で確認できるようにする
-> 注意: `research/sync_meeting/` 配下の旧ドキュメントは**参考程度**。本 PoC はゼロベースで設計する
+> Last updated: 2026-04-28
+> Purpose: capture the starting assumptions of the PoC
+> Note: documents under `research/sync_meeting/` are for reference only. This PoC is designed from scratch
 
-## ★ PoC のゴール
+## ★ PoC goals
 
-**投資家 / 顧客デモ用のリッチ版ダッシュボード**を作る。
+**Build a rich dashboard for investor/customer demo.**
 
-- 動作するデモであり、見栄えとストーリーを重視
-- 実データ接続は Phase 2、PoC ではモック JSON で完結
-- Vercel にデプロイして URL 共有できる状態を最終形とする
+- Emphasize a runnable demo with visuals and narrative
+- Use mock JSON for the full PoC (real data connection in Phase 2)
+- Final shape is ready for sharing via Vercel URL
 
-## ★ 想定利用者
+## ★ Intended users
 
-**顧客 API Provider** (= 自社 API を x402 で提供している SaaS の PM / Growth / DevRel 担当)
+**API providers as customers** (= SaaS providers offering APIs via x402)
 
-社内 PM 向けではなく、API Provider が自社のユーザー (= ウォレット) を理解するためのツールとして設計する。
+Designed as a tool for API providers to understand their users (= wallets), not an internal PM dashboard.
 
-## ★ ナラティブ (3 分で語る物語)
+## ★ Narrative (three-minute story)
 
-### メインナラティブ — Co-usage Discovery
+### Main narrative — Co-usage Discovery
 
-> **"あなたの API を叩いているこのウォレットは、他にどんな API と組み合わせて使っているのか?"**
+> **"For wallets calling your API, what other APIs are they combining it with?"**
 >
-> 自社の決済ログだけでは分からない "ユーザーの全体像" が、x402 facilitator の公開データを横断することで初めて見える。
+> Cross-provider payment logs reveal a full view of user behavior that cannot be seen from a single provider's invoices.
 >
-> 例: 「画像生成 API を提供している我々のユーザーは、ストレージ API と決済 API と一緒に使っている」→ AI エージェントが画像を生成 → 保存 → 課金、というワークフローが見える。
+> Example: "Our image-generation users also call Storage and Billing APIs" → the workflow of
+> image generation → storage → payment becomes visible.
 >
-> これは **エージェントのワークフロー全体が x402 で観測可能になった** からこそ初めて見える話で、Stripe Dashboard では絶対できない。
+> This is a story only because AI agent workflows can be observed across x402 facilitator public data,
+> which is not possible in Stripe Dashboard.
 
-### サブナラティブ — Retention
+### Sub-narrative — Retention
 
-> 人間の SaaS 顧客と違い、AI エージェントは "定着するのか" が未知。Flovia は初回 paid から D14 で残ったエージェントの率 (Retention) を併せて可視化し、"健全な顧客基盤か" を判定できる。
+> Unlike human SaaS customers, AI agent retention is uncertain. Flovia visualizes how many agents stay after
+> day 14 from first paid, helping assess whether the customer base is healthy.
 
-### 視点の重要な転換
+### Core perspective shift
 
-- **競合分析ではなく "併用パターン分析"**
-- 他社 API は競合とは限らない。むしろ補完関係 (= ワークフローの一部) であることが多い
-- "うちの API はどんな API と一緒に使われがちか" → パートナーシップ機会 / Bundle 提案 / ユースケース理解
+- **Co-usage pattern analysis, not competitor analysis**
+- Other API providers are not always competitors; they are often workflow complements
+- "Which APIs are often used with ours" → partnership opportunities, bundling ideas, better
+  use-case understanding
 
-## ★ データソースの前提
+## ★ Data assumptions
 
-| 項目 | 想定 |
+| Item | Assumption |
 |---|---|
-| x402 トランザクションの横断観測 | x402 facilitator 公開 aggregated データ |
-| API Provider の識別 | x402bazaar のディレクトリで `pay_to` アドレス → Provider 名解決 |
-| API パスの粒度 | パスごとに `pay_to` が違う場合: アドレスでユニーク特定。同一の場合: resource metadata で補完 |
-| PoC でのデータ供給 | モック JSON (本物の facilitator データ取得は Phase 2) |
+| cross-observation of x402 transactions | x402 facilitator published aggregated data |
+| provider identity | resolve provider name from x402bazaar directory using `pay_to` address |
+| API path granularity | if each API path has its own `pay_to`, identify by address; if not, complement with resource metadata |
+| PoC data source | mock JSON (Phase 2 moves to real facilitator ingestion) |
 
-**重要**: 顧客によって、API パスごとに受取アドレスが設定されているケースと、Provider 全体で 1 つの受取アドレスのケースの両方が存在する。**両対応の粒度**でデータモデルを設計する。
+**Important**: Customers may have one `pay_to` per API path or one for the entire provider.
+Data model must support **both patterns**.
 
-## ★ 技術スタック
+## ★ Tech stack
 
-| 項目 | 選定 |
+| Item | Choice |
 |---|---|
-| フレームワーク | Next.js (App Router) |
-| パッケージマネージャ | pnpm |
-| デプロイ先 | Vercel |
-| データ | モック JSON 起点、後でバックエンド差し替え可能な構造 |
-| デザイン | ゼロベース。Codex と相談して最新 SaaS ダッシュボード風 |
-| 可視化 | 主役: ネットワーク図 (Force-directed) / サブ: Sankey / 戦略示唆: バブル |
+| Framework | Next.js (App Router) |
+| Package manager | pnpm |
+| Deployment | Vercel |
+| Data | mock JSON first, structured for backend replacement |
+| Design | custom from scratch with Codex, modern SaaS dashboard style |
+| Visualization | primary: network graph (Force-directed), secondary: Sankey, strategy: bubble |
 
-## ★ アクセスモデル (PoC)
+## ★ Access model (PoC)
 
-**完全フラット**。すべての Provider のページが誰でも閲覧可能 (公開ディレクトリ)。
+**Fully flat**: pages for all providers are publicly viewable.
 
-- 「自社モード / 他社モード」の概念は持たない
-- ユーザーが入力した `pay_to` アドレスは **ブラウザ側 (localStorage)** に保存し、簡単に切り替え・削除できる
-- 各ページで「これは ○○ Provider のデータです」と明記
+- No "self mode / other mode"
+- `pay_to` entered by user is saved in browser `localStorage` for easy switching and deleting
+- Each page explicitly states "data from this provider"
 
-### 将来の認証導入時の拡張ポイント
+### Expansion points when authentication is introduced later
 
-API Provider が SDK 経由で提供する**自社専用データ**は、将来認証を入れて当該 Provider のみが見られるようにする予定。PoC では:
+Provider-specific proprietary data via SDK will be separated into components so it can be
+introduced with auth later. In PoC:
 
-- **公開データ** (x402 facilitator 由来) と **自社専用データ** (将来 SDK 由来) を**コンポーネント単位で分離**しておく
-- 後者は将来の認証ガード対象として組み込みやすい構造にする
+- Keep public x402 data and provider-private SDK data separated by component boundaries
+- Keep private data ready for future auth guard integration
 
-## ★ スコープ外 (PoC では作らない)
+## ★ Scope out of PoC
 
-- 実 facilitator / on-chain データ接続
-- 認証 / マルチテナント / RBAC (将来導入予定)
-- サーバー側でのユーザー設定保存 (PoC は localStorage のみ)
-- 自社専用データの表示 (SDK 連携は将来)
-- アラート / 通知
-- 多言語対応
+- Real facilitator / on-chain ingestion
+- Authentication / multitenancy / RBAC (planned for future)
+- Server-side user setting persistence (only localStorage in PoC)
+- Proprietary private data display (SDK integration later)
+- Alerts / notifications
+- Internationalization

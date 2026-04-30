@@ -1,10 +1,10 @@
 # Phase B: real transaction + mock endpoint attribution plan
 
-## 目的
+## Purpose
 
-Phase B demo では、CoinGecko の `payTo` に紐づく **real onchain transaction** を使いながら、オンチェーンだけでは判定できない endpoint path / workflow を **mock attribution** として補う。
+In the Phase B demo, we use **real onchain transactions** tied to CoinGecko `payTo`, and fill the endpoint path / workflow gaps that cannot be inferred from onchain data alone with **mock attribution**.
 
-これにより、完全な手書き demo data ではなく、次の構成に近づける。
+This moves the implementation toward this shape instead of fully manual demo data:
 
 ```text
 real onchain tx facts
@@ -13,9 +13,9 @@ real onchain tx facts
   -> BFF read-only API
 ```
 
-## 背景
+## Background
 
-CoinGecko には demo 上で扱いたい endpoint が複数ある。
+CoinGecko has multiple endpoints to cover in the demo.
 
 ```text
 CoinGecko endpoint A
@@ -25,7 +25,7 @@ CoinGecko endpoint D
 CoinGecko endpoint E
 ```
 
-しかし、それらの endpoint に対する payment が同じ `payTo` に集約される場合、public/onchain data だけでは、どの transaction がどの endpoint request に対応したかを判定できない。
+When payment for those endpoints is aggregated to the same `payTo`, public/onchain data alone cannot determine which transaction matches which endpoint request.
 
 ```text
 endpoint A ┐
@@ -35,19 +35,19 @@ endpoint D ┤
 endpoint E ┘
 ```
 
-そのため、現時点では `txHash -> endpointPath` の対応を mock として持つ必要がある。
+For now, we therefore need to maintain a mock mapping for `txHash -> endpointPath`.
 
-## 基本方針
+## Guiding Policy
 
-Phase B では次の方針を採用する。
+Phase B adopts the following policy.
 
-1. CoinGecko の `payTo` から real transaction を逆引きする。
-2. real transaction 由来の値は `onchain_fact` として扱う。
-3. endpoint path / workflow / request context は mock attribution として外付けする。
-4. mock attribution 由来の値は `demo_label` または `future_sdk_field` として扱う。
-5. derived insight は、根拠に mock attribution が含まれる場合、実データとして扱わない。
+1. Trace real transactions from CoinGecko `payTo`.
+2. Treat values derived from real transactions as `onchain_fact`.
+3. Attach endpoint path / workflow / request context as mock attribution.
+4. Treat values from mock attribution as `demo_label` or `future_sdk_field`.
+5. Do not treat derived insight as real data when its evidence includes mock attribution.
 
-## データフロー
+## Data Flow
 
 ```text
 CoinGecko payTo
@@ -88,17 +88,17 @@ BFF read-only API
   - GET /wallet-usage-graph
 ```
 
-## レイヤー分離
+## Layer Separation
 
 ### 1. Onchain fact layer
 
-オンチェーンから取得できる実データ。
+Actual data that can be obtained from onchain sources.
 
 ```text
 provenance: onchain_fact
 ```
 
-対象例:
+Examples:
 
 - `txHash`
 - `payerWallet`
@@ -112,13 +112,13 @@ provenance: onchain_fact
 
 ### 2. Mock attribution layer
 
-オンチェーンだけでは分からないため、demo 用に付与する値。
+Values attached for the demo when they cannot be determined from onchain data alone.
 
 ```text
 provenance: demo_label | future_sdk_field
 ```
 
-対象例:
+Examples:
 
 - `endpointPath`
 - `endpointName`
@@ -131,13 +131,13 @@ provenance: demo_label | future_sdk_field
 
 ### 3. Derived insight layer
 
-onchain fact と mock attribution から作る仮説。
+Hypotheses created from onchain facts plus mock attribution.
 
 ```text
 provenance: derived_insight
 ```
 
-対象例:
+Examples:
 
 - retention hypothesis
 - upsell candidate
@@ -147,15 +147,15 @@ provenance: derived_insight
 
 ## Mock attribution fixture
 
-最初は JSON fixture として管理する。
+Manage initially as a JSON fixture.
 
-候補パス:
+Candidate path:
 
 ```text
 apps/bff/fixtures/phase-b/mock-attribution.json
 ```
 
-例:
+Example:
 
 ```json
 {
@@ -188,21 +188,21 @@ apps/bff/fixtures/phase-b/mock-attribution.json
 }
 ```
 
-## 重要な制約
+## Key Constraints
 
-- mock attribution fixture 側で `payerWallet`、`payTo`、`amount`、`timestamp` を作らない。
-- それらは real onchain tx fact から取得する。
-- mock attribution fixture の join key は原則 `txHash` にする。
-- `endpointPath` を onchain fact として扱わない。
-- BFF response では、field 単位で provenance を保持する。
-- request path で live CDP / Bitquery / RPC を呼ばない。
-- BFF は生成済み projection / fixture を read-only に返す。
+- Do not create `payerWallet`, `payTo`, `amount`, or `timestamp` in the mock attribution fixture.
+- Those fields must come from real onchain tx facts.
+- Use `txHash` as the join key for mock attribution fixtures by default.
+- Do not treat `endpointPath` as an onchain fact.
+- Preserve provenance at field level in BFF response.
+- Do not call live CDP / Bitquery / RPC on request path.
+- Return generated projection / fixture as read-only from BFF.
 
-## 将来の SDK 置き換え
+## Future SDK replacement
 
-最終的には mock attribution layer を SDK middleware telemetry に置き換える。
+Eventually, replace the mock attribution layer with SDK middleware telemetry.
 
-SDK が取得する想定値:
+Expected values captured by SDK:
 
 - `requestId`
 - `providerId`
@@ -215,7 +215,7 @@ SDK が取得する想定値:
 - `correlationId`
 - `requestMetadata`
 
-置き換え後の理想フロー:
+Ideal flow after replacement:
 
 ```text
 SDK request event
@@ -225,19 +225,19 @@ SDK request event
   -> BFF/API
 ```
 
-## 実装ステップ案
+## Proposed implementation steps
 
-### Step 1: real tx の取得
+### Step 1: Collect real transactions
 
-CoinGecko の `payTo` から関連 transaction を取得する。
+Collect related transactions from CoinGecko `payTo`.
 
-出力候補:
+Candidate output:
 
 ```text
 fixtures/phase-a/coingecko-transactions.json
 ```
 
-保持する値:
+Fields to retain:
 
 - `txHash`
 - `payerWallet`
@@ -247,21 +247,21 @@ fixtures/phase-a/coingecko-transactions.json
 - `network`
 - `timestamp`
 
-### Step 2: mock attribution fixture の作成
+### Step 2: Create mock attribution fixture
 
-real tx の `txHash` に対して、demo 用 endpoint path を割り当てる。
+Assign demo endpoint path values for each real tx `txHash`.
 
-出力候補:
+Candidate output:
 
 ```text
 apps/bff/fixtures/phase-b/mock-attribution.json
 ```
 
-### Step 3: projection builder の作成
+### Step 3: Create projection builder
 
-onchain tx fact と mock attribution を `txHash` で join し、Phase B の canonical response を生成する。
+Join onchain tx facts and mock attribution by `txHash` to produce Phase B canonical response.
 
-出力候補:
+Candidate outputs:
 
 ```text
 apps/bff/fixtures/phase-b/customer-list.json
@@ -269,31 +269,31 @@ apps/bff/fixtures/phase-b/customer-profiles.json
 apps/bff/fixtures/phase-b/wallet-usage-graph.json
 ```
 
-### Step 4: BFF の読み込み先を切り替える
+### Step 4: Switch BFF read source
 
-現在の in-file deterministic read model から、生成済み projection fixture を読む構成に移行する。
+Migrate from the current in-file deterministic read model to reading generated projection fixtures.
 
-### Step 5: provenance test を追加する
+### Step 5: Add provenance tests
 
-少なくとも次をテストする。
+At minimum, test:
 
-- `txHash` は `onchain_fact`
-- `endpointPath` は `demo_label` または `future_sdk_field`
-- `derived_insight` は `reasons` を持つ
-- BFF response が contract schema に通る
+- `txHash` is `onchain_fact`
+- `endpointPath` is `demo_label` or `future_sdk_field`
+- `derived_insight` has `reasons`
+- BFF response passes contract schema
 
-## 成功条件
+## Success Criteria
 
-- BFF の demo response が real tx hash を含む。
-- endpoint attribution が mock であることが response 上で分かる。
-- BFF runtime は live source を呼ばない。
-- Phase A fact と Phase B mock attribution の境界が fixture / projection 上で分離されている。
-- 将来 SDK telemetry へ置き換える場所が明確になっている。
+- BFF demo response includes real tx hash values.
+- The response clearly indicates endpoint attribution is mocked.
+- BFF runtime does not call live sources.
+- Phase A facts and Phase B mock attribution boundaries are separated in fixture / projection.
+- The eventual replacement path toward SDK telemetry is clearly defined.
 
-## 非目標
+## Out of scope
 
-- SDK middleware の本実装
-- request path での live RPC / Bitquery call
-- endpoint attribution のオンチェーン推定
-- CoinGecko endpoint usage の実データ主張
-- 認証、課金、本番 multi tenant 化
+- Full implementation of SDK middleware
+- Live RPC / Bitquery calls on request path
+- Onchain inference of endpoint attribution
+- Claiming that all CoinGecko endpoint usage is fully real data
+- Authentication, billing, and production multi-tenancy

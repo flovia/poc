@@ -1,12 +1,11 @@
 # Flovia BFF
 
-BFF は、frontend demo のための read-only product API 境界です。
+The BFF is a read-only product API boundary for the frontend demo.
 
-Phase B では、prepared demo read model を返す read-only product endpoint を提供します。
-現在の BFF は `apps/cli` に依存せず、`packages/contracts` の Phase B contract に従う
-canonical envelope response を返します。
+In Phase B, it provides a read-only product endpoint that returns prepared demo read models.
+The current BFF does not depend on `apps/cli` and returns responses in a canonical envelope that follows the Phase B contract in `packages/contracts`.
 
-## コマンド
+## Commands
 
 ```bash
 bun install
@@ -15,7 +14,7 @@ bun run start
 bun run verify
 ```
 
-## エンドポイント
+## Endpoints
 
 - `GET /` -> `{ status: "ok", service: "flovia-bff" }`
 - `GET /health` -> `{ status: "ok", service: "flovia-bff" }`
@@ -24,11 +23,10 @@ bun run verify
 - `GET /customers/:address/intelligence` -> Phase B customer intelligence read model
 - `GET /wallet-usage-graph` -> Phase B co-usage graph projection
 
-product endpoint の response は `docs/phase-b/api-contract.md` と `packages/contracts` の Phase B schema に従います。
-demo label や future SDK telemetry 想定値は response 内の `provenance` /
-`provenanceByField` / `reasons` で区別されます。
+The product endpoint responses follow `docs/phase-b/api-contract.md` and the Phase B schema in `packages/contracts`.
+Demo labels and expected future SDK telemetry fields are distinguished by `provenance` / `provenanceByField` / `reasons` in responses.
 
-以下は Phase B 初回実装では公開しません。
+The following endpoints are not exposed in the initial Phase B implementation.
 
 - `GET /demo-data`
 - `GET /sdk-events`
@@ -36,15 +34,14 @@ demo label や future SDK telemetry 想定値は response 内の `provenance` /
 - `GET /patterns`
 - `GET /summary`
 
-## データソース
+## Data source
 
-現在の BFF は `apps/bff/src/data/phase-b-demo.ts` の deterministic fixture / read model を返します。
-fixture は module initialization 時に `packages/contracts` の validator で検証されます。
+The current BFF returns deterministic fixtures / read models from `apps/bff/src/data/phase-b-demo.ts`.
+Fixtures are validated by `packages/contracts` validators during module initialization.
 
-将来 market intelligence endpoint を拡張する場合も、生成済み snapshot、projection、または保存済みデータを読みます。
-ユーザーリクエストごとに live CDP / Bitquery / RPC / SDK collector call を発行しない方針です。
+If future market intelligence endpoints are extended, it will also read generated snapshots, projections, or stored data.
+The policy is not to issue live CDP / Bitquery / RPC / SDK collector calls per user request.
 
-## Read-only 方針
+## Read-only policy
 
-product endpoint は GET のみを受け付けます。非 GET method は write operation を行わず、
-read-only 方針に沿った error response を返します。
+Product endpoints accept GET only. Non-GET methods do not perform write operations and return an error response aligned with the read-only policy.

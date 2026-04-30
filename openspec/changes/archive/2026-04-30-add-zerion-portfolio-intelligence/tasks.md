@@ -1,46 +1,46 @@
-## 1. Contract 境界
+## 1. Contract boundary
 
-- [x] 1.1 現在の `CustomerIntelligenceResponse`、`PortfolioSummary`、`DeFiPosition`、`SourceCoverage` schema を確認し、Zerion provenance の最小追加方針を決める
-- [x] 1.2 Zerion source provenance と normalized portfolio / DeFi source result shape の failing contract tests を追加する
-- [x] 1.3 `zerion` source provenance support と、`packages/sources` / `packages/intelligence` で共有が必要な normalized portfolio source schema を追加する
-- [x] 1.4 product payload fixture が raw Zerion response、API key、auth header、request metadata を拒否することを検証する
+- [x] 1.1 Review existing `CustomerIntelligenceResponse`, `PortfolioSummary`, `DeFiPosition`, and `SourceCoverage` schemas and decide minimal Zerion provenance additions.
+- [x] 1.2 Add failing contract tests for Zerion source provenance and normalized portfolio / DeFi source result shape.
+- [x] 1.3 Add `zerion` source provenance support and normalized portfolio source schema shared by `packages/sources` / `packages/intelligence`.
+- [x] 1.4 Validate that product payload fixture rejects raw Zerion response, API key, auth header, and request metadata.
 
 ## 2. Zerion Source Adapter
 
-- [x] 2.1 portfolio summary、DeFi positions、empty portfolio、partial response、API error 用の Zerion response fixtures を追加する
-- [x] 2.2 injected `FetchLike`、明示 endpoint configuration、adapter 内で process env を読まない方針で `packages/sources/zerion.ts` を実装する
-- [x] 2.3 Zerion wallet portfolio response を repository-owned summary / position DTO に正規化する
-- [x] 2.4 Zerion が成功 response として empty result を返した場合は、unavailable ではなく zero positions の available portfolio coverage として扱う
-- [x] 2.5 timeout / 429 / 5xx 系 response を、positions を捏造せず explicit partial または unavailable coverage に map する
+- [x] 2.1 Add Zerion response fixtures for portfolio summary, DeFi positions, empty portfolio, partial response, and API error.
+- [x] 2.2 Implement `packages/sources/zerion.ts` with injected `FetchLike`, explicit endpoint configuration, and no process env reads inside adapter.
+- [x] 2.3 Normalize Zerion wallet portfolio response into repository-owned summary / position DTOs.
+- [x] 2.4 Treat successful empty Zerion result as `available` portfolio coverage with zero positions, not unavailable.
+- [x] 2.5 Map timeout / 429 / 5xx responses to explicit partial or unavailable coverage without fabricating positions.
 
 ## 3. Intelligence Integration
 
-- [x] 3.1 available Zerion portfolio summary / positions を使う `classifyDefiActivity()` tests を追加する
-- [x] 3.2 unavailable Zerion coverage が DeFi inactive を意味しないことを示す tests を追加する
-- [x] 3.3 successful positions が evidence / reasons 付きの derived DeFi active insights を生成するよう portfolio / DeFi classification を更新する
-- [x] 3.4 wallet-wide Zerion data が Base / USDC x402 payment scope と混同されないよう、reasons または scope metadata に明示する
+- [x] 3.1 Add `classifyDefiActivity()` tests using available Zerion portfolio summary and positions.
+- [x] 3.2 Add tests that unavailable Zerion coverage does not imply DeFi inactivity.
+- [x] 3.3 Update portfolio / DeFi classification so successful positions produce derived DeFi active insights with evidence and reasons.
+- [x] 3.4 Explicitly mark wallet-wide Zerion data as not the Base / USDC x402 payment scope via `reasons` or scope metadata.
 
 ## 4. CLI Capture Integration
 
-- [x] 4.1 `--portfolio-source zerion` など、明示的な Zerion enablement の CLI argument tests を追加する
-- [x] 4.2 Zerion capture が有効な場合だけ `apps/cli` で `ZERION_API_KEY` を解決する
-- [x] 4.3 Zerion capture 有効時に credential がない場合、output write 前に失敗することを確認する
-- [x] 4.4 Zerion source adapter を `customer:intelligence` capture に接続し、normalized portfolio result を `buildCustomerIntelligence()` に渡す
-- [x] 4.5 available、empty、partial、unavailable の Zerion outcome について mocked end-to-end CLI flow tests を追加する
+- [x] 4.1 Add CLI argument tests for explicit Zerion enablement such as `--portfolio-source zerion`.
+- [x] 4.2 Resolve `ZERION_API_KEY` in `apps/cli` only when Zerion capture is enabled.
+- [x] 4.3 Confirm capture fails before writing output when credentials are missing in enabled Zerion mode.
+- [x] 4.4 Connect Zerion source adapter to `customer:intelligence` capture and pass normalized portfolio results to `buildCustomerIntelligence()`.
+- [x] 4.5 Add mocked end-to-end CLI flow tests for available, empty, partial, and unavailable Zerion outcomes.
 
 ## 5. BFF / Fixtures / Docs
 
-- [ ] 5.1 raw Zerion data を露出せず、Zerion available coverage を示す prepared customer intelligence fixture を更新または追加する
-- [x] 5.2 fixture を更新する場合は、Zerion portfolio / DeFi context を含む prepared read model の BFF validation test coverage を追加する
-- [x] 5.3 CLI docs に Zerion capture usage、必要な environment variable、offline verification separation を追記する
-- [x] 5.4 customer intelligence docs に Zerion-derived facts、derived DeFi classification、unavailable / partial coverage semantics を追記する
+- [ ] 5.1 Update or add prepared customer intelligence fixture indicating Zerion available coverage without exposing raw Zerion data.
+- [x] 5.2 Add BFF validation test coverage for prepared read model including Zerion portfolio / DeFi context when fixtures are updated.
+- [x] 5.3 Add Zerion capture usage, required environment variables, and offline verification separation to CLI docs.
+- [x] 5.4 Add Zerion-derived facts, derived DeFi classification, and unavailable / partial coverage semantics to customer intelligence docs.
 
 ## 6. Verification
 
-- [x] 6.1 formatting が変わった場合は `bun run format` を実行する
-- [x] 6.2 root で `bun run verify` を実行し、live Zerion access や `ZERION_API_KEY` が不要であることを確認する
-- [ ] 6.3 `ZERION_API_KEY` を `.env` から読み込む explicit live command を実行し、対象 wallet の portfolio / DeFi 情報が Zerion から取得できることを確認する
-- [x] 6.4 live Zerion capture で生成した read model JSON を `packages/contracts` の customer intelligence schema で validation する
-- [x] 6.5 live capture 結果を `apps/bff/fixtures/phase-b/customer-intelligence/0xac5a07c44a4f971667b3df4b6551fb6991b2142d.json` などの prepared fixture に反映する場合、raw Zerion response、API key、auth header、request metadata が含まれないことを確認する
-- [x] 6.6 prepared fixture 更新後に BFF route test / schema validation が offline で通ることを確認する
-- [x] 6.7 `add-zerion-portfolio-intelligence` の OpenSpec status を確認し、artifacts と implementation tasks が揃っていることを確認する
+- [x] 6.1 Run `bun run format` when formatting changes are introduced.
+- [x] 6.2 Run root `bun run verify` and confirm no live Zerion access or `ZERION_API_KEY` is required.
+- [ ] 6.3 Run explicit live command loading `ZERION_API_KEY` from `.env` to confirm portfolio / DeFi information can be fetched from Zerion for target wallet.
+- [x] 6.4 Validate live-captured read model JSON with customer intelligence schema in `packages/contracts`.
+- [x] 6.5 When reflecting live capture result in prepared fixtures such as `apps/bff/fixtures/phase-b/customer-intelligence/0xac5a07c44a4f971667b3df4b6551fb6991b2142d.json`, confirm raw Zerion response, API key, auth header, and request metadata are not included.
+- [x] 6.6 Confirm BFF route tests and schema validation pass offline after prepared fixture updates.
+- [x] 6.7 Verify OpenSpec status for `add-zerion-portfolio-intelligence` and confirm artifacts and implementation tasks are complete.

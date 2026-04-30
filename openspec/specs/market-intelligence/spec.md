@@ -1,147 +1,147 @@
 ## Purpose
 
-Market intelligence は CDP discovery resource と Bitquery payment activity を正規化・集計し、product read 用の snapshot / projection と report を提供する。
+Market intelligence provides normalized and aggregated snapshot / projection and report data for product read APIs from CDP discovery resources and Bitquery payment activity.
 
 ## Requirements
 
-### 要件: CDP discovery resource を正規化する
+### Requirement: Normalize CDP discovery resources
 
-システムは CDP x402 Discovery resource を取得し、各 resource と payment option をこの repository が所有する contract 型へ正規化することを MUST とする。
+The system MUST fetch CDP x402 Discovery resources and normalize each resource and payment option into repository-owned contract types.
 
-#### シナリオ: Base USDC payment option を持つ resource
+#### Scenario: Resource with Base USDC payment option
 
-- **条件** CDP resource が `resource`、`network`、`asset`、`amount`、`payTo` を持つ Base USDC payment option を含む
-- **結果** システムは、それらの field と source provenance を含む正規化済み payment option を持つ resource を記録する
+- **WHEN** a CDP resource contains a Base USDC payment option with `resource`, `network`, `asset`, `amount`, and `payTo`
+- **THEN** the system records the resource with a normalized payment option including those fields and source provenance
 
-#### シナリオ: resource が未対応 network を含む
+#### Scenario: Resource includes unsupported network
 
-- **条件** CDP resource が要求された snapshot scope 外の network 向け payment option を含む
-- **結果** システムは、正規化済み resource 自体は落とさず、その payment option を scoped Bitquery aggregation から除外する
+- **WHEN** a CDP resource includes payment options for networks outside the requested snapshot scope
+- **THEN** the system keeps the normalized resource but excludes those payment options from scoped Bitquery aggregation
 
-### 要件: Bitquery payment activity を集計する
+### Requirement: Aggregate Bitquery payment activity
 
-システムは、正規化済み payment option に一致する payment activity を Bitquery GraphQL に問い合わせ、要求された time window の aggregate transfer metrics を返すことを MUST とする。
+The system MUST query Bitquery GraphQL for payment activity matching normalized payment options and return aggregate transfer metrics for the requested time window.
 
-#### シナリオ: payment option に観測済み transfer がある
+#### Scenario: Transfer is observed for payment option
 
-- **条件** Bitquery が payment option の `network`、`asset`、`payTo` に対する transfer を返す
-- **結果** システムは、その payment option の transaction count、unique sender count、payment volume、latest observed transfer metadata を報告する
+- **WHEN** Bitquery returns transfers for the payment option `network`, `asset`, and `payTo`
+- **THEN** the system reports transaction count, unique sender count, payment volume, and latest observed transfer metadata for that payment option
 
-#### シナリオ: payment option に観測済み transfer がない
+#### Scenario: No observed transfer for payment option
 
-- **条件** Bitquery が payment option に一致する transfer を返さない
-- **結果** システムは snapshot build を失敗させず、その payment option の activity metrics を zero として報告する
+- **WHEN** Bitquery returns no matching transfer for a payment option
+- **THEN** the system does not fail snapshot build and reports zero activity metrics for that payment option
 
-### 要件: market snapshot は metadata と activity を結合する
+### Requirement: Market snapshot combines metadata and activity
 
-システムは、正規化済み payment option identity によって CDP resource metadata と Bitquery transfer aggregate を結合した market snapshot を構築することを MUST とする。
+The system MUST build a market snapshot by joining CDP resource metadata and Bitquery transfer aggregates using normalized payment option identity.
 
-#### シナリオ: CDP payment option が Bitquery aggregate に一致する
+#### Scenario: CDP payment option matches Bitquery aggregate
 
-- **条件** 正規化済み payment option と Bitquery aggregate が同じ `network`、`asset`、`payTo` を共有する
-- **結果** snapshot は resource、payment option、source quality field、activity metrics を1つの market resource entry に含める
+- **WHEN** normalized payment options and Bitquery aggregates share the same `network`, `asset`, and `payTo`
+- **THEN** the snapshot includes resource, payment option, source quality field, and activity metrics in one market resource entry
 
-#### シナリオ: CDP と Bitquery の metrics が一致しない
+#### Scenario: CDP and Bitquery metrics mismatch
 
-- **条件** CDP quality metrics と Bitquery activity metrics が大きく異なる
-- **結果** snapshot はどちらかの source を上書きせず、両方の値を保持し、resource に discrepancy indicator を付ける
+- **WHEN** CDP quality metrics and Bitquery activity metrics differ significantly
+- **THEN** the snapshot preserves both sets of values without overwriting either source and marks the resource with a discrepancy indicator
 
-### 要件: CLI が market report を生成する
+### Requirement: CLI generates market report
 
-システムは、CDP と Bitquery data から JSON / Markdown market snapshot report を生成する CLI command を提供することを MUST とする。
+The system MUST provide a CLI command that generates JSON / Markdown market snapshot reports from CDP and Bitquery data.
 
-#### シナリオ: snapshot command が成功する
+#### Scenario: Snapshot command succeeds
 
-- **条件** operator が有効な Bitquery credential で market snapshot command を実行する
-- **結果** システムは JSON snapshot report と Markdown summary report を設定済み output path に書き出す
+- **WHEN** the operator runs the market snapshot command with valid Bitquery credentials
+- **THEN** the system writes a JSON snapshot report and a Markdown summary report to the configured output path
 
-#### シナリオ: Bitquery credential がない
+#### Scenario: Bitquery credential is missing
 
-- **条件** operator が Bitquery data を必要とする snapshot を `BITQUERY_TOKEN` なしで実行する
-- **結果** システムは明確な configuration error で失敗し、誤解を招く partial activity report を書き出さない
+- **WHEN** the operator runs a snapshot that requires Bitquery data without `BITQUERY_TOKEN`
+- **THEN** the system fails with a clear configuration error and does not write a partial or misleading activity report
 
-### 要件: BFF は request ごとに外部 source を呼ばない
+### Requirement: BFF must not call external sources per request
 
-初期 market intelligence design では、BFF request handler が product read のために CDP や Bitquery を直接呼ぶことを要求しない。Phase B の demo BFF では、Phase A snapshot / projection 相当の値を prepared demo fixture または read model として扱い、`onchain_fact` として説明できる field と demo / future / derived field を区別することを MUST とする。
+In the initial market intelligence design, BFF request handlers must not call CDP or Bitquery directly for product read. In Phase B demo BFF, the values equivalent to Phase A snapshot/projection are handled as prepared demo fixtures or read models, and fields must distinguish what can be explained as `onchain_fact` versus demo / future / derived fields.
 
-#### シナリオ: product read path を後から追加する
+#### Scenario: Product read path is added later
 
-- **条件** この change の後に BFF market intelligence endpoint を実装する
-- **結果** endpoint は user request ごとに live Bitquery GraphQL call を発行せず、生成済み snapshot、projection、保存済み data、または prepared demo read model を読む
+- **WHEN** a BFF market intelligence endpoint is implemented after this change
+- **THEN** the endpoint reads generated snapshot, projection, stored data, or prepared demo read model and does not issue live Bitquery GraphQL calls per user request
 
-#### シナリオ: Phase B read model が Phase A 相当の値を含む
+#### Scenario: Phase B read model contains Phase A-equivalent values
 
-- **条件** Phase B BFF response が wallet、pay_to、payment frequency、co-usage など Phase A snapshot / projection 相当の値を含む
-- **結果** システムはそれらを request path で再取得せず、prepared demo read model 内の `onchain_fact` として返す
+- **WHEN** a Phase B BFF response includes Phase A-equivalent values such as wallet, pay_to, payment frequency, and co-usage
+- **THEN** the system returns those values as `onchain_fact` from the prepared demo read model without re-fetching them in the request path
 
-### Requirement: CoinGecko payTo transaction facts を保存する
+### Requirement: Persist CoinGecko payTo transaction facts
 
-システムは CoinGecko の `payTo` に紐づく transaction を取得した場合、Phase B projection 生成に再利用できる transaction fact として保存することを MUST とする。
+The system MUST persist transactions linked to CoinGecko `payTo` values as reusable transaction facts for Phase B projection generation.
 
-初期対象として、CDP Discovery snapshot で観測済みの Base USDC `payTo` `0x110cdbba7fe6434ec4ce3464cc523942ad6fb784` を扱う。capture は default 1000 transfers を要求し、明示 limit で 1000 件超も取得できる。取得できた件数を metadata として保存する。
+As an initial target, it handles the Base USDC `payTo` `0x110cdbba7fe6434ec4ce3464cc523942ad6fb784` observed in the CDP Discovery snapshot. The capture requests 1000 transfers by default and can fetch more with an explicit limit. The captured count is stored as metadata.
 
-#### Scenario: transaction fact を保存する
+#### Scenario: Persist a transaction fact
 
-- **WHEN** source が CoinGecko `payTo` に一致する transaction を取得する
-- **THEN** システムは `txHash`、`payerWallet`、`payTo`、`amount`、`asset`、`network`、`timestamp` を保存する
-- **THEN** 保存された fact は `onchain_fact` として扱える
+- **WHEN** the source retrieves a transaction matching a CoinGecko `payTo`
+- **THEN** the system stores `txHash`, `payerWallet`, `payTo`, `amount`, `asset`, `network`, and `timestamp`
+- **THEN** the stored fact can be used as an `onchain_fact`
 
-#### Scenario: capture metadata を保存する
+#### Scenario: Persist capture metadata
 
-- **WHEN** source が CoinGecko `payTo` に一致する transfer list を取得する
-- **THEN** システムは `requestedLimit`、`capturedCount`、`timeWindow`、`source` を metadata として保存する
-- **THEN** `capturedCount` が `requestedLimit` 未満でも、取得済み facts が schema を満たす場合は有効な fixture として扱う
+- **WHEN** the source retrieves a transfer list matching a CoinGecko `payTo`
+- **THEN** the system stores `requestedLimit`, `capturedCount`, `timeWindow`, and `source` as metadata
+- **THEN** even if `capturedCount` is below `requestedLimit`, the captured facts are valid as fixtures when they satisfy the schema
 
-#### Scenario: request path では取得しない
+#### Scenario: Do not fetch during request path
 
-- **WHEN** BFF product endpoint が呼び出される
-- **THEN** システムは CoinGecko transaction fact を live source から取得しない
+- **WHEN** a BFF product endpoint is called
+- **THEN** the system must not fetch CoinGecko transaction facts from a live source
 
-### Requirement: sources package は payTo transfer list を取得する
+### Requirement: sources package must retrieve payTo transfer list
 
-システムは `packages/sources` の source adapter として、指定された `network`、`asset`、`payTo` に一致する transfer list を取得できることを MUST とする。
+The system MUST be able, via the `packages/sources` source adapter, to fetch a transfer list matching the specified `network`, `asset`, and `payTo`.
 
-#### Scenario: payTo transfer list を最大 1000 件取得する
+#### Scenario: Fetch up to 1000 payTo transfers
 
-- **WHEN** caller が `network`、`asset`、`payTo`、time window、limit を指定して transfer list を要求する
-- **THEN** source adapter は `txHash`、`sender`、`recipient`、`amountAtomic`、`blockNumber`、`blockTimestamp` を含む transfer facts を返す
-- **THEN** 初期実装では `limit` の default は 1000 とし、明示 limit で 1000 件超も取得できる
-- **THEN** 返された transfer facts は projection generation の `onchain_fact` として扱える
+- **WHEN** the caller requests a transfer list with `network`, `asset`, `payTo`, time window, and limit
+- **THEN** the source adapter returns transfer facts including `txHash`, `sender`, `recipient`, `amountAtomic`, `blockNumber`, and `blockTimestamp`
+- **THEN** initial implementation sets the default `limit` to 1000, and explicit limits can request more than 1000
+- **THEN** returned transfer facts can be treated as `onchain_fact` for projection generation
 
-#### Scenario: source pagination を扱う
+#### Scenario: Handle source pagination
 
-- **WHEN** source API が一度に 1000 件を返せない
-- **THEN** source adapter は source API の制約に従って pagination し、最大 1000 件まで transfer facts を取得する
-- **THEN** pagination 後の実取得件数を `capturedCount` として記録する
+- **WHEN** the source API cannot return 1000 items at once
+- **THEN** the source adapter paginates within source API constraints and retrieves transfer facts up to a maximum of 1000
+- **THEN** the actual count after pagination is recorded as `capturedCount`
 
-#### Scenario: aggregate と transfer list の責務を分ける
+#### Scenario: Separate aggregate and transfer list responsibilities
 
-- **WHEN** caller が market snapshot aggregate を要求する
-- **THEN** システムは既存の aggregate response を維持する
-- **WHEN** caller が Phase B projection 用の transaction facts を要求する
-- **THEN** システムは aggregate ではなく transfer list response を返す
+- **WHEN** the caller requests market snapshot aggregate
+- **THEN** the system preserves the existing aggregate response
+- **WHEN** the caller requests transaction facts for Phase B projection
+- **THEN** the system returns a transfer list response instead of an aggregate
 
-### Requirement: mock attribution は txHash で transaction fact に join する
+### Requirement: Join mock attribution to transaction fact by txHash
 
-システムは Phase B projection 生成時に、mock endpoint attribution を `txHash` で real transaction fact に join することを MUST とする。
+The system MUST join mock endpoint attribution with real transaction facts by `txHash` during Phase B projection generation.
 
-#### Scenario: txHash が一致する attribution を join する
+#### Scenario: Join attribution when txHash matches
 
-- **WHEN** transaction fact と mock attribution item が同じ `txHash` を持つ
-- **THEN** projection builder は onchain fields と endpoint attribution fields を同じ projection record に結合する
-- **THEN** onchain fields と attribution fields の provenance を混同しない
+- **WHEN** a transaction fact and mock attribution item share the same `txHash`
+- **THEN** the projection builder merges onchain fields and endpoint attribution fields into the same projection record
+- **THEN** provenance of onchain fields and attribution fields is not conflated
 
-#### Scenario: txHash が一致しない attribution を扱う
+#### Scenario: Handle attribution with unmatched txHash
 
-- **WHEN** mock attribution item の `txHash` が transaction facts に存在しない
-- **THEN** projection builder は schema validation または明確な generation error で失敗する
+- **WHEN** a mock attribution item `txHash` does not exist in transaction facts
+- **THEN** the projection builder fails via schema validation or a clear generation error
 
-### Requirement: projection generation は offline verification と分離する
+### Requirement: Separate projection generation from offline verification
 
-システムは live source を必要とする transaction capture と、offline verification 可能な projection validation を分離することを MUST とする。
+The system MUST separate live-source-required transaction capture from projection validation that can be run offline.
 
-#### Scenario: offline verify を実行する
+#### Scenario: Run offline verification
 
-- **WHEN** operator が `bun run verify` を実行する
-- **THEN** システムは保存済み fixture / projection と contract validation を使って検証する
-- **THEN** live CDP、Bitquery、RPC、または external service call を要求しない
+- **WHEN** an operator runs `bun run verify`
+- **THEN** the system validates against stored fixture / projection and contract validation
+- **THEN** it does not require live CDP, Bitquery, RPC, or external service calls

@@ -1,39 +1,45 @@
-# Phase B Customer Intelligence 方針
+# Phase B Customer Intelligence Policy
 
-## 目的
+## Purpose
 
-顧客ウォレットについて、次の問いに答えられる状態を目指す。
+For each customer wallet, the target is to answer:
 
-> この customer は、自社 x402 API 以外にどんなサービスを使っているか？
+> Which services is this customer using besides the partner's x402 API?
 
-この PoC では **wallet = customer** として扱う。そのため、endpoint 名は wallet ではなく customer を主体にし、将来追加する場合は次を第一候補にする。
+In this PoC, we treat a wallet as a customer, so endpoint naming is customer-
+centric. For future additions, this should be the first choice:
 
 ```text
 GET /customers/:address/intelligence
 ```
 
-`profile` は Wallet 360° の基本表示、`intelligence` は外部サービス利用・x402 横断 activity・portfolio / DeFi context・insight を返す分析 endpoint として分ける。
+`profile` is the baseline Wallet 360° display, while `intelligence` is an
+analysis endpoint that returns external service usage, cross-product x402 activity,
+portfolio / DeFi context, and insights.
 
-`add-customer-intelligence` change では、`GET /customers/:address/intelligence` を prepared read model から返す read-only endpoint として追加した。BFF request path では live source を呼ばず、CLI / offline capture で生成した customer intelligence fixture を読む。
+In the `add-customer-intelligence` change, `GET /customers/:address/intelligence`
+was added as a read-only endpoint returning prepared read model. The BFF request
+path does not call live sources; it reads customer intelligence fixtures generated
+by CLI/offline capture.
 
-## 現状
+## Current status
 
-| 領域　　　　　　　　　　　　　　　　　　　 | 対応状況　　| 備考　　　　　　　　　　　　　　　　　　　　 |
+| Area | Status | Notes |
 | --------------------------------------------| -------------| ----------------------------------------------|
-| 顧客一覧　　　　　　　　　　　　　　　　　 | 実装済み　　| `GET /customers`　　　　　　　　　　　　　　 |
-| 顧客 profile　　　　　　　　　　　　　　　 | 実装済み　　| `GET /customers/:address/profile`　　　　　　|
-| co-usage / wallet usage graph　　　　　　　| 実装済み　　| `GET /wallet-usage-graph`　　　　　　　　　　|
-| payer wallet / amount / timestamp / txHash | 実データ　　| Bitquery 由来の onchain fact fixture　　　　 |
-| endpoint / workflow / service label　　　　| demo / mock | `txHash -> endpointPath` の mock attribution |
-| 他 x402 provider / 他 payTo 探索　　　　　 | 部分実装　　| CLI capture で customer address 起点の outgoing transfer と CDP payment option を join する |
-| DeFi / portfolio / 資産状況　　　　　　　　| 部分実装　　| CLI で Zerion capture を明示した場合に取得。未取得・取得不能時は `unavailableReason` で表現 |
-| browser / E2E での demo flow 検証　　　　　| 未整備　　　| typecheck / unit test / route test 中心　　　|
+| customer list                                 | implemented   | `GET /customers` |
+| customer profile                              | implemented   | `GET /customers/:address/profile` |
+| co-usage / wallet usage graph                  | implemented   | `GET /wallet-usage-graph` |
+| payer wallet / amount / timestamp / txHash      | onchain fact | fixture from Bitquery |
+| endpoint / workflow / service label             | demo / mock  | deterministic `txHash -> endpointPath` mock attribution |
+| other x402 provider / other payTo discovery      | partial      | join outgoing transfer and CDP payment option from CLI capture |
+| DeFi / portfolio / asset status                 | partial      | obtained only when Zerion capture is explicitly enabled; otherwise represented with `unavailableReason` |
+| browser / E2E demo flow validation               | not ready    | mostly typecheck / unit test / route test |
 
-## `profile` と `intelligence` の責務
+## `profile` and `intelligence` responsibilities
 
 ### `GET /customers/:address/profile`
 
-Wallet 360° の基本表示に必要な profile projection を返す。
+Returns profile projection needed for baseline Wallet 360° display:
 
 - identity
 - usage metrics
@@ -41,28 +47,38 @@ Wallet 360° の基本表示に必要な profile projection を返す。
 - timeline
 - insights
 
-現状の `profile` は、CoinGecko x402 `payTo` 周辺の transaction fact と mock attribution から作られる。wallet address / amount / tx count / timestamp / payTo は onchain fact だが、endpoint 名・workflow・一部 provider/service label は demo / mock。
+Current `profile` is built from CoinGecko x402 `payTo` transaction facts and
+mock attribution. `wallet address`, `amount`, `tx count`, and `timestamp` / `payTo`
+are onchain facts, while endpoint name, workflow, and some provider/service labels
+are demo / mock.
 
 ### `GET /customers/:address/intelligence`
 
-prepared read model から、customer を起点にした分析結果を返す。
+Returns analysis results anchored on the customer from prepared read model:
 
-- 他 x402 service candidates
+- other x402 service candidates
 - payTo activity
 - cross-provider affinity
 - portfolio summary
 - DeFi positions
-- DeFi active / inactive 判定
+- DeFi active / inactive determination
 - upsell / retention / partnership insights
 - evidence / provenance
 
-`profile` に intelligence を全部詰め込むのではなく、重い探索・外部 API 由来・更新頻度が違う情報は `intelligence` に分離する。
+`intelligence` does not pack everything into `profile`. Heavy exploration,
+external API-derived, or differently refreshed data is separated into
+`intelligence`.
 
-`profile.insights` は現在の Wallet 360° 表示に必要な短い利用仮説に限定する。`intelligence.insights` は、外部 x402 service、portfolio / DeFi context、cross-provider affinity など、複数 source を組み合わせた分析結果を扱う。
+`profile.insights` is currently limited to short usage hypotheses required by
+Wallet 360° display. `intelligence.insights` handles analysis results that combine
+multiple sources, including external x402 service usage, portfolio / DeFi context,
+and cross-provider affinity.
 
 ### `GET /customers/:address/intelligence/research`
 
-`research` は `intelligence` の派生サブリソースとして扱う。base intelligence は deterministic analysis / scoring / evidence を返し、research はその結果を LLM で人間向け narrative に変換した report を返す。
+`research` is a derived sub-resource of `intelligence`. Base intelligence returns
+deterministic analysis/scoring/evidence, while research returns a report converted
+to human-readable narrative by an LLM.
 
 ```text
 GET /customers/:address/intelligence
@@ -72,13 +88,18 @@ GET /customers/:address/intelligence/research
   -> LLM-generated report derived from intelligence
 ```
 
-依存方向は `research -> intelligence` とし、`intelligence -> research` にはしない。`GET /customers/:address/intelligence` の MVP に LLM report を必須 field として混ぜると、実装中の deterministic intelligence が LLM provider、prompt version、generated fixture に依存してしまうため避ける。
+Dependency direction is `research -> intelligence`, not `intelligence -> research`.
+Requiring an LLM-generated report as a mandatory field in
+`GET /customers/:address/intelligence` would make the deterministic intelligence
+depend on LLM provider, prompt version, and generated fixture, which we avoid.
 
-`intelligence/research` は、LLM report が未生成でも base intelligence を表示できるように分離する。BFF request path で LLM を実行せず、CLI / offline job で生成済みの validated report を BFF が read-only に返す。
+`intelligence/research` is separated so base intelligence can be shown even when
+LLM report is not generated. BFF does not call LLM on request path; CLI/offline
+jobs generate a validated report returned read-only by BFF.
 
-## 今分かること
+## What is known now
 
-現在の Phase B で実データとして扱えるのは、主に次の onchain fact。
+In current Phase B, the following values are primarily onchain fact:
 
 - payer wallet
 - recipient / `payTo`
@@ -90,79 +111,85 @@ GET /customers/:address/intelligence/research
 - provider-level spend
 - payment activity / frequency
 
-これらは `apps/bff/fixtures/phase-a/coingecko-transactions.json` に保存され、BFF の projection builder で customer list / profile / wallet usage graph に変換される。
+These are stored in `apps/bff/fixtures/phase-a/coingecko-transactions.json` and
+converted by BFF projection builder into customer list/profile/wallet usage graph.
 
-## 今分からないこと
+## What is not known yet
 
-オンチェーン transaction だけでは、次は確定できない。
+Onchain transactions alone cannot confirm:
 
-- どの endpoint を叩いたか
-- どの request がどの transaction に対応するか
+- which endpoint was called
+- which request maps to which transaction
 - endpoint-level usage frequency
 - workflow / use case
 - request sequence
 - agent type
 - provider-side funnel
-- customer が他に使っている x402 service の確定名称
-- DeFi protocol 利用状況
-- token / NFT / LP / lending position などの資産状況
+- confirmed name of other x402 services the customer uses
+- DeFi protocol activity
+- asset status such as token / NFT / LP / lending positions
 
-現状の `otherServiceCandidates` や endpoint / workflow label は、実データではなく demo / future telemetry placeholder として扱う。
+Current `otherServiceCandidates` and endpoint/workflow labels are treated as demo
+or future telemetry placeholders, not live data.
 
-## 理想形
+## Ideal form
 
-理想的には、customer address を起点に次の intelligence pipeline を構成する。
+Ideally, customer address should trigger the following intelligence pipeline:
 
 ```text
 customer address
   ├─ Bitquery
-  │    └─ outgoing transfer / x402 payment / payTo activity を取得
+  │    └─ get outgoing transfer / x402 payment / payTo activity
   ├─ CDP Discovery
-  │    └─ payTo -> provider / service / x402 payment option を解決
+  │    └─ resolve payTo -> provider / service / x402 payment option
   ├─ Zerion
-  │    └─ wallet-wide portfolio / DeFi positions を取得
-  └─ SDK telemetry（将来）
-       └─ endpoint request / tx hash / correlation id を紐づけ
+  │    └─ get wallet-wide portfolio / DeFi positions
+  └─ SDK telemetry (future)
+       └─ correlate endpoint request / tx hash / correlation id
 ```
 
-これにより、次の問いに答えられる。
+This enables answers to:
 
-- customer A は自社 provider 以外のどの x402 provider に支払っているか
-- customer A はどの `payTo` と頻繁に関係しているか
-- 支払い先 `payTo` は CDP 上でどの service / payment option と対応するか
-- customer A は DeFi active user か
-- customer A の資産規模や protocol 利用傾向はどうか
-- 自社 API 利用と外部 service / DeFi 行動に相関があるか
+- which x402 providers customer A pays besides own provider
+- which `payTo` values customer A frequently interacts with
+- which service / payment option in CDP corresponds to each payment destination
+- whether customer A is a DeFi active user
+- customer A asset scale and protocol usage patterns
+- whether there is correlation between internal API usage and external service/
+  DeFi behavior
 
-## 実行形態
+## Execution mode
 
-Phase B / PoC では、customer intelligence の live 探索は **CLI / offline capture ベース**で行う。
+In Phase B / PoC, customer intelligence exploration is **CLI / offline capture
+based**.
 
-BFF request path では、CDP、Bitquery、Zerion、MCP、RPC を直接呼ばない。BFF は保存済み read model を read-only に返す。
+BFF request path does not call CDP, Bitquery, Zerion, MCP, or RPC directly. BFF
+returns prepared read model in read-only mode.
 
 ```text
 apps/cli
   customer:intelligence capture
-    -> packages/sources で外部データ取得
-    -> packages/intelligence で集計・スコアリング
-    -> packages/contracts で projection validation
-    -> fixture / read model JSON 出力
+    -> external data retrieval by packages/sources
+    -> aggregation / scoring by packages/intelligence
+    -> projection validation by packages/contracts
+    -> fixture / read model JSON output
 
 apps/bff
   GET /customers/:address/intelligence
-    -> 保存済み read model を読む
-    -> packages/contracts で validation
-    -> read-only response を返す
+    -> read saved read model
+    -> validate with packages/contracts
+    -> return read-only response
 
   GET /customers/:address/intelligence/research
-    -> 保存済み LLM research report を読む
-    -> packages/contracts で validation
-    -> read-only response を返す
+    -> read saved LLM research report
+    -> validate with packages/contracts
+    -> return read-only response
 ```
 
-この分離により、外部 API の rate limit、retry、認証、live 検証を通常の `bun run verify` から切り離せる。
+This separation keeps external API rate limits, retry, auth, and live validation
+outside normal `bun run verify`.
 
-想定 command 例:
+Example command:
 
 ```sh
 bun --cwd apps/cli customer:intelligence -- \
@@ -174,8 +201,8 @@ bun --cwd apps/cli customer:intelligence -- \
   --out apps/bff/fixtures/phase-b/customer-intelligence/0x....json
 ```
 
-Zerion を使う場合は `--portfolio-source zerion` を明示する。この場合だけ
-`ZERION_API_KEY` が必要になる。
+If using Zerion, explicitly set `--portfolio-source zerion`. In this case,
+`ZERION_API_KEY` is required.
 
 ```sh
 bun --cwd apps/cli customer:intelligence -- \
@@ -188,20 +215,21 @@ bun --cwd apps/cli customer:intelligence -- \
   --out apps/bff/fixtures/phase-b/customer-intelligence/0x....json
 ```
 
-Zerion 由来の portfolio / DeFi data は **customer wallet 全体**の context であり、
-Base / USDC x402 payment scope そのものではない。read model では
-`sourceCoverage.source = "portfolio"`、`sourceCoverage.provenance.sourceKind = "zerion"`
-として表現し、wallet-wide chain context は `reasons` で補足する。
+Zerion-derived portfolio / DeFi data is context for the **entire customer
+wallet**, not the `Base / USDC x402 payment` scope itself. In read model, this is
+expressed as `sourceCoverage.source = "portfolio"` and
+`sourceCoverage.provenance.sourceKind = "zerion"`; chain-wide context is
+supplemented by `reasons`.
 
-Zerion が成功 response として empty positions を返した場合は、取得成功かつ
-DeFi position なしとして扱う。一方、timeout、429、5xx、partial response は
-DeFi inactive の事実としては扱わず、`partial` / `unavailable` coverage として
-明示する。product payload / fixture には raw Zerion response、API key、
-Authorization header、request metadata を含めない。
+If Zerion returns empty positions as a successful response, it is treated as a
+successful fetch with no DeFi position. However, timeout, 429, 5xx, or partial
+response are not treated as DeFi inactivity facts; they are represented as
+`partial` / `unavailable` coverage. Product payloads/fixtures must not include
+raw Zerion responses, API keys, Authorization headers, or request metadata.
 
-## package 分割方針
+## Package split policy
 
-customer intelligence は、CLI にロジックを閉じ込めず、次の責務に分ける。
+Customer intelligence stays outside CLI-specific logic and is split by responsibility:
 
 ```text
 packages/contracts
@@ -211,16 +239,16 @@ packages/contracts
   - PayToActivity schema
   - PortfolioSummary schema
   - DeFiPosition schema
-  - provenance / evidence 型
+  - provenance / evidence types
 
 packages/sources
   - Bitquery outgoing transfers by customer
   - CDP Discovery payment option lookup
   - Zerion / MCP portfolio adapter
-  - 外部 API response parse / 正規化
+  - external API response parse / normalization
 
 packages/intelligence
-  - x402 service candidate 抽出
+  - x402 service candidate extraction
   - payTo activity aggregation
   - CDP payment option join
   - confidence scoring
@@ -228,24 +256,24 @@ packages/intelligence
   - customer intelligence projection builder
 
 apps/cli
-  - 引数 parse
+  - argument parsing
   - capture orchestration
-  - fixture / read model 書き込み
-  - live command と offline verify の分離
+  - fixture / read model writing
+  - live command and offline verify separation
 
 apps/bff
-  - read model 読み込み
+  - read model loading
   - contracts validation
-  - GET /customers/:address/intelligence の read-only 配信
+  - GET /customers/:address/intelligence read-only delivery
 ```
 
-依存方向は次を維持する。
+Dependency direction remains:
 
 ```text
 apps/cli
-  -> packages/sources        # 外部 fact を取得する
-  -> packages/intelligence   # 取得済み fact を集計・スコアリングする
-  -> packages/contracts      # projection / fixture を validate する
+  -> packages/sources        # fetch external facts
+  -> packages/intelligence   # aggregate and score fetched facts
+  -> packages/contracts      # validate projection / fixture
 
 apps/bff
   -> packages/contracts
@@ -261,14 +289,15 @@ packages/contracts
   -> external deps only
 ```
 
-`packages/sources` は `packages/intelligence` に依存しない。`apps/cli` が両者を呼び出して orchestration する。
+`packages/sources` does not depend on `packages/intelligence`; `apps/cli` calls both
+to orchestrate.
 
-切り出すもの:
+Extraction plan:
 
 - `packages/sources`
   - `fetchOutgoingTransfersByCustomer()`
-  - `fetchCdpPaymentOptions()` または既存 CDP Discovery adapter の再利用
-  - `fetchCustomerPortfolio()`（Zerion / MCP adapter）
+  - `fetchCdpPaymentOptions()` or reuse existing CDP Discovery adapter
+  - `fetchCustomerPortfolio()` (Zerion / MCP adapter)
 - `packages/intelligence`
   - `buildCustomerIntelligence()`
   - `aggregatePayToActivities()`
@@ -276,23 +305,23 @@ packages/contracts
   - `scoreServiceCandidates()`
   - `classifyDefiActivity()`
 - `packages/contracts`
-  - response / fixture / projection schema
+  - response / fixture / projection schemas
   - provenance / evidence contract
   - intelligence research report schema
 
-切り出さないもの:
+Not extracted:
 
-- CLI の引数処理
-- fixture 書き込み
-- BFF route 実装
+- CLI argument handling
+- fixture writing
+- BFF route implementation
 - frontend DTO adapter
-- demo 固有の mock labels
+- demo-specific mock labels
 
-## 推奨データ分類
+## Recommended data classification
 
 ### `onchain_fact`
 
-オンチェーンまたは外部 indexer から直接説明できる値。
+Values directly explainable from onchain or external indexer data.
 
 - customer address
 - payTo address
@@ -301,24 +330,27 @@ packages/contracts
 - asset / network
 - block timestamp
 - provider-level payment count / spend
-- Zerion / MCP が返す token balance や position の raw fact
+- raw token balance / position facts from Zerion / MCP
 
-将来的に Zerion / MCP / SDK telemetry の事実値が増え、`onchain_fact` だけでは source の違いを表しづらくなった場合は、`external_source_fact` や `sdk_telemetry_fact` のような provenance 追加を検討する。Phase B の現時点では既存の provenance set を維持し、source の詳細は `reasons` / `evidence` / `provenanceByField` で補足する。
+If future Zerion / MCP / SDK telemetry facts make a single `onchain_fact` lineage
+insufficient, consider adding provenance values such as `external_source_fact` or
+`sdk_telemetry_fact`. At Phase B, keep existing provenance set and supplement
+source detail with `reasons` / `evidence` / `provenanceByField`.
 
 ### `derived_insight`
 
-複数 source を join / score して作る仮説。
+Hypotheses produced by joining/scoring multiple sources.
 
 - other service candidate
 - co-usage score
 - customer segment
-- DeFi active / inactive 判定
+- DeFi active / inactive judgment
 - partnership / upsell opportunity
 - cross-provider affinity
 
 ### `demo_label`
 
-Phase B demo の表示体験のために補っている値。
+Values supplemented for Phase B demo decision experience.
 
 - endpoint name
 - workflow label
@@ -327,7 +359,7 @@ Phase B demo の表示体験のために補っている値。
 
 ### `future_sdk_field`
 
-SDK telemetry または provider-side instrumentation が必要な値。
+Values requiring SDK telemetry or provider-side instrumentation.
 
 - endpoint attribution
 - request sequence
@@ -336,24 +368,25 @@ SDK telemetry または provider-side instrumentation が必要な値。
 - agent behavior
 - endpoint-level retention
 
-## API 設計候補
+## API design candidates
 
-現行 Phase B では `GET /customers/:address/intelligence` を contract-first で追加済み。live source capture は CLI 側に分離し、BFF は保存済み read model を返す。
+In current Phase B, `GET /customers/:address/intelligence` has been added contract-
+first. Live source capture remains in CLI, while BFF returns saved read model.
 
-### 第一候補: customer intelligence
+### First candidate: customer intelligence
 
 ```text
 GET /customers/:address/intelligence
 ```
 
-用途:
+Use cases:
 
-- customer の外部 service 利用候補
-- x402 provider / payTo 横断 activity
+- external service usage candidates
+- cross x402 provider / payTo activity
 - portfolio / DeFi summary
-- derived insight と evidence
+- derived insight and evidence
 
-想定 response 要素:
+Expected response elements:
 
 - `customerAddress`
 - `x402Services[]`
@@ -364,97 +397,110 @@ GET /customers/:address/intelligence
 - `provenanceByField`
 - `reasons`
 
-read model の選択条件は、少なくとも次を明示する。
+Read model selection criteria must be explicit at least for:
 
-- `address`: lowercase EVM address に正規化する。
-- `network`: 初期値は `base`。multi-chain 化する場合は scope または query で明示する。
-- `asset`: 初期値は `USDC`。multi-asset 化する場合は scope または query で明示する。
-- `timeWindow`: CLI capture 時の `from` / `to` を metadata として保持する。
-- 未取得 address: まずは `404` または空の valid response のどちらにするかを contract-first で固定する。
-- partial source: Bitquery / CDP / Zerion / MCP の一部が未取得の場合は、section ごとに `sourceCoverage` や `unavailableReason` を持てる形を検討する。
+- `address`: normalize to lowercase EVM address.
+- `network`: default is `base`; when multi-chain is needed use scope or query.
+- `asset`: default is `USDC`; when multi-asset is needed use scope or query.
+- `timeWindow`: store capture `from`/`to` as metadata.
+- missing address: decide contract-first whether to return `404` or an empty
+  valid response.
+- partial source: consider storing per-section `sourceCoverage` or `unavailableReason`
+  when any of Bitquery / CDP / Zerion / MCP are partially unavailable.
 
-### 代替候補: services / portfolio 分割
+### Alternative: split services / portfolio endpoints
 
-必要になった場合だけ、より小さい endpoint に分ける。
+Split into smaller endpoints only if needed:
 
 ```text
 GET /customers/:address/services
 GET /customers/:address/portfolio
 ```
 
-- `services`: 「他にどんなサービスを使っているか」に絞り、Bitquery + CDP Discovery join の結果を返す。
-- `portfolio`: Zerion / MCP 由来の資産状況、token balance、DeFi position、protocol exposure を返す。
+- `services`: returns results from Bitquery + CDP Discovery join, focused on
+  “what other services are used”
+- `portfolio`: returns asset status, token balances, DeFi positions, and protocol
+  exposure from Zerion / MCP
 
-まずは `intelligence` にまとめ、payload が肥大化したり更新頻度が分かれたりした時点で分割する。
+Start with `intelligence` unified; split only when payload size grows or update
+cadence diverges.
 
-### 派生候補: intelligence research
+### Derivative: intelligence research
 
 ```text
 GET /customers/:address/intelligence/research
 ```
 
-用途:
+Use cases:
 
-- `intelligence` の deterministic evidence を人間向けに要約する
-- finding / risk note / opportunity を LLM report として表示する
-- evidence id、confidence、provenance、prompt version、input digest を UI に渡す
+- summarize deterministic `intelligence` evidence for humans as LLM report
+- expose finding / risk note / opportunity as an LLM-generated report
+- pass evidence id, confidence, provenance, prompt version, and input digest to UI
 
-制約:
+Constraints:
 
-- base intelligence の実装・検証は research の有無に依存しない
-- BFF request 中に LLM を呼ばない
-- research report は CLI / offline job で生成する
-- LLM claim は evidence id と confidence を必須にする
-- onchain fact と demo label を混同しない
+- deterministic base intelligence implementation and validation must not depend on
+  research
+- do not run LLM during BFF request path
+- generate research report with CLI / offline job
+- LLM claims require evidence id and confidence
+- do not mix onchain fact and demo label
 
-## 実装ステップ案
+## Implementation plan
 
-### Step 1: customer 起点の x402 service candidate
+### Step 1: customer-first x402 service candidates
 
-CLI / offline capture として実装する。
+Implement as CLI/offline capture.
 
-1. `apps/cli` で customer address、network、asset、time window、出力先を受け取る。
-2. `packages/sources` で Bitquery から outgoing transfer を取得する。
-3. `packages/intelligence` で x402 payment と見なせる transfer を抽出する。
-4. `packages/intelligence` で recipient / `payTo` を集計する。
-5. `packages/sources` の CDP Discovery adapter で payment option / service metadata を取得する。
-6. `packages/intelligence` で payTo activity と CDP payment option を join する。
-7. `packages/intelligence` で service candidate と confidence を算出する。
-8. `packages/contracts` で projection を validate する。
-9. `apps/cli` が fixture / read model JSON を出力する。
+1. In `apps/cli`, accept customer address, network, asset, time window, and output target.
+2. Fetch outgoing transfer from Bitquery via `packages/sources`.
+3. Extract transfer entries that can be considered x402 payment in
+   `packages/intelligence`.
+4. Aggregate recipient / `payTo` in `packages/intelligence`.
+5. Fetch payment option / service metadata with CDP Discovery adapter in
+   `packages/sources`.
+6. Join payTo activity and CDP payment option in `packages/intelligence`.
+7. Compute service candidates and confidence in `packages/intelligence`.
+8. Validate projection using `packages/contracts`.
+9. `apps/cli` outputs fixture / read model JSON.
 
-この段階では endpoint-level attribution は行わない。
+Endpoint-level attribution is not performed in this phase.
 
-### Step 2: BFF read model 化
+### Step 2: BFF read model
 
-1. live query を BFF request path に入れない。
-2. CLI capture / job で fixture または projection を生成する。
-3. BFF は保存済み read model を返す。
-4. `provenance` と `reasons` を必須化する。
+1. Avoid live queries on BFF request path.
+2. Generate fixture or projection via CLI capture/job.
+3. BFF returns saved read model.
+4. Make `provenance` and `reasons` mandatory.
 
 ### Step 3: portfolio / DeFi intelligence
 
-1. Zerion または MCP source adapter を追加する。
-2. customer address から portfolio / positions を取得する。
-3. raw fact と derived segment を分ける。
-4. `GET /customers/:address/intelligence` に接続する。
+1. Add Zerion or MCP source adapter.
+2. Fetch portfolio / positions by customer address.
+3. Separate raw fact from derived segments.
+4. Connect to `GET /customers/:address/intelligence`.
 
-### Step 4: SDK telemetry 置き換え
+### Step 4: replace with SDK telemetry
 
-1. provider endpoint request と payment transaction を correlation id で紐づける。
-2. mock endpoint attribution を実 telemetry に置き換える。
-3. endpoint-level usage / workflow / retention insight を `future_sdk_field` から実データへ昇格する。
+1. Correlate provider endpoint request and payment transaction via correlation id.
+2. Replace mock endpoint attribution with real telemetry.
+3. Promote endpoint-level usage / workflow / retention insight from
+   `future_sdk_field` to live data.
 
-## 現時点の結論
+## Current conclusion
 
-Phase B の現状は、**CoinGecko x402 payTo 周辺の実 onchain fact を使った demo projection** まで。
+Current Phase B currently supports **demo projections based on real onchain facts
+around CoinGecko x402 payTo**.
 
-「customer が他にどんなサービスを使っているか」を本当に知るには、次の追加が必要。
+To truly know “what other services this customer uses,” we still need:
 
-1. customer 起点の outgoing payment 探索
-2. CDP Discovery による `payTo -> provider/service` 解決
-3. Bitquery capture の多 provider / 多 payTo 対応
-4. MCP または Zerion による portfolio / DeFi intelligence
-5. 将来 SDK telemetry による endpoint attribution
+1. customer-first outgoing payment exploration
+2. `payTo -> provider/service` resolution via CDP Discovery
+3. Bitquery capture support for multiple providers and payTo values
+4. portfolio / DeFi intelligence from MCP or Zerion
+5. future SDK telemetry-based endpoint attribution
 
-短期的には、`GET /wallet-usage-graph` の `otherServiceCandidates` を拡張するよりも、まずは `GET /customers/:address/intelligence` の独立 contract を作り、x402 service candidate と portfolio / DeFi 情報を分離して扱うのが安全。
+In the near term, rather than immediately extending
+`otherServiceCandidates` in `GET /wallet-usage-graph`, it is safer to first add an
+independent contract for `GET /customers/:address/intelligence` and separate
+x402 service candidates from portfolio / DeFi data.

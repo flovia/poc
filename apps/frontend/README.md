@@ -1,82 +1,82 @@
 # Flovia PoC Frontend
 
-x402 Co-usage Discovery のプロトタイプ UI。Next.js 15 (App Router) + React 19 + TypeScript + Tailwind CSS v4 で実装しています。
+This is a prototype UI for x402 Co-usage Discovery, built with Next.js 15 (App Router), React 19, TypeScript, and Tailwind CSS v4.
 
-## 動かし方
+## Usage
 
-依存ツール: **Bun 1.3.13 以上**。このアプリは monorepo の `apps/frontend` workspace として動作し、データソースとして `apps/bff` が `http://localhost:3001` で起動している必要があります。
+Required tool: **Bun 1.3.13+**. This app runs as the monorepo `apps/frontend` workspace and expects `apps/bff` to be running at `http://localhost:3001` as its data source.
 
 ```bash
 bun install
 bun --filter frontend dev
 ```
 
-[http://localhost:3000](http://localhost:3000) を開きます。初回アクセス時は localStorage が空なので、サイドバー用の3つの demo Provider が seed されます。Setup から自分の `pay_to` を追加することもできます。
+Open [http://localhost:3000](http://localhost:3000). On first access localStorage is empty, so three demo providers for the sidebar are seeded. You can also add your own `pay_to` from Setup.
 
-### BFF への接続
+### Connect to BFF
 
-各画面（Customers / Wallet 360° / Patterns）は Server Component から BFF を直接 fetch します。Server Component の接続先は `BFF_URL` で上書き可能です（既定: `http://localhost:3001`）。Browser 側から呼ぶ場合は `NEXT_PUBLIC_BFF_URL`（既定: `/api`）を使い、`next.config.ts` の rewrite 経由で BFF に転送します。
+Each screen (Customers / Wallet 360° / Patterns) fetches BFF directly from Server Components. The Server Component target can be overridden with `BFF_URL` (default: `http://localhost:3001`). For browser-side calls, use `NEXT_PUBLIC_BFF_URL` (default: `/api`), which is forwarded to BFF through the rewrite in `next.config.ts`.
 
 ```bash
 BFF_URL=http://localhost:3001 NEXT_PUBLIC_BFF_URL=/api bun --filter frontend dev
 ```
 
-PoC の BFF は payer wallet 単位の customer projection のみを返し、provider 単位のスコープ分割は行いません。サイドバーの `providerId` は localStorage 上の表示識別子としてのみ機能し、画面に流れるデータは BFF 全体の集計です。
+The PoC BFF returns only customer projections at payer wallet level and does not split scope by provider. The sidebar `providerId` works only as a display identifier in localStorage; data shown in screens is aggregated across the full BFF dataset.
 
-#### BFF の起動とデモデータ
+#### BFF startup and demo data
 
-BFF は同じ monorepo の `apps/bff` にあります。request path では live RPC / 外部 service を呼ばず、prepared fixture / projection を read-only product API として返します。
+BFF lives in the same monorepo at `apps/bff`. On request path it does not call live RPC / external services, and returns prepared fixtures / projections as a read-only product API.
 
 ```bash
 bun install
 bun --filter bff start
 ```
 
-Docker Compose で BFF と frontend をまとめて起動できます。
+You can start BFF and frontend together with Docker Compose.
 
 ```bash
 docker compose up --build
 ```
 
-`3000` が使用中の場合は host port を変更できます。
+If `3000` is in use, change the host port.
 
 ```bash
 FRONTEND_PORT=3002 docker compose up --build
 ```
 
-その他のスクリプト:
+Other scripts:
 
-| コマンド | 内容 |
+| Command | Description |
 | --- | --- |
-| `bun --filter frontend build` | 本番ビルド (`.next/`) |
-| `bun --filter frontend start` | 本番ビルドの起動 |
+| `bun --filter frontend build` | Production build (`.next/`) |
+| `bun --filter frontend start` | Start production build |
 | `bun --filter frontend typecheck` | `tsc --noEmit` |
 | `bun --filter frontend verify` | typecheck + test |
 
-## ルーティング
+## Routing
 
-| パス | 役割 |
+| Path | Purpose |
 | --- | --- |
-| `/setup` | Provider (pay_to) の登録・管理。localStorage に保存 |
-| `/providers/[providerId]/customers` | 当該 Provider の顧客ウォレット一覧 |
-| `/providers/[providerId]/wallet/[address]` | Wallet 360°(主役画面)。Activity Timeline + Co-usage Map + Insight stack |
-| `/providers/[providerId]/patterns` | 集約ビュー。Bubble Chart による co-usage 表示。Retention / Workflow Clusters は未実装 |
-| `/` | localStorage の最初の Provider の Customers にリダイレクト。なければ `/setup` へ |
+| `/setup` | Register and manage providers (`pay_to`). Saved in localStorage |
+| `/providers/[providerId]/customers` | Customer wallet list for the provider |
+| `/providers/[providerId]/wallet/[address]` | Wallet 360° (main screen). Activity Timeline + Co-usage Map + Insight stack |
+| `/providers/[providerId]/patterns` | Aggregated view. Co-usage shown with Bubble Chart. Retention / Workflow Clusters are not implemented |
+| `/` | Redirect to Customers of the first Provider in localStorage, or to `/setup` if none exists |
 
-## ディレクトリ構成
+## Directory structure
 
 ```
 apps/frontend/
 ├── app/                              # Next.js App Router
-│   ├── layout.tsx                    # フォントとコンテキストプロバイダ
-│   ├── page.tsx                      # ルート (動的リダイレクト)
-│   ├── globals.css                   # CSS 変数 + Tailwind v4 @theme + ユーティリティクラス
+│   ├── layout.tsx                    # font + context providers
+│   ├── page.tsx                      # root (dynamic redirect)
+│   ├── globals.css                   # CSS variables + Tailwind v4 @theme + utility classes
 │   ├── providers.tsx                 # Provider context (localStorage hydration)
 │   ├── setup/
 │   │   ├── layout.tsx
 │   │   └── page.tsx
 │   └── providers/[providerId]/
-│       ├── layout.tsx                # Sidebar を含むシェル
+│       ├── layout.tsx                # shell with sidebar
 │       ├── customers/page.tsx
 │       ├── wallet/[address]/page.tsx
 │       └── patterns/page.tsx
@@ -89,34 +89,34 @@ apps/frontend/
 │   └── patterns/                     # PatternsScreen, BubbleChart
 ├── lib/
 │   ├── api/
-│   │   ├── client.ts                 # BFF への fetch ラッパ (no-store)
+│   │   ├── client.ts                 # fetch wrapper for BFF (no-store)
 │   │   ├── adapters.ts               # canonical BFF response -> UI view model
-│   │   └── types.ts                  # UI view model 型
-│   ├── types.ts                      # StoredProvider 系 (localStorage 用)
-│   ├── storage.ts                    # localStorage 読み書き (SSR-safe)
-│   ├── providers.ts                  # slugify, seed, 表示用ヘルパ
+│   │   └── types.ts                  # UI view model types
+│   ├── types.ts                      # StoredProvider-related (for localStorage)
+│   ├── storage.ts                    # localStorage read/write (SSR-safe)
+│   ├── providers.ts                  # slugify, seed, UI helpers
 │   └── format.ts                     # formatAtomic, formatRatioPct, formatGrowth, classNames, shortAddr
 └── ...
 ```
 
-## デザインの方針
+## Design direction
 
-色・余白・タイポグラフィは `app/globals.css` の `:root` で定義した CSS 変数で統一しています。Tailwind v4 の `@theme` でこれらを Tailwind トークン (`bg-mesh-blue`, `text-text-1`, ...) として再公開しているので、新規コードは Tailwind ユーティリティで書きつつ、既存の `style={{ color: "var(--mesh-blue)" }}` のような inline 指定もそのまま動作します。
+Color, spacing, and typography are unified via CSS variables defined in `app/globals.css` under `:root`. They are re-exposed as Tailwind v4 `@theme` tokens (`bg-mesh-blue`, `text-text-1`, ...) so new code can use Tailwind utilities, while existing inline styles like `style={{ color: "var(--mesh-blue)" }}` still work.
 
-色の意味:
+Color meanings:
 
-| 役割 | 値 | Tailwind |
+| Role | Value | Tailwind |
 | --- | --- | --- |
-| 主アクセント (青) | `--mesh-blue` `#2563EB` | `bg-mesh-blue` |
-| 副アクセント (teal) | `--teal` `#0D9488` | `bg-teal` |
-| 警告 | `--warn` `#B45309` | `bg-warn` |
-| ベース面 | `--bg-shell` `#F6F7F9` | `bg-bg-shell` |
-| 主要テキスト | `--text-1` `#0F172A` | `text-text-1` |
+| Primary accent (blue) | `--mesh-blue` `#2563EB` | `bg-mesh-blue` |
+| Secondary accent (teal) | `--teal` `#0D9488` | `bg-teal` |
+| Warning | `--warn` `#B45309` | `bg-warn` |
+| Base surface | `--bg-shell` `#F6F7F9` | `bg-bg-shell` |
+| Primary text | `--text-1` `#0F172A` | `text-text-1` |
 
 ## localStorage
 
-Setup で登録した Provider はキー `flovia:providers` の下に `StoredProvider[]` として保存されます。形は [`lib/types.ts`](lib/types.ts) を参照。初回訪問時は `flovia:initialized` センチネルが立っていないと、デモ用の3エントリが seed されます。手動で localStorage をクリアすれば再 seed されます。
+Providers added in Setup are stored under key `flovia:providers` as `StoredProvider[]`. See [`lib/types.ts`](lib/types.ts) for the shape. On first visit, if `flovia:initialized` sentinel is not set, three demo entries are seeded. Clearing localStorage manually will trigger reseeding.
 
-## デプロイ
+## Deployment
 
-現時点の標準起動は monorepo の Docker Compose です。BFF と同じ contract / fixture に対して検証できるよう、frontend 単独デプロイより workspace 内での検証を優先します。
+Current standard startup is monorepo Docker Compose. To validate against the same contract and fixtures as BFF, workspace-level validation is prioritized over standalone frontend deployment.

@@ -1,10 +1,10 @@
 ## Context
 
-Phase B の BFF は `GET /customers`、`GET /customers/:address/profile`、`GET /wallet-usage-graph` を read-only に提供している。現在の response は `apps/bff/src/data/phase-b-demo.ts` の deterministic demo read model から返しており、request path で CDP / Bitquery / RPC / SDK collector は呼ばない。
+Phase B BFF currently provides `GET /customers`, `GET /customers/:address/profile`, and `GET /wallet-usage-graph` as read-only. Current responses come from deterministic demo read model in `apps/bff/src/data/phase-b-demo.ts`, and the request path does not call CDP / Bitquery / RPC / SDK collector.
 
-一方で、demo 上で扱う CoinGecko の endpoint attribution には構造的な制約がある。複数 endpoint が同じ `payTo` に支払われる場合、public/onchain data だけでは `txHash -> endpointPath` を判定できない。そのため、real transaction facts と mock endpoint attribution を分離したうえで join し、Phase B projection を生成する。
+On the demo, CoinGecko endpoint attribution has structural constraints. When multiple endpoints are paid to the same `payTo`, public/onchain data alone cannot determine `txHash -> endpointPath`. Therefore, join and generate Phase B projection by separating real transaction facts and mock endpoint attribution.
 
-現時点で repo 内の `apps/cli/reports/x402-market-snapshot.json` と `apps/cli/reports/x402-market-summary.md` から確認できている CoinGecko x402 data は次の通り。
+Current CoinGecko x402 data visible from `apps/cli/reports/x402-market-snapshot.json` and `apps/cli/reports/x402-market-summary.md` is as follows:
 
 ```text
 providerId: coingecko
@@ -20,17 +20,17 @@ latestSender: 0xac5a07c44a4f971667b3df4b6551fb6991b2142d
 latestBlockTimestamp: 2026-04-29T04:11:53Z
 ```
 
-初期 capture policy は次の通り。
+Initial capture policy is:
 
 ```text
-requestedLimit: 1000 default（明示 limit で 1000 件超も可）
-timeWindow: snapshot generation と同等の window から開始し、必要に応じて拡張する
-goal: selected time window 内の observed transfers を可能な限り全件取得する
+requestedLimit: 1000 default (explicit limit may exceed 1000)
+timeWindow: start from same window used in snapshot generation and expand when needed
+goal: capture all observed transfers within the selected time window as much as possible
 ```
 
-現在の observed `transactionCount` は 628 なので、1000 件上限で現時点の window 内 transfer は概ね収まる想定。ただし、source 側の pagination / availability により取得件数が 1000 未満でも generation error にはしない。fixture metadata に `requestedLimit`、`capturedCount`、`timeWindow`、`source` を記録する。
+Current observed `transactionCount` is 628, so 1000-limit capture should generally cover the current window. However, if API pagination or availability returns fewer than 1000, that does not produce a generation error. Record `requestedLimit`, `capturedCount`, `timeWindow`, and `source` in fixture metadata.
 
-公式 docs で確認した CoinGecko x402 supported endpoints は次の 5 つ。
+Supported CoinGecko x402 endpoints confirmed from official docs are:
 
 ```text
 GET /api/v3/x402/onchain/simple/networks/{id}/token_price/{address}
@@ -40,61 +40,61 @@ GET /api/v3/x402/onchain/networks/{id}/tokens/{address}
 GET /api/v3/x402/simple/price
 ```
 
-公式 docs 上の価格は `$0.01 USDC / request`。ただし、公式 docs には `payTo` address は明記されていないため、`payTo` は CDP Discovery snapshot 由来の observed data として扱う。
+Official docs state price at `$0.01 USDC / request`. Because `payTo` addresses are not listed in official docs, `payTo` values are treated as observed data from CDP Discovery snapshot.
 
 ## Goals / Non-Goals
 
 **Goals:**
 
-- `packages/sources` で CoinGecko `payTo` から real onchain transfer list を取得し、その transaction facts を Phase B demo projection の入力にする。
-- `txHash` を join key として mock endpoint attribution を外付けする。
-- `onchain_fact` と `demo_label` / `future_sdk_field` / `derived_insight` を field 単位で保持する。
-- BFF runtime は生成済み projection を read-only に返し、live source を呼ばない。
-- 将来 SDK telemetry によって mock attribution を置き換えられる構造にする。
+- Fetch real onchain transfer lists from CoinGecko payTo in `packages/sources` and use those transaction facts as input for Phase B demo projection.
+- Add `txHash` as join key and apply mock endpoint attribution as supplemental data.
+- Preserve field-level `onchain_fact`, `demo_label`, and `future_sdk_field` / `derived_insight`.
+- BFF runtime returns generated projections as read-only without live source calls.
+- Structure for replacing mock attribution with future SDK telemetry.
 
 **Non-Goals:**
 
-- SDK middleware の本実装。
-- request path での live CDP / Bitquery / RPC call。
-- endpoint attribution をオンチェーン情報だけで推定すること。
-- CoinGecko endpoint usage を実測値として主張すること。
-- 認証、課金、本番 multi tenant 化。
+- Implement full SDK middleware.
+- Live CDP / Bitquery / RPC call in request path.
+- Infer endpoint attribution from onchain data alone.
+- Claim official CoinGecko endpoint usage as measured facts.
+- Implement authentication, billing, or production multi-tenant.
 
 ## Decisions
 
-### Decision 1: real transaction facts と mock attribution を別 fixture にする
+### Decision 1: Separate real transaction facts and mock attribution into different fixtures
 
-Phase A 相当の onchain transaction facts と、Phase B demo 用の endpoint attribution は別ファイル / 別レイヤーとして管理する。
+Phase A transaction facts and Phase B demo endpoint attribution are managed as separate files / layers.
 
-候補:
+Candidates:
 
 ```text
 fixtures/phase-a/coingecko-transactions.json
 apps/bff/fixtures/phase-b/mock-attribution.json
 ```
 
-理由:
+Rationale:
 
-- `txHash`、`payerWallet`、`payTo`、`amount`、`timestamp` は real fact として扱える。
-- `endpointPath`、`workflowLabel`、`requestSequence` は現時点では real fact ではない。
-- 同じ fixture に混ぜると「オンチェーンだけで endpoint が分かる」と誤解される。
+- `txHash`, `payerWallet`, `payTo`, `amount`, and `timestamp` are valid as real facts.
+- `endpointPath`, `workflowLabel`, and `requestSequence` are not real facts today.
+- Mixing them in one fixture can create the false impression that onchain data alone identifies endpoint mapping.
 
-代替案:
+Alternatives:
 
-- すべてを BFF の hand-written data に含める: 実装は速いが、Phase A との接続が不明瞭になる。
-- live source を BFF request path で呼ぶ: demo の安定性と offline verification 方針に反する。
+- Put everything in BFF hand-written data: fast implementation but unclear connection to Phase A.
+- Call live source in BFF request path: conflicts with stability and offline verification policy.
 
-### Decision 2: real transfer list capture は `packages/sources` に寄せる
+### Decision 2: Put real transfer-list capture in `packages/sources`
 
-CoinGecko `payTo` から real transaction facts を取得する責務は `packages/sources` に置く。既存の Bitquery adapter は `network + asset + payTo` の aggregate と latest transfer を扱っているため、同じ境界に transfer list 取得を追加する。
+Responsibility for fetching real transaction facts from CoinGecko `payTo` is placed in `packages/sources`. Existing Bitquery adapter already handles aggregate and latest transfer by `network + asset + payTo`, so transfer-list retrieval is added at the same boundary.
 
-想定 API:
+Planned API:
 
 ```text
 fetchPaymentTransfersByPayTo({ network, asset, payTo, from, limit })
 ```
 
-返す値:
+Returned fields:
 
 ```text
 txHash
@@ -107,38 +107,38 @@ blockNumber
 blockTimestamp
 ```
 
-初期実装では `limit` の default を 1000 とし、明示 limit で 1000 件超も許可する。Bitquery 側の上限に応じて pagination する。取得結果が requested limit 未満の場合も有効な capture とし、fixture metadata の `capturedCount` で実取得件数を明示する。
+Initial implementation uses default `limit` of 1000 and allows explicit limits beyond 1000. If Bitquery page size limits apply, apply pagination. If results are below requested limit, treat this as valid capture and record actual count in fixture metadata `capturedCount`.
 
-理由:
+Rationale:
 
-- external source integration は `packages/sources` に集約する。
-- `apps/cli` / scripts は source adapter を呼んで fixture / projection を生成する orchestration に集中できる。
-- `apps/bff` は `packages/sources` に依存せず、生成済み projection だけを読む。
+- Source integration stays consolidated in `packages/sources`.
+- `apps/cli` / scripts can focus on orchestration to call source adapter and generate fixture / projection.
+- `apps/bff` reads only generated projection and does not depend on `packages/sources`.
 
-代替案:
+Alternatives:
 
-- `apps/cli` に Bitquery GraphQL を直接書く: 速いが source boundary が分散する。
-- `apps/bff` で取得する: read-only/offline 方針に反するため採用しない。
+- Write Bitquery GraphQL directly in `apps/cli`: faster but scattered source boundaries.
+- Fetch in `apps/bff`: conflicts with read-only/offline policy.
 
-### Decision 3: join key は `txHash` にする
+### Decision 3: Use `txHash` as join key
 
-Projection builder は real transaction facts と mock attribution を `txHash` で join する。
+Projection builder joins real transaction facts and mock attribution by `txHash`.
 
-理由:
+Rationale:
 
-- `payerWallet + timestamp` のような曖昧な join を避けられる。
-- demo attribution の根拠を transaction 単位で明確に追跡できる。
-- 将来 SDK telemetry も `txHash` / `paymentIntentId` / `correlationId` による対応へ自然に移行できる。
+- Avoids ambiguous joins like `payerWallet + timestamp`.
+- Supports explicit traceability of attribution evidence at transaction granularity.
+- Naturally supports migration to SDK telemetry via `txHash` / `paymentIntentId` / `correlationId` later.
 
-代替案:
+Alternatives:
 
-- `payerWallet + amount + near timestamp` で join: 実データ欠損時の補助には使えるが、Phase B demo の主 join key としては曖昧。
+- Join by `payerWallet + amount + near timestamp`: usable as fallback for missing facts, but too ambiguous as primary key for Phase B demo.
 
-### Decision 4: BFF は generated projection を読む
+### Decision 4: BFF reads generated projection
 
-BFF は real tx fixture と mock attribution fixture を request ごとに処理せず、生成済み projection を読み込んで返す。
+BFF does not process real tx fixture and mock attribution fixture on each request; it reads pre-generated projection.
 
-候補:
+Candidates:
 
 ```text
 apps/bff/fixtures/phase-b/customer-list.json
@@ -146,50 +146,50 @@ apps/bff/fixtures/phase-b/customer-profiles.json
 apps/bff/fixtures/phase-b/wallet-usage-graph.json
 ```
 
-理由:
+Rationale:
 
-- BFF は read-only product API boundary に集中できる。
-- verification を offline で安定させられる。
-- projection generation と HTTP serving の関心を分離できる。
+- BFF can stay focused on read-only product API boundary.
+- Maintains stable offline verification.
+- Separates projection generation and HTTP serving concerns.
 
-代替案:
+Alternatives:
 
-- BFF 起動時に projection を生成する: 小規模では可能だが、fixture validation と projection build の責務が BFF に寄りすぎる。
+- Build projection at BFF startup: possible for small scope, but adds too much responsibility to BFF for fixture validation and projection build.
 
-### Decision 5: provenance は contract validation の対象として残す
+### Decision 5: Keep provenance in contract validation
 
-Projection output は既存 Phase B canonical contract に従い、`provenance`、`provenanceByField`、`reasons` を保持する。
+Projection output follows existing Phase B canonical contract and keeps `provenance`, `provenanceByField`, and `reasons`.
 
-理由:
+Rationale:
 
-- real fact と mock attribution の境界が API response 上でも失われない。
-- frontend が demo label / future SDK field / derived insight を区別できる。
-- 将来 SDK telemetry に置き換える場所を明示できる。
+- The API boundary does not lose real-fact vs mock-attribution boundary.
+- Frontend can distinguish demo label / future SDK field / derived insight.
+- Enables clear replacement points for future SDK telemetry.
 
 ## Risks / Trade-offs
 
-- Real transaction が少ない、または偏る → 初期 capture は最大 1000 件を要求し、demo に必要な wallet / workflow coverage を満たすため、transaction selection criteria と mock attribution coverage を明示する。
-- Mock attribution が実測に見える → `provenanceByField` と `reasons` を必須化し、docs / tests で固定する。
-- Fixture が古くなる → generation metadata と version を持たせ、再生成可能な script / command を用意する。
-- Projection builder が BFF schema と乖離する → builder output を `packages/contracts` validator で検証する。
-- Live source 取得が通常 verify に混ざる → `packages/sources` の live transfer list capture は明示的な別 command 経由で使い、`bun run verify` は保存済み fixture で offline のまま維持する。
+- Real transfers are low or skewed: initial capture requests up to 1000, with explicit transaction selection criteria and mock attribution coverage visible for wallet / workflow coverage.
+- Mock attribution looks like measured data: enforce non-empty `provenanceByField` and `reasons` in contract and tests.
+- Fixture staleness: store generation metadata and version and provide re-generation script/command.
+- Projection builder divergence from BFF schema: validate builder output with `packages/contracts` validators.
+- Live source capture leaks into normal verify path: run `packages/sources` live capture through explicit separate command and keep `bun run verify` offline.
 
 ## Migration Plan
 
-1. `packages/sources` に `payTo` 宛 transfer list 取得 API を追加する。
-2. Real transaction facts fixture と mock attribution fixture の schema を定義する。
-3. CoinGecko `payTo` 由来の transaction facts fixture を用意する。
-4. `txHash` に対して mock endpoint attribution fixture を用意する。
-5. Projection builder で customer list / profile / wallet usage graph を生成し、contract validator を通す。
-6. BFF の読み込み元を generated projection fixture に切り替える。
-7. Existing route tests を維持し、provenance separation の tests を追加する。
+1. Add a CoinGecko `payTo` transfer-list API in `packages/sources`.
+2. Define schemas for real transaction fact fixture and mock attribution fixture.
+3. Prepare transaction fact fixture derived from CoinGecko `payTo`.
+4. Prepare mock endpoint attribution fixture keyed by `txHash`.
+5. Generate customer list / profile / wallet usage graph in projection builder and validate via contract.
+6. Switch BFF read source to generated projection fixtures.
+7. Keep existing route tests and add provenance-separation tests.
 
-Rollback は、BFF の読み込み元を現行の deterministic in-file read model に戻すことで行う。
+Rollback is to revert BFF read source to current deterministic in-file read model.
 
 ## Open Questions
 
-- CoinGecko `payTo` の対象 network / asset / time window をどこまで固定するか。
-- Real transaction fixture を `fixtures/phase-a` に置くか、`apps/bff/fixtures` 配下へ閉じるか。
-- `packages/sources` の transfer list capture を呼ぶ command を `apps/cli` に置くか、root script に置くか。
-- Projection builder を `apps/cli` の command とするか、root script とするか。
-- Mock endpoint の 5 endpoint に対応する demo workflow label の最終セット。
+- How strictly should CoinGecko `payTo` network / asset / time window be fixed initially?
+- Should real transaction fixture live under `fixtures/phase-a` or under `apps/bff/fixtures`?
+- Should the transfer-list capture command belong to `apps/cli` or root script?
+- Should projection builder be placed as `apps/cli` command or root script?
+- Final set of demo workflow labels for the five CoinGecko endpoints.

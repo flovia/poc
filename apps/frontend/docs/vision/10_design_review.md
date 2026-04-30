@@ -1,157 +1,158 @@
 ---
-name: 設計レビュー (デモ脚本との整合)
-description: 脚本に合わせた既存設計の再評価と修正方針
+name: Design review (alignment with demo script)
+description: Re-evaluate existing design and propose fixes for demo-script fit
 type: project
 ---
 
-# 設計レビュー (デモ脚本との整合)
+# Design review (alignment with demo script)
 
-> 最終更新: 2026-04-28
-> 出典: [Codex 提案](/tmp/flovia-codex-review/demo_script.md)
-> 目的: [08_demo_script.md](08_demo_script.md) を最大限活かすため、既存設計 (01-07) を再評価
+> Last updated: 2026-04-28
+> Source: [Codex proposal](/tmp/flovia-codex-review/demo_script.md)
+> Purpose: Maximize use of [08_demo_script.md](08_demo_script.md) by re-evaluating existing design (01-07)
 
-## ★ 総評 (Codex)
+## ★ Overall review (Codex)
 
-> 現在の PoC 設計はかなり良い。`Customers → Wallet 360° → Patterns` の導線は、3 分デモに必要な起承転結を持っている。
+> The current PoC design is strong. The `Customers → Wallet 360° → Patterns` path already has a natural arc for a 3-minute demo.
 >
-> ただし、今回の脚本を最大化するには **`Wallet 360°` の上部要約と Insight の営業寄り表現を強化し、逆に Setup と Patterns はさらに脇役化する** のが正しい。
+> To maximize this script, however, we should **strengthen the upper summary and sales-oriented insight language in Wallet 360°, while shifting Setup and Patterns even further into supporting roles**.
 
 ---
 
-## ★ 重要決定: Wallet 360° の主役は Timeline で固定
+## ★ Key decision: Wallet 360° hero is Timeline
 
-[01_screens.md](01_screens.md) と [07_moodboard_per_screen.md](07_moodboard_per_screen.md) で揺れていた「Timeline 主役 vs Co-usage Map 主役」の論点を、**Timeline 主役で固定** とする。
+[01_screens.md](01_screens.md) and [07_moodboard_per_screen.md](07_moodboard_per_screen.md) had been oscillating between "Timeline hero" and "Map hero." We now set it to **Timeline hero fixed**.
 
-### 理由
+### Why
 
-> 売るべき価値は「ネットワークが綺麗」ではなく、
-> 1. **自社 API が顧客の何の仕事に組み込まれているか分かる** (a)
-> 2. **誰に何を売るべきか分かる** (b)
+> What we need to sell is not a pretty network shape,
+> but the ability to answer:
+> 1. **how this API is embedded in customer work** (a)
+> 2. **who to sell to and what to sell** (b)
 >
-> の 2 点。クライマックス a は **タイムラインでしか成立しない**。Map は補強役。
+> Climax a is achievable **only with Timeline**. The map is reinforcement.
 
-### 序列 (Wallet 360°)
+### Ordering (Wallet 360°)
 
-| 優先度 | 要素 |
+| Priority | Element |
 |---|---|
-| 1 | Identity bar の **business summary** (Monthly spend / 7d growth / Free tier progress) |
-| 2 | **Activity Timeline** (主役) |
+| 1 | Identity bar **business summary** (Monthly spend / 7d growth / Free tier progress) |
+| 2 | **Activity Timeline** (hero) |
 | 3 | **Upsell insight** card |
-| 4 | Co-usage Map (証拠補強) |
-| 5 | その他 Insight cards |
+| 4 | Co-usage Map (supporting evidence) |
+| 5 | Other insight cards |
 
 ---
 
-## ★ 追加すべきクリティカル UI 要素 (5 つ)
+## ★ Five critical UI additions needed
 
-脚本のクライマックスを成立させるために **新規追加** が必要な要素。
+To realize the demo climaxes, these are newly required.
 
 ### 1. Free Tier Progress Bar
-- 場所: Wallet 360° の Identity bar
-- 表示例: `Free tier: 92%`
-- 80% 超から subtle な強調 (バーの該当部分が静かに発光)
-- **クライマックス b (Scene 6) に必須**
+- Location: Wallet 360° identity bar
+- Example: `Free tier: 92%`
+- Above 80%, apply subtle emphasis (the relevant segment glows softly)
+- **Mandatory for climax b (Scene 6)**
 
 ### 2. 7d Volume Sparkline
-- 場所: Identity bar の `7d growth` 数値の横
-- 細い sparkline で「急増」を数字より速く伝える
-- 数字 (`+184%`) のみだと弱い
+- Location: right of `7d growth` in identity bar
+- A thin sparkline communicates surge faster than text alone
+- A number like `+184%` is too weak by itself
 
 ### 3. Upsell Opportunity Card
-- 場所: Wallet 360° の Insight stack 内
-- 単なる分析結果ではなく、以下を含める:
-  - `Recommended plan` (例: `Pro Trading 250M`)
-  - `Why now` (= 急増理由 + 無料枠到達)
-  - `Projected monthly expansion` (推定アップセル金額)
-- **クライマックス b の中核**
+- Location: inside Wallet 360° insight stack
+- Not just analytics; include:
+  - `Recommended plan` (e.g., `Pro Trading 250M`)
+  - `Why now` (rapid surge + free-tier approach)
+  - `Projected monthly expansion` (estimated upsell amount)
+- **Core for climax b**
 
 ### 4. Workflow Summary Strip
-- 場所: Activity Timeline の上部
-- 表示例: `Price API → LLM → DEX → Discord`
-- タイムラインを読まなくても **一撃でワークフローが分かる** 補助
-- a の理解速度を決める
+- Location: above Activity Timeline
+- Example: `Price API → LLM → DEX → Discord`
+- Lets viewers understand workflow immediately without reading rows deeply
+- Decides speed of comprehension for climax a
 
 ### 5. Entry-point Badge
-- 場所: Identity bar or Insight 最上段
-- 表示例: `Your API is step 1 in 87% of observed loops`
-- 事業者が一番反応するポイント。**かなり強い契約動機**
+- Location: top of identity bar or top-most insight
+- Example: `Your API is step 1 in 87% of observed loops`
+- This is the strongest conversion hook for commercial teams
 
 ---
 
-## ★ Activity Timeline に追加すべき視覚補助
+## ★ Additional visual support in Activity Timeline
 
 ### Workflow Grouping
-- 同一ワークフローの 4 行 (Price → LLM → DEX → Discord) を **薄い縦ガイドで束ねる**
-- 自社行のみ Teal hairline で強調
-- a の理解速度を決定する
+- Bundle four rows in the same workflow (Price → LLM → DEX → Discord) with a **subtle vertical guide**
+- Emphasize only own-provider rows with Teal hairline
+- This determines comprehension speed for climax a
 
-### "Your API is the entry point" 表現
-- Insight card の最上段に短く配置
-- 「うちが起点になっている」事実を即時に伝える
+### "Your API is the entry point" label
+- Short line at top of insight card
+- Immediately communicates that our API is the entry point
 
 ---
 
-## ★ 削れる要素 (デモでは見せない / 弱める)
+## ★ Removed / muted elements for demo
 
 ### Setup
-- **Provider Name 入力** → デモでは不要 (`pay_to` のみで十分)
-- **Advanced モード説明の厚み** → 視覚的に弱める (存在は OK)
+- **Provider Name input** is unnecessary for demo (`pay_to` alone is enough)
+- reduce visual weight of **Advanced mode explanation** (presence is okay)
 
 ### My Customers
-- **過剰なフィルタ** → `Agent / Sort / Status` 程度に絞る (多いとデモの焦点が散る)
-- 「一覧」ではなく **「次にクリックすべき 1 行を気持ちよく見つける画面」** に寄せる
+- Reduce excessive filters to `Agent / Sort / Status`
+- Position as **"screen that helps you pick the one row to click next"**, not a passive list
 
 ### Co-usage Patterns
-- **補助チャート全般** → サブ扱いなので Bubble Chart 以外はかなり抑える
-- 「全体でも再現する」で十分、説明しすぎない
+- **Most supplementary charts** should be light, with Bubble Chart as the primary focus
+- Enough to show "it scales to the full cohort" without over-explanation
 
 ---
 
-## ★ 各画面の優先順位 (デモ脚本ベースで再提案)
+## ★ Re-prioritized screen order by demo script
 
 ### `/setup`
-1. 既登録 `pay_to`
+1. Registered `pay_to`
 2. `Continue to Customers`
-3. 新規追加
-4. Advanced モード
+3. Add new
+4. Advanced mode
 
-→ デモでは「もう登録済み」が前提。**入力体験よりも "すぐ始められる" 印象を優先**
+→ In demo this is pre-registered, so we optimize for "quick start" over input experience.
 
 ### `/providers/[id]/customers`
-1. **主役ウォレット行**
-2. `Status` (Growth Potential 等)
+1. **Hero wallet row**
+2. `Status` (Growth Potential, etc.)
 3. `Free tier progress`
 4. `7d growth`
 5. `Co-used with`
 
-→ **次にクリックすべき 1 行を気持ちよく見つける画面**
+→ A screen where the next clickable row is easy and pleasant to find.
 
-### `/providers/[id]/wallet/[addr]` ★ 最重要
-1. **Identity bar の business summary**
+### `/providers/[id]/wallet/[addr]` ★ Most important
+1. **Identity bar business summary**
 2. **Activity Timeline**
 3. **Upsell insight**
 4. Co-usage Map
-5. その他 Insight
+5. Other insight
 
-→ **Timeline 主役、Map は補強、Insight は営業アクション化**
+→ Timeline as hero, map as reinforcement, insight to be sales-usable.
 
 ### `/providers/[id]/patterns`
 1. Bubble Chart
-2. 高頻度 bot クラスタのラベル
-3. そのクラスタの共通ワークフロー短文
-4. 補助比較
+2. High-frequency bot cluster labels
+3. One-line common workflows for that cluster
+4. Supporting comparison
 
-→ サブ扱い、説明過多にしない
+→ Supporting role, avoid over-explanation.
 
 ---
 
-## ★ 既存ドキュメントへの反映
+## ★ Documents requiring update
 
-このレビュー結果に基づき、以下のドキュメントを更新が必要:
+Based on this review, the following docs need updates:
 
-| ドキュメント | 更新内容 |
+| Document | Required updates |
 |---|---|
-| [01_screens.md](01_screens.md) | Wallet 360° に追加 UI (Upsell Card / Free Tier Bar / Sparkline / Workflow Strip / Entry-point Badge) を反映、Timeline 主役で確定 |
-| [07_moodboard_per_screen.md](07_moodboard_per_screen.md) | Wallet 360° の主役論点を解決済みに更新 |
-| [05_decisions_log.md](05_decisions_log.md) | D14 として「Wallet 360° は Timeline 主役で確定」を追記 |
-| [03_data_model.md](03_data_model.md) | 主役ウォレットのモックデータを Activity Timeline サンプルに合わせる旨追記 |
+| [01_screens.md](01_screens.md) | reflect added Wallet 360° UI (Upsell Card / Free Tier Bar / Sparkline / Workflow Strip / Entry-point Badge), confirm Timeline hero |
+| [07_moodboard_per_screen.md](07_moodboard_per_screen.md) | update Wallet 360° hero decision to resolved Timeline state |
+| [05_decisions_log.md](05_decisions_log.md) | add D14 note: "Wallet 360° hero is Timeline" |
+| [03_data_model.md](03_data_model.md) | note that hero wallet mock follows Activity Timeline sample |

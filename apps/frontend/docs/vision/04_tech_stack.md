@@ -1,61 +1,61 @@
 ---
-name: 技術スタック
-description: フレームワーク・デプロイ先・依存方針
+name: Technology stack
+description: Framework, deployment target, and dependency direction
 type: project
 ---
 
-# 技術スタック
+# Technology stack
 
-> 最終更新: 2026-04-28
+> Last updated: 2026-04-28
 
-## ★ 確定事項
+## ★ Confirmed items
 
-| 項目 | 選定 | 備考 |
+| Item | Choice | Notes |
 |---|---|---|
-| フレームワーク | Next.js (App Router) | |
-| パッケージマネージャ | pnpm | |
-| デプロイ先 | Vercel | URL 共有でデモ配信 |
-| 言語 | TypeScript | |
-| データソース | モック JSON | バックエンド差し替え可能な構造 |
-| デザイン | Codex 相談で最新 SaaS 風 | ゼロベース |
+| Framework | Next.js (App Router) | |
+| Package manager | pnpm | |
+| Deployment | Vercel | URL sharing for demo distribution |
+| Language | TypeScript | |
+| Data source | Mock JSON | replaceable backend-ready structure |
+| Design | modern SaaS look decided through Codex consultation | built from scratch |
 
-## ★ 未確定 (実装ステップで検討)
+## ★ Undecided (to decide during implementation)
 
-| 項目 | 候補 |
+| Item | Candidates |
 |---|---|
-| UI コンポーネント | shadcn/ui / Tremor / 自作 |
-| スタイリング | Tailwind CSS (ほぼ確定) / CSS Modules |
-| ネットワーク図 | react-force-graph / visx / D3 直接 / cytoscape.js |
+| UI components | shadcn/ui / Tremor / custom |
+| Styling | Tailwind CSS (near final) / CSS Modules |
+| Network graph | react-force-graph / visx / D3 directly / cytoscape.js |
 | Sankey | visx / D3 |
-| バブル / 一般チャート | Recharts / visx / Tremor |
-| 状態管理 | React 標準 (useState/Context) / Zustand / Jotai |
-| データフェッチ | fetch + Server Components (モック JSON は静的読み込みで OK) |
-| アイコン | lucide-react / heroicons |
-| フォント | Inter / Geist |
-| ダークモード | 採用検討 (デモ映えで有利) |
+| Bubble / general charts | Recharts / visx / Tremor |
+| State management | React built-ins (useState/Context) / Zustand / Jotai |
+| Data fetching | fetch + Server Components (mock JSON can be loaded statically) |
+| Icons | lucide-react / heroicons |
+| Fonts | Inter / Geist |
+| Dark mode | under consideration (advantageous for demo) |
 
-## ★ ディレクトリ構造 (想定)
+## ★ Proposed directory structure
 
 ```
 poc/
-├── docs/                    # 本ドキュメント群
+├── docs/                    # this documentation set
 ├── app/                     # Next.js App Router
 │   ├── (dashboard)/
-│   │   ├── customers/       # 画面1
-│   │   ├── wallet/[id]/     # 画面2
-│   │   └── patterns/        # 画面3
+│   │   ├── customers/       # Screen 1
+│   │   ├── wallet/[id]/     # Screen 2
+│   │   └── patterns/        # Screen 3
 │   ├── layout.tsx
 │   └── page.tsx
 ├── components/
-│   ├── charts/              # ネットワーク図 / Sankey / バブル
-│   ├── ui/                  # shadcn 等
+│   ├── charts/              # network / Sankey / bubble charts
+│   ├── ui/                  # shadcn, etc.
 │   └── layout/
 ├── lib/
-│   ├── data/                # モック JSON
+│   ├── data/                # mock JSON
 │   └── types/               # TypeScript types
 ├── public/
 ├── package.json
 └── ...
 ```
 
-実装に入る段階で正式に確定する。
+To be finalized at implementation time.

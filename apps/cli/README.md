@@ -1,20 +1,20 @@
 # Flovia 260427 CLI
 
-## この CLI でできること
+## What this CLI can do
 
-- CDP x402 Discovery の metadata と Bitquery の onchain activity を使って market snapshot を生成します。
-- JSON (`x402-market-snapshot.json`) と Markdown summary (`x402-market-summary.md`) の両方を書き出します。
-- `--network` / `--asset` による scope 指定、CDP 取得件数の `--limit`、明示的な全件取得 `--all` に対応します。
-- Bitquery enrichment には環境変数 `BITQUERY_TOKEN` を使います。
+- Generates market snapshots using CDP x402 Discovery metadata and Bitquery onchain activity.
+- Writes both JSON (`x402-market-snapshot.json`) and Markdown summary (`x402-market-summary.md`).
+- Supports scope with `--network` / `--asset`, CDP fetch limit with `--limit`, and explicit full fetch with `--all`.
+- Uses the `BITQUERY_TOKEN` environment variable for Bitquery enrichment.
 
-## 主なコマンド
+## Main commands
 
-- リポジトリルートで依存関係を導入: `bun install`
-- 環境変数の雛形を作成: `cp -n .env.example .env`
-- snapshot を生成: `bun run market:snapshot`
-- offline pipeline を検証: `bun run verify`
+- Install dependencies from the repository root: `bun install`
+- Create environment variable template: `cp -n .env.example .env`
+- Generate snapshot: `bun run market:snapshot`
+- Verify offline pipeline: `bun run verify`
 
-## 注意
+## Notes
 
-- 旧 self-implemented discovery / probe / onchain pipeline は `v0-self-implemented-x402` branch に保存済みです。
-- この branch では CDP + Bitquery を primary path とし、旧 pipeline は意図的に含めていません。
+- The legacy self-implemented discovery / probe / onchain pipeline is stored on the `v0-self-implemented-x402` branch.
+- This branch uses CDP + Bitquery as the primary path and intentionally excludes the legacy pipeline.
