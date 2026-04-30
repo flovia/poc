@@ -249,3 +249,69 @@ existed only as visual placeholders carried over from the original UI mock in
   search stay page-local?
 - If we add a "demo data" toggle, does that belong in the TopBar or in the
   Setup page where demo opt-in already lives?
+
+---
+
+## User avatar / account menu
+
+The TopBar previously rendered a small blue square in the top right with the
+letter "F" inside, mimicking the user-avatar slot that Stripe / Linear /
+Vercel / GitHub all place there. Clicking such an avatar would normally open
+an account menu (settings, sign out, switch workspace, etc.).
+
+### Status
+
+Not implemented. The "F" was rendered as a non-interactive `<div>` with no
+click handler, no menu, and no keyboard affordance. It was removed because:
+
+- Flovia is currently a localStorage-only PoC. There is no login, no user
+  identity, and no notion of "workspaces", so an avatar has nothing to
+  represent.
+- The sidebar already shows the Flovia wordmark and logo, so the "F" was
+  also a visual duplicate of that brand.
+- Leaving an avatar-shaped affordance in the corner suggests the app has
+  user accounts when it doesn't, which is misleading.
+
+### Why deferred
+
+1. **No identity layer to surface yet.** An avatar is meaningful when it
+   resolves to a person or workspace; introducing one before that feature
+   exists is decorative cargo from the original UI mock.
+2. **Account menus carry real interaction cost.** Sign out, account
+   settings, theme switch, "what's new", workspace switch — none of these
+   exist in the PoC, so the menu would be a list of disabled rows.
+3. **Cheap to add later.** When we do introduce login or multi-workspace
+   support, restoring an avatar in the same slot is a small change.
+
+### Where it should live (when implemented)
+
+Same slot, top-right of the TopBar, but as a proper `<button>` (or radix
+DropdownMenu trigger) with:
+
+- An accessible name (`aria-label="Account menu"`).
+- A keyboard shortcut hint if the menu is reachable that way.
+- Real menu items rendered via a popover, not just a hover tooltip.
+
+If multiple workspaces become a thing, consider splitting workspace switch
+out of the avatar menu and into a dedicated control near the breadcrumbs —
+mixing identity and workspace into a single corner is a common source of
+"where do I click?" confusion.
+
+### What needs to change to ship it
+
+1. **Identity model.** Decide how a user is represented (server-side
+   account? wallet-based identity? both?). Until that exists the avatar
+   has no source of truth.
+2. **Menu surface.** Pick a popover/menu primitive (custom CSS, Radix,
+   Headless UI) consistent with the rest of the app.
+3. **Menu contents.** Define the items per environment — at minimum sign
+   out, account settings, "switch dashboard mode" if we keep it as a user
+   preference rather than a top-bar toggle, and a theme/feedback link if
+   we add either.
+
+### Open questions
+
+- Should the avatar fall back to wallet-derived identicons (when wallet
+  identity ships) or always to initials?
+- Does the existing `DashboardModeToggle` move into this menu when both
+  exist, or do we keep it surfaced for one-click switching?

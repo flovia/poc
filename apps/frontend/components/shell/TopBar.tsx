@@ -88,26 +88,11 @@ export function TopBar({
       */}
       <DashboardModeToggle mode={dataMode} />
       {/*
-        Search / Filters のアイコンボタンも撤去済み。グローバル検索やページ横断
-        フィルターは現状要件ではなく、各ページの Toolbar に既存の検索 / Sort /
-        Upsell select が存在する。詳細は docs/future-work.md
-        "Global header actions (search / filters)" を参照。
+        Search / Filters のアイコンボタンと、右上の "F" アバター placeholder も
+        撤去済み。グローバル検索 / ページ横断フィルター / ユーザーメニューはいずれも
+        現状要件ではなく、PoC は localStorage ベースで login / multi-workspace の
+        概念が無い。詳細は docs/future-work.md を参照。
       */}
-      <div
-        style={{
-          width: 26,
-          height: 26,
-          borderRadius: 3,
-          background: "#1D4ED8",
-          display: "grid",
-          placeItems: "center",
-          color: "#FFFFFF",
-          fontWeight: 700,
-          fontSize: 12,
-        }}
-      >
-        F
-      </div>
     </header>
   );
 }
