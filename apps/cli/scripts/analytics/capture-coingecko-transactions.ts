@@ -9,6 +9,7 @@ import {
 import { fetchPaymentTransfersByPayTo } from "sources";
 import type { FetchLike } from "sources";
 import { writeAtomically } from "./io";
+import { type AnalyticsStore, createAnalyticsStore } from "./store";
 
 const DEFAULT_PAY_TO = "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784";
 const DEFAULT_RESOURCE = "https://pro-api.coingecko.com/api/v3/x402/onchain/search/pools";
@@ -64,11 +65,14 @@ type CliOptions = {
   bitqueryToken?: string;
   bitqueryEndpoint?: string;
   bitqueryFetch?: FetchLike;
+  analyticsDbPath?: string;
+  analyticsStore?: AnalyticsStore;
   now?: () => Date;
   timeWindow: {
     from: string;
     to?: string;
   };
+  timeSlices?: Array<{ from: string; to?: string }>;
 };
 
 type RunResult = {
@@ -76,6 +80,7 @@ type RunResult = {
   attribution: MockEndpointAttributionFixture;
   transactionOutputPath: string;
   attributionOutputPath: string;
+  analyticsRunId?: number;
 };
 
 const parseArg = (index: number, args: string[]): string | undefined => args[index + 1];
@@ -130,6 +135,20 @@ export const parseArgs = (argv: string[]): CliOptions => {
       options.attributionOutputPath = parseArg(index++, argv) ?? options.attributionOutputPath;
     } else if (arg === "--bitquery-endpoint") {
       options.bitqueryEndpoint = parseArg(index++, argv);
+    } else if (arg === "--analytics-db") {
+      options.analyticsDbPath = parseArg(index++, argv) ?? process.env.ANALYTICS_DB_PATH;
+    } else if (arg === "--slice-days") {
+      const days = parsePositiveInteger(parseArg(index++, argv), "--slice-days");
+      const end = options.timeWindow.to ? Date.parse(options.timeWindow.to) : Date.now();
+      const slices: Array<{ from: string; to?: string }> = [];
+      const sliceMs = days * 24 * 60 * 60 * 1000;
+      for (let start = Date.parse(options.timeWindow.from); start < end; start += sliceMs) {
+        slices.push({
+          from: new Date(start).toISOString(),
+          to: new Date(Math.min(start + sliceMs, end)).toISOString(),
+        });
+      }
+      options.timeSlices = slices;
     } else if (arg === "--from") {
       options.timeWindow = {
         ...options.timeWindow,
@@ -250,30 +269,87 @@ export const runCoingeckoTransactionCapture = async (
     ...options,
   };
   const generatedAt = (parsed.now?.() ?? new Date()).toISOString();
-  const transfers = await fetchPaymentTransfersByPayTo({
-    network: parsed.network,
-    asset: parsed.asset,
-    payTo: parsed.payTo,
-    token: resolveBitqueryToken(parsed.bitqueryToken),
-    endpoint: parsed.bitqueryEndpoint,
-    fetchFn: parsed.bitqueryFetch,
-    limit: parsed.limit,
-    pageSize: parsed.pageSize,
-    timeWindow: parsed.timeWindow,
+  const analyticsStore =
+    parsed.analyticsStore ??
+    (parsed.analyticsDbPath ? createAnalyticsStore({ path: parsed.analyticsDbPath }) : null);
+  const analyticsRunId = analyticsStore?.beginCaptureRun({
+    kind: "payto_transfer_capture",
+    parameters: {
+      providerId: parsed.providerId,
+      resource: parsed.resource,
+      network: parsed.network,
+      asset: parsed.asset,
+      payTo: parsed.payTo,
+      limit: parsed.limit,
+      pageSize: parsed.pageSize,
+      timeWindow: parsed.timeWindow,
+      timeSlices: parsed.timeSlices,
+    },
+    sourceCoverage: { bitquery: "started" },
   });
-  const transactions = buildTransactionFixture(parsed, transfers, generatedAt);
-  const attribution = buildMockAttributionFixture(transactions);
 
-  writeAtomically(parsed.transactionOutputPath, `${JSON.stringify(transactions, null, 2)}\n`);
-  writeAtomically(parsed.attributionOutputPath, `${JSON.stringify(attribution, null, 2)}\n`);
+  try {
+    const slices =
+      parsed.timeSlices && parsed.timeSlices.length > 0 ? parsed.timeSlices : [parsed.timeWindow];
+    const perSliceLimit = Math.ceil(parsed.limit / slices.length);
+    const transferPages = await Promise.all(
+      slices.map((timeWindow) =>
+        fetchPaymentTransfersByPayTo({
+          network: parsed.network,
+          asset: parsed.asset,
+          payTo: parsed.payTo,
+          token: resolveBitqueryToken(parsed.bitqueryToken),
+          endpoint: parsed.bitqueryEndpoint,
+          fetchFn: parsed.bitqueryFetch,
+          limit: perSliceLimit,
+          pageSize: parsed.pageSize,
+          timeWindow,
+        }),
+      ),
+    );
+    const transfers = transferPages.flat().slice(0, parsed.limit);
+    const transactions = buildTransactionFixture(parsed, transfers, generatedAt);
+    const attribution = buildMockAttributionFixture(transactions);
 
-  return {
-    transactions,
-    attribution,
-    transactionOutputPath: parsed.transactionOutputPath,
-    attributionOutputPath: parsed.attributionOutputPath,
-  };
+    if (analyticsStore && analyticsRunId !== undefined) {
+      analyticsStore.persistBitqueryTransferFacts(transfers, {
+        network: parsed.network,
+        asset: parsed.asset,
+        payTo: parsed.payTo,
+        sourceRunId: analyticsRunId,
+      });
+      analyticsStore.completeCaptureRun(analyticsRunId, {
+        bitquery: {
+          status: "available",
+          capturedCount: transfers.length,
+          timeSlices: slices.length,
+        },
+      });
+    }
+
+    writeAtomically(parsed.transactionOutputPath, `${JSON.stringify(transactions, null, 2)}\n`);
+    writeAtomically(parsed.attributionOutputPath, `${JSON.stringify(attribution, null, 2)}\n`);
+
+    return {
+      transactions,
+      attribution,
+      transactionOutputPath: parsed.transactionOutputPath,
+      attributionOutputPath: parsed.attributionOutputPath,
+      analyticsRunId,
+    };
+  } catch (error) {
+    if (analyticsStore && analyticsRunId !== undefined) {
+      analyticsStore.failCaptureRun(analyticsRunId, error, { bitquery: "partial_or_failed" });
+    }
+    throw error;
+  } finally {
+    if (analyticsStore && analyticsStore !== parsed.analyticsStore) {
+      analyticsStore.close();
+    }
+  }
 };
+
+export const runPayToTransactionCapture = runCoingeckoTransactionCapture;
 
 const main = async () => {
   const result = await runCoingeckoTransactionCapture(parseArgs(Bun.argv.slice(2)));

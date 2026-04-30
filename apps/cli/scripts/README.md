@@ -10,11 +10,13 @@ This directory stores scripts used by the CLI from `apps/cli`.
   - Queries Bitquery for scoped `payTo` values
   - Joins CDP metadata with Bitquery payment activity
   - Writes JSON / Markdown market snapshot reports
+  - With `--analytics-db`, persists CDP resources, payment options, deduplicated payment sinks, Bitquery aggregate census, capture-run metadata, and endpoint attribution mapping patterns to the ignored SQLite analytics store
 - `analytics/capture-coingecko-transactions.ts`
-  - Live captures CoinGecko Base USDC `payTo` Bitquery transfer list
+  - Live captures CoinGecko Base USDC `payTo` Bitquery transfer list, or any configured provider / service `payTo` with `--provider-id`, `--resource`, `--network`, `--asset`, and `--pay-to`
   - Generates `apps/bff/fixtures/phase-a/coingecko-transactions.json`
   - Assigns deterministic mock endpoint attribution for all `txHash` values and generates `apps/bff/fixtures/phase-b/mock-attribution.json`
   - Validates with fixture schema in `packages/contracts` before and after generation
+  - With `--analytics-db`, persists sampled transfer facts using `(network, asset, payTo, txHash, transferIndex)` identity; `--slice-days` bounds high-volume captures by time window
 - `analytics/customer-intelligence.ts`
   - Fetches Base USDC outgoing transfers from Bitquery by customer address
   - Matches `payTo` with CDP Discovery resources / payment options
@@ -22,6 +24,10 @@ This directory stores scripts used by the CLI from `apps/cli`.
   - Generates insights with payTo activity / x402 service candidates / provenance in `packages/intelligence`
   - Writes read models equivalent to `apps/bff/fixtures/phase-b/customer-intelligence/*.json`
   - If portfolio / DeFi source is not configured or unavailable, represents it as `unavailableReason`; BFF request path does not call live sources
+- `analytics/read-models.ts`
+  - Generates BFF service summary, comparison, and quadrant read models from the local SQLite analytics store
+  - Preserves sample basis, coverage, endpoint attribution status, attribution confidence, and provenance
+  - Writes an ignored generated read-model JSON file that the BFF can read through `BFF_ANALYTICS_READ_MODEL_PATH`
 
 The legacy self-implemented acquisition / probe / onchain pipeline
 is stored on the `v0-self-implemented-x402` branch. It is intentionally not included in this branch.
@@ -43,6 +49,16 @@ bun --cwd apps/cli market:snapshot -- --limit 50 --network base --asset usdc
 
 Because Bitquery is used, `BITQUERY_TOKEN` is typically required.
 
+Capture the full CDP Discovery census into the local ignored SQLite analytics store:
+
+```sh
+bun --cwd apps/cli market:snapshot -- \
+  --all \
+  --network base \
+  --asset USDC \
+  --analytics-db data/analytics/analytics.sqlite
+```
+
 To regenerate CoinGecko transaction facts and Phase B mock attribution fixtures, run:
 
 ```sh
@@ -51,6 +67,22 @@ bun --cwd apps/cli coingecko:transactions -- \
   --to 2026-04-29T23:59:59Z \
   --limit 5000 \
   --page-size 100
+```
+
+Capture any sampled x402 `payTo` and store transfer-level facts:
+
+```sh
+bun --cwd apps/cli coingecko:transactions -- \
+  --provider-id peer-service \
+  --resource https://peer.example/x402 \
+  --pay-to 0x... \
+  --from 2026-01-01T00:00:00Z \
+  --to 2026-04-29T23:59:59Z \
+  --limit 1000 \
+  --slice-days 14 \
+  --analytics-db data/analytics/analytics.sqlite \
+  --transactions-output reports/raw-transfer-facts/peer-service.json \
+  --attribution-output reports/analytics/peer-service-attribution.json
 ```
 
 This script loads `../../.env` and `apps/cli/.env` through dotenvx. It uses live Bitquery, so it is not included in normal `bun run verify` runs.
@@ -69,6 +101,8 @@ bun --cwd apps/cli customer:intelligence -- \
 
 This command also uses live Bitquery / CDP Discovery, so it is not included in normal `bun run verify`. Output JSON is validated with `CustomerIntelligenceFixture` schema; BFF returns only stored read models.
 
+Batch customer intelligence can be invoked programmatically via `runCustomerIntelligenceBatchCapture` with sampled wallet addresses. It writes one ignored JSON snapshot per wallet, stores snapshots in the analytics DB when configured, and caps optional portfolio enrichment with `portfolioEnrichmentLimit`.
+
 Enable Zerion portfolio / DeFi context explicitly.
 
 ```sh
@@ -83,6 +117,35 @@ bun --cwd apps/cli customer:intelligence -- \
 ```
 
 `ZERION_API_KEY` is required only when `--portfolio-source zerion` is specified. When not specified, the portfolio source is treated as `unavailable`, so offline verification and normal `bun run verify` do not require Zerion credentials. Zerion response is normalized into repository-owned DTOs before persistence, and raw response, API key, Authorization header, and request metadata are not included in product payloads / fixtures.
+
+Generate BFF read models from the analytics DB:
+
+```sh
+bun --cwd apps/cli analytics:read-models -- \
+  --analytics-db data/analytics/analytics.sqlite \
+  --out reports/service-read-models/analytics.json
+```
+
+Serve those read models in the BFF without live external calls:
+
+```sh
+BFF_ANALYTICS_READ_MODEL_PATH=apps/cli/reports/service-read-models/analytics.json bun --cwd apps/bff start
+```
+
+## Generated data policy
+
+Generated analytics data is private-by-default and ignored by git. Do not commit local SQLite databases (`*.db`, `*.sqlite`, WAL/SHM files), raw transfer facts, customer intelligence captures, portfolio enrichment output, cross-service overlap data, or large service read models. Commit only schemas, migrations, collectors, samplers, synthetic fixtures, docs, and tests. Normal `bun run verify` remains offline and does not require generated analytics data.
+
+## Offline analytics pipeline
+
+1. `market:snapshot --all --analytics-db ...` captures CDP resources/payment options and Bitquery aggregate census.
+2. Payment sinks are deduplicated by `network`, `asset`, and normalized `payTo`; mapping patterns are classified as direct endpoint, bundled payTo, many-payTos-one-service, or unresolved.
+3. `buildPayToSamplingPlan` produces deterministic sampled `payTo` selections from activity tiers, mapping patterns, mandatory CoinGecko payTos, and long-tail rows.
+4. `coingecko:transactions` with arbitrary `--provider-id` / `--pay-to` captures sampled transfer facts and can time-slice high-volume payTos.
+5. `buildWalletSamplingPlan` selects sampled wallets from coingecko repeat/high-spend, one-shot, peer, cross-service, bundled-payTo, recent, and random long-tail strata.
+6. `runCustomerIntelligenceBatchCapture` captures sampled wallet intelligence with explicit portfolio enrichment caps and source coverage.
+7. `analytics:read-models` builds BFF service summary, comparison, and quadrant payloads from SQLite.
+8. The BFF reads `BFF_ANALYTICS_READ_MODEL_PATH` when present, otherwise falls back to small committed fixtures during migration. Request handlers do not call CDP, Bitquery, RPC, CoinGecko, Zerion, or other live services.
 
 ## Architecture
 

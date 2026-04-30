@@ -10,6 +10,7 @@ import type { FetchLike } from "sources";
 import { normalizeAsset, normalizeNetwork, validateCustomerIntelligenceFixture } from "contracts";
 import type { CustomerIntelligenceResponse } from "contracts";
 import { writeAtomically } from "./io";
+import { type AnalyticsStore, createAnalyticsStore } from "./store";
 
 const DEFAULT_OUTPUT = path.join(
   process.cwd(),
@@ -34,11 +35,30 @@ export type CustomerIntelligenceCliOptions = {
   zerionApiKey?: string;
   zerionFetch?: FetchLike;
   zerionEndpoint?: string;
+  analyticsDbPath?: string;
+  analyticsStore?: AnalyticsStore;
 };
 
 export type CustomerIntelligenceRunResult = {
   response: CustomerIntelligenceResponse;
   outputPath: string;
+  analyticsRunId?: number;
+};
+
+export type CustomerIntelligenceBatchOptions = Omit<
+  CustomerIntelligenceCliOptions,
+  "address" | "out"
+> & {
+  addresses: string[];
+  out?: string;
+  outDir?: string;
+  portfolioEnrichmentLimit?: number;
+};
+
+export type CustomerIntelligenceBatchResult = {
+  responses: CustomerIntelligenceResponse[];
+  outputPaths: string[];
+  analyticsRunId?: number;
 };
 
 const parseArg = (index: number, args: string[]): string | undefined => args[index + 1];
@@ -90,6 +110,8 @@ export const parseCustomerIntelligenceArgs = (argv: string[]): CustomerIntellige
         throw new Error("--portfolio-source must be one of: none, zerion");
       }
       options.portfolioSource = source;
+    } else if (arg === "--analytics-db") {
+      options.analyticsDbPath = parseArg(index++, argv) ?? process.env.ANALYTICS_DB_PATH;
     } else if (arg === "--zerion-endpoint") options.zerionEndpoint = parseArg(index++, argv);
   }
 
@@ -186,9 +208,132 @@ export const runCustomerIntelligenceCapture = async (
   });
 
   const validated = validateCustomerIntelligenceFixture(response);
+  const analyticsStore =
+    parsed.analyticsStore ??
+    (parsed.analyticsDbPath ? createAnalyticsStore({ path: parsed.analyticsDbPath }) : null);
+  let analyticsRunId: number | undefined;
+  if (analyticsStore) {
+    analyticsRunId = analyticsStore.beginCaptureRun({
+      kind: "customer_intelligence_capture",
+      parameters: {
+        address: scope.address,
+        network: scope.network,
+        asset: scope.asset,
+        timeWindow: scope.timeWindow,
+        portfolioSource: parsed.portfolioSource,
+      },
+      sourceCoverage: {
+        bitquery: "available",
+        cdp_discovery: "available",
+        portfolio: parsed.portfolioSource === "zerion" ? "requested" : "skipped",
+      },
+    });
+    analyticsStore.persistCustomerWallets([
+      { address: scope.address, sourceRunId: analyticsRunId },
+    ]);
+    analyticsStore.persistCustomerIntelligenceSnapshots([validated], analyticsRunId);
+    analyticsStore.completeCaptureRun(analyticsRunId, {
+      bitquery: "available",
+      cdp_discovery: "available",
+      portfolio: parsed.portfolioSource === "zerion" ? "available_or_partial" : "skipped",
+    });
+    if (analyticsStore !== parsed.analyticsStore) analyticsStore.close();
+  }
   writeAtomically(parsed.out, `${JSON.stringify(validated, null, 2)}\n`);
 
-  return { response: validated, outputPath: parsed.out };
+  return { response: validated, outputPath: parsed.out, analyticsRunId };
+};
+
+export const runCustomerIntelligenceBatchCapture = async (
+  options: Partial<CustomerIntelligenceBatchOptions> &
+    Pick<CustomerIntelligenceBatchOptions, "addresses" | "from" | "to">,
+): Promise<CustomerIntelligenceBatchResult> => {
+  const parsed = { ...defaultOptions(), ...options } as CustomerIntelligenceBatchOptions;
+  if (parsed.addresses.length === 0) throw new Error("addresses must not be empty");
+  const analyticsStore =
+    parsed.analyticsStore ??
+    (parsed.analyticsDbPath ? createAnalyticsStore({ path: parsed.analyticsDbPath }) : null);
+  const analyticsRunId = analyticsStore?.beginCaptureRun({
+    kind: "customer_intelligence_capture",
+    parameters: {
+      addresses: parsed.addresses,
+      network: parsed.network,
+      asset: parsed.asset,
+      from: parsed.from,
+      to: parsed.to,
+      portfolioSource: parsed.portfolioSource,
+      portfolioEnrichmentLimit: parsed.portfolioEnrichmentLimit ?? 0,
+    },
+    sourceCoverage: { bitquery: "started", cdp_discovery: "started", portfolio: "pending" },
+  });
+
+  try {
+    const responses: CustomerIntelligenceResponse[] = [];
+    const outputPaths: string[] = [];
+    let remainingPortfolio =
+      parsed.portfolioSource === "zerion"
+        ? (parsed.portfolioEnrichmentLimit ?? parsed.addresses.length)
+        : 0;
+
+    for (const address of parsed.addresses) {
+      const usePortfolio = parsed.portfolioSource === "zerion" && remainingPortfolio > 0;
+      if (usePortfolio) remainingPortfolio -= 1;
+      const outputPath = path.join(
+        parsed.outDir ?? path.dirname(parsed.out ?? DEFAULT_OUTPUT),
+        `${address.toLowerCase()}.json`,
+      );
+      const result = await runCustomerIntelligenceCapture({
+        ...parsed,
+        address,
+        out: outputPath,
+        portfolioSource: usePortfolio ? "zerion" : "none",
+        analyticsStore: undefined,
+        analyticsDbPath: undefined,
+      });
+      responses.push(result.response);
+      outputPaths.push(result.outputPath);
+    }
+
+    if (analyticsStore && analyticsRunId !== undefined) {
+      analyticsStore.persistCustomerWallets(
+        responses.map((response) => ({
+          address: response.customerAddress,
+          sourceRunId: analyticsRunId,
+        })),
+      );
+      analyticsStore.persistCustomerIntelligenceSnapshots(responses, analyticsRunId);
+      analyticsStore.completeCaptureRun(analyticsRunId, {
+        bitquery: "available",
+        cdp_discovery: "available",
+        portfolio:
+          parsed.portfolioSource === "zerion"
+            ? {
+                status: "capped",
+                cap: parsed.portfolioEnrichmentLimit ?? parsed.addresses.length,
+                skipped: responses.filter((response) =>
+                  response.sourceCoverage.some(
+                    (coverage) =>
+                      coverage.source === "portfolio" && coverage.status === "unavailable",
+                  ),
+                ).length,
+              }
+            : { status: "skipped", reason: "portfolio source not configured" },
+      });
+    }
+
+    return { responses, outputPaths, analyticsRunId };
+  } catch (error) {
+    if (analyticsStore && analyticsRunId !== undefined) {
+      analyticsStore.failCaptureRun(analyticsRunId, error, {
+        bitquery: "partial_or_failed",
+        cdp_discovery: "partial_or_failed",
+        portfolio: "partial_or_failed",
+      });
+    }
+    throw error;
+  } finally {
+    if (analyticsStore && analyticsStore !== parsed.analyticsStore) analyticsStore.close();
+  }
 };
 
 const main = async () => {

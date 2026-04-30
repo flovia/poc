@@ -1,5 +1,9 @@
 import { describe, expect, test } from "bun:test";
+import fs from "node:fs";
+import path from "node:path";
+import { randomUUID } from "node:crypto";
 import { createBffHandler } from "../src/http";
+import { loadGeneratedAnalyticsDataSource } from "../src/data/analytics-source";
 import {
   joinedPhaseBProjectionRecords,
   knownCustomerIntelligenceAddress,
@@ -24,6 +28,16 @@ import {
 
 const request = (path: string, init: RequestInit = {}) =>
   new Request(`http://localhost${path}`, init);
+
+const withTempFile = async (fn: (filePath: string) => Promise<void> | void) => {
+  const directory = path.join(process.cwd(), "tmp", `bff-read-model-${randomUUID()}`);
+  fs.mkdirSync(directory, { recursive: true });
+  try {
+    await Promise.resolve(fn(path.join(directory, "analytics.json")));
+  } finally {
+    fs.rmSync(directory, { recursive: true, force: true });
+  }
+};
 
 describe("BFF routes", () => {
   test("serves minimal read-only endpoints", async () => {
@@ -158,7 +172,41 @@ describe("BFF routes", () => {
       transactionCount: "derived_insight",
       userCount: "derived_insight",
     });
+    expect(parsed.topEndpoints[0]?.endpointAttributionStatus).toBe("demo_attributed_endpoint");
+    expect(parsed.topEndpoints[0]?.attributionConfidence).toBeGreaterThan(0);
   });
+
+  test("serves generated read models before fixture fallback", async () =>
+    withTempFile(async (filePath) => {
+      const generatedSummary = {
+        ...serviceAnalyticsSummaryResponse,
+        generatedFrom: "generated-read-model-test",
+        transactionCount: 42,
+        topEndpoints: [
+          {
+            ...serviceAnalyticsSummaryResponse.topEndpoints[0],
+            endpointAttributionStatus: "direct_payto_endpoint",
+            attributionConfidence: 0.9,
+          },
+          {
+            ...serviceAnalyticsSummaryResponse.topEndpoints[1],
+            endpointAttributionStatus: "bundled_payto_unknown_endpoint",
+            attributionConfidence: 0.35,
+          },
+        ],
+      };
+      fs.writeFileSync(filePath, JSON.stringify({ serviceSummary: generatedSummary }, null, 2));
+      const handler = createBffHandler(loadGeneratedAnalyticsDataSource(filePath));
+      const response = handler(request("/analytics/services/coingecko/summary"));
+      const parsed = validateServiceAnalyticsSummaryResponse(await response.json());
+
+      expect(parsed.generatedFrom).toBe("generated-read-model-test");
+      expect(parsed.transactionCount).toBe(42);
+      expect(parsed.topEndpoints.map((endpoint) => endpoint.endpointAttributionStatus)).toEqual([
+        "direct_payto_endpoint",
+        "bundled_payto_unknown_endpoint",
+      ]);
+    }));
 
   test("serves x402 service comparison analytics", async () => {
     const handler = createBffHandler();

@@ -4,8 +4,10 @@ import path from "node:path";
 import { randomUUID } from "node:crypto";
 import {
   parseCustomerIntelligenceArgs,
+  runCustomerIntelligenceBatchCapture,
   runCustomerIntelligenceCapture,
 } from "../scripts/analytics/customer-intelligence";
+import { createAnalyticsStore } from "../scripts/analytics/store";
 
 const withTempDir = async (label: string, fn: (dir: string) => Promise<void> | void) => {
   const directory = path.join(
@@ -206,6 +208,89 @@ describe("customer intelligence cli script", () => {
       expect(result.response.portfolioSummary.sourceCoverage.status).toBe("available");
       expect(result.response.defiPositions).toEqual([]);
       expect(result.response.insights[0]).toMatchObject({ key: "external-x402-activity" });
+    }));
+
+  test("batch captures sampled wallets, stores snapshots, and records portfolio caps", async () =>
+    withTempDir("batch", async (directory) => {
+      const store = createAnalyticsStore({ mode: "memory" });
+      const secondAddress = "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+
+      try {
+        const result = await runCustomerIntelligenceBatchCapture({
+          addresses: [address, secondAddress],
+          network: "base",
+          asset: "USDC",
+          from: "2026-01-01T00:00:00Z",
+          to: "2026-04-29T23:59:59Z",
+          outDir: directory,
+          bitqueryToken: "test-token",
+          portfolioSource: "zerion",
+          portfolioEnrichmentLimit: 1,
+          zerionApiKey: "test-zerion-key",
+          analyticsStore: store,
+          cdpFetch: async () => new Response(JSON.stringify(cdpResponse)),
+          bitqueryFetch: async (_url, init) => {
+            const body = JSON.parse(String(init?.body)) as {
+              variables: { customerAddress: string };
+            };
+            return new Response(
+              JSON.stringify({
+                data: {
+                  EVM: {
+                    transfers: [
+                      {
+                        Transfer: {
+                          Sender: body.variables.customerAddress,
+                          Receiver: payTo,
+                          Amount: "0.01",
+                        },
+                        Block: { Time: "2026-04-29T04:11:53Z", Number: "299" },
+                        Transaction: {
+                          Hash:
+                            body.variables.customerAddress === address
+                              ? "0x6248880ec36541e6783ab756afdb427939f6209551b751cec5a2c97f71176d94"
+                              : "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                          From: body.variables.customerAddress,
+                        },
+                      },
+                    ],
+                  },
+                },
+              }),
+            );
+          },
+          zerionFetch: async (url) =>
+            new Response(
+              JSON.stringify(
+                String(url).includes("/positions/")
+                  ? zerionPositionsResponse
+                  : zerionPortfolioResponse,
+              ),
+            ),
+        });
+
+        const snapshotCount = store.db
+          .prepare("SELECT COUNT(*) AS count FROM customer_intelligence_snapshots")
+          .get() as { count: number };
+        expect(result.responses).toHaveLength(2);
+        expect(result.outputPaths.every((outputPath) => fs.existsSync(outputPath))).toBe(true);
+        expect(snapshotCount.count).toBe(2);
+        expect(store.getCaptureRun(result.analyticsRunId ?? 0)).toMatchObject({
+          status: "success",
+        });
+        expect(
+          result.responses.filter(
+            (response) => response.portfolioSummary.sourceCoverage.status === "available",
+          ),
+        ).toHaveLength(1);
+        expect(
+          result.responses.filter(
+            (response) => response.portfolioSummary.sourceCoverage.status === "unavailable",
+          ),
+        ).toHaveLength(1);
+      } finally {
+        store.close();
+      }
     }));
 
   test("writes partial Zerion coverage without fabricating positions", async () =>
