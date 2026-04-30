@@ -156,6 +156,7 @@ describe("full capture orchestration", () => {
 
   test("runs full capture, persists plans, applies portfolio caps, and generates read models", async () =>
     withTempDir("success", async (directory) => {
+      const logs: string[] = [];
       const result = await runFullCapture({
         analyticsDbPath: path.join(directory, "analytics.sqlite"),
         outDir: directory,
@@ -167,6 +168,7 @@ describe("full capture orchestration", () => {
         portfolioLimit: 0,
         bitqueryToken: "test-token",
         zerionApiKey: "test-zerion-key",
+        logger: (message) => logs.push(message),
         cdpFetch: async () => new Response(JSON.stringify(cdpResponse)),
         bitqueryFetch: async (_url, init) => {
           const body = JSON.parse(String(init?.body)) as { variables: Record<string, unknown> };
@@ -191,6 +193,14 @@ describe("full capture orchestration", () => {
       expect(fs.existsSync(path.join(directory, "payto-sampling-plan.json"))).toBe(true);
       expect(fs.existsSync(path.join(directory, "wallet-sampling-plan.json"))).toBe(true);
       expect(fs.existsSync(path.join(directory, "read-models.json"))).toBe(true);
+      expect(logs).toContain(
+        "[capture-full] started base USDC 2026-01-01T00:00:00.000Z..2026-04-29T23:59:59.000Z",
+      );
+      expect(logs).toContain("[capture-full] market-census: fetched 1 resources, 1 payTo rows");
+      expect(logs).toContain(
+        "[capture-full] payto-transfer-capture: 1/1 0x110cdbba7fe6434ec4ce3464cc523942ad6fb784 transfers=1",
+      );
+      expect(logs).toContain("[capture-full] completed run");
 
       const db = await import("bun:sqlite");
       const database = new db.Database(path.join(directory, "analytics.sqlite"));

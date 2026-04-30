@@ -42,6 +42,7 @@ export type FullCaptureOptions = {
   bitqueryFetch?: FetchLike;
   zerionFetch?: FetchLike;
   analyticsStore?: AnalyticsStore;
+  logger?: (message: string) => void;
 };
 
 export type FullCapturePlan = {
@@ -215,12 +216,14 @@ export const runFullCapture = async (
     asset: normalizeAsset(parsed.asset),
   };
   const plan = buildPlan(options);
+  const log = options.logger ?? (() => undefined);
   const stageProgress = Object.fromEntries(
     plan.stages.map((stage) => [stage, "pending"]),
   ) as FullCaptureResult["stageProgress"];
 
   if (options.dryRun) return { dryRun: true, plan, stageProgress };
   credentialCheck(options);
+  log(`[capture-full] started ${options.network} ${options.asset} ${options.from}..${options.to}`);
 
   const store = options.analyticsStore ?? createAnalyticsStore({ path: options.analyticsDbPath });
   const fullRunId = store.beginCaptureRun({
@@ -262,6 +265,9 @@ export const runFullCapture = async (
     const marketRunIds =
       marketResult.analyticsRunId === undefined ? [] : [marketResult.analyticsRunId];
     completeStage("market-census");
+    log(
+      `[capture-full] market-census: fetched ${marketResult.snapshot.summary.totalResources} resources, ${marketResult.snapshot.summary.scopedPaymentOptions} payTo rows`,
+    );
 
     const payToPlan = buildPayToSamplingPlan({
       seed: options.seed,
@@ -305,9 +311,10 @@ export const runFullCapture = async (
       generatedAt: payToPlan.generatedAt,
     });
     completeStage("payto-sampling");
+    log(`[capture-full] payto-sampling: selected ${payToPlan.selected.length} payTos`);
 
     const transferRunIds: number[] = [];
-    for (const row of payToPlan.selected) {
+    for (const [index, row] of payToPlan.selected.entries()) {
       const payTo = normalizePayTo(row.payTo);
       const transferResult = await runPayToTransactionCapture({
         network: options.network,
@@ -333,6 +340,9 @@ export const runFullCapture = async (
       if (transferResult.analyticsRunId !== undefined) {
         transferRunIds.push(transferResult.analyticsRunId);
       }
+      log(
+        `[capture-full] payto-transfer-capture: ${index + 1}/${payToPlan.selected.length} ${payTo} transfers=${transferResult.transactions.facts.length}`,
+      );
     }
     completeStage("payto-transfer-capture");
 
@@ -369,6 +379,7 @@ export const runFullCapture = async (
       generatedAt: walletPlan.generatedAt,
     });
     completeStage("wallet-sampling");
+    log(`[capture-full] wallet-sampling: selected ${walletPlan.selected.length} wallets`);
 
     const batchOptions: Partial<CustomerIntelligenceBatchOptions> &
       Pick<CustomerIntelligenceBatchOptions, "addresses" | "from" | "to"> = {
@@ -394,6 +405,7 @@ export const runFullCapture = async (
     };
     if (batchOptions.addresses.length > 0) await runCustomerIntelligenceBatchCapture(batchOptions);
     completeStage("customer-intelligence");
+    log(`[capture-full] customer-intelligence: captured ${batchOptions.addresses.length} wallets`);
 
     generateServiceAnalyticsReadModels({
       analyticsDbPath: options.analyticsDbPath,
@@ -401,6 +413,7 @@ export const runFullCapture = async (
       aggregateRunIds: marketRunIds,
     });
     completeStage("read-model-generation");
+    log(`[capture-full] read-model-generation: wrote ${options.readModelOutputPath}`);
 
     store.completeCaptureRun(fullRunId, {
       stages: stageProgress,
@@ -408,6 +421,7 @@ export const runFullCapture = async (
       bitquery: "available",
       portfolio: options.portfolioSource === "zerion" ? "capped" : "skipped",
     });
+    log("[capture-full] completed run");
     return {
       dryRun: false,
       plan,
@@ -428,6 +442,9 @@ export const runFullCapture = async (
 };
 
 if (import.meta.main) {
-  const result = await runFullCapture(parseFullCaptureArgs(Bun.argv.slice(2)));
+  const result = await runFullCapture({
+    ...parseFullCaptureArgs(Bun.argv.slice(2)),
+    logger: console.error,
+  });
   console.log(JSON.stringify(result, null, 2));
 }
