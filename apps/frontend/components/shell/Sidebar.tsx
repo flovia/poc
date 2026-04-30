@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useProviders } from "@/app/providers";
 import { Icon } from "@/components/ui/Icon";
+import type { DashboardMode } from "@/lib/data-mode";
 import { formatPayToShort, getDisplayPayTo } from "@/lib/providers";
 
 // "wallet" is intentionally treated as a child of "customers" for nav
@@ -14,6 +15,11 @@ type ActiveRoute = "customers" | "patterns" | "setup" | "wallet" | undefined;
 type SidebarProps = {
   activeProviderId: string | undefined;
   activeRoute: ActiveRoute;
+  // dataMode は呼び出し側 (server component) が cookie 由来で計算して渡す。
+  // Step 2 では値を受け取るだけで挙動は変えない。Step 3 で SDK connected mode
+  // のサイドバー差分 (空状態の挙動 / Currently viewing dropdown 等) を入れる
+  // ときに使う。
+  dataMode?: DashboardMode;
 };
 
 // When switching providers via the saved-providers list, prefer to keep the
@@ -24,7 +30,7 @@ function sectionFor(activeRoute: ActiveRoute): "customers" | "patterns" {
   return activeRoute === "patterns" ? "patterns" : "customers";
 }
 
-export function Sidebar({ activeProviderId, activeRoute }: SidebarProps) {
+export function Sidebar({ activeProviderId, activeRoute, dataMode: _dataMode }: SidebarProps) {
   const router = useRouter();
   const { stored, hydrated, removeProvider } = useProviders();
 

@@ -3,11 +3,18 @@ import { DemoModeBanner } from "@/components/setup/DemoModeBanner";
 import { EmptyStateCTA } from "@/components/setup/EmptyStateCTA";
 import { SetupForm } from "@/components/setup/SetupForm";
 import { SavedProviderList } from "@/components/setup/SavedProviderList";
+import { getTopBarPageContext } from "@/lib/server/page-context";
 
-export default function SetupPage() {
+export default async function SetupPage() {
+  const { dataMode, updatedAtUnixSec, renderedAtUnixSec } = await getTopBarPageContext();
   return (
     <>
-      <TopBar crumbs={[{ label: "Setup" }]} />
+      <TopBar
+        crumbs={[{ label: "Setup" }]}
+        dataMode={dataMode}
+        updatedAtUnixSec={updatedAtUnixSec}
+        renderedAtUnixSec={renderedAtUnixSec}
+      />
       <div className="scroll">
         <div style={{ padding: "40px 56px 80px", maxWidth: 880, margin: "0 auto" }}>
           <div style={{ marginBottom: 36 }}>

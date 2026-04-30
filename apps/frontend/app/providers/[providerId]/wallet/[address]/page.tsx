@@ -2,6 +2,7 @@ import Link from "next/link";
 import { TopBar } from "@/components/shell/TopBar";
 import { WalletScreen } from "@/components/wallet/WalletScreen";
 import { getCustomerProfile } from "@/lib/api/client";
+import { getTopBarPageContext } from "@/lib/server/page-context";
 
 export default async function WalletPage({
   params,
@@ -10,7 +11,10 @@ export default async function WalletPage({
 }) {
   const { providerId, address } = await params;
   const decoded = decodeURIComponent(address);
-  const profile = await getCustomerProfile(decoded);
+  const [profile, pageCtx] = await Promise.all([
+    getCustomerProfile(decoded),
+    getTopBarPageContext(),
+  ]);
 
   if (!profile) {
     return (
@@ -21,6 +25,9 @@ export default async function WalletPage({
             { label: "Customers", href: `/providers/${providerId}/customers` },
             { label: decoded },
           ]}
+          dataMode={pageCtx.dataMode}
+          updatedAtUnixSec={pageCtx.updatedAtUnixSec}
+          renderedAtUnixSec={pageCtx.renderedAtUnixSec}
         />
         <div className="scroll">
           <div style={{ padding: "40px", color: "var(--text-2)" }}>
@@ -48,6 +55,9 @@ export default async function WalletPage({
           { label: "Customers", href: `/providers/${providerId}/customers` },
           { label: decoded },
         ]}
+        dataMode={pageCtx.dataMode}
+        updatedAtUnixSec={pageCtx.updatedAtUnixSec}
+        renderedAtUnixSec={pageCtx.renderedAtUnixSec}
       />
       <div className="scroll">
         <WalletScreen profile={profile} providerId={providerId} />
