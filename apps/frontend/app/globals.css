@@ -528,9 +528,22 @@ body:has(.sdk-notice) > div:first-of-type > div.app {
   outline: 2px solid var(--sdk-purple);
   outline-offset: -2px;
 }
+/*
+  Active color follows the selected mode:
+  - On-chain only = Primary (mesh-blue) — the everyday dashboard color
+  - SDK connected = Purple (sdk-purple) — Highlights/preview indicator,
+    matching the .sdk-notice banner and SDK-only badges across the app
+  This keeps "purple = SDK preview" consistent app-wide instead of having
+  the toggle paint On-chain mode purple too.
+*/
 .dashboard-mode-toggle button.active {
-  background: var(--sdk-purple);
   color: #FFFFFF;
+}
+.dashboard-mode-toggle button.active[data-mode="onChainOnly"] {
+  background: var(--mesh-blue);
+}
+.dashboard-mode-toggle button.active[data-mode="sdkConnected"] {
+  background: var(--sdk-purple);
 }
 .dashboard-mode-toggle button.active::before {
   content: "● ";
