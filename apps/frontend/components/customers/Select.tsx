@@ -1,15 +1,26 @@
-type SelectProps = {
+"use client";
+
+import type { ChangeEvent } from "react";
+
+export type SelectOption<TValue extends string> = {
+  value: TValue;
   label: string;
-  options: string[];
-  value?: string;
 };
 
-export function Select({ label, options, value }: SelectProps) {
+type SelectProps<TValue extends string> = {
+  label: string;
+  options: ReadonlyArray<SelectOption<TValue>>;
+  value: TValue;
+  onChange: (next: TValue) => void;
+};
+
+export function Select<TValue extends string>({ label, options, value, onChange }: SelectProps<TValue>) {
+  const handleChange = (event: ChangeEvent<HTMLSelectElement>) => {
+    onChange(event.target.value as TValue);
+  };
+
   return (
-    <button
-      type="button"
-      aria-disabled
-      title="PoC: not wired"
+    <label
       className="btn ghost"
       style={{
         padding: "7px 11px",
@@ -18,11 +29,34 @@ export function Select({ label, options, value }: SelectProps) {
         background: "#FFFFFF",
         color: "var(--text-2)",
         gap: 6,
+        display: "inline-flex",
+        alignItems: "center",
       }}
     >
       <span style={{ color: "var(--text-mute)", fontSize: 12 }}>{label}:</span>
-      <span style={{ color: "var(--text-1)" }}>{value ?? options[0]}</span>
-      <span style={{ color: "var(--text-mute)", fontSize: 11 }}>▾</span>
-    </button>
+      <select
+        value={value}
+        onChange={handleChange}
+        aria-label={label}
+        style={{
+          border: "none",
+          background: "transparent",
+          color: "var(--text-1)",
+          fontSize: 14,
+          cursor: "pointer",
+          appearance: "none",
+          paddingRight: 14,
+        }}
+      >
+        {options.map((opt) => (
+          <option key={opt.value} value={opt.value}>
+            {opt.label}
+          </option>
+        ))}
+      </select>
+      <span aria-hidden style={{ color: "var(--text-mute)", fontSize: 11, marginLeft: -10 }}>
+        ▾
+      </span>
+    </label>
   );
 }

@@ -2,6 +2,10 @@
 // `apps/cli/lib/api/dto.ts` の export と一対一で対応する。BFF が拡張された
 // ときはここも合わせて更新する。
 
+import type { DataProvenance, EvidenceLabel } from "contracts";
+
+export type { DataProvenance, EvidenceLabel } from "contracts";
+
 export type UpsellOpportunity = "low" | "medium" | "high";
 
 export type CustomerListItemDto = {
@@ -13,6 +17,9 @@ export type CustomerListItemDto = {
   lastSeenAt: number;
   activityGrowth: number;
   upsellOpportunity: UpsellOpportunity;
+  provenance: DataProvenance;
+  provenanceByField: Record<string, DataProvenance>;
+  reasons: EvidenceLabel[];
 };
 
 export type CustomerIdentityDto = {

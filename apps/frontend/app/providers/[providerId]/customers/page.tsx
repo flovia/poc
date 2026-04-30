@@ -1,9 +1,10 @@
 import { TopBar } from "@/components/shell/TopBar";
+import { CustomersBrowser } from "@/components/customers/CustomersBrowser";
 import { CustomersHeader } from "@/components/customers/CustomersHeader";
-import { CustomersTable } from "@/components/customers/CustomersTable";
+import { CustomersOverview } from "@/components/customers/overview/CustomersOverview";
+import { SnapshotIndicator } from "@/components/customers/SnapshotIndicator";
 import { SummaryChip } from "@/components/customers/SummaryChip";
-import { Toolbar } from "@/components/customers/Toolbar";
-import { getCustomers, getSdkExtrasMap } from "@/lib/data-source";
+import { getCustomers, getSdkExtrasMap, getSummary } from "@/lib/data-source";
 import { formatAtomic } from "@/lib/format";
 import { getTopBarPageContext } from "@/lib/server/page-context";
 
@@ -13,10 +14,11 @@ export default async function CustomersPage({
   params: Promise<{ providerId: string }>;
 }) {
   const { providerId } = await params;
-  const [customers, extrasMap, pageCtx] = await Promise.all([
+  const [customers, extrasMap, pageCtx, summary] = await Promise.all([
     getCustomers(),
     getSdkExtrasMap(),
     getTopBarPageContext(),
+    getSummary(),
   ]);
 
   const totalSpendAtomic = customers
@@ -43,7 +45,8 @@ export default async function CustomersPage({
             }}
           >
             <CustomersHeader providerId={providerId} />
-            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+              <SnapshotIndicator generatedAt={summary.generatedAt} />
               <SummaryChip label="Wallets" value={total} hint="payer wallets observed" />
               <SummaryChip
                 label="Spend"
@@ -59,9 +62,9 @@ export default async function CustomersPage({
             </div>
           </div>
 
-          <Toolbar total={total} />
+          <CustomersOverview customers={customers} />
 
-          <CustomersTable
+          <CustomersBrowser
             customers={customers}
             providerId={providerId}
             dataMode={pageCtx.dataMode}

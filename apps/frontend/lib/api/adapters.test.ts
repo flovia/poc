@@ -51,8 +51,37 @@ describe("BFF canonical adapters", () => {
         lastSeenAt: Date.parse("2026-04-28T12:00:00.000Z") / 1000,
         activityGrowth: 0.4,
         upsellOpportunity: "high",
+        provenance: "derived_insight",
+        provenanceByField,
+        reasons: [evidence],
       },
     ]);
+  });
+
+  test("defaults missing provenance metadata to safe empties", () => {
+    const response: PhaseBCustomerListResponse = {
+      generatedAt: "2026-04-29T00:00:00.000Z",
+      generatedFrom: "phase-b-demo",
+      customerCount: 1,
+      provenance: "onchain_fact",
+      customers: [
+        {
+          address: "0x0000000000000000000000000000000000000002",
+          label: null,
+          observationCount: 1,
+          spendAtomic: "0",
+          providerCount: 0,
+          activityGrowth: 0,
+          upsellOpportunity: "low",
+          provenance: "onchain_fact",
+        },
+      ],
+    };
+
+    const [item] = adaptCustomerList(response);
+    expect(item.provenance).toBe("onchain_fact");
+    expect(item.provenanceByField).toEqual({});
+    expect(item.reasons).toEqual([]);
   });
 
   test("adapts customer profile envelope to wallet screen view model", () => {

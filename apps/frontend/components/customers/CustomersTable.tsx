@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { Icon } from "@/components/ui/Icon";
+import { HeaderTooltip } from "./HeaderTooltip";
 import { UpsellPill } from "./UpsellPill";
 import { Sparkline7d } from "@/components/wallet/Sparkline7d";
-import { classNames, formatAtomic, formatGrowth, formatTimestamp } from "@/lib/format";
+import { classNames, formatAtomic, formatTimestamp } from "@/lib/format";
 import type { CustomerListItemDto } from "@/lib/api/types";
 import type { DashboardMode } from "@/lib/data-mode";
 import type { SdkExtras } from "@/lib/sdk-fixtures/types";
@@ -48,18 +49,68 @@ export function CustomersTable({
   const isSdkConnected = dataMode === "sdkConnected";
   const rowClass = isSdkConnected ? "cust-row cust-row-sdk" : "cust-row";
   return (
-    <div className="card" style={{ overflow: "hidden" }}>
+    <div className="card" style={{ overflow: "visible" }}>
       <div className={`${rowClass} cust-head`}>
-        <div>Wallet</div>
-        {isSdkConnected && <div>Agent</div>}
-        <div>Spend (atomic)</div>
-        <div>Observations</div>
-        <div>Providers</div>
-        {isSdkConnected && <div>Used endpoint</div>}
-        <div>Activity growth</div>
-        {isSdkConnected && <div>7d</div>}
-        <div>Last seen</div>
-        <div>Upsell</div>
+        <div>
+          <HeaderTooltip
+            label="Wallet"
+            description="Payer wallet address. The on-chain account that has paid this provider."
+          />
+        </div>
+        {isSdkConnected && (
+          <div>
+            <HeaderTooltip
+              label="Agent"
+              description="Agent type self-reported by the SDK on this wallet's recent calls (e.g. coding-assistant, research-bot)."
+            />
+          </div>
+        )}
+        <div>
+          <HeaderTooltip
+            label="Spend (atomic)"
+            description="Total amount this wallet has spent with the current provider, shown in atomic (smallest) token units."
+          />
+        </div>
+        <div>
+          <HeaderTooltip
+            label="Observations"
+            description="Number of payment observations recorded for this wallet by the current provider."
+          />
+        </div>
+        <div>
+          <HeaderTooltip
+            label="Providers"
+            description="How many distinct providers this wallet has paid across the network."
+          />
+        </div>
+        {isSdkConnected && (
+          <div>
+            <HeaderTooltip
+              label="Used endpoint"
+              description="The API endpoint this wallet hits most often, reported by the SDK."
+            />
+          </div>
+        )}
+        {isSdkConnected && (
+          <div>
+            <HeaderTooltip
+              label="7d"
+              description="Spend trend over the last 7 days, one bar per day."
+            />
+          </div>
+        )}
+        <div>
+          <HeaderTooltip
+            label="Last seen"
+            description="Timestamp of the most recent payment observation from this wallet."
+          />
+        </div>
+        <div>
+          <HeaderTooltip
+            label="Upsell"
+            description="Suggested upsell opportunity inferred from this wallet's behavior, with provenance and reasons."
+          />
+        </div>
         <div aria-hidden />
       </div>
       {customers.length === 0 && (
@@ -135,22 +186,6 @@ export function CustomersTable({
               </div>
             )}
 
-            <div
-              className="mono"
-              style={{
-                fontSize: 13,
-                color:
-                  c.activityGrowth > 0
-                    ? "var(--mesh-blue)"
-                    : c.activityGrowth < 0
-                    ? "var(--text-3)"
-                    : "var(--text-2)",
-                fontWeight: 600,
-              }}
-            >
-              {formatGrowth(c.activityGrowth)}
-            </div>
-
             {isSdkConnected && (
               <div>
                 {extras && extras.sparkline7d.length === 7 ? (
@@ -165,7 +200,11 @@ export function CustomersTable({
               {formatTimestamp(c.lastSeenAt)}
             </div>
             <div>
-              <UpsellPill opportunity={c.upsellOpportunity} />
+              <UpsellPill
+                opportunity={c.upsellOpportunity}
+                provenance={c.provenanceByField.upsellOpportunity ?? c.provenance}
+                reasons={c.reasons}
+              />
             </div>
             <div className="row-arrow" style={{ display: "flex", justifyContent: "flex-end" }}>
               <Icon.arrow width="14" height="14" />

@@ -406,7 +406,14 @@ a { color: inherit; text-decoration: none; }
 /* ---- Customers table grid ---- */
 .cust-row {
   display: grid;
-  grid-template-columns: 220px 160px 200px minmax(140px, 1fr) minmax(280px, 1.2fr) 120px auto 28px;
+  grid-template-columns:
+    minmax(220px, 1fr) /* Wallet */
+    140px              /* Spend */
+    120px              /* Observations */
+    100px              /* Providers */
+    140px              /* Last seen */
+    180px              /* Upsell */
+    28px;              /* Arrow */
   align-items: center;
   gap: 14px;
   padding: 14px 18px;
@@ -419,16 +426,15 @@ a { color: inherit; text-decoration: none; }
 /* SDK connected モード時は Agent / Used endpoint / 7d sparkline の独立 3 列を追加. */
 .cust-row.cust-row-sdk {
   grid-template-columns:
-    220px               /* Wallet */
+    minmax(220px, 1fr)  /* Wallet */
     140px               /* Agent (sdk) */
     140px               /* Spend */
     100px               /* Observations */
-    minmax(140px, 1fr)  /* Providers */
+    100px               /* Providers */
     minmax(160px, 1fr)  /* Used endpoint (sdk) */
-    minmax(180px, 1fr)  /* Activity growth */
     100px               /* Sparkline (sdk) */
-    120px               /* Last seen */
-    auto                /* Upsell */
+    140px               /* Last seen */
+    180px               /* Upsell */
     28px;               /* Arrow */
 }
 .cust-row:last-child { border-bottom: none; }
