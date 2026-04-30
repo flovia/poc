@@ -86,21 +86,21 @@ export function BubbleChart({ bubbles, hover, setHover, providerId }: BubbleChar
           <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ display: "block" }}>
             <defs>
               <radialGradient id={grad("priority")} cx="100%" cy="0%" r="80%">
-                <stop offset="0%" stopColor="rgba(45,212,191,0.16)" />
-                <stop offset="60%" stopColor="rgba(96,165,250,0.04)" />
+                <stop offset="0%" style={{ stopColor: "var(--bubble-priority-from)" }} />
+                <stop offset="60%" style={{ stopColor: "var(--bubble-priority-mid)" }} />
                 <stop offset="100%" stopColor="transparent" />
               </radialGradient>
               <radialGradient id={grad("bubblue")} cx="30%" cy="30%">
-                <stop offset="0%" stopColor="#93C5FD" />
-                <stop offset="100%" stopColor="#1E3A8A" />
+                <stop offset="0%" style={{ stopColor: "var(--bubble-blue-from)" }} />
+                <stop offset="100%" style={{ stopColor: "var(--bubble-blue-to)" }} />
               </radialGradient>
               <radialGradient id={grad("bubteal")} cx="30%" cy="30%">
-                <stop offset="0%" stopColor="#5EEAD4" />
-                <stop offset="100%" stopColor="#0F766E" />
+                <stop offset="0%" style={{ stopColor: "var(--bubble-teal-from)" }} />
+                <stop offset="100%" style={{ stopColor: "var(--bubble-teal-to)" }} />
               </radialGradient>
               <radialGradient id={grad("bubslate")} cx="30%" cy="30%">
-                <stop offset="0%" stopColor="#94A3B8" />
-                <stop offset="100%" stopColor="#334155" />
+                <stop offset="0%" style={{ stopColor: "var(--bubble-slate-from)" }} />
+                <stop offset="100%" style={{ stopColor: "var(--bubble-slate-to)" }} />
               </radialGradient>
             </defs>
             <rect
@@ -163,7 +163,7 @@ export function BubbleChart({ bubbles, hover, setHover, providerId }: BubbleChar
                     cx={px(b.x)}
                     cy={py(b.y)}
                     r={b.r * 1.8}
-                    fill={`rgba(96,165,250,${b.accent === "blue" ? 0.16 : b.accent === "teal" ? 0.12 : 0.04})`}
+                    fill={`rgba(47, 93, 154, ${b.accent === "blue" ? 0.16 : b.accent === "teal" ? 0.12 : 0.04})`}
                     style={{ filter: "blur(8px)", transition: "all 180ms ease" }}
                   />
                   <circle

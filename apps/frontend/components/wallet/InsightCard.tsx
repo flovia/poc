@@ -13,8 +13,8 @@ type InsightCardProps = {
 
 const TONES: Record<Tone, { border: string }> = {
   default: { border: "var(--line)" },
-  upsell: { border: "rgba(13,148,136,0.32)" },
-  blue: { border: "rgba(37,99,235,0.28)" },
+  upsell: { border: "rgba(44, 122, 123, 0.32)" },
+  blue: { border: "rgba(47, 93, 154, 0.28)" },
 };
 
 const LABEL_COLOR: Record<Tone, string> = {

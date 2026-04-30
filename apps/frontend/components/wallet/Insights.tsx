@@ -68,10 +68,10 @@ export function UpsellCard({
         </div>
         <div
           style={{
-            background: "rgba(91,33,182,0.06)",
+            background: "rgba(123, 97, 168, 0.06)",
             borderRadius: 6,
             padding: "10px 12px",
-            border: "1px solid rgba(91,33,182,0.16)",
+            border: "1px solid rgba(123, 97, 168, 0.16)",
           }}
         >
           <div
@@ -140,7 +140,7 @@ function UpsellCardLive({ metrics }: { metrics: CustomerMetricsDto }) {
           background: "var(--teal-dim)",
           borderRadius: 10,
           padding: "10px 12px",
-          border: "1px solid rgba(13,148,136,0.20)",
+          border: "1px solid rgba(44, 122, 123, 0.20)",
           marginBottom: 10,
         }}
       >

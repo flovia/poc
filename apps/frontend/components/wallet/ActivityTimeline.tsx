@@ -22,10 +22,10 @@ type ActivityTimelineProps = {
 };
 
 const TYPE_BADGE: Record<CustomerTimelineEventType, { label: string; color: string; bg: string }> = {
-  payment: { label: "Payment", color: "#2563EB", bg: "rgba(37,99,235,0.10)" },
-  provider_usage: { label: "Provider", color: "#0D9488", bg: "rgba(13,148,136,0.10)" },
-  growth: { label: "Growth", color: "#1D4ED8", bg: "rgba(29,78,216,0.10)" },
-  upsell_signal: { label: "Upsell", color: "#B45309", bg: "rgba(180,83,9,0.10)" },
+  payment: { label: "Payment", color: "var(--mesh-blue)", bg: "var(--mesh-blue-soft)" },
+  provider_usage: { label: "Provider", color: "var(--teal)", bg: "var(--teal-soft)" },
+  growth: { label: "Growth", color: "var(--mesh-blue)", bg: "var(--mesh-blue-soft)" },
+  upsell_signal: { label: "Upsell", color: "var(--warn)", bg: "var(--warn-soft)" },
 };
 
 function formatApiPaths(paths: string[]): { text: string; unmapped: boolean } {
@@ -124,7 +124,7 @@ export function ActivityTimeline({
                     letterSpacing: "0.06em",
                     textTransform: "uppercase",
                     color: "var(--sdk-purple)",
-                    background: "rgba(91,33,182,0.04)",
+                    background: "var(--sdk-purple-dim)",
                     borderTop: i > 0 ? "1px solid var(--line)" : "none",
                   }}
                 >
@@ -140,7 +140,7 @@ export function ActivityTimeline({
                   padding: "12px 20px",
                   borderBottom: i < timeline.length - 1 ? "1px solid var(--line)" : "none",
                   borderLeft: isSelfRow ? "3px solid var(--teal)" : "3px solid transparent",
-                  background: isSelfRow ? "rgba(13,148,136,0.04)" : "transparent",
+                  background: isSelfRow ? "var(--teal-dim)" : "transparent",
                 }}
               >
               <span className="mono" style={{ fontSize: 12, color: "var(--text-3)" }}>

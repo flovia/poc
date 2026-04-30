@@ -23,8 +23,8 @@ export function DemoModeBanner() {
         marginTop: 24,
         marginBottom: 12,
         borderRadius: 8,
-        background: "rgba(20, 184, 166, 0.06)",
-        border: "1px solid rgba(20, 184, 166, 0.18)",
+        background: "rgba(44, 122, 123, 0.06)",
+        border: "1px solid rgba(44, 122, 123, 0.18)",
         fontSize: 13,
         color: "var(--text-2)",
       }}

@@ -112,7 +112,7 @@ export function SetupForm() {
                   fontSize: 13,
                   fontWeight: 500,
                   color: mode === m ? "#FFFFFF" : "var(--text-2)",
-                  background: mode === m ? "#1D4ED8" : "transparent",
+                  background: mode === m ? "var(--mesh-blue)" : "transparent",
                   transition: "background 180ms ease, color 180ms ease",
                   fontFamily: "var(--mono)",
                   letterSpacing: "0.02em",

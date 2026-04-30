@@ -351,27 +351,15 @@ and a handful of inline color literals do not.
    `--shadow-1: none` and `--shadow-2`. The guide has Sm / Md / Lg
    tiers; once defined, several inline `boxShadow: "none"` /
    `var(--shadow-1)` call sites become candidates for re-evaluation.
-4. **Inline hex literals bypass the tokens.** Colors that should follow
-   the new palette still appear hard-coded. They survived the token
-   swap intentionally because picking the right replacement requires
-   judgement (e.g. SVG gradient stops are not a 1:1 mapping). Known
-   offenders, as of this writing:
-   - [`globals.css`](../app/globals.css) `.btn.primary` and its hover
-     state use `#1D4ED8` / `#1E40AF` instead of `var(--mesh-blue)` and
-     a darker derivative
-   - [`components/ui/FreeTierBar.tsx`](../components/ui/FreeTierBar.tsx)
-     uses `#1D4ED8` / `#B45309`
-   - [`components/wallet/ActivityTimeline.tsx`](../components/wallet/ActivityTimeline.tsx)
-     `TYPE_BADGE` map uses `#2563EB` / `#0D9488` / `#1D4ED8` plus matching
-     rgba backgrounds
-   - [`components/wallet/NetworkStarChart.tsx`](../components/wallet/NetworkStarChart.tsx)
-     fills the central node with `#0D9488` and peripheral nodes with
-     `#1D4ED8`
-   - [`components/patterns/BubbleChart.tsx`](../components/patterns/BubbleChart.tsx)
-     gradient stops use `#93C5FD` / `#1E3A8A` / `#5EEAD4` / `#0F766E` /
-     `#94A3B8` / `#334155`
-   - [`components/setup/SetupForm.tsx`](../components/setup/SetupForm.tsx)
-     mode-toggle background uses `#1D4ED8`
+4. ~~**Inline hex literals bypass the tokens.**~~ **Done.** All accent
+   colors now flow through CSS variables. Bubble chart gradient stops
+   moved to dedicated `--bubble-{blue|teal|slate|priority}-{from|to|mid}`
+   tokens since gradients are not a 1:1 mapping to a single color.
+   Remaining inline hex values in `*.tsx` are deliberately left as
+   structural neutrals (`#FFFFFF` / `#FAFBFC` / `#F2F4F7` / `#F8FAFC` /
+   `#F6F8FA` etc.) and dark overlay tints
+   (`rgba(15, 23, 42, 0.92)` for tooltips, `rgba(255, 255, 255, 0.18)`
+   for translucent strokes); they are not part of the brand palette.
 
 ### What needs to change to ship it
 
@@ -383,10 +371,10 @@ and a handful of inline color literals do not.
    (CustomersTable, IdentityBar, KPI cards) first.
 3. **Define `--shadow-sm/md/lg`** matching the guide's Sm/Md/Lg samples
    and apply to cards / popovers consistently.
-4. **Sweep inline hex literals** so colors flow exclusively through CSS
-   variables. SVG gradients may need new dedicated tokens
-   (`--bubble-blue-from`, `--bubble-blue-to`, etc.) since they aren't a
-   single-color value.
+4. ~~**Sweep inline hex literals**~~ — done. Future colors should be
+   added via `:root` tokens (or new gradient-specific tokens for SVG
+   stops) rather than inline literals, to keep the sweep from
+   regressing.
 5. **Document the chosen mapping** in `docs/current-capabilities.md` so
    the next reader knows which tokens to use where.
 

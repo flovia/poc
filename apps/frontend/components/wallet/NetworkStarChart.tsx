@@ -81,7 +81,7 @@ export function NetworkStarChart({ address, providers }: Props) {
                 y1={CY}
                 x2={n.cx}
                 y2={n.cy}
-                stroke={isActive ? "rgba(37,99,235,0.85)" : "rgba(37,99,235,0.30)"}
+                stroke={isActive ? "rgba(47, 93, 154, 0.85)" : "rgba(47, 93, 154, 0.30)"}
                 strokeWidth={strokeWidth}
                 style={{ transition: "stroke 180ms ease" }}
               />
@@ -90,7 +90,7 @@ export function NetworkStarChart({ address, providers }: Props) {
 
           {/* center node */}
           <g>
-            <circle cx={CX} cy={CY} r={NODE_R_CENTER} fill="#0D9488" />
+            <circle cx={CX} cy={CY} r={NODE_R_CENTER} fill="var(--teal)" />
             <text
               x={CX}
               y={CY + 4}
@@ -122,7 +122,7 @@ export function NetworkStarChart({ address, providers }: Props) {
                   cx={n.cx}
                   cy={n.cy}
                   r={n.r}
-                  fill="#1D4ED8"
+                  fill="var(--mesh-blue)"
                   stroke="white"
                   strokeWidth={isHover ? 2 : 1}
                   style={{ transition: "stroke-width 180ms ease" }}
