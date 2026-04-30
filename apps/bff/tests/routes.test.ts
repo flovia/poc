@@ -212,6 +212,23 @@ describe("BFF routes", () => {
       ]);
     }));
 
+  test("does not mix generated customer lookups with demo fixture profiles", async () =>
+    withTempFile(async (filePath) => {
+      fs.writeFileSync(
+        filePath,
+        JSON.stringify({ serviceSummary: serviceAnalyticsSummaryResponse }, null, 2),
+      );
+      const handler = createBffHandler(loadGeneratedAnalyticsDataSource(filePath));
+
+      const profileResponse = handler(request(`/customers/${knownCustomerProfileAddress}/profile`));
+      const intelligenceResponse = handler(
+        request(`/customers/${knownCustomerIntelligenceAddress}/intelligence`),
+      );
+
+      expect(profileResponse.status).toBe(404);
+      expect(intelligenceResponse.status).toBe(404);
+    }));
+
   test("serves x402 service comparison analytics", async () => {
     const handler = createBffHandler(fixtureAnalyticsDataSource);
 

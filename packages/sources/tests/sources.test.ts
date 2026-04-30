@@ -390,6 +390,45 @@ describe("bitquery source client", () => {
     ).rejects.toThrow("Bitquery returned malformed transfer rows");
   });
 
+  test("rejects Bitquery payment transfer pages when any returned row is malformed", async () => {
+    const fixture = readFixture<Record<string, unknown>>("bitquery-transfers-page-1.json");
+    const validTransfer = (
+      ((fixture.data as Record<string, unknown>).EVM as Record<string, unknown>).transfers as Array<
+        Record<string, unknown>
+      >
+    )[0];
+
+    await expect(
+      fetchPaymentTransfersByPayTo({
+        network: "base",
+        asset: "USDC",
+        payTo: "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
+        token: "test-token",
+        limit: 2,
+        fetchFn: async () =>
+          new Response(
+            JSON.stringify({
+              data: {
+                EVM: {
+                  transfers: [
+                    validTransfer,
+                    {
+                      ...validTransfer,
+                      Transfer: {
+                        ...(validTransfer?.Transfer as object),
+                        Sender: "not-an-address",
+                      },
+                    },
+                  ],
+                },
+              },
+            }),
+            { status: 200 },
+          ),
+      }),
+    ).rejects.toThrow("Bitquery returned malformed transfer rows: skipped 1/2");
+  });
+
   test("parses paginated outgoing transfers by customer", async () => {
     const pages = [
       readFixture<unknown>("bitquery-transfers-page-1.json"),
@@ -456,6 +495,42 @@ describe("bitquery source client", () => {
         fetchFn: async () => new Response(JSON.stringify(fixture), { status: 200 }),
       }),
     ).rejects.toThrow("sender does not match");
+  });
+
+  test("rejects Bitquery outgoing transfer pages when any returned row is malformed", async () => {
+    const fixture = readFixture<Record<string, unknown>>("bitquery-transfers-page-1.json");
+    const validTransfer = (
+      ((fixture.data as Record<string, unknown>).EVM as Record<string, unknown>).transfers as Array<
+        Record<string, unknown>
+      >
+    )[0];
+
+    await expect(
+      fetchOutgoingTransfersByCustomer({
+        network: "base",
+        asset: "USDC",
+        customerAddress: "0xac5a07c44a4f971667b3df4b6551fb6991b2142d",
+        token: "test-token",
+        limit: 2,
+        fetchFn: async () =>
+          new Response(
+            JSON.stringify({
+              data: {
+                EVM: {
+                  transfers: [
+                    validTransfer,
+                    {
+                      ...validTransfer,
+                      Transaction: { Hash: "not-a-tx-hash" },
+                    },
+                  ],
+                },
+              },
+            }),
+            { status: 200 },
+          ),
+      }),
+    ).rejects.toThrow("Bitquery returned malformed transfer rows: skipped 1/2");
   });
 
   test("looks up CDP resources by payment option and represents unavailable portfolio source", () => {

@@ -539,7 +539,7 @@ export const fetchPaymentTransfersByPayTo = async (
         return [];
       }
     });
-    if (rows.length > 0 && page.length === 0) {
+    if (skippedCount > 0) {
       throw new Error(
         `Bitquery returned malformed transfer rows: skipped ${skippedCount}/${rows.length}`,
       );
@@ -630,7 +630,7 @@ export const fetchOutgoingTransfersByCustomer = async (
         }),
       ];
     });
-    if (rows.length > 0 && page.length === 0) {
+    if (skippedCount > 0) {
       throw new Error(
         `Bitquery returned malformed transfer rows: skipped ${skippedCount}/${rows.length}`,
       );

@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, test } from "bun:test";
 import { validateCustomerIntelligenceFixture } from "contracts";
-import type { BitqueryAggregate, CdpResource } from "contracts";
+import type { BitqueryAggregate, CdpResource, CustomerIntelligenceResponse } from "contracts";
 import { generateServiceAnalyticsReadModels } from "../scripts/analytics/read-models";
 import { createAnalyticsStore } from "../scripts/analytics/store";
 
@@ -55,6 +55,94 @@ const aggregate = (
   totalVolumeAtomic: `${transactionCount * 10000}`,
   provenance: { sourceKind: "bitquery", sourceName: "test" },
 });
+
+const customerFixture = (
+  address: string,
+  payTo: string,
+  serviceNameValue: string,
+  transactionCount: number,
+  totalAmountAtomic: string,
+): CustomerIntelligenceResponse =>
+  validateCustomerIntelligenceFixture({
+    generatedAt: "2026-01-01T00:00:00.000Z",
+    generatedFrom: "test",
+    customerAddress: address,
+    scope: {
+      address,
+      network: "base",
+      asset: "USDC",
+      timeWindow: { from: "2026-01-01T00:00:00.000Z", to: "2026-01-31T00:00:00.000Z" },
+    },
+    x402Services: [
+      {
+        candidateId: `${serviceNameValue}::base:USDC:payto`,
+        payTo,
+        providerName: serviceNameValue,
+        serviceName: serviceNameValue,
+        resource: `https://example.com/${serviceNameValue}`,
+        network: "base",
+        asset: "USDC",
+        transactionCount,
+        totalAmountAtomic,
+        confidence: 0.9,
+        provenance: "derived_insight",
+        provenanceByField: { serviceName: "derived_insight" },
+        evidence: [
+          {
+            provenance: "onchain_fact",
+            label: "test",
+            txHashes: ["0x6248880ec36541e6783ab756afdb427939f6209551b751cec5a2c97f71176d94"],
+          },
+        ],
+        reasons: [{ provenance: "derived_insight", label: "test" }],
+      },
+    ],
+    payToActivities: [
+      {
+        payTo,
+        network: "base",
+        asset: "USDC",
+        transactionCount,
+        totalAmountAtomic,
+        latestTimestamp: "2026-01-02T00:00:00.000Z",
+        txHashes: ["0x6248880ec36541e6783ab756afdb427939f6209551b751cec5a2c97f71176d94"],
+        provenance: "onchain_fact",
+        provenanceByField: { payTo: "onchain_fact" },
+        evidence: [
+          {
+            provenance: "onchain_fact",
+            label: "test",
+            txHashes: ["0x6248880ec36541e6783ab756afdb427939f6209551b751cec5a2c97f71176d94"],
+          },
+        ],
+      },
+    ],
+    portfolioSummary: {
+      totalValueUsd: null,
+      tokenCount: 0,
+      sourceCoverage: {
+        source: "portfolio",
+        status: "unavailable",
+        unavailableReason: "portfolio source not configured",
+        provenance: { sourceKind: "derived", sourceName: "test" },
+      },
+      provenance: "derived_insight",
+      provenanceByField: { sourceCoverage: "derived_insight" },
+      reasons: [{ provenance: "derived_insight", label: "portfolio source not configured" }],
+    },
+    defiPositions: [],
+    insights: [],
+    sourceCoverage: [
+      {
+        source: "bitquery",
+        status: "available",
+        provenance: { sourceKind: "bitquery", sourceName: "test" },
+      },
+    ],
+    provenance: "derived_insight",
+    provenanceByField: { customerAddress: "onchain_fact" },
+    reasons: [{ provenance: "derived_insight", label: "test" }],
+  });
 
 describe("service analytics read model generation", () => {
   test("builds read models with sample basis, coverage, attribution, and provenance", async () =>
@@ -290,5 +378,109 @@ describe("service analytics read model generation", () => {
           endpoint.endpointName.includes("x402-secure-api.t54.ai"),
         ),
       ).toBe(false);
+    }));
+
+  test("computes service summary comparison shares from all services", async () =>
+    withTempDir("comparison-shares", (directory) => {
+      const dbPath = path.join(directory, "analytics.sqlite");
+      const outputPath = path.join(directory, "analytics.json");
+      const store = createAnalyticsStore({ path: dbPath });
+      const coingeckoPayTo = "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784";
+      const peerPayTo = "0x2222222222222222222222222222222222222222";
+
+      store.persistCdpResources([
+        resource(
+          "coingecko",
+          "https://api.coingecko.com/api/v3/x402/simple/price",
+          "coingecko",
+          "CoinGecko x402",
+          coingeckoPayTo,
+        ),
+        resource("peer", "https://peer.example/x402", "peer", "Peer x402", peerPayTo),
+      ]);
+      store.persistPayToAggregates([aggregate(coingeckoPayTo, 10, 2), aggregate(peerPayTo, 30, 6)]);
+      store.detectAndPersistMappingPatterns();
+      store.close();
+
+      const result = generateServiceAnalyticsReadModels({
+        analyticsDbPath: dbPath,
+        outputPath,
+        generatedAt: "2026-01-01T00:00:00.000Z",
+      });
+
+      expect(result.serviceSummary.comparedToX402.userShare).toBeCloseTo(0.25);
+      expect(result.serviceSummary.comparedToX402.transactionShare).toBeCloseTo(0.25);
+      expect(result.serviceSummary.comparedToX402.activityIndex).toBeCloseTo(1);
+    }));
+
+  test("scopes customer snapshots and wallet observations to the requested current runs", async () =>
+    withTempDir("customer-scope", (directory) => {
+      const dbPath = path.join(directory, "analytics.sqlite");
+      const outputPath = path.join(directory, "analytics.json");
+      const store = createAnalyticsStore({ path: dbPath });
+      const payTo = "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784";
+      const oldCustomer = customerFixture(
+        "0x1111111111111111111111111111111111111111",
+        payTo,
+        "Old Service",
+        1,
+        "10000",
+      );
+      const currentCustomer = customerFixture(
+        "0x2222222222222222222222222222222222222222",
+        payTo,
+        "Current Service",
+        1,
+        "20000",
+      );
+      const oldRunId = store.beginCaptureRun({
+        kind: "customer_intelligence_capture",
+        parameters: {},
+      });
+      store.completeCaptureRun(oldRunId, {});
+      const currentRunId = store.beginCaptureRun({
+        kind: "customer_intelligence_capture",
+        parameters: {},
+      });
+      store.completeCaptureRun(currentRunId, {});
+
+      store.persistCdpResources([
+        resource(
+          "coingecko",
+          "https://api.coingecko.com/api/v3/x402/simple/price",
+          "coingecko",
+          "CoinGecko x402",
+          payTo,
+        ),
+      ]);
+      store.persistPayToAggregates([aggregate(payTo, 10, 2)]);
+      store.detectAndPersistMappingPatterns();
+      store.persistCustomerIntelligenceSnapshots([oldCustomer], oldRunId);
+      store.persistCustomerIntelligenceSnapshots([currentCustomer], currentRunId);
+      store.close();
+
+      const emptyScoped = generateServiceAnalyticsReadModels({
+        analyticsDbPath: dbPath,
+        outputPath: path.join(directory, "empty.json"),
+        generatedAt: "2026-01-01T00:00:00.000Z",
+        customerRunIds: [],
+      });
+      expect(emptyScoped.customers.customerCount).toBe(0);
+
+      const currentScoped = generateServiceAnalyticsReadModels({
+        analyticsDbPath: dbPath,
+        outputPath,
+        generatedAt: "2026-01-01T00:00:00.000Z",
+        customerRunIds: [currentRunId],
+      });
+
+      expect(currentScoped.customers.customers.map((customer) => customer.address)).toEqual([
+        currentCustomer.customerAddress,
+      ]);
+      expect(
+        currentScoped.walletUsageGraph.graph.providerWallets[0]?.payerWallets[0]?.observations.map(
+          (observation) => observation.serviceName,
+        ),
+      ).toEqual(["Current Service"]);
     }));
 });

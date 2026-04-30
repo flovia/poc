@@ -328,6 +328,7 @@ export const runFullCapture = async (
 
     const transferRunIds: number[] = [];
     currentStage = "payto-transfer-capture";
+    const transferTimeSlices = timeSlices(options);
     for (const [index, row] of payToPlan.selected.entries()) {
       const payTo = normalizePayTo(row.payTo);
       currentEntity = { payTo, index: index + 1, total: payToPlan.selected.length };
@@ -336,7 +337,10 @@ export const runFullCapture = async (
             network: options.network,
             asset: options.asset,
             payTo,
+            limit: options.perPayToLimit,
+            pageSize: options.pageSize,
             timeWindow: { from: options.from, to: options.to },
+            timeSlices: transferTimeSlices,
           })
         : null;
       if (existingTransferRun) {
@@ -365,7 +369,7 @@ export const runFullCapture = async (
         bitqueryFetch: options.bitqueryFetch,
         analyticsStore: store,
         timeWindow: { from: options.from, to: options.to },
-        timeSlices: timeSlices(options),
+        timeSlices: transferTimeSlices,
       });
       if (transferResult.analyticsRunId !== undefined) {
         transferRunIds.push(transferResult.analyticsRunId);

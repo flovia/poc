@@ -94,11 +94,8 @@ export const loadGeneratedAnalyticsDataSource = (filePath: string): BffAnalytics
     serviceQuadrants: validateServiceAnalyticsQuadrantResponse(
       payload.serviceQuadrants ?? serviceAnalyticsQuadrantResponse,
     ),
-    getCustomerProfile: (address: string) =>
-      profilesByAddress[address.toLowerCase()] ?? getPhaseBCustomerProfileByAddress(address),
-    getCustomerIntelligence: (address: string) =>
-      intelligenceByAddress[address.toLowerCase()] ??
-      getPhaseBCustomerIntelligenceByAddress(address),
+    getCustomerProfile: (address: string) => profilesByAddress[address.toLowerCase()],
+    getCustomerIntelligence: (address: string) => intelligenceByAddress[address.toLowerCase()],
   };
 };
 

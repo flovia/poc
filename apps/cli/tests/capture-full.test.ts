@@ -304,6 +304,58 @@ describe("full capture orchestration", () => {
       ).toBe(true);
     }));
 
+  test("does not reuse transfer runs that do not satisfy requested coverage", async () =>
+    withTempDir("reuse-coverage", async (directory) => {
+      const dbPath = path.join(directory, "analytics.sqlite");
+      await runFullCapture({
+        analyticsDbPath: dbPath,
+        outDir: path.join(directory, "first"),
+        readModelOutputPath: path.join(directory, "first-read-models.json"),
+        payToBudget: 1,
+        walletBudget: 1,
+        perPayToLimit: 1,
+        pageSize: 1,
+        bitqueryToken: "test-token",
+        cdpFetch: async () => new Response(JSON.stringify(cdpResponse)),
+        bitqueryFetch: async (_url, init) => {
+          const body = JSON.parse(String(init?.body)) as { variables: Record<string, unknown> };
+          if (Array.isArray(body.variables.payTos))
+            return new Response(JSON.stringify(aggregateResponse));
+          if (body.variables.payTo) return new Response(JSON.stringify(transferResponse()));
+          throw new Error("unexpected Bitquery request");
+        },
+      });
+
+      let transferFetches = 0;
+      const logs: string[] = [];
+      await runFullCapture({
+        analyticsDbPath: dbPath,
+        outDir: path.join(directory, "second"),
+        readModelOutputPath: path.join(directory, "second-read-models.json"),
+        payToBudget: 1,
+        walletBudget: 1,
+        perPayToLimit: 2,
+        pageSize: 1,
+        sliceDays: 14,
+        bitqueryToken: "test-token",
+        logger: (message) => logs.push(message),
+        cdpFetch: async () => new Response(JSON.stringify(cdpResponse)),
+        bitqueryFetch: async (_url, init) => {
+          const body = JSON.parse(String(init?.body)) as { variables: Record<string, unknown> };
+          if (Array.isArray(body.variables.payTos))
+            return new Response(JSON.stringify(aggregateResponse));
+          if (body.variables.payTo) {
+            transferFetches += 1;
+            return new Response(JSON.stringify(transferResponse()));
+          }
+          throw new Error("unexpected Bitquery request");
+        },
+      });
+
+      expect(transferFetches).toBeGreaterThan(0);
+      expect(logs.some((message) => message.includes("reused run="))).toBe(false);
+    }));
+
   test("records census failure and does not continue downstream", async () =>
     withTempDir("census-failure", async (directory) => {
       await expect(

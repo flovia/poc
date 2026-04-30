@@ -99,11 +99,14 @@ const topEndpointsForService = (serviceRows: ServiceAnalyticsRow[], limit: numbe
 
 const loadCustomerIntelligenceSnapshots = (
   store: ReturnType<typeof createAnalyticsStore>,
-  customerRunIds: number[],
+  customerRunIds?: number[],
 ): CustomerIntelligenceResponse[] => {
-  const runFilter = customerRunIds.length
-    ? `WHERE source_run_id IN (${customerRunIds.map(() => "?").join(", ")})`
+  const runFilter = customerRunIds
+    ? customerRunIds.length
+      ? `WHERE source_run_id IN (${customerRunIds.map(() => "?").join(", ")})`
+      : "WHERE 0"
     : "";
+  const runParameters = customerRunIds ?? [];
   const rows = store.db
     .prepare(
       `SELECT wallet_address, payload_json
@@ -111,7 +114,7 @@ const loadCustomerIntelligenceSnapshots = (
        ${runFilter}
        ORDER BY generated_at DESC`,
     )
-    .all(...customerRunIds) as Array<{ wallet_address: string; payload_json: string }>;
+    .all(...runParameters) as Array<{ wallet_address: string; payload_json: string }>;
   const latestByAddress = new Map<string, CustomerIntelligenceResponse>();
   for (const row of rows) {
     const key = row.wallet_address.toLowerCase();
@@ -326,6 +329,9 @@ const buildCustomerReadModels = (
         const payerWallets = customers
           .filter((customer) => customer.x402Services.some((service) => service.payTo === payTo))
           .map((customer) => {
+            const customerServices = customer.x402Services.filter(
+              (service) => service.payTo === payTo,
+            );
             const activities = customer.payToActivities.filter(
               (activity) => activity.payTo === payTo,
             );
@@ -347,7 +353,7 @@ const buildCustomerReadModels = (
               lastSeenAt:
                 latestTimestamp(activities.map((activity) => activity.latestTimestamp)) ??
                 customer.generatedAt,
-              observations: services.slice(0, 5).map((service) => ({
+              observations: customerServices.slice(0, 5).map((service) => ({
                 providerId: service.candidateId,
                 providerName: service.providerName ?? service.serviceName ?? service.payTo,
                 serviceName: serviceName(service),
@@ -521,6 +527,14 @@ export const generateServiceAnalyticsReadModels = (
     (sum, service) => sum + service.transactionCount,
     0,
   );
+  const totalUsers = comparison.services.reduce((sum, service) => sum + service.userCount, 0);
+  const peerServices = comparison.services.filter(
+    (service) => service.serviceId !== coingecko.serviceId,
+  );
+  const peerAverageTransactionsPerUser = peerServices.length
+    ? peerServices.reduce((sum, service) => sum + service.averageTransactionsPerUser, 0) /
+      peerServices.length
+    : 0;
   const summary = validateServiceAnalyticsSummaryResponse({
     generatedAt,
     generatedFrom,
@@ -531,10 +545,13 @@ export const generateServiceAnalyticsReadModels = (
     repeatUserRate: coingecko.repeatUserRate,
     topEndpoints: topEndpointsForService(servicesById.get("coingecko") ?? [], 5),
     comparedToX402: {
-      userShare: 1,
+      userShare: totalUsers === 0 ? 0 : coingecko.userCount / totalUsers,
       transactionShare:
         totalTransactions === 0 ? 0 : coingecko.transactionCount / totalTransactions,
-      activityIndex: coingecko.averageTransactionsPerUser,
+      activityIndex:
+        peerAverageTransactionsPerUser === 0
+          ? coingecko.averageTransactionsPerUser
+          : coingecko.averageTransactionsPerUser / peerAverageTransactionsPerUser,
       sampleBasis: "analytics data store aggregate census and sampled facts",
       availableServiceCount: comparison.services.length,
     },
@@ -571,7 +588,7 @@ export const generateServiceAnalyticsReadModels = (
   });
 
   const customerReadModels = buildCustomerReadModels(
-    loadCustomerIntelligenceSnapshots(store, options.customerRunIds ?? []),
+    loadCustomerIntelligenceSnapshots(store, options.customerRunIds),
     generatedAt,
     generatedFrom,
   );

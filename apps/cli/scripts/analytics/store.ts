@@ -146,6 +146,16 @@ export type SuccessfulPayToTransferRun = {
   finishedAt?: string;
 };
 
+type TransferRunReuseScope = {
+  network: string;
+  asset: string;
+  payTo: string;
+  limit: number;
+  pageSize?: number;
+  timeWindow: { from: string; to?: string };
+  timeSlices?: Array<{ from: string; to?: string }>;
+};
+
 export type SamplingPlanMetadataInput = {
   planKind: "payto" | "wallet" | string;
   planKey: string;
@@ -293,12 +303,7 @@ export class AnalyticsStore {
     };
   }
 
-  findSuccessfulPayToTransferRun(scope: {
-    network: string;
-    asset: string;
-    payTo: string;
-    timeWindow: { from: string; to?: string };
-  }): SuccessfulPayToTransferRun | null {
+  findSuccessfulPayToTransferRun(scope: TransferRunReuseScope): SuccessfulPayToTransferRun | null {
     this.initialize();
     const rows = this.db
       .prepare(
@@ -317,10 +322,19 @@ export class AnalyticsStore {
       if (normalizeNetwork(String(parameters.network ?? "")) !== network) continue;
       if (normalizeAsset(String(parameters.asset ?? "")) !== asset) continue;
       if (normalizePayTo(String(parameters.payTo ?? "")) !== payTo) continue;
+      if (Number(parameters.limit ?? 0) < scope.limit) continue;
+      if ((parameters.pageSize ?? undefined) !== (scope.pageSize ?? undefined)) continue;
       if (timeWindow?.from !== scope.timeWindow.from) continue;
       if ((timeWindow?.to ?? undefined) !== (scope.timeWindow.to ?? undefined)) continue;
+      if (
+        JSON.stringify(parameters.timeSlices ?? undefined) !==
+        JSON.stringify(scope.timeSlices ?? undefined)
+      ) {
+        continue;
+      }
       const coverage = parseJson(row.source_coverage_json as string, {}) as Record<string, unknown>;
       const bitqueryCoverage = coverage.bitquery as Record<string, unknown> | undefined;
+      if (Number(bitqueryCoverage?.timeSlices ?? 1) !== (scope.timeSlices?.length ?? 1)) continue;
       return {
         runId: Number(row.id),
         payTo,
