@@ -139,6 +139,13 @@ export type CustomerOutgoingTransferQueryScope = WalletTransferQueryScope & {
   payerWallets?: string[];
 };
 
+export type SuccessfulPayToTransferRun = {
+  runId: number;
+  payTo: string;
+  capturedCount: number;
+  finishedAt?: string;
+};
+
 export type SamplingPlanMetadataInput = {
   planKind: "payto" | "wallet" | string;
   planKey: string;
@@ -284,6 +291,44 @@ export class AnalyticsStore {
       sourceCoverage: parseJson(row.source_coverage_json as string, {}),
       error: parseJson(row.error_json as string | null, null),
     };
+  }
+
+  findSuccessfulPayToTransferRun(scope: {
+    network: string;
+    asset: string;
+    payTo: string;
+    timeWindow: { from: string; to?: string };
+  }): SuccessfulPayToTransferRun | null {
+    this.initialize();
+    const rows = this.db
+      .prepare(
+        `SELECT id, finished_at, parameters_json, source_coverage_json
+         FROM capture_runs
+         WHERE kind = 'payto_transfer_capture' AND status = 'success'
+         ORDER BY id DESC`,
+      )
+      .all() as Array<Record<string, unknown>>;
+    const network = normalizeNetwork(scope.network);
+    const asset = normalizeAsset(scope.asset);
+    const payTo = normalizePayTo(scope.payTo);
+    for (const row of rows) {
+      const parameters = parseJson(row.parameters_json as string, {}) as Record<string, unknown>;
+      const timeWindow = parameters.timeWindow as Record<string, unknown> | undefined;
+      if (normalizeNetwork(String(parameters.network ?? "")) !== network) continue;
+      if (normalizeAsset(String(parameters.asset ?? "")) !== asset) continue;
+      if (normalizePayTo(String(parameters.payTo ?? "")) !== payTo) continue;
+      if (timeWindow?.from !== scope.timeWindow.from) continue;
+      if ((timeWindow?.to ?? undefined) !== (scope.timeWindow.to ?? undefined)) continue;
+      const coverage = parseJson(row.source_coverage_json as string, {}) as Record<string, unknown>;
+      const bitqueryCoverage = coverage.bitquery as Record<string, unknown> | undefined;
+      return {
+        runId: Number(row.id),
+        payTo,
+        capturedCount: Number(bitqueryCoverage?.capturedCount ?? 0),
+        finishedAt: (row.finished_at as string | null) ?? undefined,
+      };
+    }
+    return null;
   }
 
   persistCdpResources(resources: CdpResource[], sourceRunId?: number) {

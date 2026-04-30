@@ -33,6 +33,7 @@ export type FullCaptureOptions = {
   readModelOutputPath: string;
   seed: string;
   dryRun: boolean;
+  reuseExistingTransfers: boolean;
   bitqueryToken?: string;
   zerionApiKey?: string;
   bitqueryEndpoint?: string;
@@ -108,6 +109,7 @@ export const parseFullCaptureArgs = (argv: string[]): FullCaptureOptions => {
     readModelOutputPath: process.env.ANALYTICS_READ_MODEL_OUTPUT_PATH ?? defaults.readModels,
     seed: "capture-full-v1",
     dryRun: false,
+    reuseExistingTransfers: true,
     bitqueryToken: process.env.BITQUERY_TOKEN,
     zerionApiKey: process.env.ZERION_API_KEY,
   };
@@ -146,6 +148,7 @@ export const parseFullCaptureArgs = (argv: string[]): FullCaptureOptions => {
     else if (arg === "--cdp-endpoint") options.cdpEndpoint = parseArg(index++, argv);
     else if (arg === "--zerion-endpoint") options.zerionEndpoint = parseArg(index++, argv);
     else if (arg === "--dry-run") options.dryRun = true;
+    else if (arg === "--no-reuse-existing-transfers") options.reuseExistingTransfers = false;
     else throw new Error(`unknown argument: ${arg}`);
   }
 
@@ -239,6 +242,7 @@ export const runFullCapture = async (
       budgets: plan.budgets,
       outputPaths: plan.outputPaths,
       seed: options.seed,
+      reuseExistingTransfers: options.reuseExistingTransfers,
     },
     sourceCoverage: { stages: stageProgress },
   });
@@ -325,6 +329,21 @@ export const runFullCapture = async (
     for (const [index, row] of payToPlan.selected.entries()) {
       const payTo = normalizePayTo(row.payTo);
       currentEntity = { payTo, index: index + 1, total: payToPlan.selected.length };
+      const existingTransferRun = options.reuseExistingTransfers
+        ? store.findSuccessfulPayToTransferRun({
+            network: options.network,
+            asset: options.asset,
+            payTo,
+            timeWindow: { from: options.from, to: options.to },
+          })
+        : null;
+      if (existingTransferRun) {
+        transferRunIds.push(existingTransferRun.runId);
+        log(
+          `[capture-full] payto-transfer-capture: ${index + 1}/${payToPlan.selected.length} ${payTo} reused run=${existingTransferRun.runId} transfers=${existingTransferRun.capturedCount}`,
+        );
+        continue;
+      }
       const transferResult = await runPayToTransactionCapture({
         network: options.network,
         asset: options.asset,
