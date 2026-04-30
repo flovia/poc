@@ -397,6 +397,20 @@ a { color: inherit; text-decoration: none; }
   transition: background 140ms ease, transform 140ms ease;
   position: relative;
 }
+/* SDK connected モード時は Agent / Used endpoint / 7d sparkline の独立 3 列を追加. */
+.cust-row.cust-row-sdk {
+  grid-template-columns:
+    220px               /* Wallet */
+    140px               /* Agent (sdk) */
+    140px               /* Spend */
+    100px               /* Observations */
+    minmax(140px, 1fr)  /* Providers */
+    minmax(160px, 1fr)  /* Used endpoint (sdk) */
+    minmax(180px, 1fr)  /* Activity growth */
+    100px               /* Sparkline (sdk) */
+    120px               /* Last seen */
+    130px;              /* Upsell */
+}
 .cust-row:last-child { border-bottom: none; }
 .cust-row.cust-head {
   font-size: 11px; font-weight: 600; letter-spacing: 0.06em;
