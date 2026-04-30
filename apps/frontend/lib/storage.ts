@@ -7,7 +7,11 @@ export const DEMO_OPTED_IN_KEY = "flovia:demo-opted-in";
 // demo provider は localStorage に書き込まずメモリ上で管理するモデル。
 // SEED_VERSION は demo 定義に互換性のない変更が入ったときに bump し、
 // 既存ブラウザの localStorage 上の demo 関連状態を再初期化する基準として使う。
-export const SEED_VERSION = 3;
+export const SEED_VERSION = 4;
+
+// 過去 SEED_VERSION で使われていたが現在は使わない providerId。
+// version bump 時のクリーンアップで除去対象にする。
+export const LEGACY_SEED_IDS: readonly string[] = ["acme-price"];
 
 const isBrowser = () => typeof window !== "undefined";
 

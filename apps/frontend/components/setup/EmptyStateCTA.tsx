@@ -12,7 +12,7 @@ export function EmptyStateCTA() {
 
   const handleTryDemo = () => {
     optInDemo();
-    router.push("/providers/acme-price/customers");
+    router.push("/providers/northwind-price/customers");
   };
 
   const handleAddPayTo = () => {

@@ -24,7 +24,7 @@ const ROWS: ProtagonistTimelineRow[] = [
   {
     hour: 0,
     minuteOffset: 0,
-    providerId: "acme-price",
+    providerId: "northwind-price",
     apiPath: "/v1/price/history?pair=ETH-USD&window=1h",
     amountUsd: 0.018,
   },
@@ -53,7 +53,7 @@ const ROWS: ProtagonistTimelineRow[] = [
   {
     hour: 1,
     minuteOffset: 0,
-    providerId: "acme-price",
+    providerId: "northwind-price",
     apiPath: "/v1/price/snapshot?pairs=ETH,ARB,SOL",
     amountUsd: 0.022,
   },
@@ -82,7 +82,7 @@ const ROWS: ProtagonistTimelineRow[] = [
   {
     hour: 2,
     minuteOffset: 0,
-    providerId: "acme-price",
+    providerId: "northwind-price",
     apiPath: "/v1/market/ohlcv?pair=SOL-USD&interval=1h",
     amountUsd: 0.028,
   },
@@ -120,7 +120,7 @@ function isoFromUnix(ts: number): string {
 }
 
 const PROVIDER_LABEL: Record<string, string> = {
-  "acme-price": "Acme Price API",
+  "northwind-price": "Northwind Price API",
   vectormind: "VectorMind AI",
   routezero: "RouteZero DEX",
   signalport: "SignalPort",
@@ -154,8 +154,8 @@ export const PROTAGONIST_PROFILE: CustomerProfileDto = {
   },
   providers: [
     {
-      providerId: "acme-price",
-      name: "Acme Price API",
+      providerId: "northwind-price",
+      name: "Northwind Price API",
       payToWallet: "0xprovider...price",
       spendAtomic: usdToAtomic(0.068),
       transactionCount: 3,
@@ -236,7 +236,7 @@ export const PROTAGONIST_EXTRAS: SdkExtras = {
     apiPath: row.apiPath,
     amountUsd: row.amountUsd,
     cycleId: row.hour + 1, // 1, 2, 3
-    isSelfProvider: row.providerId === "acme-price",
+    isSelfProvider: row.providerId === "northwind-price",
   })),
   upsell: {
     planName: "Pro Trading 250M",

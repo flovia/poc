@@ -6,6 +6,7 @@ import {
   getDemoOptedIn,
   getSeedVersion,
   hasInitialized,
+  LEGACY_SEED_IDS,
   loadStoredProviders,
   markInitialized,
   saveStoredProviders,
@@ -63,12 +64,23 @@ export function ProvidersContextProvider({ children }: { children: React.ReactNo
       markInitialized();
     }
 
-    // step 2: prov の中身を seedCount で分類
+    // step 2: prov の中身を seedCount で分類。
+    // SEED_VERSION bump 時は旧 SEED_IDS も seed と見なすことで、旧版フル保持 (M1)
+    // を正しく検出し、saveStoredProviders([]) で旧 demo 行ごと localStorage から消す。
+    // ユーザーが偶然旧 seed と同じ providerId で登録していたケースは M2 に落ち、
+    // 削除されない (この経路では SEED_VERSION も更新しないので将来のリトライが効く)。
+    const isLegacy = initialSeedV !== SEED_VERSION;
+    const recognizedSeedIds: readonly string[] = isLegacy
+      ? [...SEED_IDS, ...LEGACY_SEED_IDS]
+      : SEED_IDS;
     const seedCount = initialUser.filter((p) =>
-      (SEED_IDS as readonly string[]).includes(p.providerId),
+      recognizedSeedIds.includes(p.providerId),
     ).length;
     const userCount = initialUser.length - seedCount;
 
+    // 旧版フル保持と新版フル保持はどちらも 3 件 (SEED_IDS と同サイズ)。
+    // 旧版は LEGACY_SEED_IDS の 1 件が SEED_IDS の差分 1 件と置換された形なので、
+    // 期待件数は常に SEED_IDS.length で揃う。
     if (seedCount === SEED_IDS.length && userCount === 0) {
       // M1: seed 完全保持・user 追加なし → demoOpt=true, prov=[], seedV=SEED_VERSION
       saveStoredProviders([]);
@@ -128,10 +140,11 @@ export function ProvidersContextProvider({ children }: { children: React.ReactNo
     setSeedVersion(SEED_VERSION);
     // partial legacy (M2) のクリーンアップ: prov に残った seed 由来は demo
     // 配列で再供給するため localStorage から消す。
+    // SEED_VERSION bump 後の旧 SEED_IDS (LEGACY_SEED_IDS) も同時に除去して、
+    // M2 経由のブラウザでも明示的 opt-in 時に旧 seed が完全置換される。
+    const seedLikeIds = new Set<string>([...SEED_IDS, ...LEGACY_SEED_IDS]);
     setUserProviders((prev) => {
-      const filtered = prev.filter(
-        (p) => !(SEED_IDS as readonly string[]).includes(p.providerId),
-      );
+      const filtered = prev.filter((p) => !seedLikeIds.has(p.providerId));
       saveStoredProviders(filtered);
       return filtered;
     });

@@ -47,7 +47,7 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
 
   const current = activeProviderId ? stored.find((p) => p.providerId === activeProviderId) : undefined;
   // Phase 9: activeProviderId が sdk-demo (= stored 不在の仮想 provider) の場合も
-  // Acme Price API を表示する. SDK モード + stored>0 + /providers/sdk-demo/* 直アクセス
+  // Northwind Price API を表示する. SDK モード + stored>0 + /providers/sdk-demo/* 直アクセス
   // のケースでも仮想 provider 名で揃える.
   const isViewingSdkDemo =
     dataMode === "sdkConnected" && activeProviderId === SDK_DEMO_PROVIDER_ID && !current;

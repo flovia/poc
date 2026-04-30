@@ -9,7 +9,7 @@ export const PROTAGONIST_ADDRESS = "0x7A91...C4E8";
 
 // providerId -> canonical name (live と同じラベル).
 export const PROVIDER_NAME: Record<string, string> = {
-  "acme-price": "Acme Price API",
+  "northwind-price": "Northwind Price API",
   vectormind: "VectorMind AI",
   routezero: "RouteZero DEX",
   signalport: "SignalPort",
@@ -20,7 +20,7 @@ export const PROVIDER_NAME: Record<string, string> = {
 
 // providerId -> 仮想 pay_to wallet (live seed には存在しないアドレス).
 export const PROVIDER_PAY_TO: Record<string, string> = {
-  "acme-price": "0xprovider...price",
+  "northwind-price": "0xprovider...price",
   vectormind: "0xprovider...vector",
   routezero: "0xprovider...route",
   signalport: "0xprovider...signal",
@@ -33,4 +33,4 @@ export const PROVIDER_PAY_TO: Record<string, string> = {
 // サイドバー / URL に出すための placeholder. これは leaf 定数なので
 // `lib/sdk-fixtures/index.ts` には re-export しない (UI 側は shared 直 import).
 export const SDK_DEMO_PROVIDER_ID = "sdk-demo";
-export const SDK_DEMO_PROVIDER_NAME = "Acme Price API";
+export const SDK_DEMO_PROVIDER_NAME = "Northwind Price API";

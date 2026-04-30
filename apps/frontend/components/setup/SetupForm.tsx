@@ -42,7 +42,7 @@ export function SetupForm() {
     if (!canSave) return;
     const desiredId = slugifyProviderName(name || "untitled");
     // 衝突判定は userProviders ベース。stored を使うと demo の providerId と
-    // 衝突して acme-price を名乗れず、demo 上書き要件 (§4.1 #12) が破綻する。
+    // 衝突して northwind-price を名乗れず、demo 上書き要件 (§4.1 #12) が破綻する。
     const providerId = ensureUniqueId(
       desiredId,
       userProviders.map((p) => p.providerId),
@@ -73,7 +73,7 @@ export function SetupForm() {
 
   const handleTryDemo = () => {
     optInDemo();
-    router.push("/providers/acme-price/customers");
+    router.push("/providers/northwind-price/customers");
   };
 
   return (
@@ -130,7 +130,7 @@ export function SetupForm() {
             aria-label="Provider name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Acme Price API"
+            placeholder="Northwind Price API"
             style={fieldInputStyle}
           />
         </Field>

@@ -116,8 +116,8 @@ export function getSecondaryProfile(address: string): CustomerProfileDto | null 
     },
     providers: [
       {
-        providerId: "acme-price",
-        name: "Acme Price API",
+        providerId: "northwind-price",
+        name: "Northwind Price API",
         payToWallet: "0xprovider...price",
         spendAtomic: usdToAtomic(s.spendUsd * 0.6),
         transactionCount: Math.max(1, Math.floor(s.observationCount * 0.6)),
@@ -130,10 +130,10 @@ export function getSecondaryProfile(address: string): CustomerProfileDto | null 
         date: new Date((T0 - 3 * 86400) * 1000).toISOString(),
         timestamp: T0 - 3 * 86400,
         type: "payment",
-        title: "Acme Price API",
-        description: `Acme Price API · ${s.endpoint}`,
+        title: "Northwind Price API",
+        description: `Northwind Price API · ${s.endpoint}`,
         amountAtomic: usdToAtomic(s.spendUsd * 0.3),
-        providerId: "acme-price",
+        providerId: "northwind-price",
         txHash: `0xs${address.slice(-4)}`,
       },
       {
