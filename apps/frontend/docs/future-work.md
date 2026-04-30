@@ -109,6 +109,186 @@ Concrete placement when implemented:
 
 ---
 
+## Restore `activityGrowth` on the Customers list
+
+The Customers page used to show an `Activity growth` column powered by
+`CustomerListItemDto.activityGrowth`. The column was removed because the
+underlying value carried no real signal in the current BFF read model — see
+the entry in [current-capabilities.md](current-capabilities.md) for the
+present column set — and we want it back once the value is meaningful.
+
+### Status
+
+Removed from the table. The DTO field is **kept** so Wallet 360°
+(`metrics.activityGrowth` in `IdentityBar` / `Insights`) and the BFF contract
+remain unchanged.
+
+Removed pieces:
+
+- column header and cell in
+  [`components/customers/CustomersTable.tsx`](../components/customers/CustomersTable.tsx)
+- `activityGrowth` entry in `SORT_OPTIONS` in
+  [`components/customers/Toolbar.tsx`](../components/customers/Toolbar.tsx)
+- `activityGrowth` entry in `CustomerSortKey` and the matching comparator in
+  [`lib/customers/filter.ts`](../lib/customers/filter.ts)
+- the corresponding sort test case in
+  [`lib/customers/filter.test.ts`](../lib/customers/filter.test.ts)
+- the related grid column in
+  [`app/globals.css`](../app/globals.css) (`.cust-row` and `.cust-row-sdk`)
+
+### Why deferred
+
+1. **The value is a placeholder.** The active analytics generator
+   ([`apps/cli/scripts/analytics/read-models.ts`](../../../apps/cli/scripts/analytics/read-models.ts))
+   hard-codes `activityGrowth: 0` for every payer wallet, and the legacy
+   `projection-builder.ts` produced an index-derived synthetic value
+   (`0.12 + index * 0.04`). Neither carries the "first-half / second-half
+   ratio" semantic documented in
+   [current-capabilities.md](current-capabilities.md).
+2. **Provenance was not declared.** The `provenanceByField` emitted by the
+   analytics generator omits `activityGrowth`, so the UI always fell back to
+   the object-level `derived_insight`. With every row showing the same
+   "hypothesis" badge, the column added noise rather than signal.
+3. **The metric needs a period window to mean anything.** "Growth" without a
+   reference window is not a defined quantity. Reintroducing it depends on
+   the [Period filter](#period-filter) work above.
+4. **Wallet 360° is the right home for now.** The original vision uses
+   `7d +184%` as a hero number on the wallet detail screen, not as a list
+   column (see
+   [`docs/vision-vs-bff-gap.md`](vision-vs-bff-gap.md)). Wallet 360° still
+   reads `metrics.activityGrowth`, so the field is exercised end-to-end.
+
+### What needs to change to ship it
+
+1. **Define the comparison window.** Either piggy-back on the Period filter
+   (compare the selected window to the preceding window of the same length)
+   or pin a fixed 7d / 30d window for this column specifically and label the
+   header accordingly.
+2. **Compute the value.** Replace the placeholder in
+   `apps/cli/scripts/analytics/read-models.ts` with a real aggregation over
+   `payment_observation.blockTimestamp`. Decide how to handle wallets with
+   only one half of the window populated (treat as `null`? clamp?).
+3. **Declare provenance.** Add
+   `provenanceByField.activityGrowth: "future_sdk_field"` (or
+   `"derived_insight"` once the value is real) so the badge stops falling
+   back to the object-level provenance.
+4. **Re-add the column.** Restore the table cell, the sort option, the
+   `CustomerSortKey` entry, and the grid column. Pair it with the
+   `ProvenanceBadge` so the data origin is visible.
+5. **Tests.** Restore the `sorts by activity growth desc` case in
+   `filter.test.ts` and snapshot the new BFF projection output.
+
+### Open questions
+
+- Should the column header read `Activity growth` (period-relative) or
+  `7d growth` (fixed window)?
+- For wallets with too few observations to compute a ratio, what do we
+  display — `—`, `n/a`, or hide the row from the sort?
+- Should the SDK-connected dashboard mode show its own version (it already
+  has a 7d sparkline), or is the column redundant there?
+
+---
+
+## Per-row reason hover on the Customers table
+
+Show the `reasons[].description` from the BFF `CustomerListItem` contract
+(surfaced on the frontend as `CustomerListItemDto.reasons`, plus any
+`provenanceByField`-scoped subset) on hover over each table cell, so the
+user can read **why** a specific cell holds the value it does — not just
+what the column conceptually means.
+
+### Status
+
+Not implemented. The Customers table currently uses
+[`HeaderTooltip`](../components/customers/HeaderTooltip.tsx) on each column
+header to show a **static, column-level description** that is identical for
+every row (e.g. "Number of payment observations recorded for this wallet by
+the current provider."). It does not surface per-row, value-specific
+rationale.
+
+The `UpsellPill` exposes `reasons` to its `ProvenanceBadge` tooltip and
+`aria-label`, and `ProvenanceBadge` already has the
+[`selectReasonsForField`](../components/customers/ProvenanceBadge.tsx)
+helper that filters `reasons` by `EvidenceLabel.sourceFields`. The plumbing
+exists — it's the upstream data that does not yet vary per row or per field.
+
+### Why deferred
+
+1. **The current `reasons` are envelope-level boilerplate.** The active
+   analytics generator
+   ([`apps/cli/scripts/analytics/read-models.ts`](../../../apps/cli/scripts/analytics/read-models.ts))
+   emits one identical reason for every customer:
+   `"Generated from local SQLite analytics store; no BFF request-path
+   external calls."` There is no `sourceFields` and no per-wallet variation,
+   so a "per-row, per-cell" hover would just repeat the same sentence
+   everywhere.
+2. **A useful version requires BFF data work.** To make hover content
+   meaningful we need the read-model generator to emit reasons such as:
+   - `{ provenance: "onchain_fact", label: "onchain payment observations",
+     description: "Aggregated from N Base USDC transfer facts.",
+     sourceFields: ["address", "spendAtomic", "observationCount"] }`
+   - `{ provenance: "derived_insight", label: "upsell heuristic",
+     description: "High because providerCount=3 and observationCount=12.",
+     sourceFields: ["upsellOpportunity"] }`
+   That work spans the analytics generator and possibly the contract
+   (whether the heuristic prose belongs in `description` or in a typed
+   structured field).
+3. **Regeneration / deployment dependency.** `analytics.json` is
+   git-ignored and produced by `bun --cwd apps/cli analytics:read-models`,
+   which requires a populated `analytics.sqlite`. Local re-generation is not
+   currently part of `bun run verify`, and the deployed BFF reads a
+   pre-built file. So changing only the code path does not change what the
+   demo shows until a regen + redeploy happens.
+4. **Static column tooltips already cover the "what is this column"
+   question.** `HeaderTooltip` ships now and is enough for the immediate
+   demo. The deferred work targets the higher-value "why does *this row*
+   show this number" question.
+
+### What needs to change to ship it
+
+1. **Generator side**
+   ([`apps/cli/scripts/analytics/read-models.ts`](../../../apps/cli/scripts/analytics/read-models.ts))
+   - Replace the single envelope reason with multiple field-specific
+     reasons, each with explicit `sourceFields`.
+   - Personalize at least the `upsellOpportunity` description per row using
+     the same heuristic that produced the value (so "High because …" matches
+     reality).
+2. **Frontend (Customers page)**
+   - Wrap each cell whose column has matching `reasons` in a tooltip that
+     calls `selectReasonsForField(c.reasons, "<column>")` and renders the
+     `description` fields. Reuse or extend `HeaderTooltip` rather than
+     introducing a third tooltip pattern.
+   - Keep the static `HeaderTooltip` description as a fallback when there
+     are no field-scoped reasons for the row, so the UI degrades gracefully
+     against older BFF payloads.
+3. **Contract / docs**
+   - If we settle on structured per-cell rationale (e.g.
+     `{ providerCount: 3, observationCount: 12 }` rather than free text),
+     extend the `EvidenceLabel` schema accordingly and update
+     [`docs/phase-b/api-contract.md`](../../../docs/phase-b/api-contract.md).
+   - Otherwise document the convention that `description` is intended to be
+     human-readable per-row prose.
+4. **Tests**
+   - `selectReasonsForField` is already covered. Add an adapter / contract
+     test that asserts the generator emits at least one field-specific
+     reason per `derived_insight` field.
+   - Add a UI test (when a testing-library setup lands) that hovering a
+     cell surfaces the right `description`.
+
+### Open questions
+
+- Should hover live on the **cell** (current proposal) or on a small ⓘ
+  affordance next to the value? The former is more discoverable, the latter
+  is less noisy on dense tables.
+- Do we want both the static column description and the row-specific
+  reason in the same tooltip, or separate them (header → static, cell →
+  row-specific)?
+- For columns whose value is purely `onchain_fact`, is per-row prose
+  (`"Aggregated from 12 transfers"`) worth it, or is the static
+  `HeaderTooltip` enough? This decides how much generator work is needed.
+
+---
+
 ## Data freshness indicator
 
 Surface the freshness of the underlying data (e.g. "last observation 19h ago",

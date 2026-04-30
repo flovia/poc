@@ -94,6 +94,22 @@ export const SECONDARY_LIST_ITEMS: CustomerListItemDto[] = SECONDARIES.map((s) =
   lastSeenAt: T0 - 3 * 86400,
   activityGrowth: s.activityGrowth,
   upsellOpportunity: s.upsell,
+  provenance: "future_sdk_field",
+  provenanceByField: {
+    address: "onchain_fact",
+    observationCount: "future_sdk_field",
+    spendAtomic: "future_sdk_field",
+    providerCount: "future_sdk_field",
+    activityGrowth: "future_sdk_field",
+    upsellOpportunity: "derived_insight",
+  },
+  reasons: [
+    {
+      provenance: "future_sdk_field",
+      label: "SDK connected fixture",
+      description: "Synthetic data shown when the dashboard is in sdkConnected mode.",
+    },
+  ],
 }));
 
 export function getSecondaryProfile(address: string): CustomerProfileDto | null {

@@ -1,11 +1,47 @@
+"use client";
+
+import type { ChangeEvent } from "react";
 import { Icon } from "@/components/ui/Icon";
-import { Select } from "./Select";
+import { Select, type SelectOption } from "./Select";
+import type {
+  CustomerFilterState,
+  CustomerSortKey,
+  CustomerUpsellFilter,
+} from "@/lib/customers/filter";
 
 type ToolbarProps = {
   total: number;
+  filteredCount: number;
+  state: CustomerFilterState;
+  onChange: (next: CustomerFilterState) => void;
 };
 
-export function Toolbar({ total }: ToolbarProps) {
+const SORT_OPTIONS: ReadonlyArray<SelectOption<CustomerSortKey>> = [
+  { value: "spend", label: "Spend ↓" },
+  { value: "observations", label: "Observations ↓" },
+  { value: "lastSeen", label: "Last seen" },
+];
+
+const UPSELL_OPTIONS: ReadonlyArray<SelectOption<CustomerUpsellFilter>> = [
+  { value: "all", label: "All" },
+  { value: "high", label: "High" },
+  { value: "medium", label: "Medium" },
+  { value: "low", label: "Low" },
+];
+
+export function Toolbar({ total, filteredCount, state, onChange }: ToolbarProps) {
+  const handleQuery = (event: ChangeEvent<HTMLInputElement>) => {
+    onChange({ ...state, query: event.target.value });
+  };
+
+  const handleSort = (sort: CustomerSortKey) => {
+    onChange({ ...state, sort });
+  };
+
+  const handleUpsell = (upsell: CustomerUpsellFilter) => {
+    onChange({ ...state, upsell });
+  };
+
   return (
     <div
       className="card"
@@ -18,10 +54,10 @@ export function Toolbar({ total }: ToolbarProps) {
           style={{ position: "absolute", left: 11, top: 10, color: "var(--text-3)" }}
         />
         <input
-          placeholder="Search payer wallet address… (PoC: not wired)"
+          value={state.query}
+          onChange={handleQuery}
+          placeholder="Search payer wallet address…"
           aria-label="Search wallets"
-          aria-disabled
-          readOnly
           style={{
             width: "100%",
             padding: "8px 12px 8px 32px",
@@ -34,13 +70,19 @@ export function Toolbar({ total }: ToolbarProps) {
       </div>
       <Select
         label="Sort"
-        options={["Spend ↓", "Observations ↓", "Activity growth ↓", "Last seen"]}
-        value="Spend ↓"
+        options={SORT_OPTIONS}
+        value={state.sort}
+        onChange={handleSort}
       />
-      <Select label="Upsell" options={["All", "High", "Medium", "Low"]} />
+      <Select
+        label="Upsell"
+        options={UPSELL_OPTIONS}
+        value={state.upsell}
+        onChange={handleUpsell}
+      />
       <div style={{ flex: 1 }} />
       <span style={{ fontSize: 12, color: "var(--text-3)" }}>
-        {total} of {total} wallets
+        {filteredCount} of {total} wallets
       </span>
     </div>
   );

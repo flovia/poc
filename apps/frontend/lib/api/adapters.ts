@@ -104,6 +104,9 @@ export function adaptCustomerList(response: PhaseBCustomerListResponse): Custome
     lastSeenAt: toTimestamp(customer.lastSeenAt),
     activityGrowth: customer.activityGrowth,
     upsellOpportunity: customer.upsellOpportunity,
+    provenance: customer.provenance,
+    provenanceByField: customer.provenanceByField ?? {},
+    reasons: customer.reasons ?? [],
   }));
 }
 

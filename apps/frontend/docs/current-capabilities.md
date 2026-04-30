@@ -76,9 +76,12 @@ sidebar and does not affect BFF data scope. BFF has no provider-level filtering 
 | Spend (atomic) | `spendAtomic` | formatted with `formatAtomic`, assuming 6 decimals |
 | Observations | `observationCount` | observed on-chain payment count |
 | Providers | `providerCount` | distinct recipient wallets this payer paid |
-| Activity growth | `activityGrowth` | first-half / second-half observation ratio (BFF heuristic) |
 | Last seen | `lastSeenAt` | unix sec → ISO string |
-| Upsell | `upsellOpportunity` | displayed as `low` / `medium` / `high` using `UpsellPill` |
+| Upsell | `upsellOpportunity` | displayed as `low` / `medium` / `high` using `UpsellPill`, paired with `ProvenanceBadge` |
+
+`activityGrowth` is still in the DTO and is rendered on Wallet 360°, but is
+no longer shown on this list. See `future-work.md` for the plan to bring the
+column back once the value is period-aware.
 
 #### Summary chips
 - Total wallets

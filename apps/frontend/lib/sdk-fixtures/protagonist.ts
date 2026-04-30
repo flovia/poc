@@ -135,6 +135,22 @@ export const PROTAGONIST_LIST_ITEM: CustomerListItemDto = {
   lastSeenAt: T0 + 2 * 3600 + 3 * 60,
   activityGrowth: 1.84,
   upsellOpportunity: "high",
+  provenance: "future_sdk_field",
+  provenanceByField: {
+    address: "onchain_fact",
+    observationCount: "future_sdk_field",
+    spendAtomic: "future_sdk_field",
+    providerCount: "future_sdk_field",
+    activityGrowth: "future_sdk_field",
+    upsellOpportunity: "derived_insight",
+  },
+  reasons: [
+    {
+      provenance: "future_sdk_field",
+      label: "SDK connected fixture",
+      description: "Synthetic data shown when the dashboard is in sdkConnected mode.",
+    },
+  ],
 };
 
 export const PROTAGONIST_PROFILE: CustomerProfileDto = {
