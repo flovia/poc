@@ -1,33 +1,136 @@
-# Flovia POC
+# 🌊 Flovia
 
-This is a Bun workspace PoC for Flovia 260427 focused on x402 market intelligence / customer intelligence experiments.
+> Mapping the Machine Payable Web with x402 and Solana signals.
 
-The primary architecture currently uses the `contract / source / intelligence` layers in `packages/*` from `apps/cli`, `apps/bff`, and `apps/frontend`. The CLI generates market snapshot / customer intelligence by combining CDP x402 Discovery and Bitquery, the BFF returns saved read models as a read-only product API, and the frontend renders those projections as a Next.js UI.
+<p align="center">
+  <strong>x402 × MPP × Solana × Customer Intelligence</strong>
+</p>
 
-## Workspace
+<p align="center">
+  <img src="https://img.shields.io/badge/x402-Payment%20Discovery-purple" alt="x402 Payment Discovery" />
+  <img src="https://img.shields.io/badge/MPP-Machine%20Payable%20Products-orange" alt="Machine Payable Products" />
+  <img src="https://img.shields.io/badge/Solana-Onchain%20Signals-14F195" alt="Solana Onchain Signals" />
+</p>
 
-- `apps/cli/`: CLI entrypoint, market snapshot / customer intelligence generation, fixture capture, reporting
-- `apps/bff/`: read-only product API for frontend demos; returns prepared fixtures / projections in a canonical envelope
-- `apps/frontend/`: x402 Co-usage Discovery prototype UI built with Next.js 15 and React 19
-- `packages/contracts/`: shared contracts using Zod schemas. Defines market intelligence and Phase B product API schemas
-- `packages/sources/`: source clients and normalization for CDP Discovery and Bitquery
-- `packages/intelligence/`: join logic for market snapshot / customer intelligence, ranking, and projection helpers
+---
 
-## Requirements
+## 🚀 What is Flovia?
+
+**Flovia** explores the emerging **Machine Payable Web** through market intelligence for machine-payable products and services.
+
+It combines x402 payment discovery, onchain activity signals, customer intelligence pipelines, a read-only product API, and a Next.js demo frontend to reveal:
+
+- what machine-payable services exist
+- which wallets are economically active
+- how usage clusters across apps and services
+- where new customer opportunities may be forming
+- how Solana-style high-frequency payment signals can shape market intelligence
+
+The current implementation uses `contract / source / intelligence` layers across `packages/*`, consumed by `apps/cli`, `apps/bff`, and `apps/frontend`.
+
+---
+
+## 🧠 The thesis
+
+The web is gaining a new economic layer.
+
+Instead of relying only on manual subscriptions, signups, and checkout flows, software can increasingly:
+
+- discover paid APIs
+- pay per request
+- compose services dynamically
+- leave machine-readable payment traces
+- generate wallet-level usage and demand signals
+
+This creates a new category:
+
+> **Machine Payable Products** — products and services that agents, apps, and APIs can discover, evaluate, and pay for programmatically.
+
+Flovia explores the intelligence layer for that category.
+
+---
+
+## ✨ Demo flow
+
+```mermaid
+flowchart LR
+  A[x402 Discovery] --> D[Source Layer]
+  B[Bitquery / Onchain Signals] --> D
+  C[Solana Payment Activity] --> D
+
+  D --> E[Intelligence Layer]
+  E --> F[Market Snapshot]
+  E --> G[Customer Intelligence]
+  E --> H[Wallet Usage Graph]
+
+  F --> I[BFF API]
+  G --> I
+  H --> I
+
+  I --> J[Next.js Frontend]
+```
+
+---
+
+## ⚡ What Flovia reveals
+
+| Signal | Insight |
+| --- | --- |
+| x402 service discovery | What machine-payable services exist? |
+| Onchain payment activity | Which wallets are economically active? |
+| Solana-style payment signals | Where high-frequency payment demand may emerge |
+| Wallet co-usage | Which apps and services share customer clusters? |
+| Customer intelligence | Who is likely to pay for what next? |
+
+---
+
+## 🟣 Why Solana signals?
+
+Solana is a natural fit for machine-payable market intelligence because it emphasizes:
+
+- low-cost payment events
+- fast settlement
+- wallet-native identity surfaces
+- high-frequency usage patterns
+- strong agent, DePIN, API-commerce, and payment experimentation ecosystems
+
+Flovia currently treats Solana as a signal direction for onchain payment intelligence while keeping default verification deterministic and offline-first.
+
+---
+
+## 🏗️ Architecture
+
+| Workspace | Purpose |
+| --- | --- |
+| `apps/cli/` | CLI entrypoint, market snapshot / customer intelligence generation, fixture capture, reporting |
+| `apps/bff/` | Read-only product API for frontend demos; returns prepared fixtures / projections in a canonical envelope |
+| `apps/frontend/` | x402 co-usage discovery prototype UI built with Next.js 15 and React 19 |
+| `packages/contracts/` | Shared Zod contracts for market intelligence and Phase B product API schemas |
+| `packages/sources/` | Source clients and normalization for CDP Discovery and Bitquery |
+| `packages/intelligence/` | Join logic, ranking, customer intelligence, and projection helpers |
+
+The CLI generates market snapshots and customer intelligence by combining CDP x402 Discovery and Bitquery. The BFF serves saved read models as a read-only product API, and the frontend renders those projections as a Next.js UI.
+
+---
+
+## ⚡ Quick start
+
+Requirements:
 
 - Bun `>=1.3.13`
 - Node.js `>=20` to run the frontend
 
-## Setup
-
 ```sh
 bun install
 cp -n .env.example .env
+bun run verify
 ```
 
-Environment variables are stored in the repository-root `.env` file. Use the root `.env.example` as a template. The CLI loads `../../.env` and `apps/cli/.env` through dotenvx. Live capture / snapshot / customer intelligence with Bitquery requires `BITQUERY_TOKEN`.
+Environment variables are stored in the repository-root `.env` file. Use `.env.example` as a template. Live capture / snapshot / customer intelligence with Bitquery requires `BITQUERY_TOKEN`.
 
-## Common commands
+---
+
+## 🧪 Common commands
 
 Unless otherwise noted, run commands from the repository root.
 
@@ -39,13 +142,22 @@ bun run format        # format TypeScript / JSON with Biome
 bun run format:check  # check formatting
 ```
 
-Per-app main commands can be run via Bun workspace filtering.
+Start the demo stack:
 
 ```sh
 bun --filter bff start       # start read-only product API (default: localhost:3001)
 bun --filter frontend dev    # start frontend dev server (default: localhost:3000)
-docker compose up --build    # start BFF and frontend together
 ```
+
+Or run BFF and frontend together:
+
+```sh
+docker compose up --build
+```
+
+---
+
+## 🔎 Generate intelligence
 
 CLI pipeline commands are available from the `apps/cli` workspace.
 
@@ -63,17 +175,23 @@ bun --cwd apps/cli coingecko:transactions -- --from 2026-01-01T00:00:00Z --to 20
 
 Without `--all`, the result is capped by `X402_MARKET_FETCH_LIMIT` (default: 100). This cap is intentionally conservative, so pass `--all` explicitly if needed.
 
-`customer:intelligence` and `coingecko:transactions` are commands that regenerate fixtures / read models using live Bitquery and CDP Discovery. They are not included in normal `verify` runs. See `apps/cli/scripts/README.md` for details.
+`customer:intelligence` and `coingecko:transactions` regenerate fixtures / read models using live Bitquery and CDP Discovery. They are not included in normal `verify` runs. See `apps/cli/scripts/README.md` for details.
 
-## BFF / frontend
+---
 
-The BFF does not call live CDP / Bitquery / RPC / SDK collector methods on the request path and instead returns deterministic fixture / read models from `apps/bff/src/data/phase-b-demo.ts`. Main endpoints are:
+## 🌐 BFF / frontend
 
-- `GET /` / `GET /health`
-- `GET /customers`
-- `GET /customers/:address/profile`
-- `GET /customers/:address/intelligence`
-- `GET /wallet-usage-graph`
+The BFF does not call live CDP / Bitquery / RPC / SDK collector methods on the request path. It returns deterministic fixture / read models from `apps/bff/src/data/phase-b-demo.ts`.
+
+Main endpoints:
+
+| Endpoint | Description |
+| --- | --- |
+| `GET /` / `GET /health` | API health check |
+| `GET /customers` | Known customer list |
+| `GET /customers/:address/profile` | Customer profile |
+| `GET /customers/:address/intelligence` | Customer intelligence |
+| `GET /wallet-usage-graph` | Wallet / app usage graph |
 
 The frontend fetches the BFF from Server Components. You can override the target with `BFF_URL` (default: `http://localhost:3001`) and `NEXT_PUBLIC_BFF_URL` (default: `/api`).
 
@@ -84,12 +202,31 @@ BFF_URL=http://localhost:3001 NEXT_PUBLIC_BFF_URL=/api bun --filter frontend dev
 
 API contracts are based on `docs/phase-b/api-contract.md` and the Phase B schema in `packages/contracts`.
 
-The self-implemented discovery / probe / onchain attribution baseline is stored on the `v0-self-implemented-x402` branch. It is intentionally excluded from this branch.
+---
 
-## Verification policy
+## 🔒 Verification policy
 
-`bun run verify` is intentionally offline-only. It must pass without wallet access, paid APIs, or live RPC calls. If live verification is required, run an explicit command such as `market:snapshot`.
+```sh
+bun run verify
+```
 
-## Artifacts and local files
+The default verification path is intentionally offline-only. It must pass without:
 
-Local environment files, databases, build outputs, dependencies, and generated reports are excluded from git. Do not commit artifacts; keep them reproducible from fixtures and scripts.
+- wallet access
+- paid APIs
+- live RPC calls
+
+Live verification is explicit and opt-in through commands such as `market:snapshot`.
+
+---
+
+## 🛠️ Tech stack
+
+- Bun workspaces
+- TypeScript 6
+- Zod contracts
+- Next.js 15
+- React 19
+- CDP x402 Discovery
+- Bitquery
+- Biome

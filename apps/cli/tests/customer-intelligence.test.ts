@@ -4,8 +4,10 @@ import path from "node:path";
 import { randomUUID } from "node:crypto";
 import {
   parseCustomerIntelligenceArgs,
+  runCustomerIntelligenceBatchCapture,
   runCustomerIntelligenceCapture,
 } from "../scripts/analytics/customer-intelligence";
+import { createAnalyticsStore } from "../scripts/analytics/store";
 
 const withTempDir = async (label: string, fn: (dir: string) => Promise<void> | void) => {
   const directory = path.join(
@@ -206,6 +208,143 @@ describe("customer intelligence cli script", () => {
       expect(result.response.portfolioSummary.sourceCoverage.status).toBe("available");
       expect(result.response.defiPositions).toEqual([]);
       expect(result.response.insights[0]).toMatchObject({ key: "external-x402-activity" });
+    }));
+
+  test("batch captures sampled wallets, stores snapshots, and records portfolio caps", async () =>
+    withTempDir("batch", async (directory) => {
+      const store = createAnalyticsStore({ mode: "memory" });
+      const secondAddress = "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+      let cdpCalls = 0;
+
+      try {
+        const result = await runCustomerIntelligenceBatchCapture({
+          addresses: [address, secondAddress],
+          network: "base",
+          asset: "USDC",
+          from: "2026-01-01T00:00:00Z",
+          to: "2026-04-29T23:59:59Z",
+          outDir: directory,
+          bitqueryToken: "test-token",
+          portfolioSource: "zerion",
+          portfolioEnrichmentLimit: 1,
+          zerionApiKey: "test-zerion-key",
+          analyticsStore: store,
+          cdpFetch: async () => {
+            cdpCalls += 1;
+            return new Response(JSON.stringify(cdpResponse));
+          },
+          bitqueryFetch: async (_url, init) => {
+            const body = JSON.parse(String(init?.body)) as {
+              variables: { customerAddress: string };
+            };
+            return new Response(
+              JSON.stringify({
+                data: {
+                  EVM: {
+                    transfers: [
+                      {
+                        Transfer: {
+                          Sender: body.variables.customerAddress,
+                          Receiver: payTo,
+                          Amount: "0.01",
+                        },
+                        Block: { Time: "2026-04-29T04:11:53Z", Number: "299" },
+                        Transaction: {
+                          Hash:
+                            body.variables.customerAddress === address
+                              ? "0x6248880ec36541e6783ab756afdb427939f6209551b751cec5a2c97f71176d94"
+                              : "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                          From: body.variables.customerAddress,
+                        },
+                      },
+                    ],
+                  },
+                },
+              }),
+            );
+          },
+          zerionFetch: async (url) =>
+            new Response(
+              JSON.stringify(
+                String(url).includes("/positions/")
+                  ? zerionPositionsResponse
+                  : zerionPortfolioResponse,
+              ),
+            ),
+        });
+
+        const snapshotCount = store.db
+          .prepare("SELECT COUNT(*) AS count FROM customer_intelligence_snapshots")
+          .get() as { count: number };
+        expect(result.responses).toHaveLength(2);
+        expect(cdpCalls).toBe(1);
+        expect(result.outputPaths.every((outputPath) => fs.existsSync(outputPath))).toBe(true);
+        expect(snapshotCount.count).toBe(2);
+        expect(store.getCaptureRun(result.analyticsRunId ?? 0)).toMatchObject({
+          status: "success",
+        });
+        expect(
+          result.responses.filter(
+            (response) => response.portfolioSummary.sourceCoverage.status === "available",
+          ),
+        ).toHaveLength(1);
+        expect(
+          result.responses.filter(
+            (response) => response.portfolioSummary.sourceCoverage.status === "unavailable",
+          ),
+        ).toHaveLength(1);
+      } finally {
+        store.close();
+      }
+    }));
+
+  test("batch can build customer intelligence from cached transfer facts", async () =>
+    withTempDir("batch-cached-transfers", async (directory) => {
+      const result = await runCustomerIntelligenceBatchCapture({
+        addresses: [address],
+        network: "base",
+        asset: "USDC",
+        from: "2026-01-01T00:00:00Z",
+        to: "2026-04-29T23:59:59Z",
+        outDir: directory,
+        cdpResources: [
+          {
+            resourceId: "coingecko-x402",
+            resource: "https://api.coingecko.com/api/v3/x402/simple/price",
+            provider: "CoinGecko",
+            service: "CoinGecko x402",
+            paymentOptions: [
+              {
+                network: "base",
+                asset: "USDC",
+                amount: "10000",
+                payTo,
+                provenance: { sourceKind: "cdp_discovery", sourceName: "test" },
+              },
+            ],
+            provenance: { sourceKind: "cdp_discovery", sourceName: "test" },
+          },
+        ],
+        outgoingTransfers: [
+          {
+            txHash: "0x6248880ec36541e6783ab756afdb427939f6209551b751cec5a2c97f71176d94",
+            customerAddress: address,
+            payTo,
+            amountAtomic: "10000",
+            network: "base",
+            asset: "USDC",
+            timestamp: "2026-04-29T04:11:53Z",
+            blockNumber: "299",
+            provenance: "onchain_fact",
+          },
+        ],
+        bitqueryFetch: async () => {
+          throw new Error("should not fetch Bitquery when cached transfers are provided");
+        },
+      });
+
+      expect(result.responses[0]?.payToActivities).toHaveLength(1);
+      expect(result.responses[0]?.x402Services[0]).toMatchObject({ providerName: "CoinGecko" });
     }));
 
   test("writes partial Zerion coverage without fabricating positions", async () =>

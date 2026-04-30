@@ -475,6 +475,8 @@ export const buildServiceAnalyticsProjections = (
       endpointName: endpointRecords[0].endpointName,
       transactionCount: endpointRecords.length,
       userCount: unique(endpointRecords.map((record) => record.payerWallet)).length,
+      endpointAttributionStatus: "demo_attributed_endpoint" as const,
+      attributionConfidence: 0.65,
       provenance: "derived_insight" as const,
       provenanceByField: {
         endpointPath: "demo_label" as const,
@@ -500,6 +502,9 @@ export const buildServiceAnalyticsProjections = (
         endpointDiversity: uniqueEndpointCount(joinedRecords),
         userOverlapWithCoinGecko: userCount,
         sampleBasis: "coingecko transaction fixture",
+        coverage: "sampled coingecko payTo transfer facts",
+        endpointAttributionStatus: "demo_attributed_endpoint",
+        attributionConfidence: 0.65,
         provenance: "derived_insight",
         provenanceByField: {
           serviceId: "derived_insight",
@@ -552,6 +557,10 @@ export const buildServiceAnalyticsProjections = (
         endpointDiversity: resources.length,
         userOverlapWithCoinGecko: peerTransactionCount > 0 ? 1 : 0,
         sampleBasis: "single customer intelligence fixture",
+        coverage: "sampled customer intelligence wallet",
+        endpointAttributionStatus:
+          resources.length === 1 ? "direct_payto_endpoint" : "bundled_payto_unknown_endpoint",
+        attributionConfidence: resources.length === 1 ? 0.85 : 0.35,
         provenance: "derived_insight" as const,
         provenanceByField: {
           serviceId: "derived_insight" as const,
@@ -643,6 +652,9 @@ export const buildServiceAnalyticsProjections = (
       transactionCount: service.transactionCount,
       sampleBasis: service.sampleBasis,
       isCoinGecko: service.serviceId === serviceId,
+      coverage: service.coverage,
+      endpointAttributionStatus: service.endpointAttributionStatus,
+      attributionConfidence: service.attributionConfidence,
       provenance: service.provenance,
       provenanceByField: {
         x: "derived_insight",

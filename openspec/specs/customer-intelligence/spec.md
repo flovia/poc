@@ -155,3 +155,43 @@ The system MUST not expose Zerion-provider-specific raw responses as BFF product
 - **WHEN** a client calls `GET /customers/:address/intelligence`
 - **THEN** the response returns normalized portfolio / DeFi fields from the prepared read model
 - **THEN** the response does not include Zerion raw JSON, API key, auth header, or request metadata
+
+### Requirement: Batch customer intelligence capture for sampled wallets
+
+Customer intelligence SHALL support batch capture for sampled wallets and store generated snapshots outside git-tracked fixtures.
+
+#### Scenario: Capture sampled wallet intelligence
+- **WHEN** a wallet sampling plan selects customer addresses
+- **THEN** the customer intelligence capture job fetches outgoing transfers for each selected wallet within the configured scope and stores validated snapshots in the analytics data store or ignored generated output path
+
+#### Scenario: Preserve source coverage per wallet
+- **WHEN** customer intelligence capture succeeds or partially succeeds for a wallet
+- **THEN** the stored snapshot records Bitquery, CDP discovery, and optional portfolio source coverage
+
+#### Scenario: Portfolio enrichment is capped
+- **WHEN** portfolio enrichment is enabled for sampled wallets
+- **THEN** the capture job applies configured caps and records when portfolio data is unavailable or skipped
+
+### Requirement: Do not commit generated customer intelligence
+
+Customer intelligence SHALL treat raw wallet intelligence, payer overlap, and portfolio enrichment as generated data excluded from git.
+
+#### Scenario: Generated customer intelligence output is ignored
+- **WHEN** customer intelligence batch capture writes snapshots or local database records
+- **THEN** the generated artifacts are stored in ignored paths and are not required for repository operation or verification
+
+### Requirement: Full capture runs bounded customer intelligence batch capture
+
+Customer intelligence SHALL allow full-capture orchestration to capture sampled wallet intelligence from a wallet sampling plan with explicit caps and source coverage recording.
+
+#### Scenario: Capture sampled wallets from full-capture plan
+- **WHEN** full-capture orchestration has generated a wallet sampling plan
+- **THEN** it captures customer intelligence for selected wallets, writes ignored snapshot outputs, and stores validated snapshots in the analytics data store when configured
+
+#### Scenario: Full capture applies portfolio cap
+- **WHEN** full-capture orchestration enables portfolio enrichment with a configured portfolio limit
+- **THEN** customer intelligence capture enriches at most that many wallets and records unavailable or skipped portfolio coverage for the remaining selected wallets
+
+#### Scenario: Customer intelligence batch failure is recorded
+- **WHEN** customer intelligence batch capture fails during full-capture orchestration
+- **THEN** the command records the failed stage and error details without marking the top-level full-capture run as successful

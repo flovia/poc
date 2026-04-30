@@ -6,6 +6,7 @@ import { normalizeAsset, normalizeNetwork, paymentIdentityKey } from "contracts"
 import type { CdpPaymentOption, MarketSnapshot } from "contracts";
 import { writeAtomically } from "./io";
 import { renderMarketSnapshotMarkdown } from "./report";
+import { type AnalyticsStore, createAnalyticsStore } from "./store";
 
 const DEFAULT_REPORT_JSON = path.join(process.cwd(), "reports", "x402-market-snapshot.json");
 const DEFAULT_REPORT_MARKDOWN = path.join(process.cwd(), "reports", "x402-market-summary.md");
@@ -38,6 +39,8 @@ type CliOptions = {
   cdpEndpoint?: string;
   bitqueryEndpoint?: string;
   bitqueryChunkSize?: number;
+  analyticsDbPath?: string;
+  analyticsStore?: AnalyticsStore;
   timeWindow: {
     from: string;
     to?: string;
@@ -48,6 +51,8 @@ type RunResult = {
   snapshot: MarketSnapshot;
   snapshotPath: string;
   summaryPath: string;
+  analyticsRunId?: number;
+  resources: Awaited<ReturnType<typeof fetchCdpDiscoveryResources>>["resources"];
 };
 
 const parseArg = (index: number, args: string[]): string | undefined => args[index + 1];
@@ -97,6 +102,8 @@ export const parseArgs = (argv: string[]): CliOptions => {
       options.cdpEndpoint = parseArg(index++, argv);
     } else if (arg === "--bitquery-endpoint") {
       options.bitqueryEndpoint = parseArg(index++, argv);
+    } else if (arg === "--analytics-db") {
+      options.analyticsDbPath = parseArg(index++, argv) ?? process.env.ANALYTICS_DB_PATH;
     } else if (arg === "--since-days") {
       const days = Number(parseArg(index++, argv));
       if (!Number.isFinite(days) || days <= 0) throw new Error("--since-days must be positive");
@@ -134,63 +141,113 @@ export const runMarketSnapshot = async (options: Partial<CliOptions> = {}): Prom
     ...options,
   };
 
-  const cdpResult = await fetchCdpDiscoveryResources({
-    limit: parsed.limit,
-    fetchFn: parsed.cdpFetch,
-    endpoint: parsed.cdpEndpoint,
+  const analyticsStore =
+    parsed.analyticsStore ??
+    (parsed.analyticsDbPath ? createAnalyticsStore({ path: parsed.analyticsDbPath }) : null);
+  const analyticsRunId = analyticsStore?.beginCaptureRun({
+    kind: "cdp_census",
+    parameters: {
+      limit: parsed.limit,
+      network: parsed.network,
+      asset: parsed.asset,
+      timeWindow: parsed.timeWindow,
+    },
+    sourceCoverage: { cdp_discovery: "started", bitquery: "pending" },
   });
 
-  const scope = {
-    ...(parsed.network === null ? {} : { network: normalizeNetwork(parsed.network) }),
-    ...(parsed.asset === null ? {} : { asset: normalizeAsset(parsed.asset) }),
-  };
+  try {
+    const cdpResult = await fetchCdpDiscoveryResources({
+      limit: parsed.limit,
+      fetchFn: parsed.cdpFetch,
+      endpoint: parsed.cdpEndpoint,
+    });
 
-  const scopedRows = filterPaymentOptionsByScope(cdpResult.resources, scope);
-  const bitqueryPaymentOptions = buildBitqueryTargets(
-    scopedRows.filter(({ inScope, option }) => inScope),
-  );
+    const scope = {
+      ...(parsed.network === null ? {} : { network: normalizeNetwork(parsed.network) }),
+      ...(parsed.asset === null ? {} : { asset: normalizeAsset(parsed.asset) }),
+    };
 
-  const queriedPairs = bitqueryPaymentOptions.length;
-  const aggregates =
-    queriedPairs === 0
-      ? []
-      : await fetchBitqueryBaseUsdcAggregates({
-          network: normalizeNetwork(parsed.network ?? "base"),
-          asset: normalizeAsset(parsed.asset ?? "USDC"),
-          paymentOptions: bitqueryPaymentOptions,
-          fetchFn: parsed.bitqueryFetch,
-          endpoint: parsed.bitqueryEndpoint,
-          token: resolveBitqueryToken(parsed.bitqueryToken),
-          chunkSize: parsed.bitqueryChunkSize,
-          timeWindow: parsed.timeWindow,
-        });
+    const scopedRows = filterPaymentOptionsByScope(cdpResult.resources, scope);
+    const bitqueryPaymentOptions = buildBitqueryTargets(
+      scopedRows.filter(({ inScope, option }) => inScope),
+    );
 
-  const snapshot = buildMarketSnapshot({
-    resources: cdpResult.resources,
-    aggregates,
-    scope,
-    cdp: {
-      sourceName: "cdp-discovery",
-      fetchLimit: parsed.limit,
-      fetchedCount: cdpResult.fetchedCount,
-    },
-    bitquery: {
-      sourceName: "bitquery-graphql",
-      queriedPairs,
-    },
-  });
+    const queriedPairs = bitqueryPaymentOptions.length;
+    const aggregates =
+      queriedPairs === 0
+        ? []
+        : await fetchBitqueryBaseUsdcAggregates({
+            network: normalizeNetwork(parsed.network ?? "base"),
+            asset: normalizeAsset(parsed.asset ?? "USDC"),
+            paymentOptions: bitqueryPaymentOptions,
+            fetchFn: parsed.bitqueryFetch,
+            endpoint: parsed.bitqueryEndpoint,
+            token: resolveBitqueryToken(parsed.bitqueryToken),
+            chunkSize: parsed.bitqueryChunkSize,
+            timeWindow: parsed.timeWindow,
+          });
 
-  const snapshotText = `${JSON.stringify(snapshot, null, 2)}\n`;
-  const reportText = renderMarketSnapshotMarkdown(snapshot);
+    const snapshot = buildMarketSnapshot({
+      resources: cdpResult.resources,
+      aggregates,
+      scope,
+      cdp: {
+        sourceName: "cdp-discovery",
+        fetchLimit: parsed.limit,
+        fetchedCount: cdpResult.fetchedCount,
+      },
+      bitquery: {
+        sourceName: "bitquery-graphql",
+        queriedPairs,
+      },
+    });
 
-  writeAtomically(parsed.jsonOutputPath, snapshotText);
-  writeAtomically(parsed.markdownOutputPath, reportText);
+    const snapshotText = `${JSON.stringify(snapshot, null, 2)}\n`;
+    const reportText = renderMarketSnapshotMarkdown(snapshot);
 
-  return {
-    snapshot,
-    snapshotPath: parsed.jsonOutputPath,
-    summaryPath: parsed.markdownOutputPath,
-  };
+    writeAtomically(parsed.jsonOutputPath, snapshotText);
+    writeAtomically(parsed.markdownOutputPath, reportText);
+
+    if (analyticsStore && analyticsRunId !== undefined) {
+      analyticsStore.persistCdpResources(cdpResult.resources, analyticsRunId);
+      analyticsStore.persistPayToAggregates(aggregates, analyticsRunId);
+      analyticsStore.detectAndPersistMappingPatterns(
+        aggregates.map((aggregate) => ({
+          network: aggregate.network,
+          asset: aggregate.asset,
+          payTo: aggregate.payTo,
+        })),
+      );
+      analyticsStore.completeCaptureRun(analyticsRunId, {
+        cdp_discovery: {
+          status: "available",
+          fetchedCount: cdpResult.fetchedCount,
+          skippedCount: cdpResult.skippedCount,
+        },
+        bitquery: { status: "available", queriedPairs },
+      });
+    }
+
+    return {
+      snapshot,
+      snapshotPath: parsed.jsonOutputPath,
+      summaryPath: parsed.markdownOutputPath,
+      analyticsRunId,
+      resources: cdpResult.resources,
+    };
+  } catch (error) {
+    if (analyticsStore && analyticsRunId !== undefined) {
+      analyticsStore.failCaptureRun(analyticsRunId, error, {
+        cdp_discovery: "partial_or_failed",
+        bitquery: "partial_or_failed",
+      });
+    }
+    throw error;
+  } finally {
+    if (analyticsStore && analyticsStore !== parsed.analyticsStore) {
+      analyticsStore.close();
+    }
+  }
 };
 
 const main = async () => {

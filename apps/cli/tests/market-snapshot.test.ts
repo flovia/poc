@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { parseArgs, runMarketSnapshot } from "../scripts/analytics/market-snapshot";
+import { createAnalyticsStore } from "../scripts/analytics/store";
 import { renderMarketSnapshotMarkdown } from "../scripts/analytics/report";
 
 const withFixtureTempDir = async (label: string, fn: (dir: string) => Promise<void> | void) => {
@@ -81,6 +82,8 @@ describe("market snapshot cli script", () => {
         "/tmp/summary.md",
         "--bitquery-chunk-size",
         "15",
+        "--analytics-db",
+        "/tmp/analytics.sqlite",
       ]);
 
       expect(parsed.network).toBe("base");
@@ -89,6 +92,7 @@ describe("market snapshot cli script", () => {
       expect(parsed.jsonOutputPath).toBe("/tmp/market.json");
       expect(parsed.markdownOutputPath).toBe("/tmp/summary.md");
       expect(parsed.bitqueryChunkSize).toBe(15);
+      expect(parsed.analyticsDbPath).toBe("/tmp/analytics.sqlite");
     } finally {
       if (originalDefaultLimit === undefined) {
         delete process.env.X402_MARKET_FETCH_LIMIT;
@@ -156,6 +160,114 @@ describe("market snapshot cli script", () => {
         } else {
           process.env.BITQUERY_TOKEN = originalToken;
         }
+      }
+    }));
+
+  test("persists market census outputs to the analytics store", async () =>
+    withFixtureTempDir("analytics-store", async (directory) => {
+      const originalToken = process.env.BITQUERY_TOKEN;
+      const store = createAnalyticsStore({ mode: "memory" });
+      const network = "base";
+      const asset = "USDC";
+      const payTo = "0x1111111111111111111111111111111111111111";
+      process.env.BITQUERY_TOKEN = "test-token";
+
+      try {
+        const result = await runMarketSnapshot({
+          network,
+          asset,
+          limit: null,
+          jsonOutputPath: path.join(directory, "x402-market-snapshot.json"),
+          markdownOutputPath: path.join(directory, "x402-market-summary.md"),
+          analyticsStore: store,
+          cdpFetch: async () =>
+            new Response(JSON.stringify(buildCdpDiscoveryResponse(network, asset, payTo))),
+          bitqueryFetch: async () => new Response(JSON.stringify(buildBitqueryResponse(payTo))),
+        });
+
+        const run = store.getCaptureRun(result.analyticsRunId ?? 0);
+        const sinkCount = store.db.prepare("SELECT COUNT(*) AS count FROM payment_sinks").get() as {
+          count: number;
+        };
+        const attribution = store.db
+          .prepare("SELECT mapping_pattern, endpoint_attribution_status FROM endpoint_attribution")
+          .get();
+
+        expect(run).toMatchObject({ status: "success", parameters: { limit: null } });
+        expect(sinkCount.count).toBe(1);
+        expect(attribution).toEqual({
+          mapping_pattern: "one_payto_one_endpoint",
+          endpoint_attribution_status: "direct_payto_endpoint",
+        });
+      } finally {
+        store.close();
+        if (originalToken === undefined) {
+          delete process.env.BITQUERY_TOKEN;
+        } else {
+          process.env.BITQUERY_TOKEN = originalToken;
+        }
+      }
+    }));
+
+  test("tolerates partial real-source rows while keeping verification offline", async () =>
+    withFixtureTempDir("partial-source-rows", async (directory) => {
+      const store = createAnalyticsStore({ mode: "memory" });
+      const payTo = "0x1111111111111111111111111111111111111111";
+      try {
+        const result = await runMarketSnapshot({
+          network: "base",
+          asset: "USDC",
+          limit: null,
+          bitqueryToken: "test-token",
+          analyticsStore: store,
+          jsonOutputPath: path.join(directory, "snapshot.json"),
+          markdownOutputPath: path.join(directory, "summary.md"),
+          cdpFetch: async () =>
+            new Response(
+              JSON.stringify({
+                data: {
+                  items: [
+                    { resourceId: "missing-options", resource: "https://missing.example" },
+                    ...buildCdpDiscoveryResponse("base", "USDC", payTo).data.items,
+                    ...buildCdpDiscoveryResponse("base", "USDC", payTo).data.items,
+                  ],
+                  pageInfo: { hasNextPage: false, endCursor: null },
+                },
+              }),
+            ),
+          bitqueryFetch: async () =>
+            new Response(
+              JSON.stringify({
+                data: {
+                  EVM: {
+                    byRecipient: [
+                      {
+                        Transfer: { Receiver: payTo },
+                        txCount: "",
+                        uniqueSenders: undefined,
+                        volumeUSDC: undefined,
+                      },
+                    ],
+                    latestByRecipient: [
+                      {
+                        Transfer: { Receiver: payTo },
+                        Block: {},
+                        Transaction: { Hash: "not-a-valid-hash" },
+                      },
+                    ],
+                  },
+                },
+              }),
+            ),
+        });
+
+        expect(result.snapshot.summary.totalResources).toBe(2);
+        expect(result.snapshot.summary.scopedPaymentOptions).toBe(2);
+        expect(store.listPayToCensusRows({ network: "base", asset: "USDC" })).toEqual([
+          expect.objectContaining({ payTo, transactionCount: 0, endpointCount: 1 }),
+        ]);
+      } finally {
+        store.close();
       }
     }));
 

@@ -62,7 +62,7 @@ The system MUST provide a CLI command that generates JSON / Markdown market snap
 
 ### Requirement: BFF must not call external sources per request
 
-In the initial market intelligence design, BFF request handlers must not call CDP or Bitquery directly for product read. In Phase B demo BFF, the values equivalent to Phase A snapshot/projection are handled as prepared demo fixtures or read models, and fields must distinguish what can be explained as `onchain_fact` versus demo / future / derived fields.
+In the initial market intelligence design, BFF request handlers MUST NOT call CDP or Bitquery directly for product read. In Phase B demo BFF, the values equivalent to Phase A snapshot/projection MUST be handled as prepared demo fixtures or read models, and fields MUST distinguish what can be explained as `onchain_fact` versus demo / future / derived fields.
 
 #### Scenario: Product read path is added later
 
@@ -160,3 +160,39 @@ Prepared market intelligence data SHALL be reusable by BFF service analytics for
 - **WHEN** a BFF service analytics endpoint is called
 - **THEN** market intelligence collection remains outside the BFF request path
 - **THEN** the endpoint does not issue live CDP, Bitquery, RPC, CoinGecko, or external service calls
+
+### Requirement: Persist market census to analytics data store
+
+Market intelligence SHALL be able to persist CDP discovery and Bitquery aggregate census data to the analytics data store for later sampling and read-model generation.
+
+#### Scenario: Persist CDP resources and payment options
+- **WHEN** market census capture receives normalized CDP resources
+- **THEN** it stores resource URLs, domains, provider/service metadata, raw source metadata, and payment options in the analytics data store
+
+#### Scenario: Persist Bitquery aggregates
+- **WHEN** Bitquery aggregate metrics are captured for scoped payment sinks
+- **THEN** it stores transaction count, unique sender count, volume, latest transfer metadata, source run ID, and time window by network, asset, and payTo
+
+### Requirement: Identify payment sink mapping patterns
+
+Market intelligence SHALL classify the relationship between CDP resources and payment sinks for endpoint attribution and sampling.
+
+#### Scenario: Detect bundled payTo
+- **WHEN** multiple CDP resources share the same scoped network, asset, and payTo
+- **THEN** market intelligence records a one-payTo-many-endpoints mapping pattern
+
+#### Scenario: Detect direct endpoint payTo
+- **WHEN** exactly one CDP resource uses a scoped network, asset, and payTo
+- **THEN** market intelligence records a one-payTo-one-endpoint mapping pattern
+
+### Requirement: Full capture reuses market census capture
+
+Market intelligence SHALL allow full-capture orchestration to run the same CDP Discovery and Bitquery aggregate census persistence used by standalone market snapshot capture.
+
+#### Scenario: Full capture runs census stage
+- **WHEN** full-capture orchestration starts with `--all` or equivalent full census behavior
+- **THEN** it captures CDP Discovery resources, deduplicates scoped payment sinks, persists Bitquery aggregate metrics, and records mapping pattern attribution before sampling begins
+
+#### Scenario: Census stage failure is recorded
+- **WHEN** CDP or Bitquery census capture fails during full-capture orchestration
+- **THEN** the command records the failure in the analytics data store and does not continue to downstream sampling stages as a successful run

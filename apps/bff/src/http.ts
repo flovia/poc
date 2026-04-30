@@ -1,12 +1,4 @@
-import {
-  getPhaseBCustomerIntelligenceByAddress,
-  getPhaseBCustomerProfileByAddress,
-  phaseBCustomerListResponse,
-  phaseBWalletUsageGraphResponse,
-  serviceAnalyticsComparisonResponse,
-  serviceAnalyticsQuadrantResponse,
-  serviceAnalyticsSummaryResponse,
-} from "./data/phase-b-demo";
+import { type BffAnalyticsDataSource, resolveAnalyticsDataSource } from "./data/analytics-source";
 
 type JsonValue = unknown;
 
@@ -48,67 +40,69 @@ const methodNotAllowed = () =>
     { status: 405, headers: { allow: "GET" } },
   );
 
-export const createBffHandler = () => (request: Request) => {
-  const url = new URL(request.url);
-  const path = url.pathname.replace(/\/$/, "") || "/";
+export const createBffHandler =
+  (dataSource: BffAnalyticsDataSource = resolveAnalyticsDataSource()) =>
+  (request: Request) => {
+    const url = new URL(request.url);
+    const path = url.pathname.replace(/\/$/, "") || "/";
 
-  if (request.method !== "GET") {
-    if (
-      readonlyRoutes.has(path) ||
-      toProfileAddress(path) !== null ||
-      toIntelligenceAddress(path) !== null
-    ) {
-      return methodNotAllowed();
+    if (request.method !== "GET") {
+      if (
+        readonlyRoutes.has(path) ||
+        toProfileAddress(path) !== null ||
+        toIntelligenceAddress(path) !== null
+      ) {
+        return methodNotAllowed();
+      }
+
+      return notFound(path);
+    }
+
+    switch (path) {
+      case "/":
+        return json({ service: "flovia-bff", status: "ok" });
+      case "/health":
+        return json({ status: "ok", service: "flovia-bff" });
+      case "/customers":
+        return json(dataSource.customers);
+      case "/wallet-usage-graph":
+        return json(dataSource.walletUsageGraph);
+      case "/analytics/services/coingecko/summary":
+        return json(dataSource.serviceSummary);
+      case "/analytics/services/comparison":
+        return json(dataSource.serviceComparison);
+      case "/analytics/services/quadrants":
+        return json(dataSource.serviceQuadrants);
+      default:
+        break;
+    }
+
+    const address = toProfileAddress(path);
+    if (address !== null) {
+      const normalizedAddress = address.toLowerCase();
+      const profile = dataSource.getCustomerProfile(normalizedAddress);
+
+      if (!profile) {
+        return notFound(path);
+      }
+
+      return json(profile);
+    }
+
+    const intelligenceAddress = toIntelligenceAddress(path);
+    if (intelligenceAddress !== null) {
+      const normalizedAddress = intelligenceAddress.toLowerCase();
+      const intelligence = dataSource.getCustomerIntelligence(normalizedAddress);
+
+      if (!intelligence) {
+        return notFound(path);
+      }
+
+      return json(intelligence);
     }
 
     return notFound(path);
-  }
-
-  switch (path) {
-    case "/":
-      return json({ service: "flovia-bff", status: "ok" });
-    case "/health":
-      return json({ status: "ok", service: "flovia-bff" });
-    case "/customers":
-      return json(phaseBCustomerListResponse);
-    case "/wallet-usage-graph":
-      return json(phaseBWalletUsageGraphResponse);
-    case "/analytics/services/coingecko/summary":
-      return json(serviceAnalyticsSummaryResponse);
-    case "/analytics/services/comparison":
-      return json(serviceAnalyticsComparisonResponse);
-    case "/analytics/services/quadrants":
-      return json(serviceAnalyticsQuadrantResponse);
-    default:
-      break;
-  }
-
-  const address = toProfileAddress(path);
-  if (address !== null) {
-    const normalizedAddress = address.toLowerCase();
-    const profile = getPhaseBCustomerProfileByAddress(normalizedAddress);
-
-    if (!profile) {
-      return notFound(path);
-    }
-
-    return json(profile);
-  }
-
-  const intelligenceAddress = toIntelligenceAddress(path);
-  if (intelligenceAddress !== null) {
-    const normalizedAddress = intelligenceAddress.toLowerCase();
-    const intelligence = getPhaseBCustomerIntelligenceByAddress(normalizedAddress);
-
-    if (!intelligence) {
-      return notFound(path);
-    }
-
-    return json(intelligence);
-  }
-
-  return notFound(path);
-};
+  };
 
 const notFound = (path: string) =>
   json({ error: "not_found", message: `Route not found: ${path}` }, { status: 404 });

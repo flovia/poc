@@ -84,6 +84,54 @@ describe("CDP discovery source client", () => {
     expect(result.pageCount).toBe(1);
   });
 
+  test("continues pagination when a page has only invalid resources", async () => {
+    const validPage = {
+      data: {
+        items: [
+          {
+            resourceId: "resource-1",
+            resource: "https://orthogonal.example/search",
+            paymentOptions: [
+              {
+                network: "base",
+                asset: "USDC",
+                amount: "1000",
+                payTo: "0x1111111111111111111111111111111111111111",
+              },
+            ],
+          },
+        ],
+        pageInfo: { hasNextPage: false, endCursor: null },
+      },
+    };
+    const calls: string[] = [];
+
+    const result = await fetchCdpDiscoveryResources({
+      limit: null,
+      pageSize: 1,
+      fetchFn: async (url) => {
+        const parsedUrl = new URL(String(url));
+        calls.push(parsedUrl.searchParams.get("offset") ?? "0");
+        if (calls.length === 1) {
+          return new Response(
+            JSON.stringify({
+              data: {
+                items: [{ resourceId: "invalid", resource: "https://invalid.example" }],
+                pageInfo: { hasNextPage: true, endCursor: "1" },
+              },
+            }),
+            { status: 200 },
+          );
+        }
+        return new Response(JSON.stringify(validPage), { status: 200 });
+      },
+    });
+
+    expect(result.pageCount).toBe(2);
+    expect(result.skippedCount).toBe(1);
+    expect(result.resources.length).toBeGreaterThan(0);
+  });
+
   test("builds discovery body with cursor and limit", () => {
     expect(makeCdpDiscoveryBody("cursor-1", 25)).toEqual({
       query: "query_discovery_page",
@@ -157,6 +205,57 @@ describe("bitquery source client", () => {
       uniqueSenderCount: 0,
       totalVolumeAtomic: "0",
     });
+  });
+
+  test("omits latest transfer metadata when Bitquery returns an invalid tx hash", async () => {
+    const payTo = "0x1111111111111111111111111111111111111111";
+    const result = await fetchBitqueryBaseUsdcAggregates({
+      network: "base",
+      asset: "USDC",
+      token: "test-token",
+      paymentOptions: [
+        {
+          network: "base",
+          asset: "USDC",
+          amount: "1000",
+          payTo,
+          provenance: { sourceKind: "cdp_discovery", sourceName: "cdp-discovery" },
+        },
+      ],
+      fetchFn: async () =>
+        new Response(
+          JSON.stringify({
+            data: {
+              EVM: {
+                byRecipient: [
+                  {
+                    Transfer: { Receiver: payTo },
+                    txCount: 1,
+                    uniqueSenders: 1,
+                    volumeUSDC: "0.01",
+                  },
+                ],
+                latestByRecipient: [
+                  {
+                    Transfer: { Receiver: payTo, Sender: "0xsender", Amount: "0.01" },
+                    Transaction: { Hash: "not-a-tx-hash" },
+                    Block: { Time: "2026-01-01T00:00:00Z", Number: "123" },
+                  },
+                ],
+              },
+            },
+          }),
+          { status: 200 },
+        ),
+    });
+
+    expect(result[0]).toMatchObject({
+      payTo,
+      transactionCount: 1,
+      uniqueSenderCount: 1,
+      totalVolumeAtomic: "10000",
+    });
+    expect(result[0]?.latestTransfer).toBeUndefined();
   });
 
   test("throws a clear error when BITQUERY token is missing", async () => {
@@ -256,6 +355,80 @@ describe("bitquery source client", () => {
     expect(calls[0]).toMatchObject({ limit: 1500, offset: 0 });
   });
 
+  test("rejects Bitquery transfer pages when every returned row is malformed", async () => {
+    await expect(
+      fetchPaymentTransfersByPayTo({
+        network: "base",
+        asset: "USDC",
+        payTo: "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
+        token: "test-token",
+        limit: 1,
+        fetchFn: async () =>
+          new Response(
+            JSON.stringify({
+              data: {
+                EVM: {
+                  transfers: [
+                    {
+                      Transfer: {
+                        Sender: "not-an-address",
+                        Receiver: "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
+                        Amount: "0.01",
+                      },
+                      Block: { Time: "2026-04-29T04:11:53Z", Number: "299" },
+                      Transaction: {
+                        Hash: "0x6248880ec36541e6783ab756afdb427939f6209551b751cec5a2c97f71176d94",
+                      },
+                    },
+                  ],
+                },
+              },
+            }),
+            { status: 200 },
+          ),
+      }),
+    ).rejects.toThrow("Bitquery returned malformed transfer rows");
+  });
+
+  test("rejects Bitquery payment transfer pages when any returned row is malformed", async () => {
+    const fixture = readFixture<Record<string, unknown>>("bitquery-transfers-page-1.json");
+    const validTransfer = (
+      ((fixture.data as Record<string, unknown>).EVM as Record<string, unknown>).transfers as Array<
+        Record<string, unknown>
+      >
+    )[0];
+
+    await expect(
+      fetchPaymentTransfersByPayTo({
+        network: "base",
+        asset: "USDC",
+        payTo: "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
+        token: "test-token",
+        limit: 2,
+        fetchFn: async () =>
+          new Response(
+            JSON.stringify({
+              data: {
+                EVM: {
+                  transfers: [
+                    validTransfer,
+                    {
+                      ...validTransfer,
+                      Transfer: {
+                        ...(validTransfer?.Transfer as object),
+                        Sender: "not-an-address",
+                      },
+                    },
+                  ],
+                },
+              },
+            }),
+            { status: 200 },
+          ),
+      }),
+    ).rejects.toThrow("Bitquery returned malformed transfer rows: skipped 1/2");
+  });
+
   test("parses paginated outgoing transfers by customer", async () => {
     const pages = [
       readFixture<unknown>("bitquery-transfers-page-1.json"),
@@ -322,6 +495,42 @@ describe("bitquery source client", () => {
         fetchFn: async () => new Response(JSON.stringify(fixture), { status: 200 }),
       }),
     ).rejects.toThrow("sender does not match");
+  });
+
+  test("rejects Bitquery outgoing transfer pages when any returned row is malformed", async () => {
+    const fixture = readFixture<Record<string, unknown>>("bitquery-transfers-page-1.json");
+    const validTransfer = (
+      ((fixture.data as Record<string, unknown>).EVM as Record<string, unknown>).transfers as Array<
+        Record<string, unknown>
+      >
+    )[0];
+
+    await expect(
+      fetchOutgoingTransfersByCustomer({
+        network: "base",
+        asset: "USDC",
+        customerAddress: "0xac5a07c44a4f971667b3df4b6551fb6991b2142d",
+        token: "test-token",
+        limit: 2,
+        fetchFn: async () =>
+          new Response(
+            JSON.stringify({
+              data: {
+                EVM: {
+                  transfers: [
+                    validTransfer,
+                    {
+                      ...validTransfer,
+                      Transaction: { Hash: "not-a-tx-hash" },
+                    },
+                  ],
+                },
+              },
+            }),
+            { status: 200 },
+          ),
+      }),
+    ).rejects.toThrow("Bitquery returned malformed transfer rows: skipped 1/2");
   });
 
   test("looks up CDP resources by payment option and represents unavailable portfolio source", () => {

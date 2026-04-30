@@ -13,6 +13,8 @@
     "market:snapshot": "dotenvx run --ignore=MISSING_ENV_FILE -f ../../.env -f .env -- bun scripts/analytics/market-snapshot.ts",
     "customer:intelligence": "dotenvx run --ignore=MISSING_ENV_FILE -f ../../.env -f .env -- bun scripts/analytics/customer-intelligence.ts",
     "coingecko:transactions": "dotenvx run --ignore=MISSING_ENV_FILE -f ../../.env -f .env -- bun scripts/analytics/capture-coingecko-transactions.ts",
+    "analytics:capture-full": "dotenvx run --ignore=MISSING_ENV_FILE -f ../../.env -f .env -- bun scripts/analytics/capture-full.ts",
+    "analytics:read-models": "bun scripts/analytics/read-models.ts",
     "verify": "bun run typecheck && bun test"
   },
   "dependencies": {

@@ -82,6 +82,16 @@ export const DataProvenanceSchema = z.enum([
 ]);
 export type DataProvenance = z.infer<typeof DataProvenanceSchema>;
 
+export const EndpointAttributionStatusSchema = z.enum([
+  "direct_payto_endpoint",
+  "bundled_payto_unknown_endpoint",
+  "amount_inferred_endpoint",
+  "sdk_attributed_endpoint",
+  "demo_attributed_endpoint",
+  "unresolved_payto",
+]);
+export type EndpointAttributionStatus = z.infer<typeof EndpointAttributionStatusSchema>;
+
 export const ProvenanceByFieldSchema = z.record(z.string(), DataProvenanceSchema).optional();
 
 export type ProvenanceByField = z.infer<typeof ProvenanceByFieldSchema>;
@@ -353,7 +363,7 @@ export const RealTransactionFixtureSchema = z
         source: SourceProvenanceSchema,
       })
       .strict(),
-    facts: z.array(RealTransactionFactSchema).min(1),
+    facts: z.array(RealTransactionFactSchema),
   })
   .strict()
   .superRefine((value, ctx) => {
@@ -405,7 +415,7 @@ export const MockEndpointAttributionFixtureSchema = z
   .object({
     generatedAt: z.string().datetime(),
     source: SourceProvenanceSchema.extend({ sourceKind: z.literal("derived") }),
-    items: z.array(MockEndpointAttributionItemSchema).min(1),
+    items: z.array(MockEndpointAttributionItemSchema),
   })
   .strict()
   .superRefine((value, ctx) => {
@@ -1016,6 +1026,8 @@ export const ServiceAnalyticsTopEndpointSchema = withDerivedInsightReasons(
       endpointName: z.string().min(1),
       transactionCount: z.number().int().nonnegative(),
       userCount: z.number().int().nonnegative(),
+      endpointAttributionStatus: EndpointAttributionStatusSchema.optional(),
+      attributionConfidence: z.number().min(0).max(1).optional(),
       provenance: DataProvenanceSchema,
       provenanceByField: ProvenanceByFieldSchema,
       reasons: z.array(EvidenceLabelSchema).optional(),
@@ -1067,6 +1079,9 @@ export const ServiceAnalyticsComparisonServiceSchema = withDerivedInsightReasons
       endpointDiversity: z.number().int().nonnegative(),
       userOverlapWithCoinGecko: z.number().int().nonnegative(),
       sampleBasis: z.string().min(1),
+      coverage: z.string().min(1).optional(),
+      endpointAttributionStatus: EndpointAttributionStatusSchema.optional(),
+      attributionConfidence: z.number().min(0).max(1).optional(),
       provenance: DataProvenanceSchema,
       provenanceByField: ProvenanceByFieldSchema,
       reasons: z.array(EvidenceLabelSchema).optional(),
@@ -1121,6 +1136,9 @@ export const ServiceAnalyticsQuadrantPointSchema = withDerivedInsightReasons(
       transactionCount: z.number().int().nonnegative(),
       sampleBasis: z.string().min(1),
       isCoinGecko: z.boolean(),
+      coverage: z.string().min(1).optional(),
+      endpointAttributionStatus: EndpointAttributionStatusSchema.optional(),
+      attributionConfidence: z.number().min(0).max(1).optional(),
       provenance: DataProvenanceSchema,
       provenanceByField: ProvenanceByFieldSchema,
       reasons: z.array(EvidenceLabelSchema).optional(),
