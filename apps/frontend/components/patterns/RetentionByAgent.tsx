@@ -20,19 +20,19 @@ export function RetentionByAgent({ rows }: Props) {
       <div className="eyebrow" style={{ marginBottom: 8 }}>
         SDK preview · Retention by agent
       </div>
-      <h2 style={{ fontSize: 17, fontWeight: 600, margin: "0 0 14px" }}>
+      <h2 style={{ fontSize: 18, fontWeight: 600, margin: "0 0 14px" }}>
         D14 retention varies by agent type
       </h2>
-      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
         <thead>
           <tr style={{ borderBottom: "1px solid var(--line-strong)", color: "var(--text-3)" }}>
-            <th style={{ textAlign: "left", padding: "8px 10px", fontWeight: 500, fontSize: 11.5, letterSpacing: "0.04em", textTransform: "uppercase" }}>
+            <th style={{ textAlign: "left", padding: "8px 10px", fontWeight: 500, fontSize: 12, letterSpacing: "0.04em", textTransform: "uppercase" }}>
               Agent
             </th>
-            <th style={{ textAlign: "right", padding: "8px 10px", fontWeight: 500, fontSize: 11.5, letterSpacing: "0.04em", textTransform: "uppercase" }}>
+            <th style={{ textAlign: "right", padding: "8px 10px", fontWeight: 500, fontSize: 12, letterSpacing: "0.04em", textTransform: "uppercase" }}>
               D14 retained
             </th>
-            <th style={{ textAlign: "right", padding: "8px 10px", fontWeight: 500, fontSize: 11.5, letterSpacing: "0.04em", textTransform: "uppercase" }}>
+            <th style={{ textAlign: "right", padding: "8px 10px", fontWeight: 500, fontSize: 12, letterSpacing: "0.04em", textTransform: "uppercase" }}>
               Wallets
             </th>
           </tr>

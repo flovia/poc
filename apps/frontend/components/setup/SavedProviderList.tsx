@@ -23,7 +23,7 @@ export function SavedProviderList() {
     <div style={{ marginTop: 36 }}>
       <div className="section-title">
         <h2>Saved providers</h2>
-        <span style={{ fontSize: 12, color: "var(--text-3)" }}>
+        <span style={{ fontSize: 13, color: "var(--text-3)" }}>
           {!hydrated
             ? "loading…"
             : demoOpted
@@ -39,7 +39,7 @@ export function SavedProviderList() {
             <div className="sk" style={{ height: 44, margin: 8 }} />
           </>
         ) : stored.length === 0 ? (
-          <div style={{ padding: 18, color: "var(--text-3)", fontSize: 13 }}>
+          <div style={{ padding: 18, color: "var(--text-3)", fontSize: 14 }}>
             No providers saved yet. Add one above to get started.
           </div>
         ) : (
@@ -72,14 +72,14 @@ export function SavedProviderList() {
                     }}
                   />
                   <div>
-                    <div style={{ fontSize: 13.5, fontWeight: 500 }}>{p.name}</div>
-                    <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2 }}>
+                    <div style={{ fontSize: 14, fontWeight: 500 }}>{p.name}</div>
+                    <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 2 }}>
                       {p.mode} · {getPathCount(p)} {getPathCount(p) === 1 ? "path" : "paths"} · added{" "}
                       {daysAgo(p.createdAt)}d ago
                     </div>
                   </div>
                 </div>
-                <div className="mono" style={{ fontSize: 12, color: "var(--text-2)" }}>
+                <div className="mono" style={{ fontSize: 13, color: "var(--text-2)" }}>
                   {getDisplayPayTo(p)}
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
@@ -97,7 +97,7 @@ export function SavedProviderList() {
                 <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
                   <Link
                     className="btn ghost"
-                    style={{ padding: "5px 10px", fontSize: 12 }}
+                    style={{ padding: "5px 10px", fontSize: 13 }}
                     href={`/providers/${p.providerId}/customers`}
                   >
                     Open

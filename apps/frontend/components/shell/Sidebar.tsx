@@ -272,7 +272,7 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
                           {isDemo && (
                             <span
                               style={{
-                                fontSize: 9.5,
+                                fontSize: 11,
                                 fontWeight: 600,
                                 padding: "1px 5px",
                                 borderRadius: 3,

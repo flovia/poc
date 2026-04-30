@@ -14,7 +14,7 @@ export function CustomersHeader({ providerId }: CustomersHeaderProps) {
     <div>
       <div
         style={{
-          fontSize: 11,
+          fontSize: 12,
           fontWeight: 600,
           letterSpacing: "0.1em",
           textTransform: "uppercase",
@@ -24,7 +24,7 @@ export function CustomersHeader({ providerId }: CustomersHeaderProps) {
       >
         Provider · {name}
       </div>
-      <h1 style={{ fontSize: 24, fontWeight: 700, margin: 0, letterSpacing: "-0.01em" }}>
+      <h1 style={{ fontSize: 28, fontWeight: 700, margin: 0, letterSpacing: "-0.01em" }}>
         Customers calling your API
       </h1>
     </div>

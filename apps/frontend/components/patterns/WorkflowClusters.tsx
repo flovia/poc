@@ -20,7 +20,7 @@ export function WorkflowClusters({ clusters }: Props) {
       <div className="eyebrow" style={{ marginBottom: 8 }}>
         SDK preview · Workflow clusters
       </div>
-      <h2 style={{ fontSize: 17, fontWeight: 600, margin: "0 0 14px" }}>
+      <h2 style={{ fontSize: 18, fontWeight: 600, margin: "0 0 14px" }}>
         Three patterns explain most observed wallets
       </h2>
       <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 10 }}>
@@ -38,13 +38,13 @@ export function WorkflowClusters({ clusters }: Props) {
             }}
           >
             <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>
+              <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>
                 {c.label}
               </div>
               <div
                 className="mono"
                 style={{
-                  fontSize: 12,
+                  fontSize: 13,
                   color: "var(--text-3)",
                   whiteSpace: "nowrap",
                   overflow: "hidden",
@@ -74,7 +74,7 @@ export function WorkflowClusters({ clusters }: Props) {
               </div>
               <span
                 className="mono"
-                style={{ fontSize: 12, fontWeight: 600, color: "var(--text-1)", width: 36, textAlign: "right" }}
+                style={{ fontSize: 13, fontWeight: 600, color: "var(--text-1)", width: 36, textAlign: "right" }}
               >
                 {c.walletPercentage}%
               </span>

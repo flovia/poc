@@ -21,7 +21,7 @@ function AgentBadge({ agentType }: { agentType: string }) {
     <span
       data-testid="customers-agent-badge"
       style={{
-        fontSize: 10.5,
+        fontSize: 11,
         fontWeight: 600,
         padding: "2px 8px",
         borderRadius: 3,
@@ -63,7 +63,7 @@ export function CustomersTable({
         <div aria-hidden />
       </div>
       {customers.length === 0 && (
-        <div style={{ padding: 24, color: "var(--text-3)", fontSize: 13 }}>
+        <div style={{ padding: 24, color: "var(--text-3)", fontSize: 14 }}>
           No payer wallets in BFF projection yet.
         </div>
       )}
@@ -85,7 +85,7 @@ export function CustomersTable({
               <span
                 className="mono"
                 style={{
-                  fontSize: 13,
+                  fontSize: 14,
                   fontWeight: 500,
                   whiteSpace: "nowrap",
                   overflow: "hidden",
@@ -96,7 +96,7 @@ export function CustomersTable({
                 {c.address}
               </span>
               {c.label && (
-                <span className="chip" style={{ fontSize: 10.5, padding: "1px 6px" }}>
+                <span className="chip" style={{ fontSize: 11, padding: "1px 6px" }}>
                   {c.label}
                 </span>
               )}
@@ -108,13 +108,13 @@ export function CustomersTable({
               </div>
             )}
 
-            <div className="mono" style={{ fontSize: 13, color: "var(--text-1)" }}>
+            <div className="mono" style={{ fontSize: 14, color: "var(--text-1)" }}>
               {formatAtomic(c.spendAtomic)}
             </div>
-            <div className="mono" style={{ fontSize: 13, color: "var(--text-2)" }}>
+            <div className="mono" style={{ fontSize: 14, color: "var(--text-2)" }}>
               {c.observationCount}
             </div>
-            <div className="mono" style={{ fontSize: 13, color: "var(--text-2)" }}>
+            <div className="mono" style={{ fontSize: 14, color: "var(--text-2)" }}>
               {c.providerCount}
             </div>
 
@@ -123,7 +123,7 @@ export function CustomersTable({
                 data-testid="customers-endpoint"
                 className="mono"
                 style={{
-                  fontSize: 12,
+                  fontSize: 13,
                   color: extras?.usedEndpointsTopK[0] ? "var(--text-2)" : "var(--text-mute)",
                   whiteSpace: "nowrap",
                   overflow: "hidden",
@@ -138,7 +138,7 @@ export function CustomersTable({
             <div
               className="mono"
               style={{
-                fontSize: 12.5,
+                fontSize: 13,
                 color:
                   c.activityGrowth > 0
                     ? "var(--mesh-blue)"
@@ -161,7 +161,7 @@ export function CustomersTable({
               </div>
             )}
 
-            <div className="mono" style={{ fontSize: 11.5, color: "var(--text-3)" }}>
+            <div className="mono" style={{ fontSize: 12, color: "var(--text-3)" }}>
               {formatTimestamp(c.lastSeenAt)}
             </div>
             <div>

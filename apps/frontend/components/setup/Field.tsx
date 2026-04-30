@@ -8,7 +8,7 @@ export function FieldHeader({ label, hint }: FieldHeaderProps) {
     <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 8 }}>
       <div
         style={{
-          fontSize: 12,
+          fontSize: 13,
           fontWeight: 600,
           letterSpacing: "0.04em",
           textTransform: "uppercase",
@@ -17,7 +17,7 @@ export function FieldHeader({ label, hint }: FieldHeaderProps) {
       >
         {label}
       </div>
-      {hint && <div style={{ fontSize: 11.5, color: "var(--text-3)" }}>{hint}</div>}
+      {hint && <div style={{ fontSize: 12, color: "var(--text-3)" }}>{hint}</div>}
     </div>
   );
 }

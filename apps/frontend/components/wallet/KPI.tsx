@@ -19,7 +19,7 @@ export function KPI({ label, value, sub, hue = "default", big }: KPIProps) {
     <div style={{ minWidth: 0 }}>
       <div
         style={{
-          fontSize: 10.5,
+          fontSize: 12,
           color: "var(--text-3)",
           fontWeight: 600,
           letterSpacing: "0.06em",
@@ -32,7 +32,7 @@ export function KPI({ label, value, sub, hue = "default", big }: KPIProps) {
         <div
           className="mono"
           style={{
-            fontSize: big ? 24 : 18,
+            fontSize: big ? 28 : 22,
             fontWeight: 600,
             marginTop: 4,
             color: COLOR_MAP[hue],
@@ -43,7 +43,7 @@ export function KPI({ label, value, sub, hue = "default", big }: KPIProps) {
       ) : (
         value
       )}
-      {sub && <div style={{ marginTop: 4, fontSize: 11.5, color: "var(--text-3)" }}>{sub}</div>}
+      {sub && <div style={{ marginTop: 4, fontSize: 12, color: "var(--text-3)" }}>{sub}</div>}
     </div>
   );
 }

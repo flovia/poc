@@ -63,7 +63,7 @@ export function ActivityTimeline({
       <div style={{ padding: "16px 20px 12px", borderBottom: "1px solid var(--line)" }}>
         <div
           style={{
-            fontSize: 11,
+            fontSize: 12,
             color: "var(--text-mute)",
             fontWeight: 600,
             letterSpacing: "0.08em",
@@ -73,7 +73,7 @@ export function ActivityTimeline({
         >
           Activity timeline
         </div>
-        <div className="display" style={{ fontSize: 18, fontWeight: 600, letterSpacing: "-0.01em" }}>
+        <div className="display" style={{ fontSize: 20, fontWeight: 600, letterSpacing: "-0.01em" }}>
           {timeline.length} event{timeline.length === 1 ? "" : "s"}{" "}
           {showGrouping ? "from SDK telemetry preview" : "from BFF projection"}
         </div>
@@ -81,7 +81,7 @@ export function ActivityTimeline({
 
       <div className="timeline-body" style={{ maxHeight: 520, overflow: "auto" }}>
         {timeline.length === 0 && (
-          <div style={{ padding: 20, color: "var(--text-3)", fontSize: 13 }}>
+          <div style={{ padding: 20, color: "var(--text-3)", fontSize: 14 }}>
             No timeline events.
           </div>
         )}
@@ -119,7 +119,7 @@ export function ActivityTimeline({
                   data-testid="timeline-cycle-header"
                   style={{
                     padding: "10px 20px 6px",
-                    fontSize: 11.5,
+                    fontSize: 12,
                     fontWeight: 700,
                     letterSpacing: "0.06em",
                     textTransform: "uppercase",
@@ -143,12 +143,12 @@ export function ActivityTimeline({
                   background: isSelfRow ? "rgba(13,148,136,0.04)" : "transparent",
                 }}
               >
-              <span className="mono" style={{ fontSize: 11.5, color: "var(--text-3)" }}>
+              <span className="mono" style={{ fontSize: 12, color: "var(--text-3)" }}>
                 {formatTimestamp(event.timestamp)}
               </span>
               <span
                 style={{
-                  fontSize: 10.5,
+                  fontSize: 11,
                   fontWeight: 600,
                   letterSpacing: "0.05em",
                   textTransform: "uppercase",
@@ -163,17 +163,17 @@ export function ActivityTimeline({
                 {badge.label}
               </span>
               <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: 13, fontWeight: 500, color: "var(--text-1)" }}>
+                <div style={{ fontSize: 14, fontWeight: 500, color: "var(--text-1)" }}>
                   {event.title}
                 </div>
-                <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 2, lineHeight: 1.5 }}>
+                <div style={{ fontSize: 13, color: "var(--text-3)", marginTop: 2, lineHeight: 1.5 }}>
                   {event.description}
                 </div>
                 {apiPathDisplay && (
                   <div
                     className="mono"
                     style={{
-                      fontSize: 11,
+                      fontSize: 12,
                       color: apiPathDisplay.unmapped ? "var(--text-mute)" : "var(--text-2)",
                       fontStyle: apiPathDisplay.unmapped ? "italic" : "normal",
                       marginTop: 4,
@@ -186,7 +186,7 @@ export function ActivityTimeline({
                   <div
                     className="mono"
                     style={{
-                      fontSize: 10.5,
+                      fontSize: 11,
                       color: "var(--text-mute)",
                       marginTop: 4,
                       display: "flex",
@@ -204,7 +204,7 @@ export function ActivityTimeline({
               <span
                 className="mono"
                 style={{
-                  fontSize: 12.5,
+                  fontSize: 13,
                   fontWeight: 500,
                   textAlign: "right",
                   color: event.amountAtomic || sdkExtra ? "var(--text-1)" : "var(--text-mute)",

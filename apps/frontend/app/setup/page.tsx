@@ -20,7 +20,7 @@ export default async function SetupPage() {
           <div style={{ marginBottom: 36 }}>
             <div
               style={{
-                fontSize: 11,
+                fontSize: 12,
                 fontWeight: 600,
                 letterSpacing: "0.1em",
                 textTransform: "uppercase",
@@ -32,7 +32,7 @@ export default async function SetupPage() {
             </div>
             <h1
               className="display"
-              style={{ fontSize: 32, fontWeight: 700, margin: "0 0 10px", letterSpacing: "-0.015em" }}
+              style={{ fontSize: 30, fontWeight: 700, margin: "0 0 10px", letterSpacing: "-0.015em" }}
             >
               Connect your <span style={{ color: "var(--teal)" }}>pay_to</span> address
             </h1>

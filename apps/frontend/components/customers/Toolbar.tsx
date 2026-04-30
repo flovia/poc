@@ -28,7 +28,7 @@ export function Toolbar({ total }: ToolbarProps) {
             borderRadius: 8,
             background: "#FFFFFF",
             border: "1px solid var(--line)",
-            fontSize: 13,
+            fontSize: 14,
           }}
         />
       </div>
@@ -39,7 +39,7 @@ export function Toolbar({ total }: ToolbarProps) {
       />
       <Select label="Upsell" options={["All", "High", "Medium", "Low"]} />
       <div style={{ flex: 1 }} />
-      <span style={{ fontSize: 11.5, color: "var(--text-3)" }}>
+      <span style={{ fontSize: 12, color: "var(--text-3)" }}>
         {total} of {total} wallets
       </span>
     </div>

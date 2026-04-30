@@ -47,7 +47,7 @@ export function InsightCard({
             display: "flex",
             alignItems: "center",
             gap: 6,
-            fontSize: 10.5,
+            fontSize: 12,
             fontWeight: 600,
             letterSpacing: "0.08em",
             textTransform: "uppercase",
