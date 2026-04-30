@@ -1,5 +1,22 @@
 import type { StoredProvider } from "@/lib/types";
 
+// demo provider 識別子の単一の真実源。seedProviders() の providerId と一致させる。
+export const SEED_IDS = ["acme-price", "lumen-vec", "halonet"] as const;
+
+// demo 行判定 (source-aware)。
+// user が "acme-price" を名乗って保存した場合、user 側の acme-price は demo として
+// 扱わない。userIds に含まれている providerId は user 由来。
+export function isDemoProvider(
+  provider: StoredProvider,
+  demoOpted: boolean,
+  userIds: ReadonlySet<string>,
+): boolean {
+  if (!demoOpted) return false;
+  if (!(SEED_IDS as readonly string[]).includes(provider.providerId)) return false;
+  if (userIds.has(provider.providerId)) return false;
+  return true;
+}
+
 export function slugifyProviderName(name: string): string {
   const base = name
     .toLowerCase()
@@ -16,6 +33,12 @@ export function ensureUniqueId(desired: string, existing: string[]): string {
   return `${desired}-${i}`;
 }
 
+// demo provider の payTo は UI 用の表示ダミー値で、本リポジトリの BFF
+// (apps/bff) が返す payTo とは整合しない。demo provider は Setup / Sidebar の
+// 動線体験を見せるためのモック行であり、On-chain only モードで demo provider を
+// クリックしても BFF データには紐付かない (SDK connected モードでは fixture が
+// 別軸でデータを返す)。実データに紐付く provider はユーザーが Setup で BFF と
+// 整合する payTo を入力して登録する想定。
 export function seedProviders(): StoredProvider[] {
   const now = Date.now();
   const day = 86_400_000;

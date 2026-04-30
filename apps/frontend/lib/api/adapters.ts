@@ -9,6 +9,8 @@ import type {
   CustomerProfileDto,
   CustomerProviderUsageDto,
   CustomerTimelineEventType,
+  PaymentObservationDto,
+  ReportSummaryDto,
   WalletUsageGraphDto,
 } from "./types";
 
@@ -139,6 +141,87 @@ export function adaptCustomerProfile(response: PhaseBCustomerProfileResponse): C
       title: insight.title,
       description: `${insight.summary} Confidence: ${Math.round(insight.confidence * 100)}%.`,
     })),
+  };
+}
+
+// Phase B BFF は /observations を提供しないため、validate 済みの
+// /wallet-usage-graph レスポンスから payer x recipient の first/last 観測を
+// PaymentObservationDto 列に合成する。Patterns 画面の retention 判定 (14 日比較)
+// で使う合成データなので、観測の網羅性は元レスポンス次第。
+export function adaptObservationsFromGraph(
+  response: WalletUsageGraphResponse,
+): PaymentObservationDto[] {
+  let nextId = 1;
+  const out: PaymentObservationDto[] = [];
+
+  for (const provider of response.graph.providerWallets) {
+    const recipient = provider.payToWallet;
+    for (const wallet of provider.payerWallets) {
+      const payer = wallet.address;
+      for (const observation of wallet.observations) {
+        const buildAt = (timeIso: string): PaymentObservationDto => ({
+          observationId: nextId++,
+          chainId: 8453,
+          txHash: `${observation.providerId}:${payer}:${timeIso}`,
+          blockNumber: 0,
+          blockTimestamp: toTimestamp(timeIso),
+          relayerWallet: "",
+          payerWallet: payer,
+          recipientWallet: recipient,
+          tokenAddress: "",
+          amountAtomic: observation.sharedSpendAtomic,
+          method: "",
+          topLevelSelector: "",
+          caseId: observation.providerId,
+          stableHash: `${payer}:${recipient}:${timeIso}`,
+        });
+        const firstSeen = observation.firstSeenAt;
+        const lastSeen = observation.lastSeenAt;
+        if (firstSeen) out.push(buildAt(firstSeen));
+        if (lastSeen && lastSeen !== firstSeen) out.push(buildAt(lastSeen));
+      }
+    }
+  }
+
+  return out;
+}
+
+// Phase B BFF は /summary を提供しないため、validate 済みの /customers
+// レスポンスから TopBar の "Updated Xm ago" 用に最低限の ReportSummaryDto を
+// 合成する。pickLatestObservationUnixSec は observations[].blockTimestamp の
+// max を使うので、各 customer の lastSeenAt から 1 件ずつ詰めれば十分。
+export function adaptSummaryFromCustomers(response: PhaseBCustomerListResponse): ReportSummaryDto {
+  const observations: PaymentObservationDto[] = response.customers.map((customer, index) => ({
+    observationId: index + 1,
+    chainId: 8453,
+    txHash: `customers-summary:${customer.address}`,
+    blockNumber: 0,
+    blockTimestamp: toTimestamp(customer.lastSeenAt),
+    relayerWallet: "",
+    payerWallet: customer.address,
+    recipientWallet: "",
+    tokenAddress: "",
+    amountAtomic: customer.spendAtomic,
+    method: "",
+    topLevelSelector: "",
+    caseId: "customers-summary",
+    stableHash: `customers-summary:${customer.address}`,
+  }));
+
+  return {
+    generatedAt: response.generatedAt,
+    counts: {
+      observations: observations.length,
+      attributionCandidates: 0,
+      dailyMetrics: 0,
+      payerWalletProfiles: response.customers.length,
+      recipientSummaries: 0,
+      relayerSummaries: 0,
+      walletUsageGraphProviderWallets: 0,
+    },
+    scopeNote: "Synthetic summary derived from /customers (Phase B BFF does not expose /summary).",
+    observations,
+    dailyMetrics: [],
   };
 }
 

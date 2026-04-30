@@ -45,6 +45,26 @@ export function formatTimestamp(unixSeconds: number): string {
   return new Date(unixSeconds * 1000).toISOString().replace("T", " ").slice(0, 19);
 }
 
+// 相対時間表示。TopBar の "Updated Xm ago" 等で使用する。
+// `nowUnixSec` は呼び出し側で `Date.now() / 1000` を渡す前提 (setInterval で追従)。
+export function formatRelativeAge(unixSec: number | undefined, nowUnixSec: number): string {
+  if (unixSec === undefined || !Number.isFinite(unixSec) || unixSec <= 0) {
+    return "Updated —";
+  }
+  const diffSec = Math.max(0, nowUnixSec - unixSec);
+  if (diffSec < 60) return "Updated just now";
+  if (diffSec < 60 * 60) {
+    const minutes = Math.floor(diffSec / 60);
+    return `Updated ${minutes}m ago`;
+  }
+  if (diffSec < 24 * 3600) {
+    const hours = Math.floor(diffSec / 3600);
+    return `Updated ${hours}h ago`;
+  }
+  const days = Math.floor(diffSec / 86400);
+  return `Updated ${days}d ago`;
+}
+
 export function shortAddr(address: string): string {
   if (!address) return "";
   if (address.length <= 12) return address;
