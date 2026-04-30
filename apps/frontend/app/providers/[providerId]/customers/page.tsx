@@ -31,8 +31,6 @@ export default async function CustomersPage({
         providerId={providerId}
         crumbs={[{ label: "Customers" }]}
         dataMode={pageCtx.dataMode}
-        updatedAtUnixSec={pageCtx.updatedAtUnixSec}
-        renderedAtUnixSec={pageCtx.renderedAtUnixSec}
       />
       <div className="scroll">
         <div style={{ padding: "32px 40px 80px" }}>

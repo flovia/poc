@@ -1,10 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect } from "react";
 import { useActiveProvider } from "@/app/providers";
-import { Icon } from "@/components/ui/Icon";
-import { formatRelativeAge } from "@/lib/format";
 import type { DashboardMode } from "@/lib/data-mode";
 import {
   DASHBOARD_MODE_STORAGE_KEY,
@@ -22,13 +20,6 @@ type TopBarProps = {
   providerId?: string;
   fallbackProviderName?: string;
   crumbs: Crumb[];
-  // updatedAtUnixSec: BFF が返した最終 observation の時刻 (= freshness 判定対象)。
-  // observations / dailyMetrics の両方が空なら呼び出し側が undefined を渡し、
-  // TopBar 側で "Updated —" にフォールバックする。
-  updatedAtUnixSec?: number;
-  // renderedAtUnixSec: page Server Component が描画した時刻 (= 比較基準)。
-  // SSR / hydration 直後で同じ値を使うため、各 page から必ず渡す。
-  renderedAtUnixSec: number;
   // dataMode: Server で cookie を読んだ結果。Phase 7 で追加。
   dataMode: DashboardMode;
 };
@@ -37,8 +28,6 @@ export function TopBar({
   providerId,
   fallbackProviderName = "Flovia",
   crumbs,
-  updatedAtUnixSec,
-  renderedAtUnixSec,
   dataMode,
 }: TopBarProps) {
   const { active, hydrated } = useActiveProvider(providerId);
@@ -49,18 +38,6 @@ export function TopBar({
     else if (active) providerName = active.name;
     else providerName = providerId;
   }
-
-  // 初期 now は Server から渡される renderedAtUnixSec で初期化することで
-  // SSR / hydration 直後に同じ値を使い mismatch を回避する。
-  const [nowUnixSec, setNowUnixSec] = useState<number>(renderedAtUnixSec);
-  useEffect(() => {
-    const tick = () => setNowUnixSec(Math.floor(Date.now() / 1000));
-    tick();
-    const id = setInterval(tick, 30_000);
-    return () => clearInterval(id);
-  }, []);
-
-  const updatedLabel = formatRelativeAge(updatedAtUnixSec, nowUnixSec);
 
   // Phase 8: hydration 後に Phase 7 → 8 migration を 1 回だけ実行 + cookie → localStorage 再同期.
   useEffect(() => {
@@ -104,23 +81,18 @@ export function TopBar({
         ))}
       </div>
       <div className="spacer" />
-      <span
-        className="btn"
-        style={{ padding: "4px 9px", fontSize: 11.5, color: "var(--text-2)", cursor: "default" }}
-        title="BFF returns cumulative aggregates only"
-      >
-        <Icon.calendar width="12" height="12" /> All time
-      </span>
-      <span style={{ fontSize: 11, color: "var(--text-3)", fontFamily: "var(--mono)" }}>
-        {updatedLabel}
-      </span>
+      {/*
+        グローバル UI 要素 (期間セレクタ / freshness インジケータ) は撤去済み。
+        いずれもページ単独で意味を持つので、ページ内 Toolbar / Header に再配置する
+        か、period filter と一緒に再設計する予定。詳細は docs/future-work.md を参照。
+      */}
       <DashboardModeToggle mode={dataMode} />
-      <button className="icon-btn" title="Search">
-        <Icon.search />
-      </button>
-      <button className="icon-btn" title="Filters">
-        <Icon.filter />
-      </button>
+      {/*
+        Search / Filters のアイコンボタンも撤去済み。グローバル検索やページ横断
+        フィルターは現状要件ではなく、各ページの Toolbar に既存の検索 / Sort /
+        Upsell select が存在する。詳細は docs/future-work.md
+        "Global header actions (search / filters)" を参照。
+      */}
       <div
         style={{
           width: 26,
@@ -131,7 +103,7 @@ export function TopBar({
           placeItems: "center",
           color: "#FFFFFF",
           fontWeight: 700,
-          fontSize: 11,
+          fontSize: 12,
         }}
       >
         F

@@ -38,8 +38,6 @@ export default async function WalletPage({
             { label: decoded },
           ]}
           dataMode={pageCtx.dataMode}
-          updatedAtUnixSec={pageCtx.updatedAtUnixSec}
-          renderedAtUnixSec={pageCtx.renderedAtUnixSec}
         />
         <div className="scroll">
           <div style={{ padding: "40px", color: "var(--text-2)" }}>
@@ -68,8 +66,6 @@ export default async function WalletPage({
           { label: decoded },
         ]}
         dataMode={pageCtx.dataMode}
-        updatedAtUnixSec={pageCtx.updatedAtUnixSec}
-        renderedAtUnixSec={pageCtx.renderedAtUnixSec}
       />
       <div className="scroll">
         <WalletScreen

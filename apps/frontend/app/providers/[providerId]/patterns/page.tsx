@@ -29,8 +29,6 @@ export default async function PatternsPage({
         providerId={providerId}
         crumbs={[{ label: "Co-usage Patterns" }]}
         dataMode={pageCtx.dataMode}
-        updatedAtUnixSec={pageCtx.updatedAtUnixSec}
-        renderedAtUnixSec={pageCtx.renderedAtUnixSec}
       />
       <div className="scroll">
         <PatternsScreen
