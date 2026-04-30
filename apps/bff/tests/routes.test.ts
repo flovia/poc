@@ -3,7 +3,10 @@ import fs from "node:fs";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { createBffHandler } from "../src/http";
-import { fixtureAnalyticsDataSource, loadGeneratedAnalyticsDataSource } from "../src/data/analytics-source";
+import {
+  fixtureAnalyticsDataSource,
+  loadGeneratedAnalyticsDataSource,
+} from "../src/data/analytics-source";
 import {
   joinedPhaseBProjectionRecords,
   knownCustomerIntelligenceAddress,
@@ -144,7 +147,9 @@ describe("BFF routes", () => {
     const body = await response.json();
 
     expect(response.status).toBe(200);
-    expect(validatePhaseBWalletUsageGraphResponse(body).graph.providerWallets.length).toBeGreaterThan(0);
+    expect(
+      validatePhaseBWalletUsageGraphResponse(body).graph.providerWallets.length,
+    ).toBeGreaterThan(0);
   });
 
   test("serves coingecko service summary analytics", async () => {

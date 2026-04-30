@@ -78,20 +78,23 @@ const topEndpointsForService = (serviceRows: ServiceAnalyticsRow[], limit: numbe
   return [...rowsByIdentity.values()]
     .sort((left, right) => right.transaction_count - left.transaction_count)
     .slice(0, limit)
-    .map((row) => ({
-      endpointPath: row.service_name,
-      endpointName: row.service_name,
-      transactionCount: row.transaction_count,
-      userCount: row.unique_sender_count,
-      endpointAttributionStatus: row.endpoint_attribution_status,
-      attributionConfidence: row.confidence,
-      provenance: "derived_insight" as const,
-      provenanceByField: {
-        transactionCount: "onchain_fact" as const,
-        userCount: "onchain_fact" as const,
-      },
-      reasons: [reason],
-    }));
+    .map((row) => {
+      const isBundled = row.endpoint_attribution_status === "bundled_payto_unknown_endpoint";
+      return {
+        endpointPath: row.service_name,
+        endpointName: isBundled ? `${row.service_name} inferred cluster` : row.service_name,
+        transactionCount: row.transaction_count,
+        userCount: row.unique_sender_count,
+        endpointAttributionStatus: row.endpoint_attribution_status,
+        attributionConfidence: row.confidence,
+        provenance: "derived_insight" as const,
+        provenanceByField: {
+          transactionCount: "onchain_fact" as const,
+          userCount: "onchain_fact" as const,
+        },
+        reasons: [reason],
+      };
+    });
 };
 
 const loadCustomerIntelligenceSnapshots = (
@@ -497,9 +500,11 @@ export const generateServiceAnalyticsReadModels = (
         reasons: [reason],
       };
     })
-    .sort((left, right) =>
-      left.serviceId === "coingecko" ? -1 : right.transactionCount - left.transactionCount,
-    );
+    .sort((left, right) => {
+      if (left.serviceId === "coingecko") return -1;
+      if (right.serviceId === "coingecko") return 1;
+      return right.transactionCount - left.transactionCount;
+    });
 
   const comparison = validateServiceAnalyticsComparisonResponse({
     generatedAt,

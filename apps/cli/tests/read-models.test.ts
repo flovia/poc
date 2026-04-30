@@ -278,7 +278,8 @@ describe("service analytics read model generation", () => {
       });
       expect(result.serviceSummary.topEndpoints).toHaveLength(1);
       expect(result.serviceSummary.topEndpoints[0]).toMatchObject({
-        endpointName: "CoinGecko x402",
+        endpointPath: "CoinGecko x402",
+        endpointName: "CoinGecko x402 inferred cluster",
         transactionCount: 15,
         userCount: 6,
         endpointAttributionStatus: "bundled_payto_unknown_endpoint",
