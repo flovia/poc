@@ -69,11 +69,11 @@ export function BubbleChart({ bubbles, hover, setHover, providerId }: BubbleChar
             Provider relevance map
           </div>
           <div className="display" style={{ fontSize: 16, fontWeight: 600 }}>
-            Unique payer wallets × observations per wallet
+            Unique payer wallets × 14d-retained payer ratio
           </div>
         </div>
         <div style={{ fontSize: 11, color: "var(--text-3)" }}>
-          Top-right = candidates worth reviewing · radius = wallet count
+          Top-right = high-co-usage + high-retention partnership candidates · radius = wallet count
         </div>
       </div>
 
@@ -133,7 +133,7 @@ export function BubbleChart({ bubbles, hover, setHover, providerId }: BubbleChar
               fontSize="11"
               fill="var(--text-3)"
             >
-              Avg observations per wallet →
+              14d-retained payer ratio →
             </text>
 
             {bubbles.map((b, i) => {
