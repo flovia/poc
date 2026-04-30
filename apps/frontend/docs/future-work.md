@@ -315,3 +315,85 @@ mixing identity and workspace into a single corner is a common source of
   identity ships) or always to initials?
 - Does the existing `DashboardModeToggle` move into this menu when both
   exist, or do we keep it surfaced for one-click switching?
+
+---
+
+## Style guide alignment (typography / spacing / shadows)
+
+The Flovia style guide defines a "Professional Editorial Analytics" look:
+serif headlines, sans-serif body, mono for metrics, an 8pt spacing grid,
+explicit border-radius scale (4 / 8 / 12 / 16 / 24), and a three-tier
+shadow ladder (Sm / Md / Lg). The CSS color tokens were aligned in
+`globals.css` already (Muted Blue / Teal / Muted Purple / Warm Off-White /
+Sand Beige / Graphite). The remaining gaps are below.
+
+### Status
+
+Partial. Color tokens match the guide; typography, spacing, shadows,
+and a handful of inline color literals do not.
+
+### Why deferred
+
+1. **Headline serif requires a font addition.** The guide's H1 sample
+   ("Insights that drive decisions") is set in a serif typeface, while
+   the app currently uses Geist + Space Grotesk for everything. Adding
+   a new font means deciding the family (Source Serif 4 / Crimson Pro /
+   Playfair Display / etc.), wiring it through `app/layout.tsx`,
+   weighing LCP and Web Vitals impact, and reviewing every existing H1
+   for letter-spacing and weight. That is a UI direction change, not a
+   token swap.
+2. **Spacing and radius scale need a sweep.** Components author spacing
+   inline (`padding: "8px 14px"`, `borderRadius: 10`, etc.) rather than
+   reading from CSS variables. Aligning to the 8pt grid would touch
+   most components and is best done with shared utility tokens
+   introduced first.
+3. **Shadow tokens are missing.** Today `globals.css` exposes only
+   `--shadow-1: none` and `--shadow-2`. The guide has Sm / Md / Lg
+   tiers; once defined, several inline `boxShadow: "none"` /
+   `var(--shadow-1)` call sites become candidates for re-evaluation.
+4. **Inline hex literals bypass the tokens.** Colors that should follow
+   the new palette still appear hard-coded. They survived the token
+   swap intentionally because picking the right replacement requires
+   judgement (e.g. SVG gradient stops are not a 1:1 mapping). Known
+   offenders, as of this writing:
+   - [`globals.css`](../app/globals.css) `.btn.primary` and its hover
+     state use `#1D4ED8` / `#1E40AF` instead of `var(--mesh-blue)` and
+     a darker derivative
+   - [`components/ui/FreeTierBar.tsx`](../components/ui/FreeTierBar.tsx)
+     uses `#1D4ED8` / `#B45309`
+   - [`components/wallet/ActivityTimeline.tsx`](../components/wallet/ActivityTimeline.tsx)
+     `TYPE_BADGE` map uses `#2563EB` / `#0D9488` / `#1D4ED8` plus matching
+     rgba backgrounds
+   - [`components/wallet/NetworkStarChart.tsx`](../components/wallet/NetworkStarChart.tsx)
+     fills the central node with `#0D9488` and peripheral nodes with
+     `#1D4ED8`
+   - [`components/patterns/BubbleChart.tsx`](../components/patterns/BubbleChart.tsx)
+     gradient stops use `#93C5FD` / `#1E3A8A` / `#5EEAD4` / `#0F766E` /
+     `#94A3B8` / `#334155`
+   - [`components/setup/SetupForm.tsx`](../components/setup/SetupForm.tsx)
+     mode-toggle background uses `#1D4ED8`
+
+### What needs to change to ship it
+
+1. **Decide the headline serif** and add it via `next/font`. Update
+   `--display` to point at the new family and review H1 / H2 weights
+   and letter-spacing.
+2. **Introduce spacing and radius tokens** (`--space-1` … `--space-12`,
+   `--radius-sm/md/lg/xl`) and migrate the most visited surfaces
+   (CustomersTable, IdentityBar, KPI cards) first.
+3. **Define `--shadow-sm/md/lg`** matching the guide's Sm/Md/Lg samples
+   and apply to cards / popovers consistently.
+4. **Sweep inline hex literals** so colors flow exclusively through CSS
+   variables. SVG gradients may need new dedicated tokens
+   (`--bubble-blue-from`, `--bubble-blue-to`, etc.) since they aren't a
+   single-color value.
+5. **Document the chosen mapping** in `docs/current-capabilities.md` so
+   the next reader knows which tokens to use where.
+
+### Open questions
+
+- Does the editorial serif appear only on H1, or do we extend it to
+  card titles and KPI labels too?
+- Do we keep separate "soft" and "dim" rgba derivatives per accent
+  color, or replace them with `color-mix()` at use sites once browser
+  support is acceptable?
