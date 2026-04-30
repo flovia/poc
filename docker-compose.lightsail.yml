@@ -1,11 +1,30 @@
 services:
-  bff:
-    image: ${BFF_IMAGE:?BFF_IMAGE is required}
+  main-bff:
+    image: ${BFF_IMAGE_REPOSITORY:?BFF_IMAGE_REPOSITORY is required}:${MAIN_BFF_IMAGE_TAG:-main}
     environment:
-      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
+      DATABASE_URL: ${BFF_DATA_MOUNT_PATH:-/data}/flovia.db
       PORT: 3001
     volumes:
-      - ${FLOVIA_DATA_DIR:?FLOVIA_DATA_DIR is required}:${BFF_DATA_MOUNT_PATH:?BFF_DATA_MOUNT_PATH is required}
+      - ${MAIN_FLOVIA_DATA_DIR:?MAIN_FLOVIA_DATA_DIR is required}:${BFF_DATA_MOUNT_PATH:-/data}
+    expose:
+      - "3001"
+    restart: unless-stopped
+
+  develop-bff:
+    image: ${BFF_IMAGE_REPOSITORY:?BFF_IMAGE_REPOSITORY is required}:${DEVELOP_BFF_IMAGE_TAG:-develop}
+    environment:
+      DATABASE_URL: ${BFF_DATA_MOUNT_PATH:-/data}/flovia.db
+      PORT: 3001
+    volumes:
+      - ${DEVELOP_FLOVIA_DATA_DIR:?DEVELOP_FLOVIA_DATA_DIR is required}:${BFF_DATA_MOUNT_PATH:-/data}
+    expose:
+      - "3001"
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:1.27-alpine
     ports:
-      - "${BFF_PORT:-3001}:3001"
+      - "${NGINX_PORT:-80}:80"
+    volumes:
+      - ./deploy/nginx/lightsail-bff.conf:/etc/nginx/conf.d/default.conf:ro
     restart: unless-stopped

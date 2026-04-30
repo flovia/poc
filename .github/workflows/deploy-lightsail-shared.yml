@@ -1,27 +1,21 @@
-name: deploy-lightsail
+name: deploy-lightsail-shared
 
 # Required repository secrets:
 # - AWS_REGION
 # - AWS_ROLE_TO_ASSUME
 # - LIGHTSAIL_INSTANCE_NAME
-# - LIGHTSAIL_DEPLOY_PATH
-# LIGHTSAIL_DEPLOY_PATH should point at the repository checkout on the
-# instance, for example /home/ec2-user/poc.
-# AWS_ROLE_TO_ASSUME should allow OIDC from this repository and
-# lightsail:GetInstanceAccessDetails on the target instance.
-# The workflow seeds missing FLOVIA_DATA_DIR / BFF_DATA_MOUNT_PATH /
-# DATABASE_URL / REPORTS_DIR entries into ${LIGHTSAIL_DEPLOY_PATH}/.env
-# and updates BFF_IMAGE before docker compose runs.
+# Deploy layout on the instance:
+# - $HOME/apps/main/poc and $HOME/apps/main/data
+# - $HOME/apps/develop/poc and $HOME/apps/develop/data
+# - $HOME/apps/lightsail-stack for the shared docker compose stack
 
 on:
-  push:
-    branches:
-      - main
-  workflow_dispatch:
-
-concurrency:
-  group: deploy-lightsail-main
-  cancel-in-progress: true
+  workflow_call:
+    inputs:
+      deploy_branch:
+        description: branch to deploy
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -34,22 +28,33 @@ jobs:
     env:
       AWS_REGION: ${{ secrets.AWS_REGION }}
       LIGHTSAIL_INSTANCE_NAME: ${{ secrets.LIGHTSAIL_INSTANCE_NAME }}
-      LIGHTSAIL_DEPLOY_PATH: ${{ secrets.LIGHTSAIL_DEPLOY_PATH }}
+      DEPLOY_BRANCH: ${{ inputs.deploy_branch }}
     steps:
       - name: Validate deployment configuration
         env:
           AWS_ROLE_TO_ASSUME: ${{ secrets.AWS_ROLE_TO_ASSUME }}
         run: |
           set -euo pipefail
-          for key in AWS_REGION AWS_ROLE_TO_ASSUME LIGHTSAIL_INSTANCE_NAME LIGHTSAIL_DEPLOY_PATH; do
+          for key in AWS_REGION AWS_ROLE_TO_ASSUME LIGHTSAIL_INSTANCE_NAME DEPLOY_BRANCH; do
             if [ -z "${!key}" ]; then
-              echo "Missing required secret: ${key}" >&2
+              echo "Missing required value: ${key}" >&2
               exit 1
             fi
           done
 
+          case "${DEPLOY_BRANCH}" in
+            main|develop)
+              ;;
+            *)
+              echo "Unsupported branch: ${DEPLOY_BRANCH}" >&2
+              exit 1
+              ;;
+          esac
+
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.deploy_branch }}
 
       - name: Set image metadata
         run: |
@@ -58,8 +63,7 @@ jobs:
           deploy_git_sha="$(git rev-parse HEAD)"
 
           {
-            echo "IMAGE_NAMESPACE=${image_namespace}"
-            echo "BFF_IMAGE=ghcr.io/${image_namespace}/flovia-poc-bff"
+            echo "BFF_IMAGE_REPOSITORY=ghcr.io/${image_namespace}/flovia-poc-bff"
             echo "DEPLOY_GIT_SHA=${deploy_git_sha}"
           } >> "$GITHUB_ENV"
 
@@ -84,8 +88,8 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            ${{ env.BFF_IMAGE }}:main
-            ${{ env.BFF_IMAGE }}:${{ env.DEPLOY_GIT_SHA }}
+            ${{ env.BFF_IMAGE_REPOSITORY }}:${{ env.DEPLOY_BRANCH }}
+            ${{ env.BFF_IMAGE_REPOSITORY }}:${{ env.DEPLOY_GIT_SHA }}
 
       - name: Configure AWS credentials with OIDC
         uses: aws-actions/configure-aws-credentials@v6
@@ -122,7 +126,7 @@ jobs:
             echo "LIGHTSAIL_KNOWN_HOSTS_PATH=$HOME/.ssh/known_hosts"
           } >> "$GITHUB_ENV"
 
-      - name: Pull repository and restart services on Lightsail
+      - name: Sync branch checkout and shared stack on Lightsail
         run: |
           set -euo pipefail
           ssh \
@@ -134,78 +138,51 @@ jobs:
             "${LIGHTSAIL_USER}@${LIGHTSAIL_HOST}" \
             GHCR_USERNAME="${{ github.actor }}" \
             GHCR_TOKEN="${{ secrets.GITHUB_TOKEN }}" \
-            BFF_IMAGE_REF="${BFF_IMAGE}:${DEPLOY_GIT_SHA}" \
-            LIGHTSAIL_DEPLOY_PATH="${LIGHTSAIL_DEPLOY_PATH}" \
+            GH_REPO_TOKEN="${{ secrets.GITHUB_TOKEN }}" \
+            GITHUB_REPOSITORY="${{ github.repository }}" \
+            DEPLOY_BRANCH="${DEPLOY_BRANCH}" \
+            DEPLOY_GIT_SHA="${DEPLOY_GIT_SHA}" \
+            BFF_IMAGE_REPOSITORY="${BFF_IMAGE_REPOSITORY}" \
             "bash -s" <<'EOF'
           set -euo pipefail
-          if [ ! -d "$LIGHTSAIL_DEPLOY_PATH/.git" ]; then
-            echo "Expected a git checkout at $LIGHTSAIL_DEPLOY_PATH" >&2
+          apps_root="$HOME/apps"
+          branch_root="${apps_root}/${DEPLOY_BRANCH}"
+          deploy_path="${branch_root}/poc"
+          git_auth_header="Authorization: Basic $(printf 'x-access-token:%s' "$GH_REPO_TOKEN" | base64 | tr -d '\n')"
+
+          if [ -e "$deploy_path" ] && [ ! -d "$deploy_path/.git" ]; then
+            echo "Expected ${deploy_path} to be a git checkout." >&2
             exit 1
           fi
 
-          if ! git -C "$LIGHTSAIL_DEPLOY_PATH" diff --quiet || ! git -C "$LIGHTSAIL_DEPLOY_PATH" diff --cached --quiet; then
-            echo "Refusing to deploy because tracked files under $LIGHTSAIL_DEPLOY_PATH have local changes." >&2
-            git -C "$LIGHTSAIL_DEPLOY_PATH" status --short >&2
-            exit 1
-          fi
+          mkdir -p "$branch_root"
 
-          git -C "$LIGHTSAIL_DEPLOY_PATH" fetch --prune origin
-          git -C "$LIGHTSAIL_DEPLOY_PATH" checkout main
-          git -C "$LIGHTSAIL_DEPLOY_PATH" pull --ff-only origin main
-
-          cd "$LIGHTSAIL_DEPLOY_PATH"
-
-          touch .env
-
-          upsert_env_var() {
-            key="$1"
-            value="$2"
-            temp_file="$(mktemp)"
-
-            awk -v key="$key" -v value="$value" '
-              BEGIN { updated = 0 }
-              index($0, key "=") == 1 {
-                print key "=" value
-                updated = 1
-                next
-              }
-              { print }
-              END {
-                if (!updated) {
-                  print key "=" value
-                }
-              }
-            ' .env > "$temp_file"
-
-            mv "$temp_file" .env
-          }
-
-          ensure_env_var() {
-            key="$1"
-            value="$2"
-
-            if ! grep -q "^${key}=" .env; then
-              printf '\n%s=%s\n' "$key" "$value" >> .env
+          if [ ! -d "$deploy_path/.git" ]; then
+            git -c http.extraHeader="$git_auth_header" clone \
+              --branch "$DEPLOY_BRANCH" \
+              --single-branch \
+              "https://github.com/${GITHUB_REPOSITORY}.git" \
+              "$deploy_path"
+          else
+            if ! git -C "$deploy_path" diff --quiet || ! git -C "$deploy_path" diff --cached --quiet; then
+              echo "Refusing to deploy because tracked files under $deploy_path have local changes." >&2
+              git -C "$deploy_path" status --short >&2
+              exit 1
             fi
-          }
 
-          default_data_dir="${LIGHTSAIL_DEPLOY_PATH}/docker-data"
-          ensure_env_var FLOVIA_DATA_DIR "$default_data_dir"
-          ensure_env_var BFF_DATA_MOUNT_PATH "$default_data_dir"
-          ensure_env_var DATABASE_URL "${default_data_dir}/flovia.db"
-          ensure_env_var REPORTS_DIR "${default_data_dir}/reports"
-          upsert_env_var BFF_IMAGE "$BFF_IMAGE_REF"
+            git -c http.extraHeader="$git_auth_header" -C "$deploy_path" fetch --prune origin
+            git -C "$deploy_path" checkout "$DEPLOY_BRANCH"
+            git -c http.extraHeader="$git_auth_header" -C "$deploy_path" pull --ff-only origin "$DEPLOY_BRANCH"
+          fi
 
-          set -a
-          . ./.env
-          set +a
+          git -C "$deploy_path" checkout "$DEPLOY_GIT_SHA"
 
-          FLOVIA_DATA_DIR="${FLOVIA_DATA_DIR:-$default_data_dir}"
+          export DEPLOY_BRANCH
+          export DEPLOY_GIT_SHA
+          export BFF_IMAGE_REPOSITORY
+          export GHCR_USERNAME
+          export GHCR_TOKEN
 
-          mkdir -p "$FLOVIA_DATA_DIR" "$FLOVIA_DATA_DIR/reports"
-          printf '%s\n' "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USERNAME" --password-stdin
-          docker compose -f docker-compose.lightsail.yml config >/dev/null
-          docker compose -f docker-compose.lightsail.yml pull bff
-          docker compose -f docker-compose.lightsail.yml up -d --force-recreate --remove-orphans
-          docker logout ghcr.io >/dev/null 2>&1 || true
+          cd "$deploy_path"
+          bash ./scripts/deploy/lightsail-sync-stack.sh
           EOF
