@@ -105,6 +105,9 @@ const decimalToAtomic = (value: string | number | undefined, decimals = 6): stri
 
 const toNetworkAggregateKey = paymentIdentityKey;
 
+const isTransactionHash = (value: unknown): value is string =>
+  typeof value === "string" && /^0x[a-f0-9]{64}$/i.test(value);
+
 const normalizeAggregate = (row: {
   network: string;
   asset: string;
@@ -129,15 +132,8 @@ const normalizeAggregate = (row: {
     sourceId: `bitquery:${normalizeNetwork(row.network)}:${normalizeAsset(row.asset)}:${normalizePayTo(row.payTo)}`,
     fetchedAt: new Date().toISOString(),
   });
-  return validateBitqueryAggregate({
-    network: normalizeNetwork(row.network),
-    asset: normalizeAsset(row.asset),
-    payTo: normalizePayTo(row.payTo),
-    transactionCount: Number(toIntegerString(row.txCount, "txCount")),
-    uniqueSenderCount: Number(toIntegerString(row.senderCount, "senderCount")),
-    totalVolumeAtomic: decimalToAtomic(row.volume),
-    provenance: parsed,
-    latestTransfer: row.latest
+  const latestTransfer =
+    row.latest && isTransactionHash(row.latest.txHash)
       ? {
           txHash: row.latest.txHash,
           sender: row.latest.sender,
@@ -146,7 +142,17 @@ const normalizeAggregate = (row: {
           blockTimestamp: row.latest.blockTimestamp,
           blockNumber: row.latest.blockNumber,
         }
-      : undefined,
+      : undefined;
+
+  return validateBitqueryAggregate({
+    network: normalizeNetwork(row.network),
+    asset: normalizeAsset(row.asset),
+    payTo: normalizePayTo(row.payTo),
+    transactionCount: Number(toIntegerString(row.txCount, "txCount")),
+    uniqueSenderCount: Number(toIntegerString(row.senderCount, "senderCount")),
+    totalVolumeAtomic: decimalToAtomic(row.volume),
+    provenance: parsed,
+    latestTransfer,
   });
 };
 

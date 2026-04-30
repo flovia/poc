@@ -159,6 +159,57 @@ describe("bitquery source client", () => {
     });
   });
 
+  test("omits latest transfer metadata when Bitquery returns an invalid tx hash", async () => {
+    const payTo = "0x1111111111111111111111111111111111111111";
+    const result = await fetchBitqueryBaseUsdcAggregates({
+      network: "base",
+      asset: "USDC",
+      token: "test-token",
+      paymentOptions: [
+        {
+          network: "base",
+          asset: "USDC",
+          amount: "1000",
+          payTo,
+          provenance: { sourceKind: "cdp_discovery", sourceName: "cdp-discovery" },
+        },
+      ],
+      fetchFn: async () =>
+        new Response(
+          JSON.stringify({
+            data: {
+              EVM: {
+                byRecipient: [
+                  {
+                    Transfer: { Receiver: payTo },
+                    txCount: 1,
+                    uniqueSenders: 1,
+                    volumeUSDC: "0.01",
+                  },
+                ],
+                latestByRecipient: [
+                  {
+                    Transfer: { Receiver: payTo, Sender: "0xsender", Amount: "0.01" },
+                    Transaction: { Hash: "not-a-tx-hash" },
+                    Block: { Time: "2026-01-01T00:00:00Z", Number: "123" },
+                  },
+                ],
+              },
+            },
+          }),
+          { status: 200 },
+        ),
+    });
+
+    expect(result[0]).toMatchObject({
+      payTo,
+      transactionCount: 1,
+      uniqueSenderCount: 1,
+      totalVolumeAtomic: "10000",
+    });
+    expect(result[0]?.latestTransfer).toBeUndefined();
+  });
+
   test("throws a clear error when BITQUERY token is missing", async () => {
     const old = process.env.BITQUERY_TOKEN;
     delete process.env.BITQUERY_TOKEN;
