@@ -5,6 +5,8 @@ import type {
   CustomerMetricsDto,
   CustomerProviderUsageDto,
 } from "@/lib/api/types";
+import type { DashboardMode } from "@/lib/data-mode";
+import type { SdkExtras } from "@/lib/sdk-fixtures/types";
 import { formatAtomic, formatGrowth, formatRatioPct, formatTimestamp, shortAddr } from "@/lib/format";
 import { InsightCard } from "./InsightCard";
 
@@ -14,11 +16,94 @@ const SEVERITY_TONE: Record<CustomerInsightSeverity, "default" | "upsell" | "blu
   warning: "blue",
 };
 
-export function UpsellCard({ metrics }: { metrics: CustomerMetricsDto }) {
+function formatUsd(value: number): string {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(value);
+}
+
+export function UpsellCard({
+  metrics,
+  dataMode,
+  sdkExtras,
+}: {
+  metrics: CustomerMetricsDto;
+  dataMode: DashboardMode;
+  sdkExtras: SdkExtras | null;
+}) {
+  // SDK connected モード + 主役 (upsell !== null) だけ SDK preview 版に置換.
+  if (dataMode === "sdkConnected" && sdkExtras?.upsell) {
+    const u = sdkExtras.upsell;
+    return (
+      <InsightCard
+        tone="upsell"
+        icon={<Icon.bolt width="11" height="11" />}
+        label="SDK preview · Upsell opportunity"
+        delay={60}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "flex-start",
+            justifyContent: "space-between",
+            gap: 10,
+            marginBottom: 10,
+          }}
+        >
+          <div>
+            <div className="display" style={{ fontSize: 18, fontWeight: 700, letterSpacing: "-0.01em" }}>
+              {u.planName}
+            </div>
+            <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 4 }}>
+              Projected{" "}
+              <span className="mono" style={{ fontWeight: 600, color: "var(--mesh-blue)" }}>
+                {formatUsd(u.projectedMrrUsd)}
+              </span>{" "}
+              MRR
+            </div>
+          </div>
+          <span className="chip teal">high</span>
+        </div>
+        <div
+          style={{
+            background: "rgba(91,33,182,0.06)",
+            borderRadius: 6,
+            padding: "10px 12px",
+            border: "1px solid rgba(91,33,182,0.16)",
+          }}
+        >
+          <div
+            style={{
+              fontSize: 11,
+              fontWeight: 600,
+              letterSpacing: "0.05em",
+              textTransform: "uppercase",
+              color: "var(--sdk-purple)",
+              marginBottom: 6,
+            }}
+          >
+            Why now
+          </div>
+          <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12.5, color: "var(--text-1)", lineHeight: 1.6 }}>
+            {u.whyNow.map((line, i) => (
+              <li key={i}>{line}</li>
+            ))}
+          </ul>
+        </div>
+      </InsightCard>
+    );
+  }
+
+  return <UpsellCardLive metrics={metrics} />;
+}
+
+function UpsellCardLive({ metrics }: { metrics: CustomerMetricsDto }) {
   const opp = metrics.upsellOpportunity;
   const headline =
     opp === "high"
-      ? "High upsell opportunity"
+      ? "High upsell signal"
       : opp === "medium"
       ? "Medium upsell opportunity"
       : "Low upsell signal";
@@ -115,42 +200,132 @@ export function UpsellCard({ metrics }: { metrics: CustomerMetricsDto }) {
   );
 }
 
+export function EntryPointInsight({
+  metrics,
+  dataMode,
+  sdkExtras,
+}: {
+  metrics: CustomerMetricsDto;
+  dataMode: DashboardMode;
+  sdkExtras: SdkExtras | null;
+}) {
+  // SDK connected モードで主役 (entryPointPctText !== null) なら SDK preview 文言で置換.
+  if (dataMode === "sdkConnected" && sdkExtras?.entryPointPctText) {
+    return (
+      <InsightCard
+        tone="blue"
+        icon={<Icon.spark width="11" height="11" />}
+        label="SDK preview · Entry-point badge"
+        delay={120}
+      >
+        <div style={{ fontSize: 13, lineHeight: 1.55, color: "var(--text-1)" }}>
+          Your API is{" "}
+          <span className="mono" style={{ color: "var(--mesh-blue)", fontWeight: 700 }}>
+            {sdkExtras.entryPointPctText}
+          </span>
+          .
+        </div>
+      </InsightCard>
+    );
+  }
+
+  const ratio = metrics.entryPointRatio;
+  const hasEntry = ratio > 0;
+
+  return (
+    <InsightCard
+      tone="blue"
+      icon={<Icon.spark width="11" height="11" />}
+      label="Workflow position"
+      delay={120}
+    >
+      <div style={{ fontSize: 13, lineHeight: 1.55, color: "var(--text-1)" }}>
+        {hasEntry ? (
+          <>
+            <span className="mono" style={{ color: "var(--mesh-blue)", fontWeight: 600 }}>
+              {formatRatioPct(ratio, 0)}
+            </span>{" "}
+            of this wallet&apos;s observations are tied to an attribution candidate, suggesting your endpoint sits on the wallet&apos;s identifiable workflow path.
+          </>
+        ) : (
+          <>No attribution candidates matched this wallet&apos;s observations yet.</>
+        )}
+      </div>
+    </InsightCard>
+  );
+}
+
+export function RecentActivityInsight({
+  metrics,
+  providers,
+}: {
+  metrics: CustomerMetricsDto;
+  providers: CustomerProviderUsageDto[];
+}) {
+  const growth = metrics.activityGrowth;
+  const providerCount = providers.length;
+  const hasSignal = growth !== 0 || providerCount > 0;
+
+  return (
+    <InsightCard
+      tone="default"
+      icon={<Icon.bolt width="11" height="11" />}
+      label="Recent activity & co-usage"
+      delay={150}
+    >
+      <div style={{ fontSize: 13, lineHeight: 1.55, color: "var(--text-1)" }}>
+        {hasSignal ? (
+          <>
+            Recent activity is{" "}
+            <span
+              className="mono"
+              style={{ color: growth >= 0 ? "var(--mesh-blue)" : "var(--text-3)", fontWeight: 600 }}
+            >
+              {formatGrowth(growth)}
+            </span>{" "}
+            versus the earlier baseline; this wallet has paid{" "}
+            <span className="mono" style={{ color: "var(--text-1)", fontWeight: 600 }}>
+              {providerCount}
+            </span>{" "}
+            provider {providerCount === 1 ? "wallet" : "wallets"} observed by the BFF.
+          </>
+        ) : (
+          <>No recent activity baseline available yet.</>
+        )}
+      </div>
+    </InsightCard>
+  );
+}
+
 export function ProviderUsageList({ providers }: { providers: CustomerProviderUsageDto[] }) {
   return (
     <InsightCard
       tone="blue"
       icon={<Icon.spark width="11" height="11" />}
-      label={`Known Provider Usage (${providers.length})`}
+      label={`Providers used (${providers.length})`}
       delay={120}
     >
-      <div style={{ fontSize: 11, color: "var(--text-3)", marginBottom: 12, lineHeight: 1.4 }}>
-        Attributed from on-chain observations mapped to the BFF provider directory.
-      </div>
       {providers.length === 0 ? (
         <div style={{ fontSize: 12.5, color: "var(--text-3)" }}>
           No provider usage in this projection.
         </div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {providers.map((p) => (
             <div
               key={p.providerId + p.payToWallet}
               style={{
                 display: "grid",
                 gridTemplateColumns: "minmax(0, 1fr) auto",
-                gap: 12,
-                alignItems: "center",
-                padding: "8px 10px",
-                background: "#F8FAFC",
-                borderRadius: 8,
-                border: "1px solid var(--line)",
+                gap: 8,
+                alignItems: "baseline",
               }}
             >
               <div style={{ minWidth: 0 }}>
                 <div
                   style={{
                     fontSize: 13,
-                    fontWeight: 600,
+                    fontWeight: 500,
                     color: "var(--text-1)",
                     whiteSpace: "nowrap",
                     overflow: "hidden",
@@ -160,19 +335,14 @@ export function ProviderUsageList({ providers }: { providers: CustomerProviderUs
                 >
                   {p.name}
                 </div>
-                <div className="mono" style={{ fontSize: 10, color: "var(--text-mute)", marginTop: 4 }}>
-                  PAY-TO <span style={{ color: "var(--text-2)", fontWeight: 500 }}>{shortAddr(p.payToWallet)}</span> · {p.transactionCount} TX · LAST{" "}
-                  <span style={{ color: "var(--text-2)", fontWeight: 500 }}>{formatTimestamp(p.lastSeenAt)}</span>
+                <div className="mono" style={{ fontSize: 10.5, color: "var(--text-mute)", marginTop: 2 }}>
+                  pay-to {shortAddr(p.payToWallet)} · {p.transactionCount} tx · last{" "}
+                  {formatTimestamp(p.lastSeenAt)}
                 </div>
               </div>
-              <div style={{ textAlign: "right" }}>
-                <span className="mono" style={{ fontSize: 13, fontWeight: 600, color: "var(--mesh-blue)" }}>
-                  {formatAtomic(p.spendAtomic)}
-                </span>
-                <div style={{ fontSize: 9, textTransform: "uppercase", color: "var(--text-3)", marginTop: 2, letterSpacing: "0.05em" }}>
-                  Spend
-                </div>
-              </div>
+              <span className="mono" style={{ fontSize: 12.5, color: "var(--text-2)" }}>
+                {formatAtomic(p.spendAtomic)}
+              </span>
             </div>
           ))}
         </div>

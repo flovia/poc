@@ -1,7 +1,14 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { TopBar } from "@/components/shell/TopBar";
 import { WalletScreen } from "@/components/wallet/WalletScreen";
-import { getCustomerProfile } from "@/lib/api/client";
+import {
+  getCustomerProfile,
+  getSdkExtras,
+  getSdkForceNetwork,
+  SDK_PROTAGONIST_ADDRESS,
+} from "@/lib/data-source";
+import { getTopBarPageContext } from "@/lib/server/page-context";
 
 export default async function WalletPage({
   params,
@@ -10,9 +17,18 @@ export default async function WalletPage({
 }) {
   const { providerId, address } = await params;
   const decoded = decodeURIComponent(address);
-  const profile = await getCustomerProfile(decoded);
+  const [profile, sdkExtras, sdkForceNetwork, pageCtx] = await Promise.all([
+    getCustomerProfile(decoded),
+    getSdkExtras(decoded),
+    getSdkForceNetwork(decoded),
+    getTopBarPageContext(),
+  ]);
 
   if (!profile) {
+    if (pageCtx.dataMode === "sdkConnected") {
+      // SDK connected モード時は fixture 未収録のアドレスでも主役 wallet に寄せる。
+      redirect(`/providers/${providerId}/wallet/${encodeURIComponent(SDK_PROTAGONIST_ADDRESS)}`);
+    }
     return (
       <>
         <TopBar
@@ -21,6 +37,9 @@ export default async function WalletPage({
             { label: "Customers", href: `/providers/${providerId}/customers` },
             { label: decoded },
           ]}
+          dataMode={pageCtx.dataMode}
+          updatedAtUnixSec={pageCtx.updatedAtUnixSec}
+          renderedAtUnixSec={pageCtx.renderedAtUnixSec}
         />
         <div className="scroll">
           <div style={{ padding: "40px", color: "var(--text-2)" }}>
@@ -48,9 +67,18 @@ export default async function WalletPage({
           { label: "Customers", href: `/providers/${providerId}/customers` },
           { label: decoded },
         ]}
+        dataMode={pageCtx.dataMode}
+        updatedAtUnixSec={pageCtx.updatedAtUnixSec}
+        renderedAtUnixSec={pageCtx.renderedAtUnixSec}
       />
       <div className="scroll">
-        <WalletScreen profile={profile} providerId={providerId} />
+        <WalletScreen
+          profile={profile}
+          providerId={providerId}
+          dataMode={pageCtx.dataMode}
+          sdkExtras={sdkExtras}
+          sdkForceNetwork={sdkForceNetwork}
+        />
       </div>
     </>
   );

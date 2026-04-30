@@ -3,8 +3,9 @@ import { CustomersHeader } from "@/components/customers/CustomersHeader";
 import { CustomersTable } from "@/components/customers/CustomersTable";
 import { SummaryChip } from "@/components/customers/SummaryChip";
 import { Toolbar } from "@/components/customers/Toolbar";
-import { getCustomers } from "@/lib/api/client";
+import { getCustomers, getSdkExtrasMap } from "@/lib/data-source";
 import { formatAtomic } from "@/lib/format";
+import { getTopBarPageContext } from "@/lib/server/page-context";
 
 export default async function CustomersPage({
   params,
@@ -12,7 +13,11 @@ export default async function CustomersPage({
   params: Promise<{ providerId: string }>;
 }) {
   const { providerId } = await params;
-  const customers = await getCustomers();
+  const [customers, extrasMap, pageCtx] = await Promise.all([
+    getCustomers(),
+    getSdkExtrasMap(),
+    getTopBarPageContext(),
+  ]);
 
   const totalSpendAtomic = customers
     .reduce((acc, c) => acc + BigInt(c.spendAtomic), 0n)
@@ -22,7 +27,13 @@ export default async function CustomersPage({
 
   return (
     <>
-      <TopBar providerId={providerId} crumbs={[{ label: "Customers" }]} />
+      <TopBar
+        providerId={providerId}
+        crumbs={[{ label: "Customers" }]}
+        dataMode={pageCtx.dataMode}
+        updatedAtUnixSec={pageCtx.updatedAtUnixSec}
+        renderedAtUnixSec={pageCtx.renderedAtUnixSec}
+      />
       <div className="scroll">
         <div style={{ padding: "32px 40px 80px" }}>
           <div
@@ -52,7 +63,12 @@ export default async function CustomersPage({
 
           <Toolbar total={total} />
 
-          <CustomersTable customers={customers} providerId={providerId} />
+          <CustomersTable
+            customers={customers}
+            providerId={providerId}
+            dataMode={pageCtx.dataMode}
+            extrasMap={extrasMap}
+          />
         </div>
       </div>
     </>

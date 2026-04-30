@@ -1,33 +1,25 @@
-"use client";
+// Server Component. Client (ProviderClientLayout) の外で SdkPreviewNoticeBar を
+// 描画することで, ProviderClientLayout の hydration 待ち skeleton 中でも注記バーが
+// 画面上端に出る。dataMode は server で cookie から確定させて client に props で渡す。
 
-import { use } from "react";
-import { usePathname } from "next/navigation";
-import { Sidebar } from "@/components/shell/Sidebar";
+import { SdkPreviewNoticeBar } from "@/components/shell/SdkPreviewNoticeBar";
+import { getServerDashboardMode } from "@/lib/data-mode";
+import { ProviderClientLayout } from "./ProviderClientLayout";
 
-type RouteSegment = "customers" | "patterns" | "wallet";
-
-function deriveActiveRoute(pathname: string): RouteSegment | undefined {
-  if (pathname.includes("/wallet/")) return "wallet";
-  if (pathname.endsWith("/customers") || pathname.includes("/customers/")) return "customers";
-  if (pathname.endsWith("/patterns") || pathname.includes("/patterns/")) return "patterns";
-  return undefined;
-}
-
-export default function ProviderLayout({
+export default async function ProviderLayout({
   children,
   params,
 }: {
   children: React.ReactNode;
   params: Promise<{ providerId: string }>;
 }) {
-  const { providerId } = use(params);
-  const pathname = usePathname();
-  const activeRoute = deriveActiveRoute(pathname);
-
+  const dataMode = await getServerDashboardMode();
   return (
-    <div className="app">
-      <Sidebar activeProviderId={providerId} activeRoute={activeRoute} />
-      <main className="main">{children}</main>
-    </div>
+    <>
+      <SdkPreviewNoticeBar />
+      <ProviderClientLayout params={params} dataMode={dataMode}>
+        {children}
+      </ProviderClientLayout>
+    </>
   );
 }

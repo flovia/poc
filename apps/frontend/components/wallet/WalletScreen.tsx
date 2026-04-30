@@ -1,16 +1,33 @@
 import Link from "next/link";
 import { Icon } from "@/components/ui/Icon";
 import type { CustomerProfileDto } from "@/lib/api/types";
-import { ActivityTimeline } from "./ActivityTimeline";
+import type { DashboardMode } from "@/lib/data-mode";
+import type { SdkExtras, SdkForceNetwork } from "@/lib/sdk-fixtures/types";
 import { IdentityBar } from "./IdentityBar";
-import { InsightsList, ProviderUsageList, UpsellCard } from "./Insights";
+import {
+  EntryPointInsight,
+  InsightsList,
+  ProviderUsageList,
+  RecentActivityInsight,
+  UpsellCard,
+} from "./Insights";
+import { WalletInteractive } from "./WalletInteractive";
 
 type WalletScreenProps = {
   profile: CustomerProfileDto;
   providerId: string;
+  dataMode: DashboardMode;
+  sdkExtras: SdkExtras | null;
+  sdkForceNetwork: SdkForceNetwork | null;
 };
 
-export function WalletScreen({ profile, providerId }: WalletScreenProps) {
+export function WalletScreen({
+  profile,
+  providerId,
+  dataMode,
+  sdkExtras,
+  sdkForceNetwork,
+}: WalletScreenProps) {
   return (
     <div style={{ position: "relative", background: "var(--bg-shell)", minHeight: "100%" }}>
       <div style={{ position: "relative", padding: "28px 40px 80px", maxWidth: 1500, margin: "0 auto" }}>
@@ -28,7 +45,12 @@ export function WalletScreen({ profile, providerId }: WalletScreenProps) {
           <Icon.back width="13" height="13" /> All customers
         </Link>
 
-        <IdentityBar customer={profile.customer} metrics={profile.metrics} />
+        <IdentityBar
+          customer={profile.customer}
+          metrics={profile.metrics}
+          dataMode={dataMode}
+          sdkExtras={sdkExtras}
+        />
 
         <div
           style={{
@@ -38,10 +60,19 @@ export function WalletScreen({ profile, providerId }: WalletScreenProps) {
             marginTop: 18,
           }}
         >
-          <ActivityTimeline timeline={profile.timeline} />
+          <WalletInteractive
+            address={profile.customer.address}
+            timeline={profile.timeline}
+            providers={profile.providers}
+            dataMode={dataMode}
+            sdkExtras={sdkExtras}
+            sdkForceNetwork={sdkForceNetwork}
+          />
 
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            <UpsellCard metrics={profile.metrics} />
+            <UpsellCard metrics={profile.metrics} dataMode={dataMode} sdkExtras={sdkExtras} />
+            <EntryPointInsight metrics={profile.metrics} dataMode={dataMode} sdkExtras={sdkExtras} />
+            <RecentActivityInsight metrics={profile.metrics} providers={profile.providers} />
             <ProviderUsageList providers={profile.providers} />
             <InsightsList insights={profile.insights} />
           </div>

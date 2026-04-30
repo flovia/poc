@@ -91,3 +91,55 @@ export type WalletUsageGraphDto = {
     }>;
   }>;
 };
+
+// Phase B BFF は /observations と /summary を提供しないため、フロント側で
+// /wallet-usage-graph と /customers から合成した同型 DTO を扱う。
+// 用途:
+//   - ReportSummaryDto: TopBar の "Updated Xm ago" ラベル
+//   - PaymentObservationDto: Patterns 画面の retention 計算 (payer x recipient
+//     ごとの first/last 期間幅)
+
+export type PaymentObservationDto = {
+  observationId: number;
+  chainId: number;
+  txHash: string;
+  blockNumber: number;
+  blockTimestamp: number;
+  relayerWallet: string;
+  payerWallet: string;
+  recipientWallet: string;
+  tokenAddress: string;
+  amountAtomic: string;
+  method: string;
+  topLevelSelector: string;
+  caseId: string;
+  stableHash: string;
+};
+
+export type DailyMetricDto = {
+  day: string;
+  observationCount: number;
+  candidateCount: number;
+  uniquePayers: number;
+  uniqueRecipients: number;
+  uniqueRelayers: number;
+  totalAmountAtomic: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type ReportSummaryDto = {
+  generatedAt: string;
+  counts: {
+    observations: number;
+    attributionCandidates: number;
+    dailyMetrics: number;
+    payerWalletProfiles: number;
+    recipientSummaries: number;
+    relayerSummaries: number;
+    walletUsageGraphProviderWallets: number;
+  };
+  scopeNote: string;
+  observations: PaymentObservationDto[];
+  dailyMetrics: DailyMetricDto[];
+};

@@ -1,6 +1,12 @@
 import { TopBar } from "@/components/shell/TopBar";
 import { PatternsScreen } from "@/components/patterns/PatternsScreen";
-import { getWalletUsageGraph } from "@/lib/api/client";
+import {
+  getObservations,
+  getSdkRetentionByAgent,
+  getSdkWorkflowClusters,
+  getWalletUsageGraph,
+} from "@/lib/data-source";
+import { getTopBarPageContext } from "@/lib/server/page-context";
 
 export default async function PatternsPage({
   params,
@@ -8,13 +14,33 @@ export default async function PatternsPage({
   params: Promise<{ providerId: string }>;
 }) {
   const { providerId } = await params;
-  const graph = await getWalletUsageGraph();
+  const [graph, observations, sdkWorkflowClusters, sdkRetentionByAgent, pageCtx] =
+    await Promise.all([
+      getWalletUsageGraph(),
+      getObservations(),
+      getSdkWorkflowClusters(),
+      getSdkRetentionByAgent(),
+      getTopBarPageContext(),
+    ]);
 
   return (
     <>
-      <TopBar providerId={providerId} crumbs={[{ label: "Co-usage Patterns" }]} />
+      <TopBar
+        providerId={providerId}
+        crumbs={[{ label: "Co-usage Patterns" }]}
+        dataMode={pageCtx.dataMode}
+        updatedAtUnixSec={pageCtx.updatedAtUnixSec}
+        renderedAtUnixSec={pageCtx.renderedAtUnixSec}
+      />
       <div className="scroll">
-        <PatternsScreen graph={graph} providerId={providerId} />
+        <PatternsScreen
+          graph={graph}
+          observations={observations}
+          providerId={providerId}
+          dataMode={pageCtx.dataMode}
+          sdkWorkflowClusters={sdkWorkflowClusters}
+          sdkRetentionByAgent={sdkRetentionByAgent}
+        />
       </div>
     </>
   );
