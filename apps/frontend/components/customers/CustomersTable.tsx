@@ -60,6 +60,7 @@ export function CustomersTable({
         {isSdkConnected && <div>7d</div>}
         <div>Last seen</div>
         <div>Upsell</div>
+        <div aria-hidden />
       </div>
       {customers.length === 0 && (
         <div style={{ padding: 24, color: "var(--text-3)", fontSize: 13 }}>
@@ -163,9 +164,11 @@ export function CustomersTable({
             <div className="mono" style={{ fontSize: 11.5, color: "var(--text-3)" }}>
               {formatTimestamp(c.lastSeenAt)}
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div>
               <UpsellPill opportunity={c.upsellOpportunity} />
-              <Icon.arrow width="14" height="14" style={{ color: "var(--text-3)" }} />
+            </div>
+            <div className="row-arrow" style={{ display: "flex", justifyContent: "flex-end" }}>
+              <Icon.arrow width="14" height="14" />
             </div>
           </Link>
         );
