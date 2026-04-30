@@ -3,7 +3,7 @@ name: deploy-lightsail-main
 on:
   push:
     branches:
-      - main
+      - develop
   workflow_dispatch:
 
 permissions:
