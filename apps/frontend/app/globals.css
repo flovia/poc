@@ -4,10 +4,24 @@
    Light, neutral, Geist + Geist Mono. 8pt grid. */
 
 :root {
+  /*
+    Color tokens are tuned to the Flovia style guide
+    (Professional Editorial Analytics palette):
+      Warm Off-White #F7F5F2 — backgrounds
+      Sand Beige     #EDE7DF — surfaces
+      Graphite       #0F1115 — text / headings
+      Slate Gray     #6B7280 — secondary text
+      Muted Blue     #2F5D9A — Primary
+      Teal           #2C7A7B — Accents
+      Muted Purple   #7B61A8 — Highlights (SDK preview)
+    Soft / dim variants are kept as rgba derivatives of the same hue
+    so the relationship stays one-to-one.
+  */
+
   /* Surfaces */
-  --bg-shell:        #F6F7F9;
+  --bg-shell:        #F7F5F2;
   --bg-elev-1:       #FFFFFF;
-  --bg-elev-2:       #F2F4F7;
+  --bg-elev-2:       #EDE7DF;
   --bg-card:         #FFFFFF;
   --bg-mesh:         #F8FAFC;
 
@@ -15,20 +29,20 @@
   --line:            #EAECEF;
   --line-strong:     #DCE0E5;
 
-  /* Text (slate ramp) */
-  --text-1:          #0F172A;
+  /* Text */
+  --text-1:          #0F1115;
   --text-2:          #475569;
-  --text-3:          #64748B;
+  --text-3:          #6B7280;
   --text-mute:       #94A3B8;
 
-  /* Brand accents — kept (semantics) but tuned for white */
-  --mesh-blue:       #2563EB;
-  --mesh-blue-soft:  rgba(37, 99, 235, 0.10);
-  --mesh-blue-dim:   rgba(37, 99, 235, 0.04);
+  /* Brand accents */
+  --mesh-blue:       #2F5D9A;
+  --mesh-blue-soft:  rgba(47, 93, 154, 0.10);
+  --mesh-blue-dim:   rgba(47, 93, 154, 0.04);
 
-  --teal:            #0D9488;
-  --teal-soft:       rgba(13, 148, 136, 0.10);
-  --teal-dim:        rgba(13, 148, 136, 0.04);
+  --teal:            #2C7A7B;
+  --teal-soft:       rgba(44, 122, 123, 0.10);
+  --teal-dim:        rgba(44, 122, 123, 0.04);
 
   --warn:            #B45309;
   --warn-soft:       rgba(180, 83, 9, 0.10);
@@ -457,8 +471,8 @@ a { color: inherit; text-decoration: none; }
 /* ---- SDK preview notice bar ---- */
 :root {
   --sdk-notice-h: 32px;
-  --sdk-purple: #5B21B6;
-  --sdk-purple-strong: #4C1D95;
+  --sdk-purple: #7B61A8;
+  --sdk-purple-strong: #5F4988;
 }
 
 .sdk-notice {
