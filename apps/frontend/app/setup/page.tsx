@@ -1,4 +1,6 @@
 import { TopBar } from "@/components/shell/TopBar";
+import { DemoModeBanner } from "@/components/setup/DemoModeBanner";
+import { EmptyStateCTA } from "@/components/setup/EmptyStateCTA";
 import { SetupForm } from "@/components/setup/SetupForm";
 import { SavedProviderList } from "@/components/setup/SavedProviderList";
 
@@ -33,7 +35,13 @@ export default function SetupPage() {
             </p>
           </div>
 
-          <SetupForm />
+          <EmptyStateCTA />
+
+          <div id="setup-form-anchor">
+            <SetupForm />
+          </div>
+
+          <DemoModeBanner />
           <SavedProviderList />
         </div>
       </div>

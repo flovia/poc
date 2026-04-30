@@ -12,7 +12,7 @@ type PathRow = { apiPath: string; payTo: string };
 
 export function SetupForm() {
   const router = useRouter();
-  const { stored, addProvider } = useProviders();
+  const { stored, userProviders, addProvider, hydrated, demoOpted, optInDemo } = useProviders();
 
   const nameId = useId();
   const addrId = useId();
@@ -41,9 +41,11 @@ export function SetupForm() {
   const handleSave = () => {
     if (!canSave) return;
     const desiredId = slugifyProviderName(name || "untitled");
+    // 衝突判定は userProviders ベース。stored を使うと demo の providerId と
+    // 衝突して acme-price を名乗れず、demo 上書き要件 (§4.1 #12) が破綻する。
     const providerId = ensureUniqueId(
       desiredId,
-      stored.map((p) => p.providerId),
+      userProviders.map((p) => p.providerId),
     );
     const base = {
       providerId,
@@ -67,6 +69,11 @@ export function SetupForm() {
   const handleSkip = () => {
     if (!canSkip) return;
     router.push(`/providers/${stored[0].providerId}/customers`);
+  };
+
+  const handleTryDemo = () => {
+    optInDemo();
+    router.push("/providers/acme-price/customers");
   };
 
   return (
@@ -222,8 +229,20 @@ export function SetupForm() {
             borderTop: "1px solid var(--line)",
           }}
         >
-          <div style={{ fontSize: 12, color: "var(--text-3)" }}>
-            {validation ?? "Stored locally in this browser. No server account required."}
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            {hydrated && !demoOpted && (
+              <button
+                type="button"
+                className="btn ghost"
+                onClick={handleTryDemo}
+                title="Load demo data (no save to this browser)"
+              >
+                Try demo data
+              </button>
+            )}
+            <div style={{ fontSize: 12, color: "var(--text-3)" }}>
+              {validation ?? "Stored locally in this browser. No server account required."}
+            </div>
           </div>
           <div style={{ display: "flex", gap: 8 }}>
             <button
