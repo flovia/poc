@@ -69,7 +69,7 @@ export function SdkForceNetworkChart({ network }: Props) {
                 y={n.y + (isCenter ? 34 : 28)}
                 textAnchor="middle"
                 fontFamily={isCenter ? "var(--mono)" : "inherit"}
-                fontSize={isCenter ? 12 : 12.5}
+                fontSize={13}
                 fontWeight={isCenter ? 500 : 600}
                 fill="var(--text-1)"
               >

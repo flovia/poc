@@ -23,9 +23,9 @@ export function DemoModeBanner() {
         marginTop: 24,
         marginBottom: 12,
         borderRadius: 8,
-        background: "rgba(20, 184, 166, 0.06)",
-        border: "1px solid rgba(20, 184, 166, 0.18)",
-        fontSize: 12.5,
+        background: "rgba(44, 122, 123, 0.06)",
+        border: "1px solid rgba(44, 122, 123, 0.18)",
+        fontSize: 13,
         color: "var(--text-2)",
       }}
     >
@@ -37,7 +37,7 @@ export function DemoModeBanner() {
           background: "transparent",
           border: "none",
           color: "var(--teal)",
-          fontSize: 12.5,
+          fontSize: 13,
           fontWeight: 500,
           cursor: "pointer",
           padding: 0,

@@ -53,7 +53,7 @@ export function NetworkStarChart({ address, providers }: Props) {
       <div style={{ padding: "14px 20px 10px", borderBottom: "1px solid var(--line)" }}>
         <div
           style={{
-            fontSize: 11,
+            fontSize: 12,
             color: "var(--text-mute)",
             fontWeight: 600,
             letterSpacing: "0.08em",
@@ -63,7 +63,7 @@ export function NetworkStarChart({ address, providers }: Props) {
         >
           Co-usage map
         </div>
-        <div className="display" style={{ fontSize: 14, color: "var(--text-2)" }}>
+        <div className="display" style={{ fontSize: 15, color: "var(--text-2)" }}>
           Providers paid by this wallet, sized by transaction count
         </div>
       </div>
@@ -81,7 +81,7 @@ export function NetworkStarChart({ address, providers }: Props) {
                 y1={CY}
                 x2={n.cx}
                 y2={n.cy}
-                stroke={isActive ? "rgba(37,99,235,0.85)" : "rgba(37,99,235,0.30)"}
+                stroke={isActive ? "rgba(47, 93, 154, 0.85)" : "rgba(47, 93, 154, 0.30)"}
                 strokeWidth={strokeWidth}
                 style={{ transition: "stroke 180ms ease" }}
               />
@@ -90,13 +90,13 @@ export function NetworkStarChart({ address, providers }: Props) {
 
           {/* center node */}
           <g>
-            <circle cx={CX} cy={CY} r={NODE_R_CENTER} fill="#0D9488" />
+            <circle cx={CX} cy={CY} r={NODE_R_CENTER} fill="var(--teal)" />
             <text
               x={CX}
               y={CY + 4}
               textAnchor="middle"
               fontFamily="var(--mono)"
-              fontSize="11"
+              fontSize="12"
               fill="white"
             >
               {shortAddr(address)}
@@ -122,7 +122,7 @@ export function NetworkStarChart({ address, providers }: Props) {
                   cx={n.cx}
                   cy={n.cy}
                   r={n.r}
-                  fill="#1D4ED8"
+                  fill="var(--mesh-blue)"
                   stroke="white"
                   strokeWidth={isHover ? 2 : 1}
                   style={{ transition: "stroke-width 180ms ease" }}
@@ -132,7 +132,7 @@ export function NetworkStarChart({ address, providers }: Props) {
                   y={n.cy + n.r + 14}
                   textAnchor="middle"
                   fontFamily="var(--mono)"
-                  fontSize="11"
+                  fontSize="12"
                   fill={isHover ? "var(--text-1)" : "var(--text-2)"}
                   style={{ transition: "fill 180ms ease" }}
                 >
@@ -154,14 +154,14 @@ export function NetworkStarChart({ address, providers }: Props) {
               background: "rgba(15,23,42,0.92)",
               color: "white",
               borderRadius: 6,
-              fontSize: 11.5,
+              fontSize: 12,
               maxWidth: 240,
               pointerEvents: "none",
               lineHeight: 1.5,
             }}
           >
             <div style={{ fontWeight: 600, marginBottom: 4 }}>{hovered.label}</div>
-            <div className="mono" style={{ fontSize: 10.5, opacity: 0.7, marginBottom: 6 }}>
+            <div className="mono" style={{ fontSize: 11, opacity: 0.7, marginBottom: 6 }}>
               pay-to {shortAddr(hovered.provider.payToWallet)}
             </div>
             <div>tx: {hovered.provider.transactionCount}</div>

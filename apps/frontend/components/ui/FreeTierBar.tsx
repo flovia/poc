@@ -22,7 +22,7 @@ export function FreeTierBar({ pct, height = 6 }: FreeTierBarProps) {
           position: "absolute",
           inset: 0,
           width: clamped + "%",
-          background: isHot ? "#B45309" : "#1D4ED8",
+          background: isHot ? "var(--warn)" : "var(--mesh-blue)",
           borderRadius: 2,
           boxShadow: "none",
           transition: "width 600ms cubic-bezier(.4,0,.2,1)",

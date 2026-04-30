@@ -7,6 +7,7 @@ This directory stores both documentation for the current implementation and the 
 | File | Content |
 | --- | --- |
 | [current-capabilities.md](current-capabilities.md) | What can be shown in the current implementation, which BFF endpoints each screen calls, and items excluded as out of PoC scope |
+| [future-work.md](future-work.md) | Deferred features and known gaps, with rationale for the deferral and a checklist of what needs to change when we pick them up |
 | [vision-vs-bff-gap.md](vision-vs-bff-gap.md) | Gap analysis between initial vision (`vision/`) and BFF-provided data, feasible expression range, and recommended next steps |
 
 ## Original vision (`vision/`)
@@ -31,5 +32,6 @@ Assumptions, scripts, and design direction defined before PoC development. Copie
 ## Suggested reading order
 
 - **To understand implementation status** → [current-capabilities.md](current-capabilities.md)
+- **To understand what was deferred and why** → [future-work.md](future-work.md)
 - **To understand the original vision vs current reality** → [vision-vs-bff-gap.md](vision-vs-bff-gap.md)
 - **To read the original vision fully** → [vision/README.md](vision/README.md) → 00 → 01 → ...

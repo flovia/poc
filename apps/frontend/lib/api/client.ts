@@ -85,15 +85,16 @@ export async function getObservations(): Promise<PaymentObservationDto[]> {
 }
 
 // Phase B BFF は /summary を提供しないため、/customers から合成する。
-// 用途: TopBar の "Updated Xm ago" ラベル。
+// freshness indicator (撤去済) 再導入用のヘルパー。詳細は
+// docs/future-work.md "Data freshness indicator" を参照。
 export async function getSummary(): Promise<ReportSummaryDto> {
   return adaptSummaryFromCustomers(
     validatePhaseBCustomerListResponse(await bffFetch<unknown>("/customers")),
   );
 }
 
-// TopBar の "Updated …" に渡す unix sec を summary から導出する。
-// フォールバック順:
+// freshness indicator (撤去済) 再導入用のヘルパー。
+// summary から最新観測の unix sec を選ぶ。フォールバック順:
 //   1. observations[].blockTimestamp の max (秒精度)
 //   2. dailyMetrics[].day を YYYY-MM-DD として UTC 0:00 の unix sec に変換した max
 //   3. どちらも空 / 0 -> undefined

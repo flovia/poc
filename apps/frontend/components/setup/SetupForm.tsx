@@ -42,7 +42,7 @@ export function SetupForm() {
     if (!canSave) return;
     const desiredId = slugifyProviderName(name || "untitled");
     // 衝突判定は userProviders ベース。stored を使うと demo の providerId と
-    // 衝突して acme-price を名乗れず、demo 上書き要件 (§4.1 #12) が破綻する。
+    // 衝突して northwind-price を名乗れず、demo 上書き要件 (§4.1 #12) が破綻する。
     const providerId = ensureUniqueId(
       desiredId,
       userProviders.map((p) => p.providerId),
@@ -73,7 +73,7 @@ export function SetupForm() {
 
   const handleTryDemo = () => {
     optInDemo();
-    router.push("/providers/acme-price/customers");
+    router.push("/providers/northwind-price/customers");
   };
 
   return (
@@ -82,8 +82,8 @@ export function SetupForm() {
         {/* Mode toggle */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 22 }}>
           <div>
-            <div style={{ fontSize: 13, fontWeight: 600 }}>Configuration</div>
-            <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 2 }}>
+            <div style={{ fontSize: 14, fontWeight: 600 }}>Configuration</div>
+            <div style={{ fontSize: 13, color: "var(--text-3)", marginTop: 2 }}>
               Choose how your pay_to addresses are organized
             </div>
           </div>
@@ -109,10 +109,10 @@ export function SetupForm() {
                 style={{
                   padding: "6px 14px",
                   borderRadius: 3,
-                  fontSize: 12.5,
+                  fontSize: 13,
                   fontWeight: 500,
                   color: mode === m ? "#FFFFFF" : "var(--text-2)",
-                  background: mode === m ? "#1D4ED8" : "transparent",
+                  background: mode === m ? "var(--mesh-blue)" : "transparent",
                   transition: "background 180ms ease, color 180ms ease",
                   fontFamily: "var(--mono)",
                   letterSpacing: "0.02em",
@@ -130,7 +130,7 @@ export function SetupForm() {
             aria-label="Provider name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Acme Price API"
+            placeholder="Northwind Price API"
             style={fieldInputStyle}
           />
         </Field>
@@ -183,7 +183,7 @@ export function SetupForm() {
                       setPaths(np);
                     }}
                     placeholder="/v1/path"
-                    style={{ ...fieldInputStyle, fontSize: 13 }}
+                    style={{ ...fieldInputStyle, fontSize: 14 }}
                   />
                   <input
                     className="mono"
@@ -195,7 +195,7 @@ export function SetupForm() {
                       setPaths(np);
                     }}
                     placeholder="0x..."
-                    style={{ ...fieldInputStyle, fontSize: 13 }}
+                    style={{ ...fieldInputStyle, fontSize: 14 }}
                   />
                   <button
                     type="button"
@@ -240,7 +240,7 @@ export function SetupForm() {
                 Try demo data
               </button>
             )}
-            <div style={{ fontSize: 12, color: "var(--text-3)" }}>
+            <div style={{ fontSize: 13, color: "var(--text-3)" }}>
               {validation ?? "Stored locally in this browser. No server account required."}
             </div>
           </div>

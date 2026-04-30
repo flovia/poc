@@ -80,6 +80,7 @@ export function DashboardModeToggle({ mode }: Props) {
             }}
             onKeyDown={onKeyDown}
             className={checked ? "active" : ""}
+            data-mode={seg.value}
           >
             {seg.label}
           </button>

@@ -45,7 +45,7 @@ function protagonistObservations(): PaymentObservationDto[] {
       id++,
       T0 - FIRST_SEEN_OFFSET,
       PROTAGONIST_ADDRESS,
-      PROVIDER_PAY_TO["acme-price"],
+      PROVIDER_PAY_TO["northwind-price"],
       0.018,
     ),
   );
@@ -53,7 +53,13 @@ function protagonistObservations(): PaymentObservationDto[] {
   for (let cycle = 0; cycle < 3; cycle += 1) {
     const base = T0 + cycle * 3600;
     out.push(
-      buildObservation(id++, base + 0, PROTAGONIST_ADDRESS, PROVIDER_PAY_TO["acme-price"], 0.02),
+      buildObservation(
+        id++,
+        base + 0,
+        PROTAGONIST_ADDRESS,
+        PROVIDER_PAY_TO["northwind-price"],
+        0.02,
+      ),
       buildObservation(id++, base + 60, PROTAGONIST_ADDRESS, PROVIDER_PAY_TO.vectormind, 0.035),
       buildObservation(id++, base + 120, PROTAGONIST_ADDRESS, PROVIDER_PAY_TO.routezero, 0.17),
       buildObservation(id++, base + 180, PROTAGONIST_ADDRESS, PROVIDER_PAY_TO.signalport, 0.004),
@@ -72,13 +78,19 @@ function secondaryObservations(): PaymentObservationDto[] {
         id++,
         T0 - FIRST_SEEN_OFFSET,
         s.address,
-        PROVIDER_PAY_TO["acme-price"],
+        PROVIDER_PAY_TO["northwind-price"],
         0.01,
       ),
     );
     // 直近 1 件.
     out.push(
-      buildObservation(id++, T0 - 3 * ONE_DAY_SEC, s.address, PROVIDER_PAY_TO["acme-price"], 0.02),
+      buildObservation(
+        id++,
+        T0 - 3 * ONE_DAY_SEC,
+        s.address,
+        PROVIDER_PAY_TO["northwind-price"],
+        0.02,
+      ),
     );
   }
   return out;
@@ -150,19 +162,19 @@ export const SDK_WORKFLOW_CLUSTERS: SdkWorkflowCluster[] = [
   {
     clusterId: 1,
     label: "Hourly trading loop",
-    sequence: ["Acme Price", "VectorMind AI", "RouteZero DEX", "SignalPort"],
+    sequence: ["Northwind Price", "VectorMind AI", "RouteZero DEX", "SignalPort"],
     walletPercentage: 52,
   },
   {
     clusterId: 2,
     label: "Image gen → Storage → Notify",
-    sequence: ["VectorMind AI", "Acme Price", "SignalPort"],
+    sequence: ["VectorMind AI", "Northwind Price", "SignalPort"],
     walletPercentage: 28,
   },
   {
     clusterId: 3,
     label: "Single-call price lookup",
-    sequence: ["Acme Price"],
+    sequence: ["Northwind Price"],
     walletPercentage: 15,
   },
 ];

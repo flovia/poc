@@ -16,7 +16,7 @@ export function Stat({ label, value, hue = "default", small }: StatProps) {
     <div style={{ padding: "8px 10px", borderRadius: 8, background: "#F6F8FA" }}>
       <div
         style={{
-          fontSize: 10,
+          fontSize: 11,
           color: "var(--text-3)",
           fontWeight: 600,
           letterSpacing: "0.06em",
@@ -28,7 +28,7 @@ export function Stat({ label, value, hue = "default", small }: StatProps) {
       <div
         className="mono"
         style={{
-          fontSize: small ? 16 : 20,
+          fontSize: small ? 18 : 24,
           fontWeight: 600,
           color: COLOR_MAP[hue],
           marginTop: 2,

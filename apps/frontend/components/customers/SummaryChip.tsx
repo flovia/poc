@@ -19,7 +19,7 @@ export function SummaryChip({ label, value, hint, accent }: SummaryChipProps) {
     >
       <div
         style={{
-          fontSize: 10.5,
+          fontSize: 12,
           color: "var(--text-3)",
           fontWeight: 600,
           letterSpacing: "0.05em",
@@ -31,7 +31,7 @@ export function SummaryChip({ label, value, hint, accent }: SummaryChipProps) {
       <div
         className="mono"
         style={{
-          fontSize: 18,
+          fontSize: 24,
           fontWeight: 600,
           marginTop: 2,
           color: accent === "blue" ? "var(--mesh-blue)" : "var(--text-1)",
@@ -39,7 +39,7 @@ export function SummaryChip({ label, value, hint, accent }: SummaryChipProps) {
       >
         {value}
       </div>
-      <div style={{ fontSize: 10.5, color: "var(--text-mute)", marginTop: 1 }}>{hint}</div>
+      <div style={{ fontSize: 11, color: "var(--text-mute)", marginTop: 1 }}>{hint}</div>
     </div>
   );
 }

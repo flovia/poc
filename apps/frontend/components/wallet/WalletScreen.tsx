@@ -38,7 +38,7 @@ export function WalletScreen({
             alignItems: "center",
             gap: 6,
             color: "var(--text-3)",
-            fontSize: 12,
+            fontSize: 13,
             marginBottom: 16,
           }}
         >

@@ -6,21 +6,16 @@ import { SavedProviderList } from "@/components/setup/SavedProviderList";
 import { getTopBarPageContext } from "@/lib/server/page-context";
 
 export default async function SetupPage() {
-  const { dataMode, updatedAtUnixSec, renderedAtUnixSec } = await getTopBarPageContext();
+  const { dataMode } = await getTopBarPageContext();
   return (
     <>
-      <TopBar
-        crumbs={[{ label: "Setup" }]}
-        dataMode={dataMode}
-        updatedAtUnixSec={updatedAtUnixSec}
-        renderedAtUnixSec={renderedAtUnixSec}
-      />
+      <TopBar crumbs={[{ label: "Setup" }]} dataMode={dataMode} />
       <div className="scroll">
         <div style={{ padding: "40px 56px 80px", maxWidth: 880, margin: "0 auto" }}>
           <div style={{ marginBottom: 36 }}>
             <div
               style={{
-                fontSize: 11,
+                fontSize: 12,
                 fontWeight: 600,
                 letterSpacing: "0.1em",
                 textTransform: "uppercase",
@@ -32,7 +27,7 @@ export default async function SetupPage() {
             </div>
             <h1
               className="display"
-              style={{ fontSize: 32, fontWeight: 700, margin: "0 0 10px", letterSpacing: "-0.015em" }}
+              style={{ fontSize: 30, fontWeight: 700, margin: "0 0 10px", letterSpacing: "-0.015em" }}
             >
               Connect your <span style={{ color: "var(--teal)" }}>pay_to</span> address
             </h1>

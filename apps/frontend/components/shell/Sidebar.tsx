@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
@@ -46,7 +47,7 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
 
   const current = activeProviderId ? stored.find((p) => p.providerId === activeProviderId) : undefined;
   // Phase 9: activeProviderId が sdk-demo (= stored 不在の仮想 provider) の場合も
-  // Acme Price API を表示する. SDK モード + stored>0 + /providers/sdk-demo/* 直アクセス
+  // Northwind Price API を表示する. SDK モード + stored>0 + /providers/sdk-demo/* 直アクセス
   // のケースでも仮想 provider 名で揃える.
   const isViewingSdkDemo =
     dataMode === "sdkConnected" && activeProviderId === SDK_DEMO_PROVIDER_ID && !current;
@@ -141,7 +142,14 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
   return (
     <aside className="sidebar">
       <div className="brand">
-        <div className="brand-mark" />
+        <Image
+          className="brand-mark"
+          src="/logo.jpg"
+          alt=""
+          width={44}
+          height={44}
+          priority
+        />
         <div className="brand-name">
           Flovia<em>x402 co-usage</em>
         </div>
@@ -264,7 +272,7 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
                           {isDemo && (
                             <span
                               style={{
-                                fontSize: 9.5,
+                                fontSize: 11,
                                 fontWeight: 600,
                                 padding: "1px 5px",
                                 borderRadius: 3,

@@ -38,8 +38,8 @@ User-entered `pay_to` values are saved to **localStorage**, and can be switched 
 ├─────────────────┤
 │ Currently       │
 │ viewing:        │
-│ 🟢 Acme Image   │
-│    API   [▼]    │ ← switch from registered pay_to list
+│ 🟢 Northwind    │
+│    Price [▼]    │ ← switch from registered pay_to list
 └─────────────────┘
 ```
 
@@ -76,7 +76,7 @@ Even a different Provider page is opened with the same URL structure (= flat rou
 │                                               │
 │  ┌──────────────────────────────────────┐    │
 │  │ Provider Name (optional)             │    │
-│  │ [Acme Image API                    ]  │    │
+│  │ [Northwind Price API               ]  │    │
 │  │                                       │    │
 │  │ Mode:                                 │    │
 │  │ (●) Simple — only one pay_to           │    │
@@ -121,7 +121,7 @@ Wallet list for the current (or selected) Provider API.
 
 ```
 ┌────────────────────────────────────────────────────────────────────┐
-│ Acme Image API — Customers                       [Period: 30d ▼]  │
+│ Northwind Price API — Customers                  [Period: 30d ▼]  │
 ├────────────────────────────────────────────────────────────────────┤
 │ Filter: [Agent ▼] [Endpoint ▼] [Sort: Revenue ▼]                  │
 ├────────────────────────────────────────────────────────────────────┤
@@ -189,17 +189,17 @@ Details: [10_design_review.md](10_design_review.md) and D14 decision records.
 ├──────────────────────────────────────────────────────────────┤
 │ ★ Activity Timeline (hero)                                    │
 │ ─────────────────────────────────────────────────────────    │
-│ 2026-04-27 14:23  [Acme Image API]   /v1/generate    $0.05  │
+│ 2026-04-27 14:23  [Northwind Price API]   /v1/price    $0.05 │
 │ 2026-04-27 14:24  [Storage A]        /upload         $0.01  │
 │ 2026-04-27 14:25  [Notify B]         /send           $0.002 │
-│ 2026-04-27 14:50  [Acme Image API]   /v1/generate    $0.05  │
+│ 2026-04-27 14:50  [Northwind Price API]   /v1/price    $0.05 │
 │ 2026-04-27 14:51  [Storage A]        /upload         $0.01  │
 │ ...                                                          │
 │ [Load more] [Filter by Provider ▼]                           │
 ├──────────────────────────────┬───────────────────────────────┤
 │ Co-usage Map (network)      │ Insight Cards                  │
 │                             │ ────────────                   │
-│   [Acme]                    │ • 82% co-usage with Storage A  │
+│   [Northwind]               │ • 82% co-usage with Storage A  │
 │    │  ╲                     │ • frequent chained calls w/      │
 │    │   ╲                    │   Notify B                      │
 │    [Storage A]──[Notify B]    │ • activity concentrates in      │
@@ -256,7 +256,7 @@ Overview board of all customer wallets to derive strategic implications.
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│ Co-usage Patterns — Acme Image API                           │
+│ Co-usage Patterns — Northwind Price API                      │
 ├──────────────────────────────────────────────────────────────┤
 │ ★ Bubble Chart                                               │
 │  retention rate                                              │

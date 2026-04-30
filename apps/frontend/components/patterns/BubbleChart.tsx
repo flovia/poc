@@ -58,7 +58,7 @@ export function BubbleChart({ bubbles, hover, setHover, providerId }: BubbleChar
         <div>
           <div
             style={{
-              fontSize: 11,
+              fontSize: 12,
               color: "var(--text-mute)",
               fontWeight: 600,
               letterSpacing: "0.08em",
@@ -68,39 +68,39 @@ export function BubbleChart({ bubbles, hover, setHover, providerId }: BubbleChar
           >
             Provider relevance map
           </div>
-          <div className="display" style={{ fontSize: 16, fontWeight: 600 }}>
+          <div className="display" style={{ fontSize: 18, fontWeight: 600 }}>
             Unique payer wallets × 14d-retained payer ratio
           </div>
         </div>
-        <div style={{ fontSize: 11, color: "var(--text-3)" }}>
+        <div style={{ fontSize: 12, color: "var(--text-3)" }}>
           Top-right = high-co-usage + high-retention partnership candidates · radius = wallet count
         </div>
       </div>
 
       <div style={{ position: "relative", padding: "18px 12px 12px" }}>
         {bubbles.length === 0 ? (
-          <div style={{ padding: 36, textAlign: "center", color: "var(--text-3)", fontSize: 13 }}>
+          <div style={{ padding: 36, textAlign: "center", color: "var(--text-3)", fontSize: 14 }}>
             BFF wallet-usage graph is empty.
           </div>
         ) : (
           <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ display: "block" }}>
             <defs>
               <radialGradient id={grad("priority")} cx="100%" cy="0%" r="80%">
-                <stop offset="0%" stopColor="rgba(45,212,191,0.16)" />
-                <stop offset="60%" stopColor="rgba(96,165,250,0.04)" />
+                <stop offset="0%" style={{ stopColor: "var(--bubble-priority-from)" }} />
+                <stop offset="60%" style={{ stopColor: "var(--bubble-priority-mid)" }} />
                 <stop offset="100%" stopColor="transparent" />
               </radialGradient>
               <radialGradient id={grad("bubblue")} cx="30%" cy="30%">
-                <stop offset="0%" stopColor="#93C5FD" />
-                <stop offset="100%" stopColor="#1E3A8A" />
+                <stop offset="0%" style={{ stopColor: "var(--bubble-blue-from)" }} />
+                <stop offset="100%" style={{ stopColor: "var(--bubble-blue-to)" }} />
               </radialGradient>
               <radialGradient id={grad("bubteal")} cx="30%" cy="30%">
-                <stop offset="0%" stopColor="#5EEAD4" />
-                <stop offset="100%" stopColor="#0F766E" />
+                <stop offset="0%" style={{ stopColor: "var(--bubble-teal-from)" }} />
+                <stop offset="100%" style={{ stopColor: "var(--bubble-teal-to)" }} />
               </radialGradient>
               <radialGradient id={grad("bubslate")} cx="30%" cy="30%">
-                <stop offset="0%" stopColor="#94A3B8" />
-                <stop offset="100%" stopColor="#334155" />
+                <stop offset="0%" style={{ stopColor: "var(--bubble-slate-from)" }} />
+                <stop offset="100%" style={{ stopColor: "var(--bubble-slate-to)" }} />
               </radialGradient>
             </defs>
             <rect
@@ -119,7 +119,7 @@ export function BubbleChart({ bubbles, hover, setHover, providerId }: BubbleChar
               y={H - 14}
               textAnchor="middle"
               fontFamily="var(--mono)"
-              fontSize="11"
+              fontSize="12"
               fill="var(--text-3)"
             >
               Unique payer wallets →
@@ -130,7 +130,7 @@ export function BubbleChart({ bubbles, hover, setHover, providerId }: BubbleChar
               textAnchor="middle"
               transform={`rotate(-90 16 ${H / 2})`}
               fontFamily="var(--mono)"
-              fontSize="11"
+              fontSize="12"
               fill="var(--text-3)"
             >
               14d-retained payer ratio →
@@ -163,7 +163,7 @@ export function BubbleChart({ bubbles, hover, setHover, providerId }: BubbleChar
                     cx={px(b.x)}
                     cy={py(b.y)}
                     r={b.r * 1.8}
-                    fill={`rgba(96,165,250,${b.accent === "blue" ? 0.16 : b.accent === "teal" ? 0.12 : 0.04})`}
+                    fill={`rgba(47, 93, 154, ${b.accent === "blue" ? 0.16 : b.accent === "teal" ? 0.12 : 0.04})`}
                     style={{ filter: "blur(8px)", transition: "all 180ms ease" }}
                   />
                   <circle
@@ -183,7 +183,7 @@ export function BubbleChart({ bubbles, hover, setHover, providerId }: BubbleChar
                     y={py(b.y) - b.r - 8}
                     textAnchor="middle"
                     fontFamily="var(--mono)"
-                    fontSize="11"
+                    fontSize="12"
                     fontWeight="500"
                     fill={isHover ? "var(--text-1)" : "var(--text-2)"}
                     style={{ pointerEvents: "none", transition: "fill 180ms ease" }}
@@ -195,7 +195,7 @@ export function BubbleChart({ bubbles, hover, setHover, providerId }: BubbleChar
                     y={py(b.y) + b.r + 14}
                     textAnchor="middle"
                     fontFamily="var(--mono)"
-                    fontSize="10"
+                    fontSize="11"
                     fill="var(--text-mute)"
                     style={{ pointerEvents: "none" }}
                   >

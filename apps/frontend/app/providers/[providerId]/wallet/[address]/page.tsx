@@ -38,13 +38,11 @@ export default async function WalletPage({
             { label: decoded },
           ]}
           dataMode={pageCtx.dataMode}
-          updatedAtUnixSec={pageCtx.updatedAtUnixSec}
-          renderedAtUnixSec={pageCtx.renderedAtUnixSec}
         />
         <div className="scroll">
           <div style={{ padding: "40px", color: "var(--text-2)" }}>
-            <h1 style={{ fontSize: 22, marginBottom: 8 }}>Wallet not found</h1>
-            <p style={{ marginBottom: 16, color: "var(--text-3)", fontSize: 13 }}>
+            <h1 style={{ fontSize: 24, marginBottom: 8 }}>Wallet not found</h1>
+            <p style={{ marginBottom: 16, color: "var(--text-3)", fontSize: 14 }}>
               The BFF returned 404 for this address. It may not appear in the current customer
               projection.
             </p>
@@ -68,8 +66,6 @@ export default async function WalletPage({
           { label: decoded },
         ]}
         dataMode={pageCtx.dataMode}
-        updatedAtUnixSec={pageCtx.updatedAtUnixSec}
-        renderedAtUnixSec={pageCtx.renderedAtUnixSec}
       />
       <div className="scroll">
         <WalletScreen

@@ -82,7 +82,7 @@ export function IdentityBar({ customer, metrics, dataMode, sdkExtras }: Identity
             />
             <span
               className="mono display"
-              style={{ fontSize: 22, fontWeight: 600, letterSpacing: "0.01em" }}
+              style={{ fontSize: 24, fontWeight: 600, letterSpacing: "0.01em" }}
             >
               {customer.address}
             </span>
@@ -99,7 +99,7 @@ export function IdentityBar({ customer, metrics, dataMode, sdkExtras }: Identity
               display: "flex",
               alignItems: "center",
               gap: 10,
-              fontSize: 12.5,
+              fontSize: 13,
               color: "var(--text-2)",
               flexWrap: "wrap",
             }}
@@ -112,7 +112,7 @@ export function IdentityBar({ customer, metrics, dataMode, sdkExtras }: Identity
               <span
                 data-testid="sdk-agent-badge"
                 style={{
-                  fontSize: 11,
+                  fontSize: 12,
                   fontWeight: 600,
                   padding: "2px 8px",
                   borderRadius: 3,
@@ -125,14 +125,14 @@ export function IdentityBar({ customer, metrics, dataMode, sdkExtras }: Identity
               </span>
             )}
             <span style={{ color: "var(--text-mute)" }}>·</span>
-            <span style={{ fontSize: 11, color: "var(--text-3)" }}>
+            <span style={{ fontSize: 12, color: "var(--text-3)" }}>
               role: {customer.role} · basis: {customer.identityBasis}
             </span>
           </div>
           <div
             style={{
               marginTop: 8,
-              fontSize: 11,
+              fontSize: 12,
               color: "var(--text-mute)",
               maxWidth: 420,
               lineHeight: 1.5,
@@ -158,7 +158,7 @@ export function IdentityBar({ customer, metrics, dataMode, sdkExtras }: Identity
               <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                 <span
                   className="mono"
-                  style={{ fontSize: 22, fontWeight: 600, color: "var(--mesh-blue)" }}
+                  style={{ fontSize: 28, fontWeight: 600, color: "var(--mesh-blue)" }}
                 >
                   {growthDisplay}
                 </span>
@@ -177,7 +177,7 @@ export function IdentityBar({ customer, metrics, dataMode, sdkExtras }: Identity
                 <span
                   className="mono"
                   style={{
-                    fontSize: 22,
+                    fontSize: 28,
                     fontWeight: 600,
                     color: freeTierPct >= 80 ? "var(--warn)" : "var(--text-1)",
                   }}
@@ -206,7 +206,7 @@ export function IdentityBar({ customer, metrics, dataMode, sdkExtras }: Identity
         >
           <div
             style={{
-              fontSize: 10.5,
+              fontSize: 12,
               fontWeight: 600,
               letterSpacing: "0.06em",
               textTransform: "uppercase",
@@ -219,7 +219,7 @@ export function IdentityBar({ customer, metrics, dataMode, sdkExtras }: Identity
           >
             <Icon.bolt width="11" height="11" /> Entry-point ratio
           </div>
-          <div className="display" style={{ fontSize: 16, fontWeight: 600, lineHeight: 1.3 }}>
+          <div className="display" style={{ fontSize: 18, fontWeight: 600, lineHeight: 1.3 }}>
             <span className="mono" style={{ color: "var(--mesh-blue)" }}>
               {formatRatioPct(metrics.entryPointRatio, 0)}
             </span>{" "}

@@ -95,5 +95,7 @@ export async function getSdkForceNetwork(address: string): Promise<SdkForceNetwo
   return v.getForceNetwork(address);
 }
 
-// TopBar の "Updated …" 用は on-chain only でも sdk でも同一構造.
+// freshness indicator (撤去済) を再導入する際のヘルパー。
+// on-chain only / sdk いずれの summary 形状でも同一の選択ロジックで動く。
+// 詳細は docs/future-work.md "Data freshness indicator" を参照。
 export { pickLatestObservationUnixSec } from "./api/client";

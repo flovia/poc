@@ -54,7 +54,7 @@ BFF_URL=http://localhost:3001 NEXT_PUBLIC_BFF_URL=/api bun --filter frontend dev
 | `advanced` mode: store multiple rows of `API path × pay_to` | ✅ |
 | Validation (`pay_to` required / minimum one row in `advanced`) | ✅ |
 | Persistence to localStorage (`flovia:providers`) | ✅ |
-| Demo 3-provider seed on first visit (`acme-price` / `lumen-vec` / `halonet`) | ✅ |
+| Demo 3-provider seed on first visit (`northwind-price` / `lumen-vec` / `halonet`) | ✅ |
 | Display and delete saved providers (with confirmation dialog) | ✅ |
 
 **Note**: `providerId` registered in Setup is only a **display identifier** in the

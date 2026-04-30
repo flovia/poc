@@ -118,7 +118,7 @@ export function PatternsScreen({
         <div style={{ marginBottom: 22 }}>
           <div
             style={{
-              fontSize: 11,
+              fontSize: 12,
               fontWeight: 600,
               letterSpacing: "0.1em",
               textTransform: "uppercase",
@@ -130,16 +130,16 @@ export function PatternsScreen({
           </div>
           <h1
             className="display"
-            style={{ fontSize: 26, fontWeight: 700, margin: 0, letterSpacing: "-0.015em" }}
+            style={{ fontSize: 30, fontWeight: 700, margin: 0, letterSpacing: "-0.015em" }}
           >
             Co-usage patterns across payer wallets
           </h1>
-          <p style={{ color: "var(--text-2)", fontSize: 14, margin: "6px 0 0", maxWidth: 720 }}>
+          <p style={{ color: "var(--text-2)", fontSize: 15, margin: "6px 0 0", maxWidth: 720 }}>
             Each bubble is a recipient (provider) wallet observed by the BFF. X-axis is unique
             payer wallets, Y-axis is the share of payer wallets whose observed activity for that
             provider spans 14 days or more (a simplified retention proxy). Identity-bearing fields
             are excluded:{" "}
-            <span className="mono" style={{ fontSize: 12 }}>
+            <span className="mono" style={{ fontSize: 13 }}>
               {graph.identityFieldsExcluded.join(", ") || "—"}
             </span>
             .
@@ -148,7 +148,7 @@ export function PatternsScreen({
 
         <BubbleChart bubbles={bubbles} hover={hover} setHover={setHover} providerId={providerId} />
 
-        <p style={{ fontSize: 11, color: "var(--text-mute)", marginTop: 16, maxWidth: 720, lineHeight: 1.55 }}>
+        <p style={{ fontSize: 12, color: "var(--text-mute)", marginTop: 16, maxWidth: 720, lineHeight: 1.55 }}>
           Note: Retention is the share of payer wallets whose first and last observed payment to a
           provider are at least 14 days apart. This is a PoC heuristic, not a cohort-based D14
           retention metric.

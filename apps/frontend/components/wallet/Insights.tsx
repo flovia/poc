@@ -53,10 +53,10 @@ export function UpsellCard({
           }}
         >
           <div>
-            <div className="display" style={{ fontSize: 18, fontWeight: 700, letterSpacing: "-0.01em" }}>
+            <div className="display" style={{ fontSize: 22, fontWeight: 700, letterSpacing: "-0.01em" }}>
               {u.planName}
             </div>
-            <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 4 }}>
+            <div style={{ fontSize: 13, color: "var(--text-2)", marginTop: 4 }}>
               Projected{" "}
               <span className="mono" style={{ fontWeight: 600, color: "var(--mesh-blue)" }}>
                 {formatUsd(u.projectedMrrUsd)}
@@ -68,15 +68,15 @@ export function UpsellCard({
         </div>
         <div
           style={{
-            background: "rgba(91,33,182,0.06)",
+            background: "rgba(123, 97, 168, 0.06)",
             borderRadius: 6,
             padding: "10px 12px",
-            border: "1px solid rgba(91,33,182,0.16)",
+            border: "1px solid rgba(123, 97, 168, 0.16)",
           }}
         >
           <div
             style={{
-              fontSize: 11,
+              fontSize: 12,
               fontWeight: 600,
               letterSpacing: "0.05em",
               textTransform: "uppercase",
@@ -86,7 +86,7 @@ export function UpsellCard({
           >
             Why now
           </div>
-          <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12.5, color: "var(--text-1)", lineHeight: 1.6 }}>
+          <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, color: "var(--text-1)", lineHeight: 1.6 }}>
             {u.whyNow.map((line, i) => (
               <li key={i}>{line}</li>
             ))}
@@ -125,10 +125,10 @@ function UpsellCardLive({ metrics }: { metrics: CustomerMetricsDto }) {
         }}
       >
         <div>
-          <div className="display" style={{ fontSize: 17, fontWeight: 600, letterSpacing: "-0.01em" }}>
+          <div className="display" style={{ fontSize: 20, fontWeight: 600, letterSpacing: "-0.01em" }}>
             {headline}
           </div>
-          <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2 }}>
+          <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 2 }}>
             Derived from spend, provider count, growth, and entry-point ratio
           </div>
         </div>
@@ -140,13 +140,13 @@ function UpsellCardLive({ metrics }: { metrics: CustomerMetricsDto }) {
           background: "var(--teal-dim)",
           borderRadius: 10,
           padding: "10px 12px",
-          border: "1px solid rgba(13,148,136,0.20)",
+          border: "1px solid rgba(44, 122, 123, 0.20)",
           marginBottom: 10,
         }}
       >
         <div
           style={{
-            fontSize: 11,
+            fontSize: 12,
             fontWeight: 600,
             letterSpacing: "0.05em",
             textTransform: "uppercase",
@@ -161,7 +161,7 @@ function UpsellCardLive({ metrics }: { metrics: CustomerMetricsDto }) {
             margin: 0,
             padding: 0,
             listStyle: "none",
-            fontSize: 12.5,
+            fontSize: 13,
             color: "var(--text-2)",
             lineHeight: 1.55,
           }}
@@ -193,7 +193,7 @@ function UpsellCardLive({ metrics }: { metrics: CustomerMetricsDto }) {
         </ul>
       </div>
 
-      <div style={{ fontSize: 11, color: "var(--text-mute)", lineHeight: 1.5 }}>
+      <div style={{ fontSize: 12, color: "var(--text-mute)", lineHeight: 1.5 }}>
         Heuristics are PoC-grade. The BFF README warns these are not production revenue analytics.
       </div>
     </InsightCard>
@@ -218,7 +218,7 @@ export function EntryPointInsight({
         label="SDK preview · Entry-point badge"
         delay={120}
       >
-        <div style={{ fontSize: 13, lineHeight: 1.55, color: "var(--text-1)" }}>
+        <div style={{ fontSize: 14, lineHeight: 1.55, color: "var(--text-1)" }}>
           Your API is{" "}
           <span className="mono" style={{ color: "var(--mesh-blue)", fontWeight: 700 }}>
             {sdkExtras.entryPointPctText}
@@ -239,7 +239,7 @@ export function EntryPointInsight({
       label="Workflow position"
       delay={120}
     >
-      <div style={{ fontSize: 13, lineHeight: 1.55, color: "var(--text-1)" }}>
+      <div style={{ fontSize: 14, lineHeight: 1.55, color: "var(--text-1)" }}>
         {hasEntry ? (
           <>
             <span className="mono" style={{ color: "var(--mesh-blue)", fontWeight: 600 }}>
@@ -273,7 +273,7 @@ export function RecentActivityInsight({
       label="Recent activity & co-usage"
       delay={150}
     >
-      <div style={{ fontSize: 13, lineHeight: 1.55, color: "var(--text-1)" }}>
+      <div style={{ fontSize: 14, lineHeight: 1.55, color: "var(--text-1)" }}>
         {hasSignal ? (
           <>
             Recent activity is{" "}
@@ -306,7 +306,7 @@ export function ProviderUsageList({ providers }: { providers: CustomerProviderUs
       delay={120}
     >
       {providers.length === 0 ? (
-        <div style={{ fontSize: 12.5, color: "var(--text-3)" }}>
+        <div style={{ fontSize: 13, color: "var(--text-3)" }}>
           No provider usage in this projection.
         </div>
       ) : (
@@ -324,7 +324,7 @@ export function ProviderUsageList({ providers }: { providers: CustomerProviderUs
               <div style={{ minWidth: 0 }}>
                 <div
                   style={{
-                    fontSize: 13,
+                    fontSize: 14,
                     fontWeight: 500,
                     color: "var(--text-1)",
                     whiteSpace: "nowrap",
@@ -335,12 +335,12 @@ export function ProviderUsageList({ providers }: { providers: CustomerProviderUs
                 >
                   {p.name}
                 </div>
-                <div className="mono" style={{ fontSize: 10.5, color: "var(--text-mute)", marginTop: 2 }}>
+                <div className="mono" style={{ fontSize: 11, color: "var(--text-mute)", marginTop: 2 }}>
                   pay-to {shortAddr(p.payToWallet)} · {p.transactionCount} tx · last{" "}
                   {formatTimestamp(p.lastSeenAt)}
                 </div>
               </div>
-              <span className="mono" style={{ fontSize: 12.5, color: "var(--text-2)" }}>
+              <span className="mono" style={{ fontSize: 13, color: "var(--text-2)" }}>
                 {formatAtomic(p.spendAtomic)}
               </span>
             </div>
@@ -357,10 +357,10 @@ export function InsightsList({ insights }: { insights: CustomerInsightDto[] }) {
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
       {insights.map((insight, i) => (
         <InsightCard key={i} tone={SEVERITY_TONE[insight.severity]} label={insight.severity} delay={180 + i * 40}>
-          <div style={{ fontSize: 13, fontWeight: 500, color: "var(--text-1)", marginBottom: 4 }}>
+          <div style={{ fontSize: 14, fontWeight: 500, color: "var(--text-1)", marginBottom: 4 }}>
             {insight.title}
           </div>
-          <div style={{ fontSize: 12.5, color: "var(--text-2)", lineHeight: 1.55 }}>
+          <div style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.55 }}>
             {insight.description}
           </div>
         </InsightCard>

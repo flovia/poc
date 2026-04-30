@@ -1,10 +1,10 @@
 import type { StoredProvider } from "@/lib/types";
 
 // demo provider 識別子の単一の真実源。seedProviders() の providerId と一致させる。
-export const SEED_IDS = ["acme-price", "lumen-vec", "halonet"] as const;
+export const SEED_IDS = ["northwind-price", "lumen-vec", "halonet"] as const;
 
 // demo 行判定 (source-aware)。
-// user が "acme-price" を名乗って保存した場合、user 側の acme-price は demo として
+// user が "northwind-price" を名乗って保存した場合、user 側の northwind-price は demo として
 // 扱わない。userIds に含まれている providerId は user 由来。
 export function isDemoProvider(
   provider: StoredProvider,
@@ -44,8 +44,8 @@ export function seedProviders(): StoredProvider[] {
   const day = 86_400_000;
   return [
     {
-      providerId: "acme-price",
-      name: "Acme Price API",
+      providerId: "northwind-price",
+      name: "Northwind Price API",
       mode: "advanced",
       paths: [
         { apiPath: "/v1/price/history", payTo: "0x4E2c91A9...8Df1" },

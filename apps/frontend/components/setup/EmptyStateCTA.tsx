@@ -12,7 +12,7 @@ export function EmptyStateCTA() {
 
   const handleTryDemo = () => {
     optInDemo();
-    router.push("/providers/acme-price/customers");
+    router.push("/providers/northwind-price/customers");
   };
 
   const handleAddPayTo = () => {
@@ -28,7 +28,7 @@ export function EmptyStateCTA() {
       <div>
         <div
           style={{
-            fontSize: 11,
+            fontSize: 12,
             fontWeight: 600,
             letterSpacing: "0.1em",
             textTransform: "uppercase",
@@ -38,10 +38,10 @@ export function EmptyStateCTA() {
         >
           Get started
         </div>
-        <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 6 }}>
+        <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 6 }}>
           You haven&apos;t connected a pay_to yet
         </div>
-        <p style={{ color: "var(--text-2)", fontSize: 13.5, margin: 0, maxWidth: 520 }}>
+        <p style={{ color: "var(--text-2)", fontSize: 14, margin: 0, maxWidth: 520 }}>
           Try our demo data to see a live example, or connect your own pay_to address below.
         </p>
       </div>

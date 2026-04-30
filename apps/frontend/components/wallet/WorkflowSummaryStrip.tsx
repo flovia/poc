@@ -126,7 +126,7 @@ export function WorkflowSummaryStrip({
       <div style={{ padding: "14px 20px 10px", borderBottom: "1px solid var(--line)" }}>
         <div
           style={{
-            fontSize: 11,
+            fontSize: 12,
             color: "var(--text-mute)",
             fontWeight: 600,
             letterSpacing: "0.08em",
@@ -136,7 +136,7 @@ export function WorkflowSummaryStrip({
         >
           Workflow summary
         </div>
-        <div className="display" style={{ fontSize: 14, color: "var(--text-2)" }}>
+        <div className="display" style={{ fontSize: 15, color: "var(--text-2)" }}>
           Repeating sequences observed across this wallet&apos;s payments
         </div>
       </div>
@@ -145,7 +145,7 @@ export function WorkflowSummaryStrip({
         {cycles.map((cycle) => (
           <div
             key={cycle.index}
-            style={{ display: "flex", flexWrap: "wrap", alignItems: "baseline", gap: 6, fontSize: 13 }}
+            style={{ display: "flex", flexWrap: "wrap", alignItems: "baseline", gap: 6, fontSize: 14 }}
           >
             <span
               className="mono"
@@ -159,7 +159,7 @@ export function WorkflowSummaryStrip({
                 <span
                   className="mono"
                   style={{
-                    fontSize: 12,
+                    fontSize: 13,
                     color: event.unmapped ? "var(--text-mute)" : "var(--text-2)",
                     fontStyle: event.unmapped ? "italic" : "normal",
                   }}
@@ -176,7 +176,7 @@ export function WorkflowSummaryStrip({
           </div>
         ))}
         {remaining > 0 && (
-          <div style={{ fontSize: 11.5, color: "var(--text-mute)", marginTop: 2 }}>
+          <div style={{ fontSize: 12, color: "var(--text-mute)", marginTop: 2 }}>
             +{remaining} more {remaining === 1 ? "cycle" : "cycles"}
           </div>
         )}
