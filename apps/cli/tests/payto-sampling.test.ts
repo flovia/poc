@@ -79,4 +79,24 @@ describe("payTo sampling", () => {
     expect(first.selected.some((row) => row.selectionReasons.includes("long_tail"))).toBe(true);
     expect(first.selected.every((row) => row.supportingReasons.length > 0)).toBe(true);
   });
+
+  test("continues past already selected rows when filling overlapping budgets", () => {
+    const census = [
+      sink("0x0000000000000000000000000000000000000001", 1, "one_payto_many_endpoints"),
+      sink("0x0000000000000000000000000000000000000002", 2, "one_payto_many_endpoints"),
+      sink("0x0000000000000000000000000000000000000003", 3, "one_payto_many_endpoints"),
+    ];
+
+    const plan = buildPayToSamplingPlan({
+      seed: "overlap-seed",
+      census,
+      budget: {
+        total: 3,
+        perActivityTier: { "1": 1, "2-5": 1 },
+        perMappingPattern: { one_payto_many_endpoints: 2 },
+      },
+    });
+
+    expect(plan.selected).toHaveLength(3);
+  });
 });

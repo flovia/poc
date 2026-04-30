@@ -208,6 +208,7 @@ export const runCustomerIntelligenceCapture = async (
   });
 
   const validated = validateCustomerIntelligenceFixture(response);
+  writeAtomically(parsed.out, `${JSON.stringify(validated, null, 2)}\n`);
   const analyticsStore =
     parsed.analyticsStore ??
     (parsed.analyticsDbPath ? createAnalyticsStore({ path: parsed.analyticsDbPath }) : null);
@@ -239,7 +240,6 @@ export const runCustomerIntelligenceCapture = async (
     });
     if (analyticsStore !== parsed.analyticsStore) analyticsStore.close();
   }
-  writeAtomically(parsed.out, `${JSON.stringify(validated, null, 2)}\n`);
 
   return { response: validated, outputPath: parsed.out, analyticsRunId };
 };

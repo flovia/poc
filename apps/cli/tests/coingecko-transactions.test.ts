@@ -173,7 +173,7 @@ describe("coingecko transaction capture script", () => {
           .get(txHash) as { count: number };
         expect(result.transactions.providerId).toBe("peer-service");
         expect(result.analyticsRunId).toBeGreaterThan(0);
-        expect(count.count).toBe(2);
+        expect(count.count).toBe(1);
         expect(store.getCaptureRun(result.analyticsRunId ?? 0)).toMatchObject({
           status: "success",
         });

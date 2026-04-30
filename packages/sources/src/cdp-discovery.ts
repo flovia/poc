@@ -145,6 +145,7 @@ export type CdpDiscoveryResult = {
   fetchedCount: number;
   pageCount: number;
   nextCursor: string | null;
+  skippedCount: number;
 };
 
 export const makeCdpDiscoveryUrl = (endpoint: string, cursor: string | null, limit: number) => {
@@ -173,7 +174,13 @@ const ensureFetch = (fetchFn: FetchLike | undefined): FetchLike =>
 
 export const fetchCdpDiscoveryPage = async (
   options: CdpDiscoveryOptions & { cursor?: string | null },
-): Promise<{ resources: CdpResource[]; hasNextPage: boolean; nextCursor: string | null }> => {
+): Promise<{
+  resources: CdpResource[];
+  hasNextPage: boolean;
+  nextCursor: string | null;
+  rawItemCount: number;
+  skippedCount: number;
+}> => {
   const fetchFn = ensureFetch(options.fetchFn);
   const endpoint = options.endpoint ?? DEFAULT_CDP_ENDPOINT;
   const pageLimit = options.pageSize ?? DEFAULT_PAGE_SIZE;
@@ -199,10 +206,12 @@ export const fetchCdpDiscoveryPage = async (
   const pageInfo = asRecord(data?.pageInfo);
   const pagination = asRecord(data?.pagination);
 
+  let skippedCount = 0;
   const resources = items.flatMap((item) => {
     try {
       return [toResource(item, endpoint)];
     } catch {
+      skippedCount += 1;
       return [];
     }
   });
@@ -232,6 +241,8 @@ export const fetchCdpDiscoveryPage = async (
     resources,
     hasNextPage,
     nextCursor: endCursor,
+    rawItemCount: items.length,
+    skippedCount,
   };
 };
 
@@ -247,6 +258,7 @@ export const fetchCdpDiscoveryResources = async (
   const resources: CdpResource[] = [];
   let cursor: string | null = null;
   let pageCount = 0;
+  let skippedCount = 0;
 
   while (resources.length < target) {
     const remaining = target - resources.length;
@@ -261,13 +273,14 @@ export const fetchCdpDiscoveryResources = async (
     });
 
     resources.push(...result.resources);
+    skippedCount += result.skippedCount;
 
-    if (result.resources.length === 0 || !result.hasNextPage || resources.length >= target) {
+    if (!result.hasNextPage || resources.length >= target) {
       break;
     }
 
     cursor = result.nextCursor;
-    if (cursor === null) break;
+    if (cursor === null || result.rawItemCount === 0) break;
   }
 
   return {
@@ -275,6 +288,7 @@ export const fetchCdpDiscoveryResources = async (
     fetchedCount: resources.length,
     pageCount,
     nextCursor: cursor,
+    skippedCount,
   };
 };
 

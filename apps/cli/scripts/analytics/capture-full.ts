@@ -245,7 +245,7 @@ export const runFullCapture = async (
   };
 
   try {
-    await runMarketSnapshot({
+    const marketResult = await runMarketSnapshot({
       limit: null,
       network: options.network,
       asset: options.asset,
@@ -259,6 +259,8 @@ export const runFullCapture = async (
       bitqueryFetch: options.bitqueryFetch,
       cdpFetch: options.cdpFetch,
     });
+    const marketRunIds =
+      marketResult.analyticsRunId === undefined ? [] : [marketResult.analyticsRunId];
     completeStage("market-census");
 
     const payToPlan = buildPayToSamplingPlan({
@@ -281,7 +283,13 @@ export const runFullCapture = async (
         },
         longTail: 3,
       },
-      census: store.listPayToCensusRows({ network: options.network, asset: options.asset }),
+      census: store.listPayToCensusRows({
+        network: options.network,
+        asset: options.asset,
+        aggregateRunIds: marketRunIds,
+        cdpRunIds: marketRunIds,
+        timeWindow: { from: options.from, to: options.to },
+      }),
       mandatoryPayTos: [
         { network: options.network, asset: options.asset, payTo: DEFAULT_COINGECKO_PAYTO },
       ],
@@ -298,9 +306,10 @@ export const runFullCapture = async (
     });
     completeStage("payto-sampling");
 
+    const transferRunIds: number[] = [];
     for (const row of payToPlan.selected) {
       const payTo = normalizePayTo(row.payTo);
-      await runPayToTransactionCapture({
+      const transferResult = await runPayToTransactionCapture({
         network: options.network,
         asset: options.asset,
         payTo,
@@ -321,12 +330,20 @@ export const runFullCapture = async (
         timeWindow: { from: options.from, to: options.to },
         timeSlices: timeSlices(options),
       });
+      if (transferResult.analyticsRunId !== undefined) {
+        transferRunIds.push(transferResult.analyticsRunId);
+      }
     }
     completeStage("payto-transfer-capture");
 
     const walletPlan = buildWalletSamplingPlan({
       seed: options.seed,
-      transfers: store.listWalletTransferRows({ network: options.network, asset: options.asset }),
+      transfers: store.listWalletTransferRows({
+        network: options.network,
+        asset: options.asset,
+        transferRunIds,
+        timeWindow: { from: options.from, to: options.to },
+      }),
       budget: {
         total: options.walletBudget,
         coingecko_repeat_user: 10,
@@ -381,6 +398,7 @@ export const runFullCapture = async (
     generateServiceAnalyticsReadModels({
       analyticsDbPath: options.analyticsDbPath,
       outputPath: options.readModelOutputPath,
+      aggregateRunIds: marketRunIds,
     });
     completeStage("read-model-generation");
 

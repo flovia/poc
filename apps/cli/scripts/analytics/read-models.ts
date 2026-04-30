@@ -11,6 +11,7 @@ export type GenerateServiceReadModelsOptions = {
   analyticsDbPath?: string;
   outputPath?: string;
   generatedAt?: string;
+  aggregateRunIds?: number[];
 };
 
 const DEFAULT_OUTPUT = path.join(process.cwd(), "reports", "service-read-models", "analytics.json");
@@ -28,6 +29,11 @@ export const generateServiceAnalyticsReadModels = (
   store.initialize();
   const generatedAt = options.generatedAt ?? new Date().toISOString();
   const generatedFrom = "analytics-data-store:service-read-model-generation";
+  const aggregateRunIds = options.aggregateRunIds ?? [];
+  const aggregateRunFilter = aggregateRunIds.length
+    ? `AND pa.source_run_id IN (${aggregateRunIds.map(() => "?").join(", ")})`
+    : "";
+  const aggregateRowFilter = aggregateRunIds.length ? "WHERE pa.source_run_id IS NOT NULL" : "";
   const rows = store.db
     .prepare(
       `SELECT
@@ -40,10 +46,11 @@ export const generateServiceAnalyticsReadModels = (
          COALESCE(pa.unique_sender_count, 0) AS unique_sender_count
        FROM endpoint_attribution ea
        LEFT JOIN service_candidates sc ON sc.sink_key = ea.sink_key
-       LEFT JOIN payto_aggregates pa ON pa.sink_key = ea.sink_key
+       LEFT JOIN payto_aggregates pa ON pa.sink_key = ea.sink_key ${aggregateRunFilter}
+       ${aggregateRowFilter}
        ORDER BY transaction_count DESC`,
     )
-    .all() as Array<{
+    .all(...aggregateRunIds) as Array<{
     service_key: string;
     service_name: string;
     endpoint_attribution_status: string;
@@ -200,8 +207,8 @@ export const generateServiceAnalyticsReadModels = (
     payload: quadrants,
     sourceRunId: runId,
   });
-  store.completeCaptureRun(runId, { sqlite: "available", readModels: Object.keys(output) });
   writeAtomically(options.outputPath ?? DEFAULT_OUTPUT, `${JSON.stringify(output, null, 2)}\n`);
+  store.completeCaptureRun(runId, { sqlite: "available", readModels: Object.keys(output) });
   store.close();
   return { ...output, outputPath: options.outputPath ?? DEFAULT_OUTPUT, analyticsRunId: runId };
 };

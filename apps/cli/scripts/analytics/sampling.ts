@@ -158,7 +158,7 @@ const addSelection = (
   const existing = selected.get(key);
   if (existing) {
     if (!existing.selectionReasons.includes(reason)) existing.selectionReasons.push(reason);
-    return;
+    return false;
   }
   selected.set(key, {
     ...normalized,
@@ -171,6 +171,7 @@ const addSelection = (
     ],
     samplingWeight: Math.max(1, row.transactionCount),
   });
+  return true;
 };
 
 const selectFromGroup = (
@@ -186,7 +187,12 @@ const selectFromGroup = (
     if (scoreDelta !== 0) return scoreDelta;
     return rowKey(left).localeCompare(rowKey(right));
   });
-  for (const row of ordered.slice(0, count)) addSelection(selected, row, reason, seed);
+  let added = 0;
+  for (const row of ordered) {
+    const wasAdded = addSelection(selected, row, reason, seed);
+    if (wasAdded) added += 1;
+    if (added >= count) break;
+  }
 };
 
 export const buildPayToSamplingPlan = (input: PayToSamplingPlanInput): PayToSamplingPlan => {
@@ -328,7 +334,13 @@ export const buildWalletSamplingPlan = (input: WalletSamplingPlanInput): WalletS
         (left, right) =>
           seededScore(input.seed, left.address) - seededScore(input.seed, right.address),
       );
-    for (const row of rows.slice(0, count)) addWallet(row, stratum);
+    let added = 0;
+    for (const row of rows) {
+      const alreadySelected = selected.has(row.address);
+      addWallet(row, stratum);
+      if (!alreadySelected) added += 1;
+      if (added >= count) break;
+    }
   };
 
   for (const stratum of [
@@ -345,13 +357,12 @@ export const buildWalletSamplingPlan = (input: WalletSamplingPlanInput): WalletS
   }
 
   if (selected.size < input.budget.total) {
-    for (const row of candidates
-      .sort(
-        (left, right) =>
-          seededScore(input.seed, left.address) - seededScore(input.seed, right.address),
-      )
-      .slice(0, input.budget.total - selected.size)) {
-      addWallet(row, "random_seed");
+    for (const row of candidates.sort(
+      (left, right) =>
+        seededScore(input.seed, left.address) - seededScore(input.seed, right.address),
+    )) {
+      if (selected.size >= input.budget.total) break;
+      if (!selected.has(row.address)) addWallet(row, "random_seed");
     }
   }
 

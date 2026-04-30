@@ -232,6 +232,34 @@ describe("analytics store", () => {
     }
   });
 
+  test("scopes payTo census rows to requested capture runs and time window", () => {
+    const store = createAnalyticsStore({ mode: "memory" });
+    try {
+      const currentPayTo = "0x1111111111111111111111111111111111111111";
+      const stalePayTo = "0x2222222222222222222222222222222222222222";
+      const staleRunId = store.beginCaptureRun({ kind: "cdp_census" });
+      store.persistCdpResources([resource("stale", stalePayTo)], staleRunId);
+      store.persistPayToAggregates([aggregate(stalePayTo)], staleRunId);
+
+      const currentRunId = store.beginCaptureRun({ kind: "cdp_census" });
+      store.persistCdpResources([resource("current", currentPayTo)], currentRunId);
+      store.persistPayToAggregates([aggregate(currentPayTo)], currentRunId);
+      store.detectAndPersistMappingPatterns();
+
+      const rows = store.listPayToCensusRows({
+        network: "base",
+        asset: "USDC",
+        cdpRunIds: [currentRunId],
+        aggregateRunIds: [currentRunId],
+        timeWindow: { from: "2026-01-01T00:00:00.000Z", to: "2026-01-31T00:00:00.000Z" },
+      });
+
+      expect(rows.map((row) => row.payTo)).toEqual([currentPayTo]);
+    } finally {
+      store.close();
+    }
+  });
+
   test("reads wallet transfer rows with service identity and bundled-payTo signal", () => {
     const store = createAnalyticsStore({ mode: "memory" });
     try {
@@ -266,6 +294,54 @@ describe("analytics store", () => {
           isCoingecko: true,
           isBundledPayTo: true,
         }),
+      ]);
+    } finally {
+      store.close();
+    }
+  });
+
+  test("scopes wallet transfer rows to requested transfer runs and time window", () => {
+    const store = createAnalyticsStore({ mode: "memory" });
+    try {
+      const payTo = "0x2222222222222222222222222222222222222222";
+      store.persistCdpResources([resource("direct", payTo)]);
+      store.detectAndPersistMappingPatterns();
+      const staleRunId = store.beginCaptureRun({ kind: "payto_transfer_capture" });
+      store.persistTransferFacts([
+        {
+          network: "base",
+          asset: "USDC",
+          payTo,
+          txHash: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          payerWallet: "0x3333333333333333333333333333333333333333",
+          amountAtomic: "1000",
+          blockTimestamp: "2025-01-02T00:00:00.000Z",
+          sourceRunId: staleRunId,
+        },
+      ]);
+      const currentRunId = store.beginCaptureRun({ kind: "payto_transfer_capture" });
+      store.persistTransferFacts([
+        {
+          network: "base",
+          asset: "USDC",
+          payTo,
+          txHash: "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          payerWallet: "0x4444444444444444444444444444444444444444",
+          amountAtomic: "2000",
+          blockTimestamp: "2026-01-02T00:00:00.000Z",
+          sourceRunId: currentRunId,
+        },
+      ]);
+
+      const rows = store.listWalletTransferRows({
+        network: "base",
+        asset: "USDC",
+        transferRunIds: [currentRunId],
+        timeWindow: { from: "2026-01-01T00:00:00.000Z", to: "2026-01-31T00:00:00.000Z" },
+      });
+
+      expect(rows.map((row) => row.payerWallet)).toEqual([
+        "0x4444444444444444444444444444444444444444",
       ]);
     } finally {
       store.close();

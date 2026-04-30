@@ -69,4 +69,25 @@ describe("wallet sampling", () => {
     expect(first.selected.filter((row) => row.portfolioEnrichment === "included")).toHaveLength(2);
     expect(first.selected.some((row) => row.portfolioEnrichment === "skipped")).toBe(true);
   });
+
+  test("continues past already selected wallets when filling overlapping budgets", () => {
+    const wallets = [
+      "0x1111111111111111111111111111111111111111",
+      "0x2222222222222222222222222222222222222222",
+      "0x3333333333333333333333333333333333333333",
+    ];
+    const plan = buildWalletSamplingPlan({
+      seed: "overlap-seed",
+      transfers: wallets.map((address) => transfer(address, "coingecko", "1000")),
+      budget: {
+        total: 3,
+        one_shot_user: 2,
+        recent_user: 2,
+        random_long_tail_user: 2,
+      },
+      caps: { total: 3 },
+    });
+
+    expect(plan.selected).toHaveLength(3);
+  });
 });

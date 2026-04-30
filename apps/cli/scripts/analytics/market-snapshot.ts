@@ -186,22 +186,6 @@ export const runMarketSnapshot = async (options: Partial<CliOptions> = {}): Prom
             timeWindow: parsed.timeWindow,
           });
 
-    if (analyticsStore && analyticsRunId !== undefined) {
-      analyticsStore.persistCdpResources(cdpResult.resources, analyticsRunId);
-      analyticsStore.persistPayToAggregates(aggregates, analyticsRunId);
-      analyticsStore.detectAndPersistMappingPatterns(
-        aggregates.map((aggregate) => ({
-          network: aggregate.network,
-          asset: aggregate.asset,
-          payTo: aggregate.payTo,
-        })),
-      );
-      analyticsStore.completeCaptureRun(analyticsRunId, {
-        cdp_discovery: { status: "available", fetchedCount: cdpResult.fetchedCount },
-        bitquery: { status: "available", queriedPairs },
-      });
-    }
-
     const snapshot = buildMarketSnapshot({
       resources: cdpResult.resources,
       aggregates,
@@ -222,6 +206,26 @@ export const runMarketSnapshot = async (options: Partial<CliOptions> = {}): Prom
 
     writeAtomically(parsed.jsonOutputPath, snapshotText);
     writeAtomically(parsed.markdownOutputPath, reportText);
+
+    if (analyticsStore && analyticsRunId !== undefined) {
+      analyticsStore.persistCdpResources(cdpResult.resources, analyticsRunId);
+      analyticsStore.persistPayToAggregates(aggregates, analyticsRunId);
+      analyticsStore.detectAndPersistMappingPatterns(
+        aggregates.map((aggregate) => ({
+          network: aggregate.network,
+          asset: aggregate.asset,
+          payTo: aggregate.payTo,
+        })),
+      );
+      analyticsStore.completeCaptureRun(analyticsRunId, {
+        cdp_discovery: {
+          status: "available",
+          fetchedCount: cdpResult.fetchedCount,
+          skippedCount: cdpResult.skippedCount,
+        },
+        bitquery: { status: "available", queriedPairs },
+      });
+    }
 
     return {
       snapshot,

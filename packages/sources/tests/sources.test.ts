@@ -84,6 +84,54 @@ describe("CDP discovery source client", () => {
     expect(result.pageCount).toBe(1);
   });
 
+  test("continues pagination when a page has only invalid resources", async () => {
+    const validPage = {
+      data: {
+        items: [
+          {
+            resourceId: "resource-1",
+            resource: "https://orthogonal.example/search",
+            paymentOptions: [
+              {
+                network: "base",
+                asset: "USDC",
+                amount: "1000",
+                payTo: "0x1111111111111111111111111111111111111111",
+              },
+            ],
+          },
+        ],
+        pageInfo: { hasNextPage: false, endCursor: null },
+      },
+    };
+    const calls: string[] = [];
+
+    const result = await fetchCdpDiscoveryResources({
+      limit: null,
+      pageSize: 1,
+      fetchFn: async (url) => {
+        const parsedUrl = new URL(String(url));
+        calls.push(parsedUrl.searchParams.get("offset") ?? "0");
+        if (calls.length === 1) {
+          return new Response(
+            JSON.stringify({
+              data: {
+                items: [{ resourceId: "invalid", resource: "https://invalid.example" }],
+                pageInfo: { hasNextPage: true, endCursor: "1" },
+              },
+            }),
+            { status: 200 },
+          );
+        }
+        return new Response(JSON.stringify(validPage), { status: 200 });
+      },
+    });
+
+    expect(result.pageCount).toBe(2);
+    expect(result.skippedCount).toBe(1);
+    expect(result.resources.length).toBeGreaterThan(0);
+  });
+
   test("builds discovery body with cursor and limit", () => {
     expect(makeCdpDiscoveryBody("cursor-1", 25)).toEqual({
       query: "query_discovery_page",

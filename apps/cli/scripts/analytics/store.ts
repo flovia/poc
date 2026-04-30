@@ -105,6 +105,14 @@ export type PayToCensusQueryRow = ScopedPaymentSink & {
   resourceCount: number;
 };
 
+export type PayToCensusQueryScope = {
+  network?: string;
+  asset?: string;
+  aggregateRunIds?: number[];
+  cdpRunIds?: number[];
+  timeWindow?: { from?: string; to?: string };
+};
+
 export type WalletTransferQueryRow = {
   payerWallet: string;
   payTo: string;
@@ -117,6 +125,13 @@ export type WalletTransferQueryRow = {
   isCoingecko: boolean;
   isBundledPayTo: boolean;
   attributionMetadata: Record<string, unknown>;
+};
+
+export type WalletTransferQueryScope = {
+  network?: string;
+  asset?: string;
+  transferRunIds?: number[];
+  timeWindow?: { from?: string; to?: string };
 };
 
 export type SamplingPlanMetadataInput = {
@@ -705,10 +720,34 @@ export class AnalyticsStore {
     });
   }
 
-  listPayToCensusRows(scope: { network?: string; asset?: string } = {}): PayToCensusQueryRow[] {
+  listPayToCensusRows(scope: PayToCensusQueryScope = {}): PayToCensusQueryRow[] {
     this.initialize();
     const network = scope.network ? normalizeNetwork(scope.network) : null;
     const asset = scope.asset ? normalizeAsset(scope.asset) : null;
+    const aggregateRunIds = scope.aggregateRunIds ?? [];
+    const cdpRunIds = scope.cdpRunIds ?? [];
+    const aggregateRunFilter = aggregateRunIds.length
+      ? `AND pa.source_run_id IN (${aggregateRunIds.map(() => "?").join(", ")})`
+      : "";
+    const cdpRunFilter = cdpRunIds.length
+      ? `AND po.source_run_id IN (${cdpRunIds.map(() => "?").join(", ")})`
+      : "";
+    const windowFromFilter = scope.timeWindow?.from ? "AND pa.window_from >= ?" : "";
+    const windowToFilter = scope.timeWindow?.to ? "AND pa.window_to <= ?" : "";
+    const runScopeFilter =
+      aggregateRunIds.length || cdpRunIds.length
+        ? "AND (pa.source_run_id IS NOT NULL OR po.source_run_id IS NOT NULL)"
+        : "";
+    const params: Array<string | number | null> = [
+      ...aggregateRunIds,
+      ...(scope.timeWindow?.from ? [scope.timeWindow.from] : []),
+      ...(scope.timeWindow?.to ? [scope.timeWindow.to] : []),
+      ...cdpRunIds,
+      network,
+      network,
+      asset,
+      asset,
+    ];
     const rows = this.db
       .prepare(
         `SELECT
@@ -728,14 +767,16 @@ export class AnalyticsStore {
            MIN(sc.service_key) AS service_id,
            MIN(COALESCE(sc.service, sc.provider, sc.domain)) AS service_name
          FROM payment_sinks ps
-         LEFT JOIN payto_aggregates pa ON pa.sink_key = ps.sink_key
+         LEFT JOIN payto_aggregates pa ON pa.sink_key = ps.sink_key ${aggregateRunFilter} ${windowFromFilter} ${windowToFilter}
+         LEFT JOIN payment_options po ON po.network = ps.network AND po.asset = ps.asset AND po.pay_to = ps.pay_to ${cdpRunFilter}
          LEFT JOIN endpoint_attribution ea ON ea.sink_key = ps.sink_key
          LEFT JOIN service_candidates sc ON sc.sink_key = ps.sink_key
          WHERE (? IS NULL OR ps.network = ?) AND (? IS NULL OR ps.asset = ?)
+         ${runScopeFilter}
          GROUP BY ps.sink_key
          ORDER BY transaction_count DESC, ps.pay_to ASC`,
       )
-      .all(network, network, asset, asset) as Array<Record<string, unknown>>;
+      .all(...params) as Array<Record<string, unknown>>;
 
     return rows.map((row) => ({
       network: row.network as string,
@@ -756,12 +797,25 @@ export class AnalyticsStore {
     }));
   }
 
-  listWalletTransferRows(
-    scope: { network?: string; asset?: string } = {},
-  ): WalletTransferQueryRow[] {
+  listWalletTransferRows(scope: WalletTransferQueryScope = {}): WalletTransferQueryRow[] {
     this.initialize();
     const network = scope.network ? normalizeNetwork(scope.network) : null;
     const asset = scope.asset ? normalizeAsset(scope.asset) : null;
+    const transferRunIds = scope.transferRunIds ?? [];
+    const transferRunFilter = transferRunIds.length
+      ? `AND tf.source_run_id IN (${transferRunIds.map(() => "?").join(", ")})`
+      : "";
+    const windowFromFilter = scope.timeWindow?.from ? "AND tf.block_timestamp >= ?" : "";
+    const windowToFilter = scope.timeWindow?.to ? "AND tf.block_timestamp <= ?" : "";
+    const params: Array<string | number | null> = [
+      network,
+      network,
+      asset,
+      asset,
+      ...transferRunIds,
+      ...(scope.timeWindow?.from ? [scope.timeWindow.from] : []),
+      ...(scope.timeWindow?.to ? [scope.timeWindow.to] : []),
+    ];
     const rows = this.db
       .prepare(
         `SELECT
@@ -781,10 +835,11 @@ export class AnalyticsStore {
          LEFT JOIN endpoint_attribution ea ON ea.sink_key = ps.sink_key
          LEFT JOIN service_candidates sc ON sc.sink_key = ps.sink_key
          WHERE (? IS NULL OR tf.network = ?) AND (? IS NULL OR tf.asset = ?)
+         ${transferRunFilter} ${windowFromFilter} ${windowToFilter}
          GROUP BY tf.id
          ORDER BY tf.block_timestamp DESC, tf.tx_hash ASC, tf.transfer_index ASC`,
       )
-      .all(network, network, asset, asset) as Array<Record<string, unknown>>;
+      .all(...params) as Array<Record<string, unknown>>;
 
     return rows.map((row) => {
       const serviceText = `${row.service_id ?? ""} ${row.service_name ?? ""}`.toLowerCase();

@@ -181,6 +181,28 @@ const uniqueTransfersByTxHash = (transfers: BitqueryTransferFact[]): BitqueryTra
   return uniqueTransfers;
 };
 
+const transferEventKey = (transfer: BitqueryTransferFact) =>
+  [
+    transfer.txHash.toLowerCase(),
+    transfer.sender.toLowerCase(),
+    transfer.recipient.toLowerCase(),
+    transfer.amountAtomic,
+    transfer.blockTimestamp,
+    transfer.blockNumber ?? "",
+  ].join("::");
+
+const uniqueTransferEvents = (transfers: BitqueryTransferFact[]): BitqueryTransferFact[] => {
+  const seen = new Set<string>();
+  const uniqueTransfers: BitqueryTransferFact[] = [];
+  for (const transfer of transfers) {
+    const key = transferEventKey(transfer);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    uniqueTransfers.push(transfer);
+  }
+  return uniqueTransfers;
+};
+
 const endpointIndexForTxHash = (txHash: string) => {
   let hash = 0;
   for (const character of txHash.toLowerCase()) {
@@ -292,9 +314,10 @@ export const runCoingeckoTransactionCapture = async (
     const slices =
       parsed.timeSlices && parsed.timeSlices.length > 0 ? parsed.timeSlices : [parsed.timeWindow];
     const perSliceLimit = Math.ceil(parsed.limit / slices.length);
-    const transferPages = await Promise.all(
-      slices.map((timeWindow) =>
-        fetchPaymentTransfersByPayTo({
+    const transferPages: BitqueryTransferFact[][] = [];
+    for (const timeWindow of slices) {
+      transferPages.push(
+        await fetchPaymentTransfersByPayTo({
           network: parsed.network,
           asset: parsed.asset,
           payTo: parsed.payTo,
@@ -305,11 +328,14 @@ export const runCoingeckoTransactionCapture = async (
           pageSize: parsed.pageSize,
           timeWindow,
         }),
-      ),
-    );
-    const transfers = transferPages.flat().slice(0, parsed.limit);
+      );
+    }
+    const transfers = uniqueTransferEvents(transferPages.flat()).slice(0, parsed.limit);
     const transactions = buildTransactionFixture(parsed, transfers, generatedAt);
     const attribution = buildMockAttributionFixture(transactions);
+
+    writeAtomically(parsed.transactionOutputPath, `${JSON.stringify(transactions, null, 2)}\n`);
+    writeAtomically(parsed.attributionOutputPath, `${JSON.stringify(attribution, null, 2)}\n`);
 
     if (analyticsStore && analyticsRunId !== undefined) {
       analyticsStore.persistBitqueryTransferFacts(transfers, {
@@ -326,9 +352,6 @@ export const runCoingeckoTransactionCapture = async (
         },
       });
     }
-
-    writeAtomically(parsed.transactionOutputPath, `${JSON.stringify(transactions, null, 2)}\n`);
-    writeAtomically(parsed.attributionOutputPath, `${JSON.stringify(attribution, null, 2)}\n`);
 
     return {
       transactions,

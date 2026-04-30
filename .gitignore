@@ -32,6 +32,12 @@ apps/*/reports/customer-intelligence/
 apps/*/reports/service-read-models/
 apps/*/fixtures/generated-analytics/
 
+data/analytics/
+reports/analytics/
+reports/raw-transfer-facts/
+reports/customer-intelligence/
+reports/service-read-models/
+
 packages/*/dist/
 packages/*/node_modules/
 
