@@ -1,6 +1,7 @@
 import { TopBar } from "@/components/shell/TopBar";
 import { CustomersBrowser } from "@/components/customers/CustomersBrowser";
 import { CustomersHeader } from "@/components/customers/CustomersHeader";
+import { CustomersOverview } from "@/components/customers/overview/CustomersOverview";
 import { SnapshotIndicator } from "@/components/customers/SnapshotIndicator";
 import { SummaryChip } from "@/components/customers/SummaryChip";
 import { getCustomers, getSdkExtrasMap, getSummary } from "@/lib/data-source";
@@ -60,6 +61,8 @@ export default async function CustomersPage({
               />
             </div>
           </div>
+
+          <CustomersOverview customers={customers} />
 
           <CustomersBrowser
             customers={customers}
