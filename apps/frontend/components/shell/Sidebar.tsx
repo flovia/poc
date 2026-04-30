@@ -2,10 +2,13 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { useProviders } from "@/app/providers";
 import { Icon } from "@/components/ui/Icon";
+import { formatPayToShort, getDisplayPayTo, isDemoProvider } from "@/lib/providers";
 import type { DashboardMode } from "@/lib/data-mode";
-import { formatPayToShort, getDisplayPayTo } from "@/lib/providers";
+// Phase 9: barrel ではなく leaf module から直 import (sdk-fixtures の他データを引き込まないため).
+import { SDK_DEMO_PROVIDER_ID, SDK_DEMO_PROVIDER_NAME } from "@/lib/sdk-fixtures/shared";
 
 // "wallet" is intentionally treated as a child of "customers" for nav
 // highlighting — there's no top-level Wallet entry, the wallet detail page
@@ -15,11 +18,7 @@ type ActiveRoute = "customers" | "patterns" | "setup" | "wallet" | undefined;
 type SidebarProps = {
   activeProviderId: string | undefined;
   activeRoute: ActiveRoute;
-  // dataMode は呼び出し側 (server component) が cookie 由来で計算して渡す。
-  // Step 2 では値を受け取るだけで挙動は変えない。Step 3 で SDK connected mode
-  // のサイドバー差分 (空状態の挙動 / Currently viewing dropdown 等) を入れる
-  // ときに使う。
-  dataMode?: DashboardMode;
+  dataMode: DashboardMode;
 };
 
 // When switching providers via the saved-providers list, prefer to keep the
@@ -30,20 +29,103 @@ function sectionFor(activeRoute: ActiveRoute): "customers" | "patterns" {
   return activeRoute === "patterns" ? "patterns" : "customers";
 }
 
-export function Sidebar({ activeProviderId, activeRoute, dataMode: _dataMode }: SidebarProps) {
+export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProps) {
   const router = useRouter();
-  const { stored, hydrated, removeProvider } = useProviders();
+  const { stored, userProviders, hydrated, removeProvider, demoOpted, optOutDemo } = useProviders();
+  const userIds = useMemo(
+    () => new Set(userProviders.map((p) => p.providerId)),
+    [userProviders],
+  );
+
+  // Phase 9: dataMode で stored 空の挙動を分岐.
+  //   - On-chain only + stored 空 = Phase 4/5/6 と同一 (nav disabled, pill disabled)
+  //   - SDK connected + stored 空 = nav active, pill は read-only (enabled だが click で開かない)
+  //   - stored 1 件以上 (mode 問わず) = 通常挙動
+  const isOnChainOnlyEmpty = hydrated && dataMode === "onChainOnly" && stored.length === 0;
+  const isSdkEmpty = hydrated && dataMode === "sdkConnected" && stored.length === 0;
 
   const current = activeProviderId ? stored.find((p) => p.providerId === activeProviderId) : undefined;
-  const currentName = current?.name ?? (hydrated ? "Select a provider" : "Loading…");
+  // Phase 9: activeProviderId が sdk-demo (= stored 不在の仮想 provider) の場合も
+  // Acme Price API を表示する. SDK モード + stored>0 + /providers/sdk-demo/* 直アクセス
+  // のケースでも仮想 provider 名で揃える.
+  const isViewingSdkDemo =
+    dataMode === "sdkConnected" && activeProviderId === SDK_DEMO_PROVIDER_ID && !current;
+  const currentName =
+    current?.name
+    ?? (isViewingSdkDemo || isSdkEmpty
+      ? SDK_DEMO_PROVIDER_NAME
+      : hydrated
+        ? "Select a provider"
+        : "Loading…");
   const section = sectionFor(activeRoute);
+  // hydration 後に provider が一つも無いとき My Customers / Co-usage Patterns を disabled 表示。
+  // SSR (hydrated=false) では通常 Link を出すことで mismatch を避ける。
+  // Phase 9: SDK connected モードでは disabled にしない.
+  const navDisabled = isOnChainOnlyEmpty;
+
+  // Phase 6: Currently viewing dropdown (disclosure) の開閉 state。
+  const [open, setOpen] = useState(false);
+  const providerBlockRef = useRef<HTMLDivElement>(null);
+  const pillId = useId();
+  const providerListId = useId();
+  // 表示判定: stored が 0 になった瞬間に open を残さない。useEffect でも下記で false に戻す。
+  const effectiveOpen = stored.length > 0 && open;
+
+  const close = useCallback(() => setOpen(false), []);
+
+  // stored が 0 になった瞬間に open を強制リセット (例: 最後の provider を削除/Reset した場合)。
+  useEffect(() => {
+    if (stored.length === 0 && open) setOpen(false);
+  }, [stored.length, open]);
+
+  // 開いている間だけ outside-click と Esc を監視する。
+  useEffect(() => {
+    if (!open) return;
+    const onMouseDown = (e: MouseEvent) => {
+      const root = providerBlockRef.current;
+      if (root && !root.contains(e.target as Node)) close();
+    };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") close();
+    };
+    document.addEventListener("mousedown", onMouseDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onMouseDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open, close]);
 
   const navHrefFor = (segment: "customers" | "patterns") => {
-    const id = activeProviderId ?? stored[0]?.providerId;
+    const id =
+      activeProviderId
+      ?? stored[0]?.providerId
+      ?? (dataMode === "sdkConnected" ? SDK_DEMO_PROVIDER_ID : undefined);
     return id ? `/providers/${id}/${segment}` : "/setup";
   };
 
-  const handleDelete = (providerId: string, name: string) => {
+  // Phase 9: SDK connected モードでは provider が 0 件になっても /setup に飛ばさず
+  // 仮想 sdk-demo に留める. fallbackHref は section + dataMode で決まる.
+  const fallbackHrefAfterEmpty = () =>
+    dataMode === "sdkConnected"
+      ? `/providers/${SDK_DEMO_PROVIDER_ID}/${section}`
+      : "/setup";
+
+  const handleDelete = (providerId: string, name: string, isDemo: boolean) => {
+    if (isDemo) {
+      if (!window.confirm("Reset demo data? Your own providers will be kept.")) return;
+      optOutDemo();
+      // demo を全 off にすると user provider が無ければ active が消えるため fallback へ。
+      // user provider があれば最初の user provider のページへ遷移する。
+      if (providerId === activeProviderId) {
+        if (userProviders.length > 0) {
+          router.replace(`/providers/${userProviders[0].providerId}/${section}`);
+        } else {
+          router.replace(fallbackHrefAfterEmpty());
+        }
+      }
+      return;
+    }
     if (!window.confirm(`Remove ${name} from this browser?`)) return;
     const remaining = stored.filter((p) => p.providerId !== providerId);
     removeProvider(providerId);
@@ -51,7 +133,7 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode: _dataMode }: 
       if (remaining.length > 0) {
         router.replace(`/providers/${remaining[0].providerId}/${section}`);
       } else {
-        router.replace("/setup");
+        router.replace(fallbackHrefAfterEmpty());
       }
     }
   };
@@ -68,89 +150,161 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode: _dataMode }: 
       <nav className="nav">
         <div className="nav-label">Workspace</div>
 
-        <Link
-          href={navHrefFor("customers")}
-          className="nav-item"
-          aria-current={activeRoute === "customers" || activeRoute === "wallet"}
-        >
-          <Icon.customers />
-          My Customers
-        </Link>
+        {navDisabled ? (
+          <span
+            role="link"
+            className="nav-item disabled"
+            aria-disabled="true"
+            aria-label="My Customers, setup required"
+          >
+            <Icon.customers />
+            My Customers
+          </span>
+        ) : (
+          <Link
+            href={navHrefFor("customers")}
+            className="nav-item"
+            aria-current={activeRoute === "customers" || activeRoute === "wallet"}
+          >
+            <Icon.customers />
+            My Customers
+          </Link>
+        )}
 
-        <Link href={navHrefFor("patterns")} className="nav-item" aria-current={activeRoute === "patterns"}>
-          <Icon.patterns />
-          Co-usage Patterns
-        </Link>
+        {navDisabled ? (
+          <span
+            role="link"
+            className="nav-item disabled"
+            aria-disabled="true"
+            aria-label="Co-usage Patterns, setup required"
+          >
+            <Icon.patterns />
+            Co-usage Patterns
+          </span>
+        ) : (
+          <Link href={navHrefFor("patterns")} className="nav-item" aria-current={activeRoute === "patterns"}>
+            <Icon.patterns />
+            Co-usage Patterns
+          </Link>
+        )}
 
         <Link href="/setup" className="nav-item" aria-current={activeRoute === "setup"}>
           <Icon.setup />
           Setup
         </Link>
 
-        <div className="provider-block">
+        <div className="provider-block" ref={providerBlockRef}>
           <div className="label">Currently viewing</div>
-          <div className="provider-pill">
-            <span className="dot" />
-            <span className="name">{currentName}</span>
-            <span className="caret">▾</span>
-          </div>
 
-          <div className="provider-list">
-            {!hydrated ? (
-              <>
+          {!hydrated ? (
+            <>
+              <div className="sk" style={{ height: 32, marginBottom: 8 }} />
+              <div className="provider-list">
                 <div className="sk" style={{ height: 22, margin: "4px 0" }} />
                 <div className="sk" style={{ height: 22, margin: "4px 0" }} />
                 <div className="sk" style={{ height: 22, margin: "4px 0" }} />
-              </>
-            ) : (
-              stored.map((p) => {
-                const isActive = p.providerId === activeProviderId;
-                return (
-                  <div key={p.providerId} className="provider-row" aria-current={isActive}>
-                    <Link
-                      href={`/providers/${p.providerId}/${section}`}
-                      style={{
-                        flex: 1,
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 8,
-                        minWidth: 0,
-                        color: "inherit",
-                      }}
-                    >
-                      <span
-                        style={{
-                          width: 6,
-                          height: 6,
-                          borderRadius: "50%",
-                          background: isActive ? "var(--teal)" : "var(--text-mute)",
-                          boxShadow: "none",
-                          flexShrink: 0,
-                        }}
-                      />
-                      <span style={{ flex: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                        {p.name}
-                      </span>
-                      <span className="pay">{formatPayToShort(getDisplayPayTo(p))}</span>
-                    </Link>
-                    <button
-                      type="button"
-                      className="x"
-                      onClick={() => handleDelete(p.providerId, p.name)}
-                      title={`Remove ${p.name}`}
-                      aria-label={`Remove ${p.name}`}
-                    >
-                      <Icon.x width="10" height="10" />
-                    </button>
-                  </div>
-                );
-              })
-            )}
+              </div>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                id={pillId}
+                className="provider-pill"
+                aria-expanded={!isSdkEmpty && stored.length > 0 ? effectiveOpen : undefined}
+                aria-controls={!isSdkEmpty && stored.length > 0 ? providerListId : undefined}
+                aria-disabled={isOnChainOnlyEmpty ? "true" : undefined}
+                disabled={isOnChainOnlyEmpty}
+                onClick={() => {
+                  // Phase 9: SDK connected モード + stored 空のとき pill は read-only (click で何もしない).
+                  if (isOnChainOnlyEmpty) return;
+                  if (isSdkEmpty) return;
+                  setOpen((v) => !v);
+                }}
+              >
+                <span className="dot" />
+                <span className="name">{currentName}</span>
+                {!isSdkEmpty && (
+                  <span className="caret">{effectiveOpen ? "▴" : "▾"}</span>
+                )}
+              </button>
 
-            <Link href="/setup" className="add-pay" style={{ display: "block", textDecoration: "none" }}>
-              + Add new pay_to
-            </Link>
-          </div>
+              {effectiveOpen && (
+                <div id={providerListId} className="provider-list" aria-labelledby={pillId}>
+                  {stored.map((p) => {
+                    const isActive = p.providerId === activeProviderId;
+                    const isDemo = isDemoProvider(p, demoOpted, userIds);
+                    return (
+                      <div key={p.providerId} className="provider-row" aria-current={isActive}>
+                        <Link
+                          href={`/providers/${p.providerId}/${section}`}
+                          onClick={close}
+                          style={{
+                            flex: 1,
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 8,
+                            minWidth: 0,
+                            color: "inherit",
+                          }}
+                        >
+                          <span
+                            style={{
+                              width: 6,
+                              height: 6,
+                              borderRadius: "50%",
+                              background: isActive ? "var(--teal)" : "var(--text-mute)",
+                              boxShadow: "none",
+                              flexShrink: 0,
+                            }}
+                          />
+                          <span style={{ flex: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                            {p.name}
+                          </span>
+                          {isDemo && (
+                            <span
+                              style={{
+                                fontSize: 9.5,
+                                fontWeight: 600,
+                                padding: "1px 5px",
+                                borderRadius: 3,
+                                background: "rgba(148,163,184,0.18)",
+                                color: "var(--text-3)",
+                                letterSpacing: "0.04em",
+                                textTransform: "uppercase",
+                                flexShrink: 0,
+                              }}
+                            >
+                              demo
+                            </span>
+                          )}
+                          <span className="pay">{formatPayToShort(getDisplayPayTo(p))}</span>
+                        </Link>
+                        <button
+                          type="button"
+                          className="x"
+                          onClick={() => handleDelete(p.providerId, p.name, isDemo)}
+                          title={isDemo ? "Reset demo data" : `Remove ${p.name}`}
+                          aria-label={isDemo ? "Reset demo data" : `Remove ${p.name}`}
+                        >
+                          <Icon.x width="10" height="10" />
+                        </button>
+                      </div>
+                    );
+                  })}
+
+                  <Link
+                    href="/setup"
+                    className="add-pay"
+                    onClick={close}
+                    style={{ display: "block", textDecoration: "none" }}
+                  >
+                    + Add new pay_to
+                  </Link>
+                </div>
+              )}
+            </>
+          )}
         </div>
       </nav>
 

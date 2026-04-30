@@ -4,8 +4,14 @@ import Link from "next/link";
 import { Fragment, useEffect, useState } from "react";
 import { useActiveProvider } from "@/app/providers";
 import { Icon } from "@/components/ui/Icon";
-import type { DashboardMode } from "@/lib/data-mode";
 import { formatRelativeAge } from "@/lib/format";
+import type { DashboardMode } from "@/lib/data-mode";
+import {
+  DASHBOARD_MODE_STORAGE_KEY,
+  migrateLegacyDashboardMode,
+  readClientDashboardMode,
+} from "@/lib/data-mode";
+import { DashboardModeToggle } from "./DashboardModeToggle";
 
 export type Crumb = {
   label: string;
@@ -21,12 +27,10 @@ type TopBarProps = {
   // TopBar 側で "Updated —" にフォールバックする。
   updatedAtUnixSec?: number;
   // renderedAtUnixSec: page Server Component が描画した時刻 (= 比較基準)。
-  // SSR / hydration 直後で同じ値を使うため、freshness を出したい page から渡す。
-  // 未指定の場合は "Updated 2m ago" の placeholder を出してフレッシュネス計算しない。
-  renderedAtUnixSec?: number;
-  // dataMode: Server で cookie を読んだ結果。Step 2 では受け取るだけで挙動には
-  // 反映しない (Step 3 で DashboardModeToggle を導入するときに使う)。
-  dataMode?: DashboardMode;
+  // SSR / hydration 直後で同じ値を使うため、各 page から必ず渡す。
+  renderedAtUnixSec: number;
+  // dataMode: Server で cookie を読んだ結果。Phase 7 で追加。
+  dataMode: DashboardMode;
 };
 
 export function TopBar({
@@ -35,7 +39,7 @@ export function TopBar({
   crumbs,
   updatedAtUnixSec,
   renderedAtUnixSec,
-  dataMode: _dataMode,
+  dataMode,
 }: TopBarProps) {
   const { active, hydrated } = useActiveProvider(providerId);
 
@@ -46,20 +50,40 @@ export function TopBar({
     else providerName = providerId;
   }
 
-  // freshness 用の now を保持。Server から渡された renderedAtUnixSec で初期化
-  // することで SSR / hydration 直後に同じ値を使い mismatch を回避する。
-  // renderedAtUnixSec が無い場合は freshness 計算自体を行わず placeholder を出す。
-  const [nowUnixSec, setNowUnixSec] = useState<number | undefined>(renderedAtUnixSec);
+  // 初期 now は Server から渡される renderedAtUnixSec で初期化することで
+  // SSR / hydration 直後に同じ値を使い mismatch を回避する。
+  const [nowUnixSec, setNowUnixSec] = useState<number>(renderedAtUnixSec);
   useEffect(() => {
-    if (renderedAtUnixSec === undefined) return;
     const tick = () => setNowUnixSec(Math.floor(Date.now() / 1000));
     tick();
     const id = setInterval(tick, 30_000);
     return () => clearInterval(id);
-  }, [renderedAtUnixSec]);
+  }, []);
 
-  const updatedLabel =
-    nowUnixSec === undefined ? "Updated 2m ago" : formatRelativeAge(updatedAtUnixSec, nowUnixSec);
+  const updatedLabel = formatRelativeAge(updatedAtUnixSec, nowUnixSec);
+
+  // Phase 8: hydration 後に Phase 7 → 8 migration を 1 回だけ実行 + cookie → localStorage 再同期.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    // 1. Phase 7 の旧 cookie/localStorage を新 key に移して旧 key を削除 (idempotent).
+    migrateLegacyDashboardMode();
+    // 2. cookie → localStorage の片方向再同期 (Phase 7 と同じロジック、key 名は新形式).
+    const cookieMode = readClientDashboardMode();
+    let lsMode: DashboardMode = "onChainOnly";
+    try {
+      const raw = window.localStorage.getItem(DASHBOARD_MODE_STORAGE_KEY);
+      lsMode = raw === "sdkConnected" ? "sdkConnected" : "onChainOnly";
+    } catch {
+      lsMode = "onChainOnly";
+    }
+    if (cookieMode !== lsMode) {
+      try {
+        window.localStorage.setItem(DASHBOARD_MODE_STORAGE_KEY, cookieMode);
+      } catch {
+        // ignore quota
+      }
+    }
+  }, []);
 
   return (
     <header className="topbar">
@@ -80,17 +104,17 @@ export function TopBar({
         ))}
       </div>
       <div className="spacer" />
-      <button className="btn" style={{ padding: "4px 9px", fontSize: 11.5, color: "var(--text-2)" }}>
-        <Icon.calendar width="12" height="12" /> Last 30d
-        <span style={{ color: "var(--text-mute)", marginLeft: 4 }}>▾</span>
-      </button>
+      <span
+        className="btn"
+        style={{ padding: "4px 9px", fontSize: 11.5, color: "var(--text-2)", cursor: "default" }}
+        title="BFF returns cumulative aggregates only"
+      >
+        <Icon.calendar width="12" height="12" /> All time
+      </span>
       <span style={{ fontSize: 11, color: "var(--text-3)", fontFamily: "var(--mono)" }}>
         {updatedLabel}
       </span>
-      <span className="pill">
-        <span className="dot" />
-        LIVE
-      </span>
+      <DashboardModeToggle mode={dataMode} />
       <button className="icon-btn" title="Search">
         <Icon.search />
       </button>
