@@ -48,7 +48,7 @@ export type RepeatSummary = {
   }>;
 };
 
-export type OtherServiceCandidate = {
+export type CoUsageProvider = {
   serviceId: MacroServiceId;
   serviceName: string;
   sharedWallets: number;
@@ -89,7 +89,7 @@ export type MacroMetricsViewModel = {
   overview: MacroOverview;
   spendConcentration: SpendConcentration;
   repeatSummary: RepeatSummary;
-  otherServiceCandidates: OtherServiceCandidate[];
+  coUsageProviders: CoUsageProvider[];
   endpointUsage: EndpointUsage[];
   endpointFlows: EndpointFlow[];
   sourceRankings: SourceRanking[];
@@ -222,7 +222,7 @@ export function buildMacroMetrics(data: MacroMetricsDemoData): MacroMetricsViewM
   );
   const candidates = data.services
     .filter((service) => service.id !== data.primaryProviderId)
-    .map((service): OtherServiceCandidate => {
+    .map((service): CoUsageProvider => {
       const sharedEvents = data.events.filter(
         (event) => event.serviceId === service.id && primaryWallets.has(event.walletAddress),
       );
@@ -290,7 +290,7 @@ export function buildMacroMetrics(data: MacroMetricsDemoData): MacroMetricsViewM
       averageSessionsPerRepeatedWallet,
       bySegment,
     },
-    otherServiceCandidates: candidates,
+    coUsageProviders: candidates,
     endpointUsage,
     endpointFlows,
     sourceRankings,
@@ -408,7 +408,7 @@ function buildSourceRankings(
 
 function buildExecutiveTakeaways(
   data: MacroMetricsDemoData,
-  candidates: OtherServiceCandidate[],
+  candidates: CoUsageProvider[],
   repeatedWallets: number,
   totalWallets: number,
 ): string[] {

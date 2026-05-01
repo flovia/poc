@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import type { OtherServiceCandidateRow } from "@/lib/customers/other-service-candidates";
+import type { CoUsageProviderRow } from "@/lib/customers/co-usage-providers";
 
 type Props = {
-  row: OtherServiceCandidateRow | null;
+  row: CoUsageProviderRow | null;
   onClose: () => void;
 };
 
@@ -31,7 +31,7 @@ const hostnameOf = (urlOrText: string): string | null => {
 const shortenWallet = (address: string) =>
   address.length > 12 ? `${address.slice(0, 6)}…${address.slice(-4)}` : address;
 
-export function OtherServiceCandidateDrawer({ row, onClose }: Props) {
+export function CoUsageProviderDrawer({ row, onClose }: Props) {
   const open = row !== null;
   const [copied, setCopied] = useState(false);
 

@@ -221,7 +221,7 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
                 ?? stored[0]?.providerId
                 ?? (dataMode === "sdkConnected" ? SDK_DEMO_PROVIDER_ID : undefined);
               if (!id) return null;
-              const otherHref = `/providers/${id}/customers/other-service-candidate`;
+              const coUsageHref = `/providers/${id}/customers/co-usage-providers`;
               return (
                 <div
                   id="nav-sub-customers"
@@ -229,11 +229,11 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
                   hidden={!customersSubVisible}
                 >
                   <Link
-                    href={otherHref}
+                    href={coUsageHref}
                     className="nav-item nav-item--sub"
-                    aria-current={pathname === otherHref}
+                    aria-current={pathname === coUsageHref}
                   >
-                    Other Service Candidates
+                    Co-Usage Providers
                   </Link>
                 </div>
               );

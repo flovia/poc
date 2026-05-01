@@ -4,7 +4,7 @@ import { PROVIDER_NAME, PROVIDER_PAY_TO } from "./shared";
 import { SECONDARIES } from "./secondaries";
 
 // Synthesize a wallet-usage graph for SDK connected mode so the
-// "Other Service Candidates" view has data to render. The shape mirrors
+// "Co-Usage Providers" view has data to render. The shape mirrors
 // the live BFF projection: providerWallets[] containing the active
 // provider, with each payer wallet listing otherServiceCandidates that
 // point to other known SDK providers.

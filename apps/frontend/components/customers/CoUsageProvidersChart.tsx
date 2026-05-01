@@ -1,4 +1,4 @@
-import type { OtherServiceCandidateRow } from "@/lib/customers/other-service-candidates";
+import type { CoUsageProviderRow } from "@/lib/customers/co-usage-providers";
 import { OverviewCard } from "./overview/OverviewCard";
 
 const TOP_N = 8;
@@ -24,12 +24,12 @@ const txOpacity = (txCount: number, maxTx: number): number => {
   return MIN_TX_OPACITY + (MAX_TX_OPACITY - MIN_TX_OPACITY) * ratio;
 };
 
-export function OtherServiceCandidatesChart({
+export function CoUsageProvidersChart({
   rows,
   onRowSelect,
 }: {
-  rows: OtherServiceCandidateRow[];
-  onRowSelect?: (row: OtherServiceCandidateRow) => void;
+  rows: CoUsageProviderRow[];
+  onRowSelect?: (row: CoUsageProviderRow) => void;
 }) {
   if (rows.length === 0) return null;
 

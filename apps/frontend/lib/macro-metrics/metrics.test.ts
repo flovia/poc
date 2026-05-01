@@ -15,7 +15,7 @@ describe("buildMacroMetrics", () => {
     expect(metrics.overview.trend7d).toHaveLength(7);
     expect(metrics.overview.trend30d).toHaveLength(30);
     expect(metrics.repeatSummary.repeatWalletRate).toBeGreaterThan(0.7);
-    expect(metrics.otherServiceCandidates[0].sharedSpendAtomic).not.toBe("0");
+    expect(metrics.coUsageProviders[0].sharedSpendAtomic).not.toBe("0");
     expect(metrics.endpointUsage[0].txCount).toBeGreaterThan(0);
     expect(metrics.endpointFlows[0].occurrences).toBeGreaterThan(0);
     expect(metrics.sourceRankings[0].spendAtomic).not.toBe("0");

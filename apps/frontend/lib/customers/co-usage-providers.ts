@@ -2,18 +2,18 @@ import type { WalletUsageGraphDto } from "@/lib/api/types";
 
 export type OpportunityLevel = "high" | "medium" | "low";
 
-export type OtherServiceCandidateEndpoint = {
+export type CoUsageProviderEndpoint = {
   serviceName: string;
   sharedTxCount: number;
   sharedWallets: number;
 };
 
-export type OtherServiceCandidatePayer = {
+export type CoUsageProviderPayer = {
   wallet: string;
   sharedTxCount: number;
 };
 
-export type OtherServiceCandidateRow = {
+export type CoUsageProviderRow = {
   providerId: string;
   providerName: string;
   serviceName: string;
@@ -22,8 +22,8 @@ export type OtherServiceCandidateRow = {
   sharedTxCount: number;
   confidence: number;
   opportunity: OpportunityLevel;
-  endpoints: OtherServiceCandidateEndpoint[];
-  payerWallets: OtherServiceCandidatePayer[];
+  endpoints: CoUsageProviderEndpoint[];
+  payerWallets: CoUsageProviderPayer[];
 };
 
 export type AggregateOptions = {
@@ -80,10 +80,10 @@ type ProviderAcc = {
   payerTxByWallet: Map<string, number>;
 };
 
-export const aggregateOtherServiceCandidates = (
+export const aggregateCoUsageProviders = (
   graph: WalletUsageGraphDto,
   { ownPayTo, resolveProviderName }: AggregateOptions,
-): OtherServiceCandidateRow[] => {
+): CoUsageProviderRow[] => {
   const own = normalize(ownPayTo);
   const accByPayTo = new Map<string, ProviderAcc>();
 
@@ -138,11 +138,11 @@ export const aggregateOtherServiceCandidates = (
     }
   }
 
-  const rows: OtherServiceCandidateRow[] = [];
+  const rows: CoUsageProviderRow[] = [];
   for (const acc of accByPayTo.values()) {
     const avgConfidence = acc.confidenceCount > 0 ? acc.confidenceSum / acc.confidenceCount : 0;
     const resolvedName = resolveProviderName ? resolveProviderName(acc.payToWallet) : null;
-    const endpoints: OtherServiceCandidateEndpoint[] = [...acc.endpointsByService.values()]
+    const endpoints: CoUsageProviderEndpoint[] = [...acc.endpointsByService.values()]
       .map((e) => ({
         serviceName: e.serviceName,
         sharedTxCount: e.txTotal,
@@ -154,7 +154,7 @@ export const aggregateOtherServiceCandidates = (
       });
 
     const topEndpointName = endpoints[0]?.serviceName ?? acc.serviceName;
-    const payerWallets: OtherServiceCandidatePayer[] = [...acc.payerTxByWallet.entries()]
+    const payerWallets: CoUsageProviderPayer[] = [...acc.payerTxByWallet.entries()]
       .map(([wallet, sharedTxCount]) => ({ wallet, sharedTxCount }))
       .sort((a, b) => {
         if (b.sharedTxCount !== a.sharedTxCount) return b.sharedTxCount - a.sharedTxCount;

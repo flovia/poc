@@ -1,12 +1,12 @@
 import { TopBar } from "@/components/shell/TopBar";
-import { OtherServiceCandidatesView } from "@/components/customers/OtherServiceCandidatesView";
+import { CoUsageProvidersView } from "@/components/customers/CoUsageProvidersView";
 import { SummaryChip } from "@/components/customers/SummaryChip";
-import { aggregateOtherServiceCandidates } from "@/lib/customers/other-service-candidates";
+import { aggregateCoUsageProviders } from "@/lib/customers/co-usage-providers";
 import { resolveKnownProviderName } from "@/lib/customers/known-providers";
 import { getProviders, getWalletUsageGraph } from "@/lib/data-source";
 import { getTopBarPageContext } from "@/lib/server/page-context";
 
-export default async function OtherServiceCandidatePage({
+export default async function CoUsageProvidersPage({
   params,
 }: {
   params: Promise<{ providerId: string }>;
@@ -20,7 +20,7 @@ export default async function OtherServiceCandidatePage({
   const ownPayTo = providers.find((p) => p.providerId === providerId)?.payTo;
 
   const rows = graph
-    ? aggregateOtherServiceCandidates(graph, {
+    ? aggregateCoUsageProviders(graph, {
         ownPayTo,
         resolveProviderName: resolveKnownProviderName,
       })
@@ -36,7 +36,7 @@ export default async function OtherServiceCandidatePage({
         providerId={providerId}
         crumbs={[
           { label: "Customers", href: `/providers/${providerId}/customers` },
-          { label: "Other Service Candidates" },
+          { label: "Co-Usage Providers" },
         ]}
         dataMode={pageCtx.dataMode}
       />
@@ -64,7 +64,7 @@ export default async function OtherServiceCandidatePage({
                 My Customers · Cross-provider co-usage
               </div>
               <h1 style={{ fontSize: 28, fontWeight: 700, margin: 0, letterSpacing: "-0.01em" }}>
-                Other Service Candidates
+                Co-Usage Providers
               </h1>
             </div>
             <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
@@ -107,7 +107,7 @@ export default async function OtherServiceCandidatePage({
               No external provider co-usage has been observed for this provider yet.
             </div>
           ) : (
-            <OtherServiceCandidatesView rows={rows} />
+            <CoUsageProvidersView rows={rows} />
           )}
         </div>
       </div>

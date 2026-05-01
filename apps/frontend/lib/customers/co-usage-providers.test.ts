@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import type { WalletUsageGraphDto } from "@/lib/api/types";
-import { aggregateOtherServiceCandidates } from "./other-service-candidates";
+import { aggregateCoUsageProviders } from "./co-usage-providers";
 
 const OWN_PAY_TO = "0x0000000000000000000000000000000000000010";
 const EXT_A = "0x00000000000000000000000000000000000000aa";
@@ -47,7 +47,7 @@ const makeCandidate = (
   ...overrides,
 });
 
-describe("aggregateOtherServiceCandidates", () => {
+describe("aggregateCoUsageProviders", () => {
   test("aggregates same external provider across multiple payer wallets", () => {
     const graph = makeGraph([
       makePayer("0x1", [
@@ -72,7 +72,7 @@ describe("aggregateOtherServiceCandidates", () => {
       ]),
     ]);
 
-    const rows = aggregateOtherServiceCandidates(graph, { ownPayTo: OWN_PAY_TO });
+    const rows = aggregateCoUsageProviders(graph, { ownPayTo: OWN_PAY_TO });
     expect(rows).toHaveLength(1);
     expect(rows[0]).toMatchObject({
       payToWallet: EXT_A,
@@ -111,7 +111,7 @@ describe("aggregateOtherServiceCandidates", () => {
         }),
       ]),
     ]);
-    const rows = aggregateOtherServiceCandidates(graph, { ownPayTo: OWN_PAY_TO });
+    const rows = aggregateCoUsageProviders(graph, { ownPayTo: OWN_PAY_TO });
     expect(rows).toHaveLength(1);
     expect(rows[0]?.sharedWallets).toBe(2);
     expect(rows[0]?.sharedTxCount).toBe(12);
@@ -147,7 +147,7 @@ describe("aggregateOtherServiceCandidates", () => {
         }),
       ]),
     ]);
-    const rows = aggregateOtherServiceCandidates(graph, { ownPayTo: OWN_PAY_TO });
+    const rows = aggregateCoUsageProviders(graph, { ownPayTo: OWN_PAY_TO });
     expect(rows.map((r) => r.payToWallet)).toEqual([EXT_A]);
   });
 
@@ -163,7 +163,7 @@ describe("aggregateOtherServiceCandidates", () => {
         makeCandidate({ providerId: "ext:a", payToWallet: EXT_A, coUsageCount: 1 }),
       ]),
     ]);
-    const rows = aggregateOtherServiceCandidates(graph, { ownPayTo: OWN_PAY_TO });
+    const rows = aggregateCoUsageProviders(graph, { ownPayTo: OWN_PAY_TO });
     expect(rows[0]?.payToWallet).toBe(EXT_A); // 2 wallets > 1 wallet
     expect(rows[1]?.payToWallet).toBe(EXT_B);
   });
@@ -177,7 +177,7 @@ describe("aggregateOtherServiceCandidates", () => {
         makeCandidate({ providerId: "low", payToWallet: EXT_C, confidence: 0.2 }),
       ]),
     ]);
-    const rows = aggregateOtherServiceCandidates(graph, { ownPayTo: OWN_PAY_TO });
+    const rows = aggregateCoUsageProviders(graph, { ownPayTo: OWN_PAY_TO });
     const byPayTo = Object.fromEntries(rows.map((r) => [r.payToWallet, r]));
     expect(byPayTo[EXT_A]?.opportunity).toBe("high");
     expect(byPayTo[EXT_B]?.opportunity).toBe("medium");
@@ -195,7 +195,7 @@ describe("aggregateOtherServiceCandidates", () => {
         }),
       ]),
     ]);
-    const rows = aggregateOtherServiceCandidates(graph, {
+    const rows = aggregateCoUsageProviders(graph, {
       ownPayTo: OWN_PAY_TO,
       resolveProviderName: (address) => (address === EXT_A ? "Resolved API" : null),
     });
@@ -204,7 +204,7 @@ describe("aggregateOtherServiceCandidates", () => {
 
   test("returns empty list when no candidates match", () => {
     const graph = makeGraph([makePayer("0x1", [])]);
-    const rows = aggregateOtherServiceCandidates(graph, { ownPayTo: OWN_PAY_TO });
+    const rows = aggregateCoUsageProviders(graph, { ownPayTo: OWN_PAY_TO });
     expect(rows).toEqual([]);
   });
 
@@ -220,7 +220,7 @@ describe("aggregateOtherServiceCandidates", () => {
         }),
       ]),
     ]);
-    const rows = aggregateOtherServiceCandidates(graph, { ownPayTo: OWN_PAY_TO });
+    const rows = aggregateCoUsageProviders(graph, { ownPayTo: OWN_PAY_TO });
     expect(rows[0]?.providerName).toBe("search.reversesandbox.com");
   });
 
@@ -236,7 +236,7 @@ describe("aggregateOtherServiceCandidates", () => {
         makeCandidate({ providerId: "ext:a", payToWallet: EXT_A, coUsageCount: 1 }),
       ]),
     ]);
-    const rows = aggregateOtherServiceCandidates(graph, { ownPayTo: OWN_PAY_TO });
+    const rows = aggregateCoUsageProviders(graph, { ownPayTo: OWN_PAY_TO });
     expect(rows[0]?.payerWallets).toEqual([
       { wallet: "0xbbb", sharedTxCount: 4 },
       { wallet: "0xaaa", sharedTxCount: 2 },
@@ -255,7 +255,7 @@ describe("aggregateOtherServiceCandidates", () => {
         }),
       ]),
     ]);
-    const rows = aggregateOtherServiceCandidates(graph, {
+    const rows = aggregateCoUsageProviders(graph, {
       ownPayTo: OWN_PAY_TO,
       resolveProviderName: () => "Reverse Search",
     });

@@ -2,9 +2,9 @@
 
 import { useCallback, useState } from "react";
 import { HeaderTooltip } from "./HeaderTooltip";
-import { OtherServiceCandidatesChart } from "./OtherServiceCandidatesChart";
-import { OtherServiceCandidateDrawer } from "./OtherServiceCandidateDrawer";
-import type { OtherServiceCandidateRow } from "@/lib/customers/other-service-candidates";
+import { CoUsageProvidersChart } from "./CoUsageProvidersChart";
+import { CoUsageProviderDrawer } from "./CoUsageProviderDrawer";
+import type { CoUsageProviderRow } from "@/lib/customers/co-usage-providers";
 
 const ENDPOINT_PREVIEW_COUNT = 3;
 
@@ -30,10 +30,10 @@ const shortEndpoint = (serviceName: string): string => {
   }
 };
 
-export function OtherServiceCandidatesView({ rows }: { rows: OtherServiceCandidateRow[] }) {
+export function CoUsageProvidersView({ rows }: { rows: CoUsageProviderRow[] }) {
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
 
-  const select = useCallback((row: OtherServiceCandidateRow) => {
+  const select = useCallback((row: CoUsageProviderRow) => {
     setSelectedKey(row.payToWallet ?? row.providerId);
   }, []);
   const close = useCallback(() => setSelectedKey(null), []);
@@ -44,7 +44,7 @@ export function OtherServiceCandidatesView({ rows }: { rows: OtherServiceCandida
   return (
     <>
       <div style={{ marginBottom: 20 }}>
-        <OtherServiceCandidatesChart rows={rows} onRowSelect={select} />
+        <CoUsageProvidersChart rows={rows} onRowSelect={select} />
       </div>
 
       <div
@@ -210,7 +210,7 @@ export function OtherServiceCandidatesView({ rows }: { rows: OtherServiceCandida
         </table>
       </div>
 
-      <OtherServiceCandidateDrawer row={selectedRow} onClose={close} />
+      <CoUsageProviderDrawer row={selectedRow} onClose={close} />
     </>
   );
 }
