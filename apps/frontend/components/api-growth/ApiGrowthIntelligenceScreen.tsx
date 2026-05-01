@@ -28,8 +28,8 @@ export function ApiGrowthIntelligenceScreen({ intelligence }: Props) {
           </h1>
           <div style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "end", flexWrap: "wrap" }}>
             <p style={{ maxWidth: 880, color: "var(--text-2)", fontSize: 15, lineHeight: 1.6, margin: "8px 0 0" }}>
-              See where API users come from, what endpoints they use, which use cases look agent-like,
-              and where x402 / Agents packaging should improve adoption.
+              See where API users come from, what endpoints they repeat, which workflows look
+              agent-ready, and where x402 / Agents packaging should improve adoption.
             </p>
             <FilterChips />
           </div>
@@ -48,7 +48,7 @@ export function ApiGrowthIntelligenceScreen({ intelligence }: Props) {
             <EndpointFlow flows={intelligence.endpointFrequency.flows} />
           </SectionCard>
 
-          <SectionCard eyebrow="Use Case & x402 / Agents Fit" title="Inferred use cases">
+          <SectionCard eyebrow="x402 / Agents Fit" title="Which workflows are packageable">
             <UseCaseCards cards={intelligence.useCaseFit.cards} />
             <FitMatrix cards={intelligence.useCaseFit.cards} />
           </SectionCard>
@@ -274,10 +274,12 @@ function UseCaseCards({ cards }: { cards: UseCaseFitCard[] }) {
       {cards.slice(0, 4).map((card) => (
         <div key={card.useCase} style={{ padding: 12, border: "1px solid var(--line)", borderRadius: 6, background: "var(--surface-card)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", gap: 10, marginBottom: 6 }}>
-            <strong style={{ fontSize: 13 }}>{card.useCase}</strong>
+            <strong style={{ fontSize: 13 }}>{card.endpointFlow}</strong>
             <PriorityBadge priority={card.productPriority} />
           </div>
-          <div style={{ color: "var(--text-3)", fontSize: 12, marginBottom: 8 }}>{card.endpointFlow} · {card.sourceMix}</div>
+          <div style={{ color: "var(--text-3)", fontSize: 12, marginBottom: 8 }}>
+            likely use case: {card.useCase} · {card.sourceMix}
+          </div>
           <div style={{ display: "flex", justifyContent: "space-between", gap: 8, color: "var(--text-mute)", fontSize: 11, marginBottom: 8 }}>
             <span>Frequency</span>
             <span className="mono" style={{ color: "var(--text-2)", fontWeight: 650 }}>{card.frequency.toFixed(1)} calls / wallet</span>
@@ -292,7 +294,7 @@ function UseCaseCards({ cards }: { cards: UseCaseFitCard[] }) {
 function FitMatrix({ cards }: { cards: UseCaseFitCard[] }) {
   return (
     <div style={{ borderTop: "1px solid var(--line)", paddingTop: 10 }}>
-      <div style={{ ...eyebrowStyle, marginBottom: 8 }}>Fit matrix</div>
+      <div style={{ ...eyebrowStyle, marginBottom: 8 }}>Package fit matrix</div>
       <div style={{ display: "grid", gap: 8 }}>
         {cards.slice(0, 3).map((card) => (
           <div key={card.useCase} style={{ display: "grid", gridTemplateColumns: "1fr 54px 54px", gap: 8, alignItems: "center", fontSize: 12 }}>
