@@ -15,7 +15,7 @@ export function OverviewCard({ eyebrow, title, hint, children }: OverviewCardPro
         padding: 0,
         overflow: "hidden",
         borderColor: "var(--line)",
-        background: "#FFFFFF",
+        background: "var(--surface-card)",
         display: "flex",
         flexDirection: "column",
       }}

@@ -11,48 +11,40 @@ type CellSpec = {
   key: CellKey;
   label: string;
   hint: string;
-  accent: "primary" | "warm" | "muted" | "cool";
+  accent: "priority" | "attention" | "neutral";
 };
 
 const CELLS: CellSpec[] = [
   {
     key: "recentHigh",
-    label: "Active high spenders",
-    hint: "Recent activity, above-median spend",
-    accent: "primary",
+    label: "Key active accounts",
+    hint: "Recent activity, above-median spend · retain / upsell",
+    accent: "priority",
   },
   {
     key: "recentLow",
-    label: "Active low spenders",
-    hint: "Recent activity, below-median spend",
-    accent: "cool",
+    label: "Emerging accounts",
+    hint: "Recent activity, below-median spend · nurture",
+    accent: "neutral",
   },
   {
     key: "staleHigh",
-    label: "Dormant whales",
-    hint: "Older activity, above-median spend",
-    accent: "warm",
+    label: "At-risk key accounts",
+    hint: "Older activity, above-median spend · re-engage first",
+    accent: "attention",
   },
   {
     key: "staleLow",
-    label: "Dormant low spenders",
-    hint: "Older activity, below-median spend",
-    accent: "muted",
+    label: "Dormant accounts",
+    hint: "Older activity, below-median spend · automate reactivation",
+    accent: "neutral",
   },
 ];
 
-const ACCENT_BG: Record<CellSpec["accent"], string> = {
-  primary: "var(--mesh-blue-soft)",
-  cool: "var(--teal-soft)",
-  warm: "var(--warn-soft)",
-  muted: "rgba(148, 163, 184, 0.10)",
-};
-
 const ACCENT_FG: Record<CellSpec["accent"], string> = {
-  primary: "var(--mesh-blue)",
-  cool: "var(--teal)",
-  warm: "var(--warn)",
-  muted: "var(--text-3)",
+  priority: "var(--signal-priority)",
+  attention: "var(--signal-attention)",
+  neutral: "var(--signal-neutral)",
 };
 
 export function RecencyMatrixChart({ matrix }: RecencyMatrixChartProps) {
@@ -77,41 +69,60 @@ export function RecencyMatrixChart({ matrix }: RecencyMatrixChartProps) {
         {CELLS.map((spec) => {
           const count = matrix.cells[spec.key];
           const share = total === 0 ? 0 : count / total;
+          const isEmphasized = spec.accent !== "neutral";
           return (
             <div
               key={spec.key}
               style={{
-                background: ACCENT_BG[spec.accent],
+                background: "var(--surface-card)",
+                border: "1px solid var(--line)",
                 borderRadius: "var(--radius)",
-                padding: "10px 12px",
+                padding: "12px",
                 display: "flex",
                 flexDirection: "column",
-                justifyContent: "space-between",
-                gap: 4,
+                gap: 8,
               }}
               title={`${spec.label}: ${count} of ${total} wallets (${formatPercent(share)})`}
             >
-              <div
-                style={{
-                  fontSize: 10,
-                  fontWeight: 600,
-                  letterSpacing: "0.06em",
-                  textTransform: "uppercase",
-                  color: ACCENT_FG[spec.accent],
-                }}
-              >
-                {spec.label}
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span
+                  aria-hidden
+                  style={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: "50%",
+                    background: isEmphasized ? ACCENT_FG[spec.accent] : "var(--text-mute)",
+                    flexShrink: 0,
+                  }}
+                />
+                <div
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 600,
+                    letterSpacing: "0.02em",
+                    color: "var(--text-2)",
+                  }}
+                >
+                  {spec.label}
+                </div>
               </div>
-              <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
                 <span
                   className="display"
-                  style={{ fontSize: 20, fontWeight: 700, color: "var(--text-1)" }}
+                  style={{
+                    fontSize: 24,
+                    fontWeight: 600,
+                    lineHeight: 1,
+                    color: isEmphasized ? ACCENT_FG[spec.accent] : "var(--text-1)",
+                  }}
                 >
                   {count}
                 </span>
-                <span style={{ fontSize: 11, color: "var(--text-3)" }}>{formatPercent(share)}</span>
+                <span style={{ fontSize: 12, fontWeight: 500, color: "var(--text-3)" }}>
+                  {formatPercent(share)}
+                </span>
               </div>
-              <div style={{ fontSize: 11, color: "var(--text-3)" }}>{spec.hint}</div>
+              <div style={{ fontSize: 11, color: "var(--text-3)", lineHeight: 1.3 }}>{spec.hint}</div>
             </div>
           );
         })}

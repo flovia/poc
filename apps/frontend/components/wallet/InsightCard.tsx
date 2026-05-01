@@ -13,14 +13,14 @@ type InsightCardProps = {
 
 const TONES: Record<Tone, { border: string }> = {
   default: { border: "var(--line)" },
-  upsell: { border: "rgba(44, 122, 123, 0.32)" },
+  upsell: { border: "var(--signal-priority)" },
   blue: { border: "rgba(47, 93, 154, 0.28)" },
 };
 
 const LABEL_COLOR: Record<Tone, string> = {
   default: "var(--text-mute)",
-  upsell: "var(--teal)",
-  blue: "var(--mesh-blue)",
+  upsell: "var(--signal-priority)",
+  blue: "var(--signal-priority)",
 };
 
 export function InsightCard({
