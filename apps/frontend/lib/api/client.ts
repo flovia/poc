@@ -1,5 +1,6 @@
 import {
   validatePhaseBCustomerListResponse,
+  validatePhaseBCustomerUpsellExplanationResponse,
   validatePhaseBCustomerProfileResponse,
   validatePhaseBWalletUsageGraphResponse,
   validateProviderCatalogResponse,
@@ -7,6 +8,7 @@ import {
 import {
   adaptCustomerList,
   adaptCustomerProfile,
+  adaptCustomerUpsellExplanation,
   adaptObservationsFromGraph,
   adaptProviderCatalog,
   adaptSummaryFromCustomers,
@@ -15,6 +17,7 @@ import {
 import type {
   CustomerListItemDto,
   CustomerProfileDto,
+  CustomerUpsellExplanationDto,
   PaymentObservationDto,
   ProviderCatalogItemDto,
   ReportSummaryDto,
@@ -65,6 +68,29 @@ export async function getCustomerProfile(address: string): Promise<CustomerProfi
     );
   }
   return adaptCustomerProfile(validatePhaseBCustomerProfileResponse(await response.json()));
+}
+
+export async function getCustomerUpsellExplanation(
+  address: string,
+): Promise<CustomerUpsellExplanationDto | null> {
+  const response = await fetch(
+    `${bffBaseUrl()}/customers/${encodeURIComponent(address)}/llm/upsell-explanation`,
+    {
+      cache: "no-store",
+      headers: { accept: "application/json" },
+    },
+  );
+
+  if (response.status === 404 || response.status === 503) return null;
+  if (!response.ok) {
+    throw new Error(
+      `BFF request failed: ${response.status} ${response.statusText} (/customers/${address}/llm/upsell-explanation)`,
+    );
+  }
+
+  return adaptCustomerUpsellExplanation(
+    validatePhaseBCustomerUpsellExplanationResponse(await response.json()),
+  );
 }
 
 export async function getProviders(): Promise<ProviderCatalogItemDto[]> {

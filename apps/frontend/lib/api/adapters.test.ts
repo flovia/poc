@@ -1,12 +1,14 @@
 import { describe, expect, test } from "bun:test";
 import type {
   PhaseBCustomerListResponse,
+  PhaseBCustomerUpsellExplanationResponse,
   PhaseBCustomerProfileResponse,
   ProviderCatalogResponse,
   WalletUsageGraphResponse,
 } from "contracts";
 import {
   adaptCustomerList,
+  adaptCustomerUpsellExplanation,
   adaptCustomerProfile,
   adaptProviderCatalog,
   adaptWalletUsageGraph,
@@ -227,6 +229,92 @@ describe("BFF canonical adapters", () => {
     expect(profile.providers[0]?.name).toBe("Provider A canonical");
     expect(profile.timeline[0]?.type).toBe("provider_usage");
     expect(profile.insights[0]?.severity).toBe("opportunity");
+  });
+
+  test("adapts upsell explanation envelope to wallet card view model", () => {
+    const response: PhaseBCustomerUpsellExplanationResponse = {
+      generatedAt: "2026-05-01T02:50:45.838Z",
+      generatedFrom: "phase-b-bedrock-upsell-explanation-v1",
+      address: "0x0000000000000000000000000000000000000001",
+      sourceGeneratedAt: "2026-04-30T13:00:22.751Z",
+      model: {
+        provider: "bedrock",
+        modelId: "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+        region: "ap-northeast-1",
+        promptVersion: "upsell-explanation-v1",
+      },
+      input: {
+        signals: {
+          spendAtomic: "26000",
+          spendRank: 74,
+          spendPercentile: 0.262626,
+          customerCount: 100,
+          observationCount: 9,
+          providerCount: 7,
+          txCount: 9,
+          averageSpendAtomic: "2888",
+          firstSeenAt: "2026-04-21T17:13:37Z",
+          lastSeenAt: "2026-04-29T04:11:53Z",
+          daysSinceLastSeen: 1,
+          freeTierProgress: 0.9,
+          activityGrowth: 0,
+          entryPointRatio: 1,
+          upsellOpportunity: "high",
+          x402ServiceCount: 7,
+        },
+        flags: {
+          isTopSpender: false,
+          isRecentlyActive: true,
+          isMultiProvider: true,
+          hasHighTransactionCount: true,
+          isNearFreeTierLimit: true,
+          hasExternalX402Usage: true,
+          isHighUpsellCandidate: true,
+        },
+        reasonCodes: [
+          "recently_active",
+          "multi_provider_usage",
+          "high_transaction_count",
+          "free_tier_near_limit",
+          "external_x402_usage",
+          "high_upsell_score",
+        ],
+        caveats: ["PoC heuristic."],
+      },
+      explanation: {
+        summary: "This wallet appears to be a strong upsell candidate.",
+        reasons: [
+          "Recent activity suggests continued usage.",
+          "Multi-provider usage is consistent with broader workflow adoption.",
+        ],
+        recommendedAction:
+          "Review whether the observed usage pattern matches a higher-support offering.",
+        caution: "Some inputs are PoC heuristics.",
+      },
+      provenance: "derived_insight",
+      provenanceByField: {
+        address: "onchain_fact",
+        sourceGeneratedAt: "derived_insight",
+        model: "derived_insight",
+        input: "derived_insight",
+        explanation: "derived_insight",
+      },
+      reasons: [evidence],
+    };
+
+    expect(adaptCustomerUpsellExplanation(response)).toEqual({
+      generatedAt: "2026-05-01T02:50:45.838Z",
+      address: "0x0000000000000000000000000000000000000001",
+      modelId: "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      summary: "This wallet appears to be a strong upsell candidate.",
+      reasons: [
+        "Recent activity suggests continued usage.",
+        "Multi-provider usage is consistent with broader workflow adoption.",
+      ],
+      recommendedAction:
+        "Review whether the observed usage pattern matches a higher-support offering.",
+      caution: "Some inputs are PoC heuristics.",
+    });
   });
 
   test("aggregates duplicate profile providers before rendering", () => {

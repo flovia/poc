@@ -90,7 +90,7 @@ const buildUpsellExplanationSystemPrompt = (promptVersion: string) =>
     `Prompt version: ${promptVersion}.`,
     "Return strict JSON only.",
     'Use exactly these keys: "summary", "reasons", "recommendedAction", "caution".',
-    '"summary" must be a concise business explanation of why this wallet is or is not an upsell candidate.',
+    '"summary" must be a short headline of 3 to 6 words.',
     '"reasons" must be an array of 2 or 3 short evidence-based sentences.',
     '"recommendedAction" must be one concise, evidence-based next step for sales, growth, or support.',
     '"caution" must mention uncertainty or heuristic limitations when relevant.',

@@ -70,7 +70,12 @@ export function WalletScreen({
           />
 
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            <UpsellCard metrics={profile.metrics} dataMode={dataMode} sdkExtras={sdkExtras} />
+            <UpsellCard
+              address={profile.customer.address}
+              metrics={profile.metrics}
+              dataMode={dataMode}
+              sdkExtras={sdkExtras}
+            />
             <EntryPointInsight metrics={profile.metrics} dataMode={dataMode} sdkExtras={sdkExtras} />
             <RecentActivityInsight metrics={profile.metrics} providers={profile.providers} />
             <ProviderUsageList providers={profile.providers} />
