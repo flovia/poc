@@ -115,12 +115,14 @@ export function CustomersTable({
           <HeaderTooltip
             label="Last seen"
             description="Timestamp of the most recent payment observation from this wallet."
+            align="right"
           />
         </div>
         <div>
           <HeaderTooltip
             label="Upsell"
             description="Suggested upsell opportunity inferred from this wallet's behavior, with provenance and reasons."
+            align="right"
           />
         </div>
         <div aria-hidden />
