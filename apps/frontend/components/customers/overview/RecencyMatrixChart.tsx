@@ -69,13 +69,14 @@ export function RecencyMatrixChart({ matrix }: RecencyMatrixChartProps) {
         {CELLS.map((spec) => {
           const count = matrix.cells[spec.key];
           const share = total === 0 ? 0 : count / total;
+          const isEmphasized = spec.accent !== "neutral";
           return (
             <div
               key={spec.key}
               style={{
                 background: "var(--surface-card)",
-                border: "1px solid var(--line)",
-                borderLeft: spec.accent === "neutral" ? "1px solid var(--line)" : `3px solid ${ACCENT_FG[spec.accent]}`,
+                border: "1px solid transparent",
+                boxShadow: "inset 0 0 0 1px var(--line)",
                 borderRadius: "var(--radius)",
                 padding: "10px 12px",
                 display: "flex",
@@ -86,7 +87,7 @@ export function RecencyMatrixChart({ matrix }: RecencyMatrixChartProps) {
               title={`${spec.label}: ${count} of ${total} wallets (${formatPercent(share)})`}
             >
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                {spec.accent !== "neutral" && (
+                {isEmphasized && (
                   <span
                     aria-hidden
                     style={{
@@ -104,7 +105,7 @@ export function RecencyMatrixChart({ matrix }: RecencyMatrixChartProps) {
                     fontWeight: 600,
                     letterSpacing: "0.06em",
                     textTransform: "uppercase",
-                    color: spec.accent === "neutral" ? "var(--text-3)" : ACCENT_FG[spec.accent],
+                    color: isEmphasized ? ACCENT_FG[spec.accent] : "var(--text-3)",
                   }}
                 >
                   {spec.label}
@@ -113,7 +114,11 @@ export function RecencyMatrixChart({ matrix }: RecencyMatrixChartProps) {
               <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
                 <span
                   className="display"
-                  style={{ fontSize: 20, fontWeight: 700, color: "var(--text-1)" }}
+                  style={{
+                    fontSize: 20,
+                    fontWeight: 700,
+                    color: isEmphasized ? ACCENT_FG[spec.accent] : "var(--text-1)",
+                  }}
                 >
                   {count}
                 </span>
