@@ -75,56 +75,54 @@ export function RecencyMatrixChart({ matrix }: RecencyMatrixChartProps) {
               key={spec.key}
               style={{
                 background: "var(--surface-card)",
-                border: "1px solid transparent",
-                boxShadow: "inset 0 0 0 1px var(--line)",
+                border: "1px solid var(--line)",
                 borderRadius: "var(--radius)",
-                padding: "10px 12px",
+                padding: "12px",
                 display: "flex",
                 flexDirection: "column",
-                justifyContent: "space-between",
-                gap: 4,
+                gap: 8,
               }}
               title={`${spec.label}: ${count} of ${total} wallets (${formatPercent(share)})`}
             >
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                {isEmphasized && (
-                  <span
-                    aria-hidden
-                    style={{
-                      width: 6,
-                      height: 6,
-                      borderRadius: "50%",
-                      background: ACCENT_FG[spec.accent],
-                      flexShrink: 0,
-                    }}
-                  />
-                )}
+                <span
+                  aria-hidden
+                  style={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: "50%",
+                    background: isEmphasized ? ACCENT_FG[spec.accent] : "var(--text-mute)",
+                    flexShrink: 0,
+                  }}
+                />
                 <div
                   style={{
-                    fontSize: 10,
+                    fontSize: 11,
                     fontWeight: 600,
-                    letterSpacing: "0.06em",
-                    textTransform: "uppercase",
-                    color: isEmphasized ? ACCENT_FG[spec.accent] : "var(--text-3)",
+                    letterSpacing: "0.02em",
+                    color: "var(--text-2)",
                   }}
                 >
                   {spec.label}
                 </div>
               </div>
-              <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
                 <span
                   className="display"
                   style={{
-                    fontSize: 20,
-                    fontWeight: 700,
+                    fontSize: 24,
+                    fontWeight: 600,
+                    lineHeight: 1,
                     color: isEmphasized ? ACCENT_FG[spec.accent] : "var(--text-1)",
                   }}
                 >
                   {count}
                 </span>
-                <span style={{ fontSize: 11, color: "var(--text-3)" }}>{formatPercent(share)}</span>
+                <span style={{ fontSize: 12, fontWeight: 500, color: "var(--text-3)" }}>
+                  {formatPercent(share)}
+                </span>
               </div>
-              <div style={{ fontSize: 11, color: "var(--text-3)" }}>{spec.hint}</div>
+              <div style={{ fontSize: 11, color: "var(--text-3)", lineHeight: 1.3 }}>{spec.hint}</div>
             </div>
           );
         })}
