@@ -56,7 +56,7 @@ export type CatalogPreview = {
     | "cluster";
   headline: string;
   rows?: Array<{ label: string; value: string; share?: number; note?: string }>;
-  flows?: Array<{ from: string; to: string; occurrences: number }>;
+  flows?: Array<{ from: string; to: string; fromStep?: 0 | 1; toStep?: 1 | 2; occurrences: number }>;
   cells?: Array<{ x: string; y: string; value: number; label?: string }>;
   points?: Array<{ label: string; x: number; y: number; size?: number; note?: string }>;
 };
@@ -101,9 +101,11 @@ const flowRows = macro.endpointFlows.slice(0, 5).map((flow) => ({
   value: `${flow.occurrences}×`,
   share: flow.share,
 }));
-const sankeyFlows = macro.endpointFlows.slice(0, 6).map((flow) => ({
+const sankeyFlows = macro.endpointFlows.map((flow) => ({
   from: flow.from,
   to: flow.to,
+  fromStep: flow.fromStep,
+  toStep: flow.toStep,
   occurrences: flow.occurrences,
 }));
 
@@ -437,8 +439,8 @@ export const METRICS_CATALOG: CatalogMetric[] = [
     "P1",
     "Endpoint Behavior",
     "supported",
-    "Use ratio across Extract / Analyze / Search / Transact-style endpoint categories.",
-    "Explains what agents use the API for.",
+    "Use ratio across CoinGecko x402 endpoint categories.",
+    "Explains which market-data workflow steps agents pay for.",
     "stacked-bar",
     { kind: "bars", headline: "Category mix", rows: endpointRows },
   ),
@@ -455,9 +457,9 @@ export const METRICS_CATALOG: CatalogMetric[] = [
       kind: "heatmap",
       headline: "Wallet-category intensity",
       cells: heatmap(
-        ["Price", "AI", "Swap", "Notify"],
+        ["Pool search", "Trending", "Token price", "Token detail"],
         ["Bot", "Research", "One-off"],
-        [0.9, 0.8, 0.85, 0.6, 0.7, 0.9, 0.25, 0.1, 0.55, 0.05, 0.02, 0.01],
+        [0.9, 0.62, 0.88, 0.76, 0.68, 0.92, 0.7, 0.74, 0.22, 0.08, 0.38, 0.12],
       ),
     },
     "Preview matrix from demo workflow types.",
@@ -475,9 +477,9 @@ export const METRICS_CATALOG: CatalogMetric[] = [
       kind: "heatmap",
       headline: "Lift heatmap proxy",
       cells: heatmap(
-        ["Price", "AI", "Swap"],
-        ["AI", "Swap", "Notify"],
-        [0.82, 0.78, 0.54, 0.69, 0.74, 0.41, 0.33, 0.61, 0.47],
+        ["Pool search", "Trending", "Simple price"],
+        ["Token price", "Token detail", "Repeat"],
+        [0.86, 0.79, 0.52, 0.74, 0.81, 0.58, 0.62, 0.47, 0.33],
       ),
     },
     "Directional lift, not statistical proof.",
@@ -489,7 +491,7 @@ export const METRICS_CATALOG: CatalogMetric[] = [
     "Endpoint Behavior",
     "supported",
     "Ordered endpoint category transitions.",
-    "Shows real agent workflow sequence such as Extract → Analyze → Transact.",
+    "Shows multi-step endpoint movement where any endpoint can appear at any step.",
     "flow",
     { kind: "flow", headline: "Top workflow transitions", rows: flowRows, flows: sankeyFlows },
   ),
@@ -507,8 +509,8 @@ export const METRICS_CATALOG: CatalogMetric[] = [
       headline: "Category retention proxy",
       cells: heatmap(
         ["D1", "D7", "D14"],
-        ["Price", "AI", "Swap"],
-        [0.96, 0.82, 0.71, 0.88, 0.73, 0.62, 0.84, 0.69, 0.58],
+        ["Token price", "Token detail", "Pool search"],
+        [0.96, 0.84, 0.72, 0.9, 0.78, 0.66, 0.82, 0.68, 0.55],
       ),
     },
     "Needs real cohorts for production.",
@@ -622,9 +624,9 @@ export const METRICS_CATALOG: CatalogMetric[] = [
       kind: "box",
       headline: "Latency p50/p95 proxy",
       rows: [
-        { label: "Price", value: "92ms / 180ms", share: 0.22 },
-        { label: "AI", value: "840ms / 1.9s", share: 0.68 },
-        { label: "Swap", value: "310ms / 720ms", share: 0.44 },
+        { label: "Simple price", value: "92ms / 180ms", share: 0.22 },
+        { label: "Token price", value: "140ms / 260ms", share: 0.3 },
+        { label: "Token detail", value: "210ms / 520ms", share: 0.44 },
       ],
     },
     "Requires live latency instrumentation.",
@@ -642,9 +644,9 @@ export const METRICS_CATALOG: CatalogMetric[] = [
       kind: "bars",
       headline: "Failure-rate proxy",
       rows: [
-        { label: "Price", value: "0.4%", share: 0.04 },
-        { label: "AI", value: "2.8%", share: 0.28 },
-        { label: "Swap", value: "1.6%", share: 0.16 },
+        { label: "Simple price", value: "0.4%", share: 0.04 },
+        { label: "Token price", value: "0.9%", share: 0.09 },
+        { label: "Token detail", value: "1.6%", share: 0.16 },
       ],
     },
     "Requires production status/error telemetry.",

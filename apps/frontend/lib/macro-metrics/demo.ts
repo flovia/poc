@@ -10,13 +10,11 @@ export type MacroServiceId =
   | "ledgerlake";
 
 export type MacroEndpointCategory =
-  | "price_lookup"
-  | "ai_inference"
-  | "swap_execution"
-  | "notification"
-  | "portfolio_sync"
-  | "market_feed"
-  | "settlement";
+  | "pool_search"
+  | "trending_pools"
+  | "simple_price"
+  | "token_price"
+  | "token_detail";
 
 export type MacroPriority = "P0" | "P1" | "P2";
 export type MacroRecommendationType = "upsell" | "co-marketing" | "reprice" | "retention-lift";
@@ -182,31 +180,107 @@ const wallets: MacroWallet[] = [
   },
 ];
 
-const flowBySegment: Record<MacroWallet["segment"], MacroServiceId[]> = {
-  trading_bot: ["northwind-price", "vectormind", "routezero", "signalport"],
-  research_agent: ["northwind-price", "streamdelta", "vectormind", "vaultlayer"],
-  execution_wallet: ["northwind-price", "routezero", "ledgerlake"],
-  one_off: ["northwind-price"],
+type WorkflowStep = { serviceId: MacroServiceId; endpointCategory: MacroEndpointCategory };
+
+function workflow(...steps: WorkflowStep[]): WorkflowStep[] {
+  return steps;
+}
+
+function repeatWorkflow(count: number, ...steps: WorkflowStep[]): WorkflowStep[][] {
+  return Array.from({ length: count }, () => workflow(...steps));
+}
+
+const workflowVariantsBySegment: Record<MacroWallet["segment"], WorkflowStep[][]> = {
+  trading_bot: [
+    ...repeatWorkflow(
+      6,
+      { serviceId: "northwind-price", endpointCategory: "pool_search" },
+      { serviceId: "northwind-price", endpointCategory: "token_price" },
+      { serviceId: "ledgerlake", endpointCategory: "token_detail" },
+    ),
+    ...repeatWorkflow(
+      2,
+      { serviceId: "northwind-price", endpointCategory: "pool_search" },
+      { serviceId: "northwind-price", endpointCategory: "token_price" },
+      { serviceId: "northwind-price", endpointCategory: "simple_price" },
+    ),
+    workflow(
+      { serviceId: "streamdelta", endpointCategory: "trending_pools" },
+      { serviceId: "northwind-price", endpointCategory: "pool_search" },
+      { serviceId: "northwind-price", endpointCategory: "token_price" },
+    ),
+    workflow(
+      { serviceId: "northwind-price", endpointCategory: "token_price" },
+      { serviceId: "northwind-price", endpointCategory: "simple_price" },
+      { serviceId: "northwind-price", endpointCategory: "pool_search" },
+    ),
+  ],
+  research_agent: [
+    ...repeatWorkflow(
+      3,
+      { serviceId: "streamdelta", endpointCategory: "trending_pools" },
+      { serviceId: "northwind-price", endpointCategory: "pool_search" },
+      { serviceId: "ledgerlake", endpointCategory: "token_detail" },
+    ),
+    workflow(
+      { serviceId: "northwind-price", endpointCategory: "pool_search" },
+      { serviceId: "northwind-price", endpointCategory: "simple_price" },
+      { serviceId: "ledgerlake", endpointCategory: "token_detail" },
+    ),
+    workflow(
+      { serviceId: "northwind-price", endpointCategory: "simple_price" },
+      { serviceId: "streamdelta", endpointCategory: "trending_pools" },
+      { serviceId: "northwind-price", endpointCategory: "token_price" },
+    ),
+    workflow(
+      { serviceId: "ledgerlake", endpointCategory: "token_detail" },
+      { serviceId: "northwind-price", endpointCategory: "pool_search" },
+      { serviceId: "northwind-price", endpointCategory: "simple_price" },
+    ),
+  ],
+  execution_wallet: [
+    ...repeatWorkflow(
+      3,
+      { serviceId: "northwind-price", endpointCategory: "simple_price" },
+      { serviceId: "northwind-price", endpointCategory: "token_price" },
+      { serviceId: "ledgerlake", endpointCategory: "token_detail" },
+    ),
+    workflow(
+      { serviceId: "ledgerlake", endpointCategory: "token_detail" },
+      { serviceId: "northwind-price", endpointCategory: "simple_price" },
+      { serviceId: "streamdelta", endpointCategory: "trending_pools" },
+    ),
+    workflow(
+      { serviceId: "northwind-price", endpointCategory: "pool_search" },
+      { serviceId: "ledgerlake", endpointCategory: "token_detail" },
+      { serviceId: "northwind-price", endpointCategory: "token_price" },
+    ),
+  ],
+  one_off: [
+    workflow(
+      { serviceId: "northwind-price", endpointCategory: "simple_price" },
+      { serviceId: "northwind-price", endpointCategory: "token_price" },
+      { serviceId: "northwind-price", endpointCategory: "simple_price" },
+    ),
+    workflow(
+      { serviceId: "northwind-price", endpointCategory: "pool_search" },
+      { serviceId: "northwind-price", endpointCategory: "simple_price" },
+      { serviceId: "ledgerlake", endpointCategory: "token_detail" },
+    ),
+  ],
 };
 
-const categoryByService: Record<MacroServiceId, MacroEndpointCategory> = {
-  "northwind-price": "price_lookup",
-  vectormind: "ai_inference",
-  routezero: "swap_execution",
-  signalport: "notification",
-  vaultlayer: "portfolio_sync",
-  streamdelta: "market_feed",
-  ledgerlake: "settlement",
-};
+function workflowFor(wallet: MacroWallet, sessionIndex: number): WorkflowStep[] {
+  const variants = workflowVariantsBySegment[wallet.segment];
+  return variants[sessionIndex % variants.length];
+}
 
 const labelByCategory: Record<MacroEndpointCategory, string> = {
-  price_lookup: "GET /v1/prices",
-  ai_inference: "POST /v1/completions",
-  swap_execution: "POST /v1/swaps",
-  notification: "POST /v1/webhooks",
-  portfolio_sync: "GET /v1/portfolio",
-  market_feed: "GET /v1/markets/stream",
-  settlement: "POST /v1/settlements",
+  pool_search: "GET /api/v3/x402/onchain/search/pools",
+  trending_pools: "GET /api/v3/x402/onchain/networks/base/trending_pools",
+  simple_price: "GET /api/v3/x402/simple/price",
+  token_price: "GET /api/v3/x402/onchain/simple/networks/base/token_price/:address",
+  token_detail: "GET /api/v3/x402/onchain/networks/base/tokens/:address",
 };
 
 const repeatSessionsBySegment: Record<MacroWallet["segment"], number> = {
@@ -223,6 +297,14 @@ const spendUsdBySegment: Record<MacroWallet["segment"], number> = {
   one_off: 0.08,
 };
 
+const endpointSpendMultiplier: Record<MacroEndpointCategory, number> = {
+  pool_search: 0.9,
+  trending_pools: 0.75,
+  simple_price: 0.35,
+  token_price: 0.55,
+  token_detail: 1.15,
+};
+
 function atomicUsd(value: number): string {
   return Math.round(value * USDC).toString();
 }
@@ -233,24 +315,23 @@ function buildEvents(): MacroWorkflowEvent[] {
 
   for (const [walletIndex, wallet] of wallets.entries()) {
     const sessionCount = repeatSessionsBySegment[wallet.segment];
-    const flow = flowBySegment[wallet.segment];
     for (let sessionIndex = 0; sessionIndex < sessionCount; sessionIndex += 1) {
+      const flow = workflowFor(wallet, sessionIndex);
       const dayOffset = sessionCount - sessionIndex + (walletIndex % 3);
       const sessionId = `${wallet.address}:s${sessionIndex + 1}`;
       const baseTimestamp = T0 - dayOffset * DAY + walletIndex * 900 + sessionIndex * 180;
-      flow.forEach((serviceId, stepIndex) => {
-        const category = categoryByService[serviceId];
-        const spendMultiplier = 1 + stepIndex * 0.42 + (sessionIndex % 4) * 0.08;
+      flow.forEach((step, stepIndex) => {
+        const spendMultiplier = endpointSpendMultiplier[step.endpointCategory] + stepIndex * 0.14 + (sessionIndex % 4) * 0.05;
         events.push({
           eventId: `macro-${String(eventNo++).padStart(4, "0")}`,
           sessionId,
           walletAddress: wallet.address,
-          serviceId,
-          endpointCategory: category,
-          endpointLabel: labelByCategory[category],
+          serviceId: step.serviceId,
+          endpointCategory: step.endpointCategory,
+          endpointLabel: labelByCategory[step.endpointCategory],
           timestamp: baseTimestamp + stepIndex * 75,
           spendAtomic: atomicUsd(spendUsdBySegment[wallet.segment] * spendMultiplier),
-          txCount: serviceId === "routezero" ? 2 : 1,
+          txCount: step.endpointCategory === "simple_price" || step.endpointCategory === "token_price" ? 2 : 1,
         });
       });
     }

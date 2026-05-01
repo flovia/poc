@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { MACRO_METRICS_DEMO_DATA, type MacroMetricsDemoData } from "./demo";
+import { MACRO_METRICS_DEMO_DATA, type MacroEndpointCategory, type MacroMetricsDemoData } from "./demo";
 import { buildMacroMetrics, buildTrend } from "./metrics";
 
 describe("buildMacroMetrics", () => {
@@ -35,6 +35,28 @@ describe("buildMacroMetrics", () => {
     expect(metrics.repeatSummary.repeatWalletRate).toBe(0);
     expect(metrics.spendConcentration.rankedWallets).toEqual([]);
     expect(metrics.endpointFlows).toEqual([]);
+  });
+
+  test("keeps CoinGecko endpoints visible across all workflow steps", () => {
+    const metrics = buildMacroMetrics(MACRO_METRICS_DEMO_DATA);
+    const expectedEndpoints = new Set<MacroEndpointCategory>([
+      "pool_search",
+      "trending_pools",
+      "simple_price",
+      "token_price",
+      "token_detail",
+    ]);
+
+    for (const step of [0, 1, 2] as const) {
+      const endpointsAtStep = new Set(
+        metrics.endpointFlows.flatMap((flow) => [
+          ...(flow.fromStep === step ? [flow.from] : []),
+          ...(flow.toStep === step ? [flow.to] : []),
+        ]),
+      );
+
+      expect(endpointsAtStep).toEqual(expectedEndpoints);
+    }
   });
 });
 

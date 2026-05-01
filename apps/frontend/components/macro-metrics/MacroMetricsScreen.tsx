@@ -128,7 +128,7 @@ export function MacroMetricsScreen({ metrics, providerId }: Props) {
               />
             </Card>
             <Card title="Endpoint category flow" eyebrow="P1 proxy flow">
-              <EndpointSankey flows={metrics.endpointFlows.slice(0, 6)} />
+              <EndpointSankey flows={metrics.endpointFlows} />
             </Card>
           </TwoColumn>
         </Section>

@@ -71,6 +71,8 @@ export type EndpointUsage = {
 export type EndpointFlow = {
   from: MacroEndpointCategory;
   to: MacroEndpointCategory;
+  fromStep: 0 | 1;
+  toStep: 1 | 2;
   occurrences: number;
   share: number;
 };
@@ -348,11 +350,13 @@ function buildEndpointFlows(data: MacroMetricsDemoData): EndpointFlow[] {
     const sorted = [...events].sort(
       (a, b) => a.timestamp - b.timestamp || a.eventId.localeCompare(b.eventId),
     );
-    for (let index = 1; index < sorted.length; index += 1) {
+    for (let index = 1; index < sorted.length && index <= 2; index += 1) {
       const from = sorted[index - 1].endpointCategory;
       const to = sorted[index].endpointCategory;
-      const key = `${from}->${to}`;
-      const row = flows.get(key) ?? { from, to, occurrences: 0, share: 0 };
+      const fromStep = (index - 1) as 0 | 1;
+      const toStep = index as 1 | 2;
+      const key = `${fromStep}:${from}->${toStep}:${to}`;
+      const row = flows.get(key) ?? { from, to, fromStep, toStep, occurrences: 0, share: 0 };
       row.occurrences += 1;
       flows.set(key, row);
       totalTransitions += 1;
