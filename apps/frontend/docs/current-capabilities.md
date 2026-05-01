@@ -73,6 +73,7 @@ sidebar and does not affect BFF data scope. BFF has no provider-level filtering 
 | Column | DTO field | Notes |
 | --- | --- | --- |
 | Wallet | `address` | payer wallet address |
+| Chain | (frontend constant) | rendered with `ChainBadge`; resolves to `Base · USDC` for every row via `getCustomerChainAttribution`. The Toolbar `Chain` select filters on this value. See `future-work.md` for swapping the helper out for BFF-attested per-wallet chain data |
 | Spend (atomic) | `spendAtomic` | formatted with `formatAtomic`, assuming 6 decimals |
 | Observations | `observationCount` | observed on-chain payment count |
 | Providers | `providerCount` | distinct recipient wallets this payer paid |

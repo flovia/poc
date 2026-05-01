@@ -41,6 +41,7 @@ export function CustomersBrowser({
         providerId={providerId}
         dataMode={dataMode}
         extrasMap={extrasMap}
+        totalBeforeFilter={customers.length}
       />
     </>
   );
