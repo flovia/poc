@@ -1,10 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import type { CoUsageProviderRow } from "@/lib/customers/co-usage-providers";
 
 type Props = {
   row: CoUsageProviderRow | null;
+  providerId: string;
   onClose: () => void;
 };
 
@@ -28,10 +30,7 @@ const hostnameOf = (urlOrText: string): string | null => {
   }
 };
 
-const shortenWallet = (address: string) =>
-  address.length > 12 ? `${address.slice(0, 6)}…${address.slice(-4)}` : address;
-
-export function CoUsageProviderDrawer({ row, onClose }: Props) {
+export function CoUsageProviderDrawer({ row, providerId, onClose }: Props) {
   const open = row !== null;
   const [copied, setCopied] = useState(false);
 
@@ -299,19 +298,33 @@ export function CoUsageProviderDrawer({ row, onClose }: Props) {
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "space-between",
+                      gap: 8,
                       padding: "6px 8px",
                       borderRadius: 4,
                       background: "var(--surface-subtle)",
                     }}
                   >
-                    <code
+                    <Link
+                      href={`/providers/${providerId}/wallet/${encodeURIComponent(p.wallet)}`}
+                      onClick={onClose}
                       className="mono"
-                      style={{ fontSize: 12, background: "transparent" }}
-                      title={p.wallet}
+                      title={`Open wallet detail for ${p.wallet}`}
+                      style={{
+                        flex: 1,
+                        minWidth: 0,
+                        fontSize: 12,
+                        color: "var(--mesh-blue)",
+                        textDecoration: "underline",
+                        textDecorationStyle: "dotted",
+                        textDecorationColor: "var(--text-mute)",
+                        wordBreak: "break-all",
+                      }}
                     >
-                      {shortenWallet(p.wallet)}
-                    </code>
-                    <span style={{ fontSize: 11, color: "var(--text-3)" }}>
+                      {p.wallet}
+                    </Link>
+                    <span
+                      style={{ fontSize: 11, color: "var(--text-3)", whiteSpace: "nowrap" }}
+                    >
                       {p.sharedTxCount} tx
                     </span>
                   </li>

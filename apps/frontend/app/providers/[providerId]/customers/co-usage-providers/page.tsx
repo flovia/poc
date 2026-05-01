@@ -107,7 +107,7 @@ export default async function CoUsageProvidersPage({
               No external provider co-usage has been observed for this provider yet.
             </div>
           ) : (
-            <CoUsageProvidersView rows={rows} />
+            <CoUsageProvidersView rows={rows} providerId={providerId} />
           )}
         </div>
       </div>

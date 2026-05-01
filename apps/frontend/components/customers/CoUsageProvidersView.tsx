@@ -30,7 +30,13 @@ const shortEndpoint = (serviceName: string): string => {
   }
 };
 
-export function CoUsageProvidersView({ rows }: { rows: CoUsageProviderRow[] }) {
+export function CoUsageProvidersView({
+  rows,
+  providerId,
+}: {
+  rows: CoUsageProviderRow[];
+  providerId: string;
+}) {
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
 
   const select = useCallback((row: CoUsageProviderRow) => {
@@ -210,7 +216,7 @@ export function CoUsageProvidersView({ rows }: { rows: CoUsageProviderRow[] }) {
         </table>
       </div>
 
-      <CoUsageProviderDrawer row={selectedRow} onClose={close} />
+      <CoUsageProviderDrawer row={selectedRow} providerId={providerId} onClose={close} />
     </>
   );
 }
