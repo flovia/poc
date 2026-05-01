@@ -38,7 +38,7 @@ export function EndpointSankey({ flows, compact = false }: EndpointSankeyProps) 
     <div style={{ height: compact ? 220 : 320, minWidth: compact ? 420 : 560 }}>
       <ResponsiveSankey<SankeyNode, SankeyLink>
         data={data}
-        margin={compact ? { top: 6, right: 96, bottom: 6, left: 12 } : { top: 10, right: 132, bottom: 10, left: 16 }}
+        margin={compact ? { top: 6, right: 96, bottom: 6, left: 72 } : { top: 10, right: 132, bottom: 10, left: 16 }}
         align="justify"
         sort="input"
         colors={(node) => ENDPOINT_COLORS[endpointFromNodeId(node.id)] ?? "#94A3B8"}

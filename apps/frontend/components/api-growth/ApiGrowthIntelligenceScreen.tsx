@@ -1,8 +1,10 @@
 import type { CSSProperties, ReactNode } from "react";
+import { EndpointSankey, type EndpointSankeyFlow } from "@/components/macro-metrics/EndpointSankey";
 import { formatRatioPct } from "@/lib/format";
 import type {
   ApiGrowthInsightCard,
   ApiGrowthIntelligence,
+  ApiGrowthEndpointFlow,
   EndpointFrequencyRow,
   SourceMediumQualityRow,
   UseCaseFitCard,
@@ -35,14 +37,14 @@ export function ApiGrowthIntelligenceScreen({ intelligence }: Props) {
         <InsightGrid cards={intelligence.insightCards} />
 
         <div style={{ display: "grid", gridTemplateColumns: "minmax(320px, 1fr) minmax(320px, 1fr) minmax(340px, 1fr)", gap: 14, alignItems: "start" }}>
-          <SectionCard eyebrow="Source / Medium Quality" title="Where users come from">
+          <SectionCard eyebrow="Source / Medium Adoption" title="Where users come from">
             <BubbleMatrix rows={intelligence.sourceMediumQuality.rows} />
             <SourceTable rows={intelligence.sourceMediumQuality.rows} />
           </SectionCard>
 
           <SectionCard eyebrow="Endpoint & Frequency" title="What they use repeatedly">
             <EndpointBars rows={intelligence.endpointFrequency.rows} />
-            <EndpointFlow flow={intelligence.endpointFrequency.flow} />
+            <EndpointFlow flows={intelligence.endpointFrequency.flows} />
           </SectionCard>
 
           <SectionCard eyebrow="Use Case & x402 / Agents Fit" title="What they are trying to do">
@@ -138,7 +140,7 @@ function BubbleMatrix({ rows }: { rows: SourceMediumQualityRow[] }) {
         <line x1={plot.left} y1={plot.top} x2={plot.left} y2={plot.bottom} stroke="var(--line-strong)" />
         <line x1={plot.splitX} y1={plot.top} x2={plot.splitX} y2={plot.bottom} stroke="var(--line-strong)" strokeDasharray="4 4" />
         <line x1={plot.left} y1={plot.splitY} x2={plot.right} y2={plot.splitY} stroke="var(--line-strong)" strokeDasharray="4 4" />
-        <text x={plot.left + 10} y={plot.top + 16} fill="var(--text-3)" fontSize="10" fontWeight="700">Niche quality</text>
+        <text x={plot.left + 10} y={plot.top + 16} fill="var(--text-3)" fontSize="10" fontWeight="700">Niche adoption</text>
         <text x={plot.splitX + 56} y={plot.top + 16} fill="var(--mesh-blue)" fontSize="10" fontWeight="700">Scale / double down</text>
         <text x={plot.left + 10} y={plot.bottom - 10} fill="var(--text-mute)" fontSize="10">Low priority</text>
         <text x={plot.splitX + 40} y={plot.bottom - 10} fill="var(--text-3)" fontSize="10" fontWeight="700">Improve retention</text>
@@ -155,7 +157,7 @@ function BubbleMatrix({ rows }: { rows: SourceMediumQualityRow[] }) {
           );
         })}
         <text x={(plot.left + plot.right) / 2} y="228" textAnchor="middle" fill="var(--text-3)" fontSize="11">Acquisition volume, normalized to largest source</text>
-        <text x="10" y={(plot.top + plot.bottom) / 2} transform={`rotate(-90 10 ${(plot.top + plot.bottom) / 2})`} textAnchor="middle" fill="var(--text-3)" fontSize="11">Repeat quality</text>
+        <text x="10" y={(plot.top + plot.bottom) / 2} transform={`rotate(-90 10 ${(plot.top + plot.bottom) / 2})`} textAnchor="middle" fill="var(--text-3)" fontSize="11">Repeat adoption</text>
       </svg>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
         <span style={chipStyle}>bubble = paid endpoint frequency</span>
@@ -167,17 +169,46 @@ function BubbleMatrix({ rows }: { rows: SourceMediumQualityRow[] }) {
 
 function SourceTable({ rows }: { rows: SourceMediumQualityRow[] }) {
   return (
-    <div style={{ display: "grid", gap: 8 }}>
+    <div style={{ display: "grid", gap: 0, borderTop: "1px solid var(--line)" }}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1.25fr 0.6fr 0.7fr 0.7fr 0.85fr",
+          gap: 8,
+          padding: "8px 0",
+          color: "var(--text-mute)",
+          fontSize: 11,
+          fontWeight: 700,
+          letterSpacing: "0.06em",
+          textTransform: "uppercase",
+        }}
+      >
+        <span>Source</span>
+        <span style={{ textAlign: "right" }}>Wallets</span>
+        <span style={{ textAlign: "right" }}>First paid</span>
+        <span style={{ textAlign: "right" }}>W2 repeat</span>
+        <span style={{ textAlign: "right" }}>Calls / wallet</span>
+      </div>
       {rows.slice(0, 6).map((row) => (
-        <div key={row.source} style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 10, alignItems: "center", padding: "10px 0", borderTop: "1px solid var(--line)" }}>
+        <div
+          key={row.source}
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1.25fr 0.6fr 0.7fr 0.7fr 0.85fr",
+            gap: 8,
+            alignItems: "center",
+            padding: "10px 0",
+            borderTop: "1px solid var(--line)",
+            fontSize: 12,
+          }}
+        >
           <div style={{ minWidth: 0 }}>
             <strong style={{ fontSize: 13 }}>{row.source}</strong>
-            <div style={{ color: "var(--text-3)", fontSize: 12 }}>{row.wallets} wallets · {row.useCaseMix}</div>
           </div>
-          <div style={{ textAlign: "right" }}>
-            <div className="mono" style={{ color: "var(--mesh-blue)", fontWeight: 700 }}>{Math.round(row.qualityScore * 100)}</div>
-            <div style={{ color: "var(--text-mute)", fontSize: 11 }}>quality</div>
-          </div>
+          <span className="mono" style={{ textAlign: "right", color: "var(--text-1)", fontWeight: 650 }}>{row.wallets}</span>
+          <span className="mono" style={{ textAlign: "right", color: "var(--text-1)", fontWeight: 650 }}>{row.firstPaid}</span>
+          <span className="mono" style={{ textAlign: "right", color: row.repeatQuality >= 0.7 ? "var(--teal)" : "var(--text-2)", fontWeight: 700 }}>{formatRatioPct(row.repeatQuality)}</span>
+          <span className="mono" style={{ textAlign: "right", color: "var(--mesh-blue)", fontWeight: 700 }}>{row.endpointFrequency.toFixed(1)}</span>
         </div>
       ))}
     </div>
@@ -192,29 +223,37 @@ function EndpointBars({ rows }: { rows: EndpointFrequencyRow[] }) {
         <div key={row.endpoint}>
           <div style={{ display: "flex", justifyContent: "space-between", gap: 10, fontSize: 12, marginBottom: 5 }}>
             <strong>{row.endpoint}</strong>
-            <span className="mono" style={{ color: "var(--text-3)" }}>{row.callsPerWallet} calls / wallet</span>
+            <span className="mono" style={{ color: "var(--text-3)" }}>{row.paidFrequency.toLocaleString()} calls</span>
           </div>
           <div style={{ height: 9, borderRadius: 999, background: "var(--surface-muted)", overflow: "hidden" }}>
             <div style={{ width: `${Math.max(6, (row.paidFrequency / max) * 100)}%`, height: "100%", background: "var(--mesh-blue)" }} />
           </div>
-          <div style={{ color: "var(--text-mute)", fontSize: 11, marginTop: 3 }}>{row.wallets} wallets · {row.repeatSessions} repeat sessions</div>
+          <div style={{ color: "var(--text-mute)", fontSize: 11, marginTop: 3 }}>{row.wallets} wallets · {row.callsPerWallet} calls / wallet · {row.repeatSessions} repeat sessions</div>
         </div>
       ))}
     </div>
   );
 }
 
-function EndpointFlow({ flow }: { flow: EndpointFrequencyRow["endpoint"][] }) {
+function EndpointFlow({ flows }: { flows: ApiGrowthEndpointFlow[] }) {
+  const sankeyFlows: EndpointSankeyFlow[] = flows;
+  const strongestFlow = [...flows].sort((left, right) => right.occurrences - left.occurrences)[0];
+
   return (
     <div style={{ padding: 14, borderRadius: 6, border: "1px solid var(--line)", background: "var(--surface-card)" }}>
-      <div style={{ ...eyebrowStyle, marginBottom: 10 }}>repeat flow = agent-like signal</div>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-        {flow.map((endpoint, index) => (
-          <span key={endpoint} style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-            <span className="mono" style={{ padding: "6px 8px", borderRadius: 4, background: "var(--surface-muted)", border: "1px solid var(--line)", fontSize: 12 }}>{endpoint}</span>
-            {index < flow.length - 1 && <span style={{ color: "var(--text-3)", fontWeight: 700 }}>→</span>}
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "baseline", marginBottom: 10 }}>
+        <div style={eyebrowStyle}>Repeated endpoint transitions</div>
+        {strongestFlow && (
+          <span className="mono" style={{ color: "var(--text-3)", fontSize: 11 }}>
+            top path: {strongestFlow.from} → {strongestFlow.to}
           </span>
-        ))}
+        )}
+      </div>
+      <div style={{ overflowX: "auto" }}>
+        <EndpointSankey flows={sankeyFlows} compact />
+      </div>
+      <div style={{ color: "var(--text-mute)", fontSize: 11, marginTop: 8 }}>
+        Wider links indicate more observed paid transitions across repeated API sessions.
       </div>
     </div>
   );
@@ -230,6 +269,10 @@ function UseCaseCards({ cards }: { cards: UseCaseFitCard[] }) {
             <PriorityBadge priority={card.productPriority} />
           </div>
           <div style={{ color: "var(--text-3)", fontSize: 12, marginBottom: 8 }}>{card.endpointFlow} · {card.sourceMix}</div>
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 8, color: "var(--text-mute)", fontSize: 11, marginBottom: 8 }}>
+            <span>Frequency</span>
+            <span className="mono" style={{ color: "var(--text-2)", fontWeight: 650 }}>{card.frequency.toFixed(1)} calls / wallet</span>
+          </div>
           <ScorePills agentFit={card.agentFit} x402Fit={card.x402Fit} confidence={card.confidence} />
         </div>
       ))}
