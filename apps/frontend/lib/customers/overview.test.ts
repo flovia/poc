@@ -129,7 +129,10 @@ describe("computeRecencyMatrix", () => {
     ];
     const matrix = computeRecencyMatrix(customers);
     expect(
-      matrix.cells.recentHigh + matrix.cells.recentLow + matrix.cells.staleHigh + matrix.cells.staleLow,
+      matrix.cells.recentHigh +
+        matrix.cells.recentLow +
+        matrix.cells.staleHigh +
+        matrix.cells.staleLow,
     ).toBe(2);
   });
 

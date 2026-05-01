@@ -144,7 +144,7 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
       <div className="brand">
         <Image
           className="brand-mark"
-          src="/logo.jpg"
+          src="/logo.png"
           alt=""
           width={44}
           height={44}

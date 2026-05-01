@@ -21,6 +21,8 @@ ENV BFF_URL=http://bff:3001 \
     NEXT_PUBLIC_BFF_URL=/api \
     NEXT_TELEMETRY_DISABLED=1
 
+RUN bun run build
+
 EXPOSE 3000
 
-CMD ["bun", "run", "dev", "--", "--hostname", "0.0.0.0"]
+CMD ["bun", "run", "start", "--", "--hostname", "0.0.0.0"]

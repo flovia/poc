@@ -5,6 +5,10 @@
       "**/*.ts",
       "**/*.json",
       "!.worktrees/**/*",
+      "!**/.next/**/*",
+      "!**/node_modules/**/*",
+      "!**/dist/**/*",
+      "!apps/*/data/**/*.json",
       "!apps/*/fixtures/**/*.json",
       "!apps/*/reports/**/*.json"
     ]

@@ -25,11 +25,7 @@ export function describeSnapshotAge(
   }
   const ageMs = Math.max(0, nowMs - generatedMs);
   const severity: SnapshotSeverity =
-    ageMs >= OUTDATED_THRESHOLD_MS
-      ? "outdated"
-      : ageMs >= STALE_THRESHOLD_MS
-        ? "stale"
-        : "fresh";
+    ageMs >= OUTDATED_THRESHOLD_MS ? "outdated" : ageMs >= STALE_THRESHOLD_MS ? "stale" : "fresh";
 
   return {
     relative: formatRelative(ageMs),
