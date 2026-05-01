@@ -10,14 +10,8 @@ import type {
   PaymentObservationDto,
   ProviderCatalogItemDto,
   ReportSummaryDto,
-  WalletUsageGraphDto,
 } from "./api/types";
-import type {
-  SdkExtras,
-  SdkForceNetwork,
-  SdkRetentionByAgentRow,
-  SdkWorkflowCluster,
-} from "./sdk-fixtures/types";
+import type { SdkExtras, SdkForceNetwork } from "./sdk-fixtures/types";
 
 // 主役 wallet の正規アドレス. wallet/[address]/page.tsx の redirect で使う.
 export const SDK_PROTAGONIST_ADDRESS = "0x7A91...C4E8";
@@ -46,13 +40,6 @@ export async function getCustomerProfile(address: string): Promise<CustomerProfi
   return v.getCustomerProfile(address);
 }
 
-export async function getWalletUsageGraph(): Promise<WalletUsageGraphDto> {
-  const mode = await getServerDashboardMode();
-  if (mode === "onChainOnly") return live.getWalletUsageGraph();
-  const v = await sdkModule();
-  return v.getWalletUsageGraph();
-}
-
 export async function getObservations(): Promise<PaymentObservationDto[]> {
   const mode = await getServerDashboardMode();
   if (mode === "onChainOnly") return live.getObservations();
@@ -79,20 +66,6 @@ export async function getSdkExtrasMap(): Promise<Map<string, SdkExtras>> {
   if (mode === "onChainOnly") return new Map();
   const v = await sdkModule();
   return v.getExtrasMap();
-}
-
-export async function getSdkWorkflowClusters(): Promise<SdkWorkflowCluster[]> {
-  const mode = await getServerDashboardMode();
-  if (mode === "onChainOnly") return [];
-  const v = await sdkModule();
-  return v.getWorkflowClusters();
-}
-
-export async function getSdkRetentionByAgent(): Promise<SdkRetentionByAgentRow[]> {
-  const mode = await getServerDashboardMode();
-  if (mode === "onChainOnly") return [];
-  const v = await sdkModule();
-  return v.getRetentionByAgent();
 }
 
 export async function getSdkForceNetwork(address: string): Promise<SdkForceNetwork | null> {
