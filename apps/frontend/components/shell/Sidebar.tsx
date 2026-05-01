@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { useProviders } from "@/app/providers";
 import { Icon } from "@/components/ui/Icon";
@@ -34,6 +34,7 @@ function sectionFor(activeRoute: ActiveRoute): "customers" | "macro-metrics" | "
 
 export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const { stored, userProviders, hydrated, removeProvider, demoOpted, optOutDemo } = useProviders();
   const userIds = useMemo(
     () => new Set(userProviders.map((p) => p.providerId)),
@@ -68,6 +69,26 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
 
   // Phase 6: Currently viewing dropdown (disclosure) の開閉 state。
   const [open, setOpen] = useState(false);
+
+  // My Customers サブナビは default 展開. localStorage で永続化, アクティブ時は強制展開.
+  const customersGroupActive = activeRoute === "customers" || activeRoute === "wallet";
+  const [customersSubOpen, setCustomersSubOpen] = useState(true);
+  useEffect(() => {
+    try {
+      const v = localStorage.getItem("flovia.sidebar.customersSubOpen");
+      if (v === "0") setCustomersSubOpen(false);
+    } catch {}
+  }, []);
+  const toggleCustomersSub = useCallback(() => {
+    setCustomersSubOpen((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem("flovia.sidebar.customersSubOpen", next ? "1" : "0");
+      } catch {}
+      return next;
+    });
+  }, []);
+  const customersSubVisible = customersGroupActive || customersSubOpen;
   const providerBlockRef = useRef<HTMLDivElement>(null);
   const pillId = useId();
   const providerListId = useId();
@@ -171,14 +192,53 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
             My Customers
           </span>
         ) : (
-          <Link
-            href={navHrefFor("customers")}
-            className="nav-item"
-            aria-current={activeRoute === "customers" || activeRoute === "wallet"}
-          >
-            <Icon.customers />
-            My Customers
-          </Link>
+          <>
+            <div className="nav-row">
+              <Link
+                href={navHrefFor("customers")}
+                className="nav-item nav-item--with-toggle"
+                aria-current={customersGroupActive}
+              >
+                <Icon.customers />
+                My Customers
+              </Link>
+              <button
+                type="button"
+                className="nav-toggle"
+                aria-expanded={customersSubVisible}
+                aria-controls="nav-sub-customers"
+                aria-label={customersSubVisible ? "Collapse My Customers" : "Expand My Customers"}
+                onClick={toggleCustomersSub}
+                disabled={customersGroupActive}
+                title={customersGroupActive ? "Sub-pages of the active section" : undefined}
+              >
+                <span className="caret" aria-hidden="true">{customersSubVisible ? "▾" : "▸"}</span>
+              </button>
+            </div>
+            {(() => {
+              const id =
+                activeProviderId
+                ?? stored[0]?.providerId
+                ?? (dataMode === "sdkConnected" ? SDK_DEMO_PROVIDER_ID : undefined);
+              if (!id) return null;
+              const otherHref = `/providers/${id}/customers/other-service-candidate`;
+              return (
+                <div
+                  id="nav-sub-customers"
+                  className="nav-sub"
+                  hidden={!customersSubVisible}
+                >
+                  <Link
+                    href={otherHref}
+                    className="nav-item nav-item--sub"
+                    aria-current={pathname === otherHref}
+                  >
+                    Other Service Candidates
+                  </Link>
+                </div>
+              );
+            })()}
+          </>
         )}
 
         {navDisabled ? (
