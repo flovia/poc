@@ -77,11 +77,16 @@ sidebar and does not affect BFF data scope. BFF has no provider-level filtering 
 | Observations | `observationCount` | observed on-chain payment count |
 | Providers | `providerCount` | distinct recipient wallets this payer paid |
 | Last seen | `lastSeenAt` | unix sec → ISO string |
-| Upsell | `upsellOpportunity` | displayed as `low` / `medium` / `high` using `UpsellPill`, paired with `ProvenanceBadge` |
+| Upsell | `upsellOpportunity` | displayed as `low` / `medium` / `high` using `UpsellPill` |
 
 `activityGrowth` is still in the DTO and is rendered on Wallet 360°, but is
 no longer shown on this list. See `future-work.md` for the plan to bring the
 column back once the value is period-aware.
+
+`CustomerListItemDto` still carries `provenance` / `provenanceByField` /
+`reasons`, but the table does not render a provenance badge today. The
+plumbing is left in place because the deferred items in `future-work.md`
+(per-row reason hover, column-level provenance badges) will both consume it.
 
 #### Summary chips
 - Total wallets

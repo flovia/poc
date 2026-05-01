@@ -200,11 +200,7 @@ export function CustomersTable({
               {formatTimestamp(c.lastSeenAt)}
             </div>
             <div>
-              <UpsellPill
-                opportunity={c.upsellOpportunity}
-                provenance={c.provenanceByField.upsellOpportunity ?? c.provenance}
-                reasons={c.reasons}
-              />
+              <UpsellPill opportunity={c.upsellOpportunity} />
             </div>
             <div className="row-arrow" style={{ display: "flex", justifyContent: "flex-end" }}>
               <Icon.arrow width="14" height="14" />
