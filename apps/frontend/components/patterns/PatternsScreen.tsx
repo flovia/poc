@@ -109,7 +109,6 @@ export function PatternsScreen({
     () => buildBubbles(graph, observations),
     [graph, observations],
   );
-
   const isSdkConnected = dataMode === "sdkConnected";
 
   return (

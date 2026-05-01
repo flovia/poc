@@ -1,8 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import {
-  compactUpsellSummary,
-  formatUpsellExplanationModelName,
-} from "./UpsellExplanationPanel";
+import { compactUpsellSummary, formatUpsellExplanationModelName } from "./UpsellExplanationPanel";
 
 describe("compactUpsellSummary", () => {
   test("preserves short titles", () => {
@@ -26,9 +23,9 @@ describe("formatUpsellExplanationModelName", () => {
   });
 
   test("formats Claude 3.5 style model ids", () => {
-    expect(
-      formatUpsellExplanationModelName("anthropic.claude-3-5-sonnet-20241022-v2:0"),
-    ).toBe("Claude 3.5 Sonnet");
+    expect(formatUpsellExplanationModelName("anthropic.claude-3-5-sonnet-20241022-v2:0")).toBe(
+      "Claude 3.5 Sonnet",
+    );
   });
 
   test("falls back to the raw model id suffix when the pattern is unknown", () => {

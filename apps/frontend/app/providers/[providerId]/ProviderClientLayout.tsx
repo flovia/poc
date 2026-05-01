@@ -6,12 +6,13 @@ import { Sidebar } from "@/components/shell/Sidebar";
 import { useProviders } from "@/app/providers";
 import type { DashboardMode } from "@/lib/data-mode";
 
-type RouteSegment = "customers" | "patterns" | "wallet";
+type RouteSegment = "customers" | "patterns" | "macro-metrics" | "wallet";
 
 function deriveActiveRoute(pathname: string): RouteSegment | undefined {
   if (pathname.includes("/wallet/")) return "wallet";
   if (pathname.endsWith("/customers") || pathname.includes("/customers/")) return "customers";
   if (pathname.endsWith("/patterns") || pathname.includes("/patterns/")) return "patterns";
+  if (pathname.endsWith("/macro-metrics") || pathname.includes("/macro-metrics/")) return "macro-metrics";
   return undefined;
 }
 

@@ -51,8 +51,8 @@ export const Icon = {
       <path d="M3 11V4a1 1 0 0 1 1-1h7" stroke="currentColor" strokeWidth="1.3" />
     </svg>
   ),
-  bolt: (p: IconProps) => (
-    <svg viewBox="0 0 16 16" fill="none" {...A11Y_DEFAULTS} {...p}>
+  bolt: ({ className, ...p }: IconProps) => (
+    <svg viewBox="0 0 16 16" fill="none" {...A11Y_DEFAULTS} {...p} className={navIcon(className)}>
       <path d="M9 1.5 4 9h3.5L7 14.5 12 7H8.5z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
     </svg>
   ),
