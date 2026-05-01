@@ -59,7 +59,7 @@ export function ApiGrowthIntelligenceScreen({ intelligence }: Props) {
             Growth Action Bridge
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "minmax(340px, 0.86fr) minmax(420px, 1.14fr)", gap: 14, alignItems: "start" }}>
-            <SectionCard eyebrow="Other Service Candidates" title="Assigned expansion targets">
+            <SectionCard eyebrow="Other Service Candidates" title="Adjacent API opportunities">
               <OtherServiceCandidates candidates={intelligence.otherServiceCandidates} />
             </SectionCard>
 
@@ -325,16 +325,18 @@ function OtherServiceCandidates({ candidates }: { candidates: ApiGrowthServiceCa
 
   return (
     <div style={{ display: "grid", gap: 10 }}>
+      <p style={{ ...bodyText, margin: "0 0 2px" }}>
+        APIs with high overlap among repeat wallets using this provider. Ranked by shared wallet
+        count, spend, and workflow fit.
+      </p>
       {candidates.slice(0, 4).map((candidate) => (
         <div key={candidate.serviceId} style={{ padding: 12, border: "1px solid var(--line)", borderRadius: 8, background: "var(--surface-card)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "start", marginBottom: 8 }}>
             <div>
               <strong style={{ fontSize: 14 }}>{candidate.serviceName}</strong>
-              <div style={{ color: "var(--text-mute)", fontSize: 11, marginTop: 2 }}>owner: {candidate.owner}</div>
             </div>
             <span className="mono" style={{ color: "var(--mesh-blue)", fontSize: 12, fontWeight: 800 }}>{formatRatioPct(candidate.confidence)} fit</span>
           </div>
-          <p style={bodyText}>{candidate.reason}</p>
           <div style={{ display: "flex", justifyContent: "space-between", gap: 10, color: "var(--text-3)", fontSize: 12 }}>
             <span>{candidate.sharedWallets} shared wallets</span>
             <span className="mono">${formatAtomic(candidate.sharedSpendAtomic, 6, 0)} paid spend</span>

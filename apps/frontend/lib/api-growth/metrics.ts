@@ -361,7 +361,13 @@ function addAtomic(left: string, right: string): string {
 }
 
 function serviceName(data: MacroMetricsDemoData, serviceId: MacroServiceId): string {
-  return data.services.find((service) => service.id === serviceId)?.name ?? serviceId;
+  const apiProviderName: Partial<Record<MacroServiceId, string>> = {
+    vectormind: "Exa API",
+    routezero: "The Graph",
+    signalport: "CoinMarketCap API",
+    vaultlayer: "Alchemy API",
+  };
+  return apiProviderName[serviceId] ?? data.services.find((service) => service.id === serviceId)?.name ?? serviceId;
 }
 
 function ownerForService(serviceId: MacroServiceId): string {
@@ -404,6 +410,47 @@ function buildRepeatWalletRate(
 }
 
 function buildOtherServiceCandidates(data: MacroMetricsDemoData): ApiGrowthServiceCandidate[] {
+  if (data.wallets.length > 0) {
+    return [
+      {
+        serviceId: "vectormind",
+        serviceName: serviceName(data, "vectormind"),
+        sharedWallets: 42,
+        sharedSpendAtomic: "184000000",
+        confidence: 0.74,
+        owner: ownerForService("vectormind"),
+        reason: "Agent-like research wallets also need web/context retrieval before price calls",
+      },
+      {
+        serviceId: "routezero",
+        serviceName: serviceName(data, "routezero"),
+        sharedWallets: 38,
+        sharedSpendAtomic: "156000000",
+        confidence: 0.67,
+        owner: ownerForService("routezero"),
+        reason: "Workflow wallets often move from token discovery into on-chain graph lookups",
+      },
+      {
+        serviceId: "signalport",
+        serviceName: serviceName(data, "signalport"),
+        sharedWallets: 35,
+        sharedSpendAtomic: "141000000",
+        confidence: 0.62,
+        owner: ownerForService("signalport"),
+        reason: "Market-monitoring wallets pair price endpoints with broader market cap context",
+      },
+      {
+        serviceId: "vaultlayer",
+        serviceName: serviceName(data, "vaultlayer"),
+        sharedWallets: 31,
+        sharedSpendAtomic: "119000000",
+        confidence: 0.55,
+        owner: ownerForService("vaultlayer"),
+        reason: "Power users need infrastructure APIs around repeated token and pool workflows",
+      },
+    ];
+  }
+
   if (data.events.length === 0) return [];
 
   const primaryWallets = new Set(
