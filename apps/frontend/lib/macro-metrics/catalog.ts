@@ -56,6 +56,7 @@ export type CatalogPreview = {
     | "cluster";
   headline: string;
   rows?: Array<{ label: string; value: string; share?: number; note?: string }>;
+  flows?: Array<{ from: string; to: string; occurrences: number }>;
   cells?: Array<{ x: string; y: string; value: number; label?: string }>;
   points?: Array<{ label: string; x: number; y: number; size?: number; note?: string }>;
 };
@@ -99,6 +100,11 @@ const flowRows = macro.endpointFlows.slice(0, 5).map((flow) => ({
   label: `${flow.from.replace(/_/g, " ")} → ${flow.to.replace(/_/g, " ")}`,
   value: `${flow.occurrences}×`,
   share: flow.share,
+}));
+const sankeyFlows = macro.endpointFlows.slice(0, 6).map((flow) => ({
+  from: flow.from,
+  to: flow.to,
+  occurrences: flow.occurrences,
 }));
 
 export const EXPECTED_CATALOG_METRIC_IDS = [
@@ -197,13 +203,11 @@ export const METRICS_CATALOG: CatalogMetric[] = [
     {
       kind: "bars",
       headline: `${macro.overview.paidUsageTxCount} tx`,
-      rows: macro.endpointUsage
-        .slice(0, 4)
-        .map((row) => ({
-          label: row.category.replace(/_/g, " "),
-          value: `${row.txCount} tx`,
-          share: row.share,
-        })),
+      rows: macro.endpointUsage.slice(0, 4).map((row) => ({
+        label: row.category.replace(/_/g, " "),
+        value: `${row.txCount} tx`,
+        share: row.share,
+      })),
     },
   ),
   metric(
@@ -487,7 +491,7 @@ export const METRICS_CATALOG: CatalogMetric[] = [
     "Ordered endpoint category transitions.",
     "Shows real agent workflow sequence such as Extract → Analyze → Transact.",
     "flow",
-    { kind: "flow", headline: "Top workflow transitions", rows: flowRows },
+    { kind: "flow", headline: "Top workflow transitions", rows: flowRows, flows: sankeyFlows },
   ),
   metric(
     "endpoint-category-retention",

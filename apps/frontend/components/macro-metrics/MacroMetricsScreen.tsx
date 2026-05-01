@@ -1,5 +1,6 @@
 import type { CSSProperties, ReactNode } from "react";
 import Link from "next/link";
+import { EndpointSankey } from "./EndpointSankey";
 import { formatAtomic, formatRatioPct, shortAddr } from "@/lib/format";
 import type { MacroMetricsViewModel, TrendPoint } from "@/lib/macro-metrics/metrics";
 
@@ -127,18 +128,7 @@ export function MacroMetricsScreen({ metrics, providerId }: Props) {
               />
             </Card>
             <Card title="Endpoint category flow" eyebrow="P1 proxy flow">
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {metrics.endpointFlows.slice(0, 6).map((flow) => (
-                  <div key={`${flow.from}->${flow.to}`} style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 12, padding: "10px 12px", borderRadius: 8, background: "var(--bg-elev-2)" }}>
-                    <span className="mono" style={{ fontSize: 12, color: "var(--text-2)" }}>
-                      <strong style={{ color: "var(--text-1)" }}>{flow.from.replace(/_/g, " ")}</strong>
-                      <span style={{ color: "var(--text-mute)", margin: "0 8px" }}>→</span>
-                      <strong style={{ color: "var(--text-1)" }}>{flow.to.replace(/_/g, " ")}</strong>
-                    </span>
-                    <span className="mono" style={{ color: "var(--mesh-blue)", fontWeight: 700 }}>{flow.occurrences}×</span>
-                  </div>
-                ))}
-              </div>
+              <EndpointSankey flows={metrics.endpointFlows.slice(0, 6)} />
             </Card>
           </TwoColumn>
         </Section>

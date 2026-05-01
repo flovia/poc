@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { EndpointSankey } from "./EndpointSankey";
 import type {
   CatalogMetric,
   CatalogPreview,
@@ -125,7 +126,7 @@ function Preview({ preview }: { preview: CatalogPreview }) {
       {preview.kind === "kpi" && <Rows rows={preview.rows ?? []} />}
       {preview.kind === "bars" && <Bars rows={preview.rows ?? []} />}
       {preview.kind === "table" && <Rows rows={preview.rows ?? []} />}
-      {preview.kind === "flow" && <Rows rows={preview.rows ?? []} arrows />}
+      {preview.kind === "flow" && <EndpointSankey flows={preview.flows ?? []} compact />}
       {preview.kind === "heatmap" && <Heatmap cells={preview.cells ?? []} />}
       {preview.kind === "quadrant" && <Scatter points={preview.points ?? []} quadrant />}
       {preview.kind === "scatter" && <Scatter points={preview.points ?? []} />}
@@ -136,12 +137,12 @@ function Preview({ preview }: { preview: CatalogPreview }) {
   );
 }
 
-function Rows({ rows, arrows }: { rows: NonNullable<CatalogPreview["rows"]>; arrows?: boolean }) {
+function Rows({ rows }: { rows: NonNullable<CatalogPreview["rows"]> }) {
   return (
     <div style={{ display: "grid", gap: 8 }}>
       {rows.map((row) => (
         <div key={`${row.label}-${row.value}`} style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 12, fontSize: 13 }}>
-          <span style={{ color: "var(--text-2)", minWidth: 0 }}>{arrows ? row.label.replace(" → ", "  →  ") : row.label}</span>
+          <span style={{ color: "var(--text-2)", minWidth: 0 }}>{row.label}</span>
           <span className="mono" style={{ color: "var(--text-1)", fontWeight: 650 }}>{row.value}</span>
         </div>
       ))}
