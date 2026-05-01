@@ -94,7 +94,7 @@ describe("BFF routes", () => {
   test("serves provider catalog with schema validation", async () => {
     const handler = createBffHandler(fixtureAnalyticsDataSource);
 
-    const response = handler(request("/providers"));
+    const response = await handler(request("/providers"));
     const parsed = validateProviderCatalogResponse(await response.json());
 
     expect(response.status).toBe(200);
@@ -108,10 +108,12 @@ describe("BFF routes", () => {
     if (!payTo) throw new Error("fixture provider missing payTo");
 
     const scoped = validatePhaseBCustomerListResponse(
-      await handler(request(`/customers?payTo=${payTo}`)).json(),
+      await (await handler(request(`/customers?payTo=${payTo}`))).json(),
     );
     const empty = validatePhaseBCustomerListResponse(
-      await handler(request("/customers?payTo=0x9999999999999999999999999999999999999999")).json(),
+      await (
+        await handler(request("/customers?payTo=0x9999999999999999999999999999999999999999"))
+      ).json(),
     );
 
     expect(scoped.scope?.payTo).toBe(payTo.toLowerCase());
@@ -234,7 +236,8 @@ describe("BFF routes", () => {
             caveats: input.caveats,
           },
           explanation: {
-            summary: "This wallet remains active and shows multi-provider usage, making it a strong upsell candidate.",
+            summary:
+              "This wallet remains active and shows multi-provider usage, making it a strong upsell candidate.",
             reasons: [
               "Recent activity was observed within the last 7 days.",
               "The wallet interacted with multiple providers and has a high transaction count.",
@@ -377,7 +380,7 @@ describe("BFF routes", () => {
       const response = await handler(request("/analytics/services/coingecko/summary"));
       const parsed = validateServiceAnalyticsSummaryResponse(await response.json());
       const providers = validateProviderCatalogResponse(
-        await handler(request("/providers")).json(),
+        await (await handler(request("/providers"))).json(),
       );
 
       expect(parsed.generatedFrom).toBe("generated-read-model-test");
