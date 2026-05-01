@@ -2,7 +2,6 @@ import { TopBar } from "@/components/shell/TopBar";
 import { CustomersBrowser } from "@/components/customers/CustomersBrowser";
 import { CustomersHeader } from "@/components/customers/CustomersHeader";
 import { CustomersOverview } from "@/components/customers/overview/CustomersOverview";
-import { ScopeChip } from "@/components/customers/ScopeChip";
 import { SnapshotIndicator } from "@/components/customers/SnapshotIndicator";
 import { SummaryChip } from "@/components/customers/SummaryChip";
 import { getCustomers, getSdkExtrasMap, getSummary } from "@/lib/data-source";
@@ -47,7 +46,6 @@ export default async function CustomersPage({
           >
             <CustomersHeader providerId={providerId} />
             <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-              <ScopeChip network="base" asset="USDC" />
               <SnapshotIndicator generatedAt={summary.generatedAt} />
               <SummaryChip label="Wallets" value={total} hint="payer wallets observed" />
               <SummaryChip
