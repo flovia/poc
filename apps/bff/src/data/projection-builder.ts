@@ -264,9 +264,7 @@ const externalCandidatesForPayer = (
   const startIndex = seedHash % EXTERNAL_PROVIDER_CATALOG.length;
   const picked: ExternalProviderSeed[] = [];
   for (let i = 0; i < count; i++) {
-    picked.push(
-      EXTERNAL_PROVIDER_CATALOG[(startIndex + i) % EXTERNAL_PROVIDER_CATALOG.length],
-    );
+    picked.push(EXTERNAL_PROVIDER_CATALOG[(startIndex + i) % EXTERNAL_PROVIDER_CATALOG.length]);
   }
   return picked;
 };

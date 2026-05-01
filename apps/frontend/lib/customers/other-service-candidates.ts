@@ -37,8 +37,7 @@ const opportunityFor = (confidence: number): OpportunityLevel => {
   return "low";
 };
 
-const normalize = (value: string | null | undefined) =>
-  value ? value.toLowerCase() : "";
+const normalize = (value: string | null | undefined) => (value ? value.toLowerCase() : "");
 
 const EVM_ADDRESS_PATTERN = /^0x[0-9a-f]{40}$/i;
 

@@ -26,24 +26,11 @@ const EXTERNAL_PROVIDER_ENDPOINTS: Record<string, string[]> = {
     "https://api.vectormind.ai/v1/embeddings",
     "https://api.vectormind.ai/v1/similarity",
   ],
-  routezero: [
-    "https://routezero.xyz/api/quote",
-    "https://routezero.xyz/api/swap",
-  ],
-  signalport: [
-    "https://signalport.io/api/v1/signals",
-  ],
-  vaultlayer: [
-    "https://vaultlayer.com/api/v1/positions",
-    "https://vaultlayer.com/api/v1/yield",
-  ],
-  streamdelta: [
-    "https://streamdelta.network/api/stream",
-  ],
-  ledgerlake: [
-    "https://ledgerlake.app/api/v1/ledger",
-    "https://ledgerlake.app/api/v1/reports",
-  ],
+  routezero: ["https://routezero.xyz/api/quote", "https://routezero.xyz/api/swap"],
+  signalport: ["https://signalport.io/api/v1/signals"],
+  vaultlayer: ["https://vaultlayer.com/api/v1/positions", "https://vaultlayer.com/api/v1/yield"],
+  streamdelta: ["https://streamdelta.network/api/stream"],
+  ledgerlake: ["https://ledgerlake.app/api/v1/ledger", "https://ledgerlake.app/api/v1/reports"],
 };
 
 const hashToInt = (input: string): number => {
@@ -54,7 +41,8 @@ const hashToInt = (input: string): number => {
   return Math.abs(h);
 };
 
-type Candidate = WalletUsageGraphDto["providerWallets"][number]["payerWallets"][number]["otherServiceCandidates"][number];
+type Candidate =
+  WalletUsageGraphDto["providerWallets"][number]["payerWallets"][number]["otherServiceCandidates"][number];
 
 const buildCandidatesForPayer = (payerAddress: string, txBudget: number): Candidate[] => {
   // Pick 2-3 external providers per payer, deterministically.
