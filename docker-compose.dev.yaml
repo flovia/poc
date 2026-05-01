@@ -23,6 +23,9 @@ services:
           path: ./packages/contracts/package.json
 
   frontend:
+    command: bun run dev -- --hostname 0.0.0.0
+    ports:
+      - "${FRONTEND_PORT:-3333}:3000"
     develop:
       watch:
         - action: sync

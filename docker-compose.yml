@@ -36,5 +36,5 @@ services:
       NEXT_PUBLIC_BFF_URL: /api
       NEXT_TELEMETRY_DISABLED: 1
     ports:
-      - "${FRONTEND_PORT:-3333}:3000"
+      - "${FRONTEND_PORT:-3000}:3000"
     restart: unless-stopped
