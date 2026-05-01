@@ -7,6 +7,7 @@ import {
   fixtureAnalyticsDataSource,
   loadGeneratedAnalyticsDataSource,
 } from "../src/data/analytics-source";
+import type { BffLlmService } from "../src/data/llm";
 import {
   joinedPhaseBProjectionRecords,
   knownCustomerIntelligenceAddress,
@@ -18,6 +19,8 @@ import transactionFixture from "../fixtures/phase-a/coingecko-transactions.json"
 import attributionFixture from "../fixtures/phase-b/mock-attribution.json";
 import { buildPhaseBProjections, joinTransactionAttribution } from "../src/data/projection-builder";
 import {
+  validatePhaseBCustomerUpsellMetricsResponse,
+  validatePhaseBCustomerUpsellExplanationResponse,
   validatePhaseBCustomerListResponse,
   validatePhaseBCustomerProfileResponse,
   validatePhaseBWalletUsageGraphResponse,
@@ -47,7 +50,7 @@ describe("BFF routes", () => {
     const handler = createBffHandler();
 
     for (const path of ["/", "/health"] as const) {
-      const response = handler(request(path));
+      const response = await handler(request(path));
       expect(response.status, path).toBe(200);
       expect(response.headers.get("content-type"), path).toContain("application/json");
       await expect(response.json()).resolves.toEqual(
@@ -58,7 +61,7 @@ describe("BFF routes", () => {
 
   test("rejects non-GET requests to read-only endpoints", async () => {
     const handler = createBffHandler();
-    const response = handler(request("/health", { method: "POST" }));
+    const response = await handler(request("/health", { method: "POST" }));
     const body = (await response.json()) as { error: string };
 
     expect(response.status).toBe(405);
@@ -67,7 +70,7 @@ describe("BFF routes", () => {
 
   test("returns JSON not found for unsupported routes", async () => {
     const handler = createBffHandler();
-    const response = handler(request("/unknown"));
+    const response = await handler(request("/unknown"));
     const body = (await response.json()) as { error: string; message: string };
 
     expect(response.status).toBe(404);
@@ -78,7 +81,7 @@ describe("BFF routes", () => {
   test("serves customer list with schema validation", async () => {
     const handler = createBffHandler();
 
-    const response = handler(request("/customers"));
+    const response = await handler(request("/customers"));
     const body = await response.json();
     const parsed = validatePhaseBCustomerListResponse(body);
 
@@ -90,7 +93,7 @@ describe("BFF routes", () => {
   test("returns a validated profile for a known customer wallet", async () => {
     const handler = createBffHandler();
 
-    const response = handler(
+    const response = await handler(
       request(`/customers/${knownCustomerProfileAddress.toUpperCase()}/profile`),
     );
     const body = await response.json();
@@ -104,7 +107,7 @@ describe("BFF routes", () => {
   test("returns not found for an unknown customer wallet", async () => {
     const handler = createBffHandler();
 
-    const response = handler(
+    const response = await handler(
       request("/customers/0x9999999999999999999999999999999999999999/profile"),
     );
     const body = (await response.json()) as { error: string };
@@ -116,7 +119,7 @@ describe("BFF routes", () => {
   test("returns validated customer intelligence for a known customer wallet", async () => {
     const handler = createBffHandler();
 
-    const response = handler(
+    const response = await handler(
       request(`/customers/${knownCustomerIntelligenceAddress.toUpperCase()}/intelligence`),
     );
     const body = await response.json();
@@ -128,11 +131,109 @@ describe("BFF routes", () => {
     expect(parsed.x402Services[0]?.reasons.length).toBeGreaterThan(0);
   });
 
+  test("returns validated upsell metrics for a known customer wallet", async () => {
+    const handler = createBffHandler();
+
+    const response = await handler(
+      request(`/customers/${knownCustomerIntelligenceAddress.toUpperCase()}/llm/upsell-metrics`),
+    );
+    const body = await response.json();
+    const parsed = validatePhaseBCustomerUpsellMetricsResponse(body);
+
+    expect(response.status).toBe(200);
+    expect(parsed.address).toBe(knownCustomerIntelligenceAddress);
+    expect(parsed.signals.customerCount).toBeGreaterThan(0);
+    expect(parsed.reasonCodes.length).toBeGreaterThan(0);
+    expect(parsed.caveats.length).toBeGreaterThan(0);
+  });
+
+  test("returns llm_unavailable when Bedrock upsell explanation is not configured", async () => {
+    const handler = createBffHandler();
+
+    const response = await handler(
+      request(`/customers/${knownCustomerIntelligenceAddress}/llm/upsell-explanation`),
+    );
+    const body = (await response.json()) as { error: string; message: string };
+
+    expect(response.status).toBe(503);
+    expect(body.error).toBe("llm_unavailable");
+    expect(body.message).toContain("Bedrock");
+  });
+
+  test("returns validated Bedrock upsell explanation for a known customer wallet", async () => {
+    const llmService: BffLlmService = {
+      async generateUpsellExplanation(input) {
+        return {
+          generatedAt: "2026-05-01T00:00:00Z",
+          generatedFrom: "phase-b-bedrock-upsell-explanation-v1",
+          address: input.address,
+          sourceGeneratedAt: input.sourceGeneratedAt,
+          model: {
+            provider: "bedrock",
+            modelId: "anthropic.claude-3-5-sonnet-20241022-v2:0",
+            region: "ap-northeast-1",
+            promptVersion: "upsell-explanation-v1",
+          },
+          input: {
+            signals: input.signals,
+            flags: input.flags,
+            reasonCodes: input.reasonCodes,
+            caveats: input.caveats,
+          },
+          explanation: {
+            summary: "This wallet remains active and shows multi-provider usage, making it a strong upsell candidate.",
+            reasons: [
+              "Recent activity was observed within the last 7 days.",
+              "The wallet interacted with multiple providers and has a high transaction count.",
+            ],
+            recommendedAction: "Offer a higher-frequency plan or enterprise-style support package.",
+            caution:
+              "Some supporting metrics are PoC heuristics and should be reviewed before sales commitments.",
+          },
+          provenance: "derived_insight",
+          provenanceByField: {
+            address: "onchain_fact",
+            model: "derived_insight",
+            input: "derived_insight",
+            explanation: "derived_insight",
+          },
+          reasons: [
+            { provenance: "derived_insight", label: "bedrock explanation from upsell metrics" },
+          ],
+        };
+      },
+    };
+    const handler = createBffHandler(undefined, llmService);
+
+    const response = await handler(
+      request(`/customers/${knownCustomerIntelligenceAddress}/llm/upsell-explanation`),
+    );
+    const body = await response.json();
+    const parsed = validatePhaseBCustomerUpsellExplanationResponse(body);
+
+    expect(response.status).toBe(200);
+    expect(parsed.address).toBe(knownCustomerIntelligenceAddress);
+    expect(parsed.explanation.summary.length).toBeGreaterThan(0);
+    expect(parsed.input.reasonCodes.length).toBeGreaterThan(0);
+  });
+
   test("returns not found for unknown customer intelligence", async () => {
     const handler = createBffHandler();
 
-    const response = handler(
+    const response = await handler(
       request("/customers/0x9999999999999999999999999999999999999999/intelligence"),
+    );
+    const body = (await response.json()) as { error: string };
+
+    expect(response.status).toBe(404);
+    expect(body.error).toBe("not_found");
+  });
+
+  test("returns not found for unknown customer upsell metrics", async () => {
+    const handler = createBffHandler();
+
+    const response = await handler(
+      request("/customers/0x9999999999999999999999999999999999999999/llm/upsell-metrics"),
     );
     const body = (await response.json()) as { error: string };
 
@@ -143,7 +244,7 @@ describe("BFF routes", () => {
   test("serves wallet usage graph with schema validation", async () => {
     const handler = createBffHandler();
 
-    const response = handler(request("/wallet-usage-graph"));
+    const response = await handler(request("/wallet-usage-graph"));
     const body = await response.json();
 
     expect(response.status).toBe(200);
@@ -155,7 +256,7 @@ describe("BFF routes", () => {
   test("serves coingecko service summary analytics", async () => {
     const handler = createBffHandler();
 
-    const response = handler(request("/analytics/services/coingecko/summary"));
+    const response = await handler(request("/analytics/services/coingecko/summary"));
     const parsed = validateServiceAnalyticsSummaryResponse(await response.json());
 
     expect(response.status).toBe(200);
@@ -201,7 +302,7 @@ describe("BFF routes", () => {
       };
       fs.writeFileSync(filePath, JSON.stringify({ serviceSummary: generatedSummary }, null, 2));
       const handler = createBffHandler(loadGeneratedAnalyticsDataSource(filePath));
-      const response = handler(request("/analytics/services/coingecko/summary"));
+      const response = await handler(request("/analytics/services/coingecko/summary"));
       const parsed = validateServiceAnalyticsSummaryResponse(await response.json());
 
       expect(parsed.generatedFrom).toBe("generated-read-model-test");
@@ -220,19 +321,25 @@ describe("BFF routes", () => {
       );
       const handler = createBffHandler(loadGeneratedAnalyticsDataSource(filePath));
 
-      const profileResponse = handler(request(`/customers/${knownCustomerProfileAddress}/profile`));
-      const intelligenceResponse = handler(
+      const profileResponse = await handler(
+        request(`/customers/${knownCustomerProfileAddress}/profile`),
+      );
+      const intelligenceResponse = await handler(
         request(`/customers/${knownCustomerIntelligenceAddress}/intelligence`),
+      );
+      const upsellMetricsResponse = await handler(
+        request(`/customers/${knownCustomerProfileAddress}/llm/upsell-metrics`),
       );
 
       expect(profileResponse.status).toBe(404);
       expect(intelligenceResponse.status).toBe(404);
+      expect(upsellMetricsResponse.status).toBe(404);
     }));
 
   test("serves x402 service comparison analytics", async () => {
     const handler = createBffHandler(fixtureAnalyticsDataSource);
 
-    const response = handler(request("/analytics/services/comparison"));
+    const response = await handler(request("/analytics/services/comparison"));
     const parsed = validateServiceAnalyticsComparisonResponse(await response.json());
 
     expect(response.status).toBe(200);
@@ -253,7 +360,7 @@ describe("BFF routes", () => {
   test("serves quadrant-ready service analytics without chain tabs", async () => {
     const handler = createBffHandler(fixtureAnalyticsDataSource);
 
-    const response = handler(request("/analytics/services/quadrants"));
+    const response = await handler(request("/analytics/services/quadrants"));
     const body = await response.json();
     const parsed = validateServiceAnalyticsQuadrantResponse(body);
 
@@ -275,7 +382,7 @@ describe("BFF routes", () => {
     const handler = createBffHandler(fixtureAnalyticsDataSource);
 
     for (const path of ["/demo-data", "/sdk-events", "/telemetry", "/mock-attribution"] as const) {
-      const response = handler(request(path));
+      const response = await handler(request(path));
       const body = (await response.json()) as { error: string };
 
       expect(response.status).toBe(404);
@@ -291,6 +398,8 @@ describe("BFF routes", () => {
       "/customers",
       `/customers/${knownCustomerProfileAddress}/profile`,
       `/customers/${knownCustomerIntelligenceAddress}/intelligence`,
+      `/customers/${knownCustomerIntelligenceAddress}/llm/upsell-metrics`,
+      `/customers/${knownCustomerIntelligenceAddress}/llm/upsell-explanation`,
       "/wallet-usage-graph",
       "/analytics/services/coingecko/summary",
       "/analytics/services/comparison",
@@ -298,7 +407,7 @@ describe("BFF routes", () => {
     ] as const;
 
     for (const path of paths) {
-      const response = handler(request(path, { method: "POST" }));
+      const response = await handler(request(path, { method: "POST" }));
       const body = (await response.json()) as { error: string };
 
       expect(response.status).toBe(405);
@@ -309,7 +418,7 @@ describe("BFF routes", () => {
 
   test("returns not found for unsupported analytics routes", async () => {
     const handler = createBffHandler();
-    const response = handler(request("/analytics/services/unknown"));
+    const response = await handler(request("/analytics/services/unknown"));
     const body = (await response.json()) as { error: string; message: string };
 
     expect(response.status).toBe(404);
@@ -405,7 +514,7 @@ describe("BFF routes", () => {
 
   test("customer intelligence uses prepared fixture provenance without live source calls", async () => {
     const handler = createBffHandler(fixtureAnalyticsDataSource);
-    const response = handler(
+    const response = await handler(
       request(`/customers/${knownCustomerIntelligenceAddress}/intelligence`),
     );
     const parsed = validateCustomerIntelligenceResponse(await response.json());

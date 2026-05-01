@@ -9,6 +9,7 @@ import {
   validateMockEndpointAttributionFixture,
   validatePhaseBCustomerListResponse,
   validatePhaseBCustomerProfileResponse,
+  validatePhaseBCustomerUpsellExplanationResponse,
   validatePhaseBWalletUsageGraphResponse,
   validatePortfolioSourceResult,
   validateRealTransactionFixture,
@@ -662,6 +663,82 @@ describe("contracts schema validation", () => {
         ],
       },
     });
+  });
+
+  test("accepts a valid Phase B upsell explanation response", () => {
+    const parsed = validatePhaseBCustomerUpsellExplanationResponse({
+      generatedAt: "2026-05-01T00:00:00Z",
+      generatedFrom: "phase-b-bedrock-upsell-explanation-v1",
+      address: "0xAC5A07C44A4F971667B3DF4B6551FB6991B2142D",
+      sourceGeneratedAt: "2026-04-30T13:00:22Z",
+      model: {
+        provider: "bedrock",
+        modelId: "anthropic.claude-3-5-sonnet-20241022-v2:0",
+        region: "ap-northeast-1",
+        promptVersion: "upsell-explanation-v1",
+      },
+      input: {
+        signals: {
+          spendAtomic: "26000",
+          spendRank: 74,
+          spendPercentile: 0.262626,
+          customerCount: 100,
+          observationCount: 9,
+          providerCount: 7,
+          txCount: 9,
+          averageSpendAtomic: "2888",
+          firstSeenAt: "2026-04-21T17:13:37Z",
+          lastSeenAt: "2026-04-29T04:11:53Z",
+          daysSinceLastSeen: 1,
+          freeTierProgress: 0.9,
+          activityGrowth: 0,
+          entryPointRatio: 1,
+          upsellOpportunity: "high",
+          x402ServiceCount: 7,
+        },
+        flags: {
+          isTopSpender: false,
+          isRecentlyActive: true,
+          isMultiProvider: true,
+          hasHighTransactionCount: true,
+          isNearFreeTierLimit: true,
+          hasExternalX402Usage: true,
+          isHighUpsellCandidate: true,
+        },
+        reasonCodes: [
+          "recently_active",
+          "multi_provider_usage",
+          "high_transaction_count",
+          "free_tier_near_limit",
+          "external_x402_usage",
+          "high_upsell_score",
+        ],
+        caveats: [
+          "freeTierProgress is a PoC heuristic and not an actual commercial plan limit.",
+        ],
+      },
+      explanation: {
+        summary: "This wallet remains active and uses multiple providers, so it is a strong upsell candidate.",
+        reasons: [
+          "Recent activity was observed within the last 7 days.",
+          "The wallet paid multiple providers and may be part of a broader workflow.",
+        ],
+        recommendedAction: "Offer a higher-frequency usage package or enterprise outreach.",
+        caution:
+          "freeTierProgress and entryPointRatio are PoC heuristics and should not be treated as contract-ready billing facts.",
+      },
+      provenance: "derived_insight",
+      provenanceByField: {
+        address: "onchain_fact",
+        model: "derived_insight",
+        input: "derived_insight",
+        explanation: "derived_insight",
+      },
+      reasons: [{ provenance: "derived_insight", label: "bedrock explanation from upsell metrics" }],
+    });
+
+    expect(parsed.address).toBe("0xac5a07c44a4f971667b3df4b6551fb6991b2142d");
+    expect(parsed.explanation.reasons.length).toBeGreaterThan(0);
   });
 
   test("rejects malformed Phase B payloads", () => {

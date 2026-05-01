@@ -1,4 +1,9 @@
 import { type BffAnalyticsDataSource, resolveAnalyticsDataSource } from "./data/analytics-source";
+import {
+  BffLlmInferenceError,
+  type BffLlmService,
+  resolveBffLlmService,
+} from "./data/llm";
 
 type JsonValue = unknown;
 
@@ -31,6 +36,16 @@ const toIntelligenceAddress = (path: string) => {
   return match?.[1] ?? null;
 };
 
+const toUpsellMetricsAddress = (path: string) => {
+  const match = path.match(/^\/customers\/([^/]+)\/llm\/upsell-metrics$/);
+  return match?.[1] ?? null;
+};
+
+const toUpsellExplanationAddress = (path: string) => {
+  const match = path.match(/^\/customers\/([^/]+)\/llm\/upsell-explanation$/);
+  return match?.[1] ?? null;
+};
+
 const methodNotAllowed = () =>
   json(
     {
@@ -40,9 +55,33 @@ const methodNotAllowed = () =>
     { status: 405, headers: { allow: "GET" } },
   );
 
+const llmUnavailable = () =>
+  json(
+    {
+      error: "llm_unavailable",
+      message: "Bedrock upsell explanation is not configured for this environment.",
+    },
+    { status: 503 },
+  );
+
+const llmFailed = (error: unknown) =>
+  json(
+    {
+      error: "llm_failed",
+      message:
+        error instanceof BffLlmInferenceError
+          ? error.message
+          : "Bedrock upsell explanation inference failed.",
+    },
+    { status: 502 },
+  );
+
 export const createBffHandler =
-  (dataSource: BffAnalyticsDataSource = resolveAnalyticsDataSource()) =>
-  (request: Request) => {
+  (
+    dataSource: BffAnalyticsDataSource = resolveAnalyticsDataSource(),
+    llmService: BffLlmService | null = resolveBffLlmService(),
+  ) =>
+  async (request: Request) => {
     const url = new URL(request.url);
     const path = url.pathname.replace(/\/$/, "") || "/";
 
@@ -50,7 +89,9 @@ export const createBffHandler =
       if (
         readonlyRoutes.has(path) ||
         toProfileAddress(path) !== null ||
-        toIntelligenceAddress(path) !== null
+        toIntelligenceAddress(path) !== null ||
+        toUpsellMetricsAddress(path) !== null ||
+        toUpsellExplanationAddress(path) !== null
       ) {
         return methodNotAllowed();
       }
@@ -99,6 +140,38 @@ export const createBffHandler =
       }
 
       return json(intelligence);
+    }
+
+    const upsellMetricsAddress = toUpsellMetricsAddress(path);
+    if (upsellMetricsAddress !== null) {
+      const normalizedAddress = upsellMetricsAddress.toLowerCase();
+      const metrics = dataSource.getCustomerUpsellMetrics(normalizedAddress);
+
+      if (!metrics) {
+        return notFound(path);
+      }
+
+      return json(metrics);
+    }
+
+    const upsellExplanationAddress = toUpsellExplanationAddress(path);
+    if (upsellExplanationAddress !== null) {
+      const normalizedAddress = upsellExplanationAddress.toLowerCase();
+      const metrics = dataSource.getCustomerUpsellMetrics(normalizedAddress);
+
+      if (!metrics) {
+        return notFound(path);
+      }
+
+      if (!llmService) {
+        return llmUnavailable();
+      }
+
+      try {
+        return json(await llmService.generateUpsellExplanation(metrics));
+      } catch (error) {
+        return llmFailed(error);
+      }
     }
 
     return notFound(path);

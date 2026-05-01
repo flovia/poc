@@ -37,6 +37,33 @@ upsert_env_var() {
   mv "$temp_file" "$env_file"
 }
 
+delete_env_var() {
+  local env_file="$1"
+  local key="$2"
+  local temp_file
+
+  temp_file="$(mktemp)"
+
+  awk -v key="$key" '
+    index($0, key "=") != 1 { print }
+  ' "$env_file" > "$temp_file"
+
+  mv "$temp_file" "$env_file"
+}
+
+sync_optional_env_var() {
+  local env_file="$1"
+  local key="$2"
+  local value="${3:-}"
+
+  if [ -n "$value" ]; then
+    upsert_env_var "$env_file" "$key" "$value"
+    return
+  fi
+
+  delete_env_var "$env_file" "$key"
+}
+
 require_env DEPLOY_BRANCH
 require_env DEPLOY_GIT_SHA
 require_env BFF_IMAGE_REPOSITORY
@@ -77,6 +104,7 @@ install -m 644 docker-compose.lightsail.yml "$stack_compose_file"
 install -m 644 deploy/nginx/lightsail-bff.conf "$stack_nginx_config"
 
 touch "$stack_env_file"
+chmod 600 "$stack_env_file"
 
 upsert_env_var "$stack_env_file" COMPOSE_PROJECT_NAME "flovia-lightsail"
 upsert_env_var "$stack_env_file" BFF_IMAGE_REPOSITORY "$BFF_IMAGE_REPOSITORY"
@@ -85,6 +113,11 @@ upsert_env_var "$stack_env_file" DEVELOP_FLOVIA_DATA_DIR "$develop_data_dir"
 upsert_env_var "$stack_env_file" BFF_DATA_MOUNT_PATH "/data"
 upsert_env_var "$stack_env_file" NGINX_PORT "80"
 upsert_env_var "$stack_env_file" "$image_tag_key" "$DEPLOY_GIT_SHA"
+sync_optional_env_var "$stack_env_file" AWS_BEARER_TOKEN_BEDROCK "${AWS_BEARER_TOKEN_BEDROCK:-}"
+sync_optional_env_var "$stack_env_file" AWS_REGION "${BFF_BEDROCK_REGION:-}"
+sync_optional_env_var "$stack_env_file" AWS_DEFAULT_REGION "${BFF_BEDROCK_REGION:-}"
+sync_optional_env_var "$stack_env_file" BFF_BEDROCK_MODEL_ID "${BFF_BEDROCK_MODEL_ID:-}"
+sync_optional_env_var "$stack_env_file" BFF_BEDROCK_PROMPT_VERSION "${BFF_BEDROCK_PROMPT_VERSION:-}"
 
 printf '%s\n' "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USERNAME" --password-stdin
 docker compose --env-file "$stack_env_file" -f "$stack_compose_file" config >/dev/null

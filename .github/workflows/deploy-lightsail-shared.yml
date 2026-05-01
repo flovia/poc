@@ -4,6 +4,11 @@ name: deploy-lightsail-shared
 # - AWS_REGION
 # - AWS_ROLE_TO_ASSUME
 # - LIGHTSAIL_INSTANCE_NAME
+# Optional repository secrets for BFF Bedrock inference:
+# - AWS_BEARER_TOKEN_BEDROCK
+# - BFF_BEDROCK_REGION
+# - BFF_BEDROCK_MODEL_ID
+# - BFF_BEDROCK_PROMPT_VERSION
 # Deploy layout on the instance:
 # - $HOME/apps/main/poc and $HOME/apps/main/data
 # - $HOME/apps/develop/poc and $HOME/apps/develop/data
@@ -143,6 +148,10 @@ jobs:
             DEPLOY_BRANCH="${DEPLOY_BRANCH}" \
             DEPLOY_GIT_SHA="${DEPLOY_GIT_SHA}" \
             BFF_IMAGE_REPOSITORY="${BFF_IMAGE_REPOSITORY}" \
+            AWS_BEARER_TOKEN_BEDROCK="${{ secrets.AWS_BEARER_TOKEN_BEDROCK }}" \
+            BFF_BEDROCK_REGION="${{ secrets.BFF_BEDROCK_REGION }}" \
+            BFF_BEDROCK_MODEL_ID="${{ secrets.BFF_BEDROCK_MODEL_ID }}" \
+            BFF_BEDROCK_PROMPT_VERSION="${{ secrets.BFF_BEDROCK_PROMPT_VERSION }}" \
             "bash -s" <<'EOF'
           set -euo pipefail
           apps_root="$HOME/apps"
