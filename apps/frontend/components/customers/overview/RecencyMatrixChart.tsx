@@ -17,26 +17,26 @@ type CellSpec = {
 const CELLS: CellSpec[] = [
   {
     key: "recentHigh",
-    label: "Active high spenders",
-    hint: "Recent activity, above-median spend",
+    label: "Key active accounts",
+    hint: "Recent activity, above-median spend · retain / upsell",
     accent: "priority",
   },
   {
     key: "recentLow",
-    label: "Active low spenders",
-    hint: "Recent activity, below-median spend",
+    label: "Emerging accounts",
+    hint: "Recent activity, below-median spend · nurture",
     accent: "neutral",
   },
   {
     key: "staleHigh",
-    label: "Dormant whales",
-    hint: "Older activity, above-median spend",
+    label: "At-risk key accounts",
+    hint: "Older activity, above-median spend · re-engage first",
     accent: "attention",
   },
   {
     key: "staleLow",
-    label: "Dormant low spenders",
-    hint: "Older activity, below-median spend",
+    label: "Dormant accounts",
+    hint: "Older activity, below-median spend · automate reactivation",
     accent: "neutral",
   },
 ];
