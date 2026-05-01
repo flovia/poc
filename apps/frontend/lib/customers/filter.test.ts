@@ -134,9 +134,25 @@ describe("filterAndSortCustomers", () => {
       query: "0x",
       upsell: "high",
       sort: "spend",
+      chain: "all",
     };
     const result = filterAndSortCustomers(fixture, state);
     expect(result).toHaveLength(1);
     expect(result[0].upsellOpportunity).toBe("high");
+  });
+
+  test("chain=all keeps every wallet under the current single-chain dataset", () => {
+    const result = filterAndSortCustomers(fixture, { ...DEFAULT_CUSTOMER_FILTER, chain: "all" });
+    expect(result).toHaveLength(fixture.length);
+  });
+
+  test("chain=base keeps every wallet because all rows currently resolve to base", () => {
+    const result = filterAndSortCustomers(fixture, { ...DEFAULT_CUSTOMER_FILTER, chain: "base" });
+    expect(result).toHaveLength(fixture.length);
+  });
+
+  test("chain=solana drops every wallet because the dataset has no solana data yet", () => {
+    const result = filterAndSortCustomers(fixture, { ...DEFAULT_CUSTOMER_FILTER, chain: "solana" });
+    expect(result).toHaveLength(0);
   });
 });
