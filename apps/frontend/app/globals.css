@@ -236,11 +236,11 @@ a { color: inherit; text-decoration: none; }
 }
 .nav-item:hover { background: var(--surface-muted); color: var(--text-1); }
 .nav-item[aria-current="true"] {
-  background: var(--surface-selected);
+  background: var(--surface-muted);
   color: var(--text-1);
 }
 .nav-item[aria-current="true"]::before {
-  content: ""; position: absolute; left: 0; top: 4px; bottom: 4px; width: 3px; border-radius: 3px;
+  content: ""; position: absolute; left: -10px; top: 8px; bottom: 8px; width: 2px;
   background: var(--mesh-blue);
 }
 .nav-item .ico { width: 16px; height: 16px; opacity: 0.75; }
