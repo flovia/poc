@@ -1,12 +1,14 @@
 import type { CSSProperties, ReactNode } from "react";
+import Link from "next/link";
 import { formatAtomic, formatRatioPct, shortAddr } from "@/lib/format";
 import type { MacroMetricsViewModel, TrendPoint } from "@/lib/macro-metrics/metrics";
 
 type Props = {
   metrics: MacroMetricsViewModel;
+  providerId: string;
 };
 
-export function MacroMetricsScreen({ metrics }: Props) {
+export function MacroMetricsScreen({ metrics, providerId }: Props) {
   return (
     <div style={{ background: "var(--bg-shell)", minHeight: "100%" }}>
       <div style={{ padding: "32px 40px 80px", maxWidth: 1560, margin: "0 auto" }}>
@@ -17,10 +19,29 @@ export function MacroMetricsScreen({ metrics }: Props) {
           <h1 className="display" style={{ fontSize: 32, fontWeight: 700, margin: 0, letterSpacing: "-0.02em" }}>
             Macro Metrics Dashboard
           </h1>
-          <p style={{ maxWidth: 820, color: "var(--text-2)", fontSize: 15, lineHeight: 1.6, margin: "8px 0 0" }}>
-            A realistic offline demo comparing monetization, repeat usage, ecosystem adjacency,
-            endpoint behavior, and growth actions for the Northwind Price API workflow.
-          </p>
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "end", flexWrap: "wrap" }}>
+            <p style={{ maxWidth: 820, color: "var(--text-2)", fontSize: 15, lineHeight: 1.6, margin: "8px 0 0" }}>
+              A realistic offline demo comparing monetization, repeat usage, ecosystem adjacency,
+              endpoint behavior, and growth actions for the Northwind Price API workflow.
+            </p>
+            <Link
+              href={`/providers/${providerId}/metrics-catalog`}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                borderRadius: 8,
+                border: "1px solid var(--line)",
+                background: "#fff",
+                padding: "9px 12px",
+                color: "var(--mesh-blue)",
+                fontSize: 13,
+                fontWeight: 650,
+                boxShadow: "var(--shadow-1)",
+              }}
+            >
+              View full metrics catalog →
+            </Link>
+          </div>
         </header>
 
         <ExecutiveTakeaways items={metrics.executiveTakeaways} note={metrics.proxyNote} />

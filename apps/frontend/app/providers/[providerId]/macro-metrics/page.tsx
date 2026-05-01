@@ -21,7 +21,7 @@ export default async function MacroMetricsPage({
         dataMode={pageCtx.dataMode}
       />
       <div className="scroll">
-        <MacroMetricsScreen metrics={metrics} />
+        <MacroMetricsScreen metrics={metrics} providerId={providerId} />
       </div>
     </>
   );
