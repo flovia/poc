@@ -30,12 +30,13 @@ export function KPI({ label, value, sub, hue = "default", big }: KPIProps) {
       </div>
       {typeof value === "string" ? (
         <div
-          className="mono"
+          className="mono display"
           style={{
-            fontSize: big ? 28 : 22,
-            fontWeight: 600,
+            fontSize: big ? 32 : 24,
+            fontWeight: 700,
             marginTop: 4,
             color: COLOR_MAP[hue],
+            letterSpacing: "-0.01em",
           }}
         >
           {value}

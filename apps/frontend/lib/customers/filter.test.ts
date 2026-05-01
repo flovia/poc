@@ -19,7 +19,9 @@ const base: Omit<CustomerListItemDto, "address"> = {
   reasons: [],
 };
 
-const make = (overrides: Partial<CustomerListItemDto> & { address: string }): CustomerListItemDto => ({
+const make = (
+  overrides: Partial<CustomerListItemDto> & { address: string },
+): CustomerListItemDto => ({
   ...base,
   ...overrides,
 });
@@ -64,25 +66,19 @@ describe("filterAndSortCustomers", () => {
   test("filters by case-insensitive substring on address", () => {
     const state: CustomerFilterState = { ...DEFAULT_CUSTOMER_FILTER, query: "00000002" };
     const result = filterAndSortCustomers(fixture, state);
-    expect(result.map((c) => c.address)).toEqual([
-      "0xBBbbbbbbBBBBbbbbBBBBbbbbbbbbBBBB00000002",
-    ]);
+    expect(result.map((c) => c.address)).toEqual(["0xBBbbbbbbBBBBbbbbBBBBbbbbbbbbBBBB00000002"]);
   });
 
   test("query is case-insensitive", () => {
     const state: CustomerFilterState = { ...DEFAULT_CUSTOMER_FILTER, query: "0xcc" };
     const result = filterAndSortCustomers(fixture, state);
-    expect(result.map((c) => c.address)).toEqual([
-      "0xCCccccccCCCCccccCCCCccccccccCCCC00000003",
-    ]);
+    expect(result.map((c) => c.address)).toEqual(["0xCCccccccCCCCccccCCCCccccccccCCCC00000003"]);
   });
 
   test("trims whitespace in query", () => {
     const state: CustomerFilterState = { ...DEFAULT_CUSTOMER_FILTER, query: "   00000001  " };
     const result = filterAndSortCustomers(fixture, state);
-    expect(result.map((c) => c.address)).toEqual([
-      "0xAAaaaaaaAAAAaaaaAAAAaaaaaaaaAAAA00000001",
-    ]);
+    expect(result.map((c) => c.address)).toEqual(["0xAAaaaaaaAAAAaaaaAAAAaaaaaaaaAAAA00000001"]);
   });
 
   test("filters by upsell tier", () => {
@@ -99,12 +95,18 @@ describe("filterAndSortCustomers", () => {
   });
 
   test("sorts by observations desc", () => {
-    const result = filterAndSortCustomers(fixture, { ...DEFAULT_CUSTOMER_FILTER, sort: "observations" });
+    const result = filterAndSortCustomers(fixture, {
+      ...DEFAULT_CUSTOMER_FILTER,
+      sort: "observations",
+    });
     expect(result.map((c) => c.observationCount)).toEqual([12, 5, 2]);
   });
 
   test("sorts by last seen desc", () => {
-    const result = filterAndSortCustomers(fixture, { ...DEFAULT_CUSTOMER_FILTER, sort: "lastSeen" });
+    const result = filterAndSortCustomers(fixture, {
+      ...DEFAULT_CUSTOMER_FILTER,
+      sort: "lastSeen",
+    });
     expect(result.map((c) => c.lastSeenAt)).toEqual([1_700_000_300, 1_700_000_200, 1_700_000_100]);
   });
 

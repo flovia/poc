@@ -67,7 +67,7 @@ export function UpsellCard({
               MRR
             </div>
           </div>
-          <span className="chip teal">high</span>
+          <span className="chip blue">high</span>
         </div>
         <div
           style={{
@@ -144,7 +144,7 @@ function UpsellCardLive({
             Derived from spend, provider count, growth, and entry-point ratio
           </div>
         </div>
-        <span className={`chip ${opp === "high" ? "teal" : ""}`}>{opp}</span>
+        <span className={`chip ${opp === "high" ? "blue" : ""}`}>{opp}</span>
       </div>
 
       <div

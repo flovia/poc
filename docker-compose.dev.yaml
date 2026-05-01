@@ -1,0 +1,49 @@
+services:
+  bff:
+    command: bun --watch src/server.ts
+    develop:
+      watch:
+        - action: sync
+          path: ./apps/bff
+          target: /app/apps/bff
+          initial_sync: true
+          ignore:
+            - node_modules/
+        - action: sync
+          path: ./packages/contracts
+          target: /app/packages/contracts
+          initial_sync: true
+        - action: rebuild
+          path: ./package.json
+        - action: rebuild
+          path: ./bun.lock
+        - action: rebuild
+          path: ./apps/bff/package.json
+        - action: rebuild
+          path: ./packages/contracts/package.json
+
+  frontend:
+    command: bun run dev -- --hostname 0.0.0.0
+    ports:
+      - "${FRONTEND_PORT:-3333}:3000"
+    develop:
+      watch:
+        - action: sync
+          path: ./apps/frontend
+          target: /app/apps/frontend
+          initial_sync: true
+          ignore:
+            - node_modules/
+            - .next/
+        - action: sync
+          path: ./packages/contracts
+          target: /app/packages/contracts
+          initial_sync: true
+        - action: rebuild
+          path: ./package.json
+        - action: rebuild
+          path: ./bun.lock
+        - action: rebuild
+          path: ./apps/frontend/package.json
+        - action: rebuild
+          path: ./packages/contracts/package.json

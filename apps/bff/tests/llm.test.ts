@@ -21,8 +21,9 @@ const withTempDir = async (prefix: string, fn: (directory: string) => Promise<vo
 describe("BFF llm service", () => {
   test("reuses cached Bedrock explanations for the same branch, model, and input", async () =>
     withTempDir("cache-hit", async (cacheDirectory) => {
-      const metrics =
-        fixtureAnalyticsDataSource.getCustomerUpsellMetrics(knownCustomerIntelligenceAddress);
+      const metrics = fixtureAnalyticsDataSource.getCustomerUpsellMetrics(
+        knownCustomerIntelligenceAddress,
+      );
 
       if (!metrics) {
         throw new Error("Expected fixture upsell metrics for the known customer.");
@@ -76,8 +77,9 @@ describe("BFF llm service", () => {
 
   test("cache key varies by branch name, model, and input", async () =>
     withTempDir("cache-key", async (cacheDirectory) => {
-      const metrics =
-        fixtureAnalyticsDataSource.getCustomerUpsellMetrics(knownCustomerIntelligenceAddress);
+      const metrics = fixtureAnalyticsDataSource.getCustomerUpsellMetrics(
+        knownCustomerIntelligenceAddress,
+      );
 
       if (!metrics) {
         throw new Error("Expected fixture upsell metrics for the known customer.");
@@ -150,8 +152,9 @@ describe("BFF llm service", () => {
 
   test("invalidates cached explanations after the TTL or when the deploy scope changes", async () =>
     withTempDir("cache-invalidation", async (cacheDirectory) => {
-      const metrics =
-        fixtureAnalyticsDataSource.getCustomerUpsellMetrics(knownCustomerIntelligenceAddress);
+      const metrics = fixtureAnalyticsDataSource.getCustomerUpsellMetrics(
+        knownCustomerIntelligenceAddress,
+      );
 
       if (!metrics) {
         throw new Error("Expected fixture upsell metrics for the known customer.");
@@ -234,8 +237,9 @@ describe("BFF llm service", () => {
 
   test("sends an English and evidence-constrained Bedrock system prompt", async () =>
     withTempDir("system-prompt", async (cacheDirectory) => {
-      const metrics =
-        fixtureAnalyticsDataSource.getCustomerUpsellMetrics(knownCustomerIntelligenceAddress);
+      const metrics = fixtureAnalyticsDataSource.getCustomerUpsellMetrics(
+        knownCustomerIntelligenceAddress,
+      );
 
       if (!metrics) {
         throw new Error("Expected fixture upsell metrics for the known customer.");
@@ -294,8 +298,9 @@ describe("BFF llm service", () => {
 
   test("includes Bedrock cause details when inference fails", async () =>
     withTempDir("inference-error", async (cacheDirectory) => {
-      const metrics =
-        fixtureAnalyticsDataSource.getCustomerUpsellMetrics(knownCustomerIntelligenceAddress);
+      const metrics = fixtureAnalyticsDataSource.getCustomerUpsellMetrics(
+        knownCustomerIntelligenceAddress,
+      );
 
       if (!metrics) {
         throw new Error("Expected fixture upsell metrics for the known customer.");

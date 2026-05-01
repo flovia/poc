@@ -440,7 +440,7 @@ export const PhaseBResponseScopeSchema = z
     providerId: z.string().min(1).optional(),
     network: z.string().min(1).optional(),
     asset: z.string().min(1).optional(),
-    payTo: EvmAddressSchema.optional(),
+    payTo: z.string().min(1).optional(),
   })
   .strict();
 
@@ -802,9 +802,7 @@ export const PhaseBCustomerUpsellExplanationSchema = z
   })
   .strict();
 
-export type PhaseBCustomerUpsellExplanation = z.infer<
-  typeof PhaseBCustomerUpsellExplanationSchema
->;
+export type PhaseBCustomerUpsellExplanation = z.infer<typeof PhaseBCustomerUpsellExplanationSchema>;
 
 export const PhaseBCustomerUpsellExplanationResponseSchema = withDerivedInsightReasons(
   z

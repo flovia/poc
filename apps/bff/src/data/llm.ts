@@ -22,8 +22,7 @@ const DEFAULT_BEDROCK_MAX_TOKENS = 500;
 const DEFAULT_BEDROCK_TEMPERATURE = 0.2;
 const DEFAULT_BEDROCK_BRANCH_NAME = "unknown-branch";
 const DEFAULT_BEDROCK_CACHE_DIRNAME = "bff-llm-cache";
-const GENERIC_BEDROCK_INFERENCE_ERROR_MESSAGE =
-  "Bedrock upsell explanation inference failed.";
+const GENERIC_BEDROCK_INFERENCE_ERROR_MESSAGE = "Bedrock upsell explanation inference failed.";
 const RECENT_ACTIVITY_DAYS = 7;
 const HIGH_TX_COUNT_THRESHOLD = 5;
 const FREE_TIER_NEAR_LIMIT_THRESHOLD = 0.8;
@@ -446,11 +445,7 @@ class BedrockUpsellExplanationService implements BffLlmService {
       return await inflight;
     }
 
-    const generation = this.#generateAndCacheUpsellExplanation(
-      input,
-      explanationInput,
-      cacheKey,
-    );
+    const generation = this.#generateAndCacheUpsellExplanation(input, explanationInput, cacheKey);
     this.#inflightByCacheKey.set(cacheKey, generation);
 
     try {
@@ -532,12 +527,12 @@ class BedrockUpsellExplanationService implements BffLlmService {
       generatedFrom: UPSSELL_EXPLANATION_GENERATED_FROM,
       address: input.address,
       sourceGeneratedAt: input.sourceGeneratedAt,
-        model: {
-          provider: "bedrock",
-          modelId: this.#modelId,
-          region: this.#region,
-          promptVersion: this.#promptVersion,
-        },
+      model: {
+        provider: "bedrock",
+        modelId: this.#modelId,
+        region: this.#region,
+        promptVersion: this.#promptVersion,
+      },
       input: explanationInput,
       explanation,
       provenance: "derived_insight",
@@ -556,9 +551,9 @@ class BedrockUpsellExplanationService implements BffLlmService {
 export const resolveBffLlmService = (
   options: ResolveBffLlmServiceOptions = {},
 ): BffLlmService | null => {
-  const modelId = options.modelId ?? process.env.BFF_BEDROCK_MODEL_ID ?? process.env.BEDROCK_MODEL_ID;
-  const region =
-    options.region ?? process.env.AWS_REGION ?? process.env.AWS_DEFAULT_REGION;
+  const modelId =
+    options.modelId ?? process.env.BFF_BEDROCK_MODEL_ID ?? process.env.BEDROCK_MODEL_ID;
+  const region = options.region ?? process.env.AWS_REGION ?? process.env.AWS_DEFAULT_REGION;
   const promptVersion =
     options.promptVersion ??
     process.env.BFF_BEDROCK_PROMPT_VERSION ??
@@ -567,8 +562,7 @@ export const resolveBffLlmService = (
   const cacheDirectory = options.cacheDirectory ?? resolveDefaultCacheDirectory();
   const cacheTtlMs = options.cacheTtlMs ?? resolveDefaultCacheTtlMs();
   const deploymentId = options.deploymentId ?? resolveDefaultDeploymentId();
-  const runtimeInstanceId =
-    options.runtimeInstanceId ?? resolveDefaultRuntimeInstanceId();
+  const runtimeInstanceId = options.runtimeInstanceId ?? resolveDefaultRuntimeInstanceId();
   const now = options.now ?? Date.now;
 
   if (!modelId || !region) {
@@ -615,19 +609,16 @@ export const buildUpsellMetricsByAddress = ({
       const spendRank = rankByAddress.get(address) ?? customers.customerCount;
       const spendPercentile = percentileFromRank(spendRank, customers.customerCount);
       const txCount = profile.profile.metrics.txCount ?? customer.observationCount;
-      const providerCount =
-        profile.profile.metrics.uniqueProviderCount ?? customer.providerCount;
+      const providerCount = profile.profile.metrics.uniqueProviderCount ?? customer.providerCount;
       const firstSeenAt = profile.profile.metrics.firstSeenAt ?? null;
-      const lastSeenAt =
-        profile.profile.metrics.lastSeenAt ?? customer.lastSeenAt ?? null;
+      const lastSeenAt = profile.profile.metrics.lastSeenAt ?? customer.lastSeenAt ?? null;
       const daysSinceLastSeen =
         lastSeenAt === null ? null : daysBetween(profile.generatedAt, lastSeenAt);
       const x402ServiceCount = intelligence?.x402Services.length ?? 0;
 
       const flags = {
         isTopSpender: spendPercentile >= TOP_SPENDER_PERCENTILE_THRESHOLD,
-        isRecentlyActive:
-          daysSinceLastSeen !== null && daysSinceLastSeen <= RECENT_ACTIVITY_DAYS,
+        isRecentlyActive: daysSinceLastSeen !== null && daysSinceLastSeen <= RECENT_ACTIVITY_DAYS,
         isMultiProvider: providerCount >= 2,
         hasHighTransactionCount: txCount >= HIGH_TX_COUNT_THRESHOLD,
         isNearFreeTierLimit:
