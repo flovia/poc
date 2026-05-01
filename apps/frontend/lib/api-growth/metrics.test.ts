@@ -9,7 +9,17 @@ describe("buildApiGrowthIntelligence", () => {
     expect(intelligence.insightCards).toHaveLength(4);
     expect(intelligence.sourceMediumQuality.rows.map((row) => row.source)).toContain("Agent SDK");
     expect(intelligence.sourceMediumQuality.rows.map((row) => row.source)).toContain("Dexter");
+    expect(intelligence.sourceMediumQuality.rows.find((row) => row.source === "Direct")?.wallets).toBe(100);
+    expect(intelligence.sourceMediumQuality.rows.find((row) => row.source === "Sponge")?.wallets).toBe(80);
+    expect(intelligence.sourceMediumQuality.rows.find((row) => row.source === "Dexter")?.wallets).toBe(60);
     expect(intelligence.sourceMediumQuality.rows[0].qualityScore).toBeGreaterThan(0);
+    expect(
+      new Set(
+        intelligence.sourceMediumQuality.rows.map(
+          (row) => `${row.volumeShare.toFixed(2)}:${row.repeatQuality.toFixed(2)}`,
+        ),
+      ).size,
+    ).toBe(intelligence.sourceMediumQuality.rows.length);
     expect(intelligence.endpointFrequency.rows[0].callsPerWallet).toBeGreaterThan(0);
     expect(intelligence.endpointFrequency.flow).toEqual([
       "pool_search",

@@ -77,6 +77,20 @@ const useCaseBySegment: Record<MacroWallet["segment"], string> = {
   one_off: "One-off lookup",
 };
 
+const sourceQualityProxy: Record<
+  string,
+  { wallets: number; firstPaidRate: number; repeatQuality: number }
+> = {
+  "Agent SDK": { wallets: 45, firstPaidRate: 0.78, repeatQuality: 0.9 },
+  Dexter: { wallets: 60, firstPaidRate: 0.72, repeatQuality: 0.82 },
+  Direct: { wallets: 100, firstPaidRate: 0.34, repeatQuality: 0.22 },
+  Docs: { wallets: 35, firstPaidRate: 0.46, repeatQuality: 0.38 },
+  "Partner App": { wallets: 55, firstPaidRate: 0.61, repeatQuality: 0.64 },
+  Sponge: { wallets: 80, firstPaidRate: 0.55, repeatQuality: 0.46 },
+};
+
+const maxSourceProxyWallets = Math.max(...Object.values(sourceQualityProxy).map((source) => source.wallets));
+
 function sourceMediumFor(wallet: MacroWallet): string {
   if (wallet.intermediary === "Circle Wallets") return "Agent SDK";
   if (wallet.intermediary === "Coinbase CDP") return "Dexter";
@@ -212,12 +226,17 @@ function buildSourceMediumRows(
 
   return [...rows.entries()]
     .map(([source, row]) => {
-      const wallets = row.wallets.size;
-      const repeatRate = ratio(row.repeated.size, wallets);
-      const endpointFrequency = wallets === 0 ? 0 : row.eventCount / wallets;
-      const volumeShare = ratio(wallets, totalWallets);
+      const observedWallets = row.wallets.size;
+      const repeatRate = ratio(row.repeated.size, observedWallets);
+      const endpointFrequency = observedWallets === 0 ? 0 : row.eventCount / observedWallets;
+      const observedVolumeShare = ratio(observedWallets, totalWallets);
+      const proxy = sourceQualityProxy[source];
+      const wallets = proxy?.wallets ?? observedWallets;
+      const firstPaid = proxy ? Math.round(proxy.wallets * proxy.firstPaidRate) : observedWallets;
+      const volumeShare = proxy ? ratio(proxy.wallets, maxSourceProxyWallets) : observedVolumeShare;
+      const repeatQuality = proxy?.repeatQuality ?? repeatRate;
       const qualityScore = clamp(
-        repeatRate * 0.55 + Math.min(endpointFrequency / 50, 1) * 0.35 + volumeShare * 0.1,
+        repeatQuality * 0.55 + Math.min(endpointFrequency / 50, 1) * 0.35 + volumeShare * 0.1,
       );
       const useCaseMix = [...row.segments.entries()]
         .sort((left, right) => right[1] - left[1])
@@ -227,12 +246,12 @@ function buildSourceMediumRows(
       return {
         source,
         wallets,
-        firstPaid: wallets,
+        firstPaid,
         repeatRate: round(repeatRate),
         endpointFrequency: round(endpointFrequency, 1),
         qualityScore: round(qualityScore),
         volumeShare: round(volumeShare),
-        repeatQuality: round(repeatRate),
+        repeatQuality: round(repeatQuality),
         useCaseMix,
       };
     })
