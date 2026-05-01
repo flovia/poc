@@ -160,6 +160,30 @@ describe("BFF routes", () => {
     expect(body.message).toContain("Bedrock");
   });
 
+  test("returns llm_failed with llm service error detail", async () => {
+    const llmService: BffLlmService = {
+      async generateUpsellExplanation() {
+        throw new Error("AccessDeniedException: missing model access");
+      },
+    };
+    const handler = createBffHandler(undefined, llmService);
+    const originalConsoleError = console.error;
+    console.error = () => {};
+
+    try {
+      const response = await handler(
+        request(`/customers/${knownCustomerIntelligenceAddress}/llm/upsell-explanation`),
+      );
+      const body = (await response.json()) as { error: string; message: string };
+
+      expect(response.status).toBe(502);
+      expect(body.error).toBe("llm_failed");
+      expect(body.message).toContain("AccessDeniedException");
+    } finally {
+      console.error = originalConsoleError;
+    }
+  });
+
   test("returns validated Bedrock upsell explanation for a known customer wallet", async () => {
     const llmService: BffLlmService = {
       async generateUpsellExplanation(input) {

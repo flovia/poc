@@ -17,6 +17,8 @@ const UPSSELL_EXPLANATION_GENERATED_FROM = "phase-b-bedrock-upsell-explanation-v
 const DEFAULT_BEDROCK_PROMPT_VERSION = "upsell-explanation-v1";
 const DEFAULT_BEDROCK_MAX_TOKENS = 500;
 const DEFAULT_BEDROCK_TEMPERATURE = 0.2;
+const GENERIC_BEDROCK_INFERENCE_ERROR_MESSAGE =
+  "Bedrock upsell explanation inference failed.";
 const RECENT_ACTIVITY_DAYS = 7;
 const HIGH_TX_COUNT_THRESHOLD = 5;
 const FREE_TIER_NEAR_LIMIT_THRESHOLD = 0.8;
@@ -135,6 +137,32 @@ const extractJsonObject = (text: string) => {
   return text.slice(start, end + 1);
 };
 
+const formatErrorMessage = (error: Error) => {
+  const prefix = error.name && error.name !== "Error" ? `${error.name}: ` : "";
+  return `${prefix}${error.message}`.trim();
+};
+
+const describeErrorCause = (error: unknown) => {
+  const seen = new Set<Error>();
+  const parts: string[] = [];
+  let current = error;
+
+  while (current instanceof Error && !seen.has(current)) {
+    seen.add(current);
+    const message = formatErrorMessage(current);
+    if (
+      message &&
+      message !== GENERIC_BEDROCK_INFERENCE_ERROR_MESSAGE &&
+      !parts.includes(message)
+    ) {
+      parts.push(message);
+    }
+    current = current.cause;
+  }
+
+  return parts.join(" <- ");
+};
+
 type BuildUpsellMetricsByAddressInput = {
   customers: PhaseBCustomerListResponse;
   profilesByAddress: Record<string, PhaseBCustomerProfileResponse>;
@@ -225,9 +253,15 @@ class BedrockUpsellExplanationService implements BffLlmService {
         throw error;
       }
 
-      throw new BffLlmInferenceError("Bedrock upsell explanation inference failed.", {
-        cause: error,
-      });
+      const causeDetail = describeErrorCause(error);
+      throw new BffLlmInferenceError(
+        causeDetail
+          ? `${GENERIC_BEDROCK_INFERENCE_ERROR_MESSAGE} ${causeDetail}`
+          : GENERIC_BEDROCK_INFERENCE_ERROR_MESSAGE,
+        {
+          cause: error,
+        },
+      );
     }
 
     return validatePhaseBCustomerUpsellExplanationResponse({

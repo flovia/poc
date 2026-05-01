@@ -6,6 +6,8 @@ import {
 } from "./data/llm";
 
 type JsonValue = unknown;
+const GENERIC_BEDROCK_INFERENCE_ERROR_MESSAGE =
+  "Bedrock upsell explanation inference failed.";
 
 const json = (body: JsonValue, init: ResponseInit = {}) =>
   Response.json(body, {
@@ -71,7 +73,9 @@ const llmFailed = (error: unknown) =>
       message:
         error instanceof BffLlmInferenceError
           ? error.message
-          : "Bedrock upsell explanation inference failed.",
+          : error instanceof Error && error.message
+            ? error.message
+            : GENERIC_BEDROCK_INFERENCE_ERROR_MESSAGE,
     },
     { status: 502 },
   );
@@ -170,6 +174,7 @@ export const createBffHandler =
       try {
         return json(await llmService.generateUpsellExplanation(metrics));
       } catch (error) {
+        console.error("Bedrock upsell explanation request failed.", error);
         return llmFailed(error);
       }
     }
