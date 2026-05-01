@@ -1,6 +1,7 @@
 import type {
   MacroEndpointCategory,
   MacroMetricsDemoData,
+  MacroServiceId,
   MacroWallet,
 } from "@/lib/macro-metrics/demo";
 
@@ -60,6 +61,23 @@ export type ApiGrowthRecommendation = {
   priority: "P0" | "P1" | "P2";
 };
 
+export type ApiGrowthRepeatWalletRate = {
+  rate: number;
+  repeatedWallets: number;
+  totalWallets: number;
+  note: string;
+};
+
+export type ApiGrowthServiceCandidate = {
+  serviceId: MacroServiceId;
+  serviceName: string;
+  sharedWallets: number;
+  sharedSpendAtomic: string;
+  confidence: number;
+  owner: string;
+  reason: string;
+};
+
 export type ApiGrowthIntelligence = {
   insightCards: ApiGrowthInsightCard[];
   sourceMediumQuality: {
@@ -73,6 +91,8 @@ export type ApiGrowthIntelligence = {
   useCaseFit: {
     cards: UseCaseFitCard[];
   };
+  repeatWalletRate: ApiGrowthRepeatWalletRate;
+  otherServiceCandidates: ApiGrowthServiceCandidate[];
   recommendations: ApiGrowthRecommendation[];
   proxyNote: string;
 };
@@ -115,7 +135,12 @@ const API_GROWTH_CHANNEL_PROFILES: ApiGrowthChannelProfile[] = [
     retainedW2: 18,
     repeatSessions: 82,
     endpointCalls: { simple_price: 920, token_price: 360, pool_search: 210, token_detail: 120 },
-    useCases: { "One-off lookup": 58, "Research agent": 18, "Trading bot / agent workflow": 14, "Execution workflow": 10 },
+    useCases: {
+      "One-off lookup": 58,
+      "Research agent": 18,
+      "Trading bot / agent workflow": 14,
+      "Execution workflow": 10,
+    },
   },
   {
     source: "Sponge",
@@ -123,8 +148,19 @@ const API_GROWTH_CHANNEL_PROFILES: ApiGrowthChannelProfile[] = [
     firstPaid: 44,
     retainedW2: 27,
     repeatSessions: 148,
-    endpointCalls: { pool_search: 720, token_price: 660, simple_price: 280, token_detail: 300, trending_pools: 180 },
-    useCases: { "Trading bot / agent workflow": 34, "Research agent": 20, "One-off lookup": 16, "Execution workflow": 10 },
+    endpointCalls: {
+      pool_search: 720,
+      token_price: 660,
+      simple_price: 280,
+      token_detail: 300,
+      trending_pools: 180,
+    },
+    useCases: {
+      "Trading bot / agent workflow": 34,
+      "Research agent": 20,
+      "One-off lookup": 16,
+      "Execution workflow": 10,
+    },
   },
   {
     source: "Dexter",
@@ -132,8 +168,19 @@ const API_GROWTH_CHANNEL_PROFILES: ApiGrowthChannelProfile[] = [
     firstPaid: 43,
     retainedW2: 35,
     repeatSessions: 220,
-    endpointCalls: { pool_search: 640, token_price: 760, token_detail: 520, trending_pools: 240, simple_price: 180 },
-    useCases: { "Trading bot / agent workflow": 28, "Execution workflow": 18, "Research agent": 10, "One-off lookup": 4 },
+    endpointCalls: {
+      pool_search: 640,
+      token_price: 760,
+      token_detail: 520,
+      trending_pools: 240,
+      simple_price: 180,
+    },
+    useCases: {
+      "Trading bot / agent workflow": 28,
+      "Execution workflow": 18,
+      "Research agent": 10,
+      "One-off lookup": 4,
+    },
   },
   {
     source: "Partner App",
@@ -141,8 +188,19 @@ const API_GROWTH_CHANNEL_PROFILES: ApiGrowthChannelProfile[] = [
     firstPaid: 34,
     retainedW2: 26,
     repeatSessions: 132,
-    endpointCalls: { token_detail: 420, token_price: 340, pool_search: 260, simple_price: 210, trending_pools: 120 },
-    useCases: { "Execution workflow": 22, "Research agent": 16, "Trading bot / agent workflow": 12, "One-off lookup": 5 },
+    endpointCalls: {
+      token_detail: 420,
+      token_price: 340,
+      pool_search: 260,
+      simple_price: 210,
+      trending_pools: 120,
+    },
+    useCases: {
+      "Execution workflow": 22,
+      "Research agent": 16,
+      "Trading bot / agent workflow": 12,
+      "One-off lookup": 5,
+    },
   },
   {
     source: "Coinbase AgentKit MCP",
@@ -150,8 +208,19 @@ const API_GROWTH_CHANNEL_PROFILES: ApiGrowthChannelProfile[] = [
     firstPaid: 35,
     retainedW2: 32,
     repeatSessions: 246,
-    endpointCalls: { pool_search: 860, token_price: 920, token_detail: 740, trending_pools: 340, simple_price: 120 },
-    useCases: { "Trading bot / agent workflow": 27, "Research agent": 9, "Execution workflow": 7, "One-off lookup": 2 },
+    endpointCalls: {
+      pool_search: 860,
+      token_price: 920,
+      token_detail: 740,
+      trending_pools: 340,
+      simple_price: 120,
+    },
+    useCases: {
+      "Trading bot / agent workflow": 27,
+      "Research agent": 9,
+      "Execution workflow": 7,
+      "One-off lookup": 2,
+    },
   },
   {
     source: "Docs",
@@ -159,13 +228,28 @@ const API_GROWTH_CHANNEL_PROFILES: ApiGrowthChannelProfile[] = [
     firstPaid: 16,
     retainedW2: 9,
     repeatSessions: 44,
-    endpointCalls: { simple_price: 260, token_price: 140, pool_search: 90, token_detail: 70, trending_pools: 40 },
-    useCases: { "One-off lookup": 18, "Research agent": 9, "Trading bot / agent workflow": 5, "Execution workflow": 3 },
+    endpointCalls: {
+      simple_price: 260,
+      token_price: 140,
+      pool_search: 90,
+      token_detail: 70,
+      trending_pools: 40,
+    },
+    useCases: {
+      "One-off lookup": 18,
+      "Research agent": 9,
+      "Trading bot / agent workflow": 5,
+      "Execution workflow": 3,
+    },
   },
 ];
 
-const sourceProfileByName = new Map(API_GROWTH_CHANNEL_PROFILES.map((profile) => [profile.source, profile]));
-const maxSourceProfileWallets = Math.max(...API_GROWTH_CHANNEL_PROFILES.map((profile) => profile.wallets));
+const sourceProfileByName = new Map(
+  API_GROWTH_CHANNEL_PROFILES.map((profile) => [profile.source, profile]),
+);
+const maxSourceProfileWallets = Math.max(
+  ...API_GROWTH_CHANNEL_PROFILES.map((profile) => profile.wallets),
+);
 
 function sourceMediumFor(wallet: MacroWallet): string {
   if (wallet.intermediary === "Circle Wallets") return "Coinbase AgentKit MCP";
@@ -212,6 +296,8 @@ export function buildApiGrowthIntelligence(data: MacroMetricsDemoData): ApiGrowt
   const sourceRows = buildSourceMediumRows(data, sessionsByWallet);
   const endpointRows = buildEndpointRows(data, eventsByEndpoint, totalEvents);
   const useCaseCards = buildUseCaseCards(data, sessionsByWallet, walletByAddress);
+  const repeatWalletRate = buildRepeatWalletRate(data, sessionsByWallet);
+  const otherServiceCandidates = buildOtherServiceCandidates(data);
   const bestChannel = topBy(sourceRows, (row) => row.qualityScore);
   const highestFrequencyChannel = topBy(sourceRows, (row) => row.endpointFrequency);
   const topEndpoint = topBy(endpointRows, (row) => row.paidFrequency);
@@ -244,6 +330,13 @@ export function buildApiGrowthIntelligence(data: MacroMetricsDemoData): ApiGrowt
         tone: "primary",
       },
       {
+        label: "Repeat wallet rate",
+        value:
+          repeatWalletRate.totalWallets === 0 ? "—" : `${Math.round(repeatWalletRate.rate * 100)}%`,
+        note: repeatWalletRate.note,
+        tone: "teal",
+      },
+      {
         label: "Best x402 fit",
         value: bestFit?.useCase ?? "—",
         note: bestFit
@@ -255,10 +348,99 @@ export function buildApiGrowthIntelligence(data: MacroMetricsDemoData): ApiGrowt
     sourceMediumQuality: { rows: sourceRows },
     endpointFrequency: { rows: endpointRows, flow: AGENT_FLOW, flows: API_GROWTH_ENDPOINT_FLOWS },
     useCaseFit: { cards: useCaseCards },
+    repeatWalletRate,
+    otherServiceCandidates,
     recommendations: buildRecommendations(sourceRows, endpointRows, useCaseCards),
     proxyNote:
       "Offline demo model. Source / medium labels and x402 / Agent fit are directional product-growth proxies derived from wallet, session, endpoint, and repeat behavior.",
   };
+}
+
+function addAtomic(left: string, right: string): string {
+  return (BigInt(left) + BigInt(right)).toString();
+}
+
+function serviceName(data: MacroMetricsDemoData, serviceId: MacroServiceId): string {
+  return data.services.find((service) => service.id === serviceId)?.name ?? serviceId;
+}
+
+function ownerForService(serviceId: MacroServiceId): string {
+  if (serviceId === "vectormind" || serviceId === "routezero") return "Growth PM";
+  if (serviceId === "ledgerlake" || serviceId === "vaultlayer") return "Product lead";
+  return "Developer relations";
+}
+
+function buildRepeatWalletRate(
+  data: MacroMetricsDemoData,
+  sessionsByWallet: Map<string, Set<string>>,
+): ApiGrowthRepeatWalletRate {
+  if (data.wallets.length > 0) {
+    const firstPaid = API_GROWTH_CHANNEL_PROFILES.reduce(
+      (acc, profile) => acc + profile.firstPaid,
+      0,
+    );
+    const retained = API_GROWTH_CHANNEL_PROFILES.reduce(
+      (acc, profile) => acc + profile.retainedW2,
+      0,
+    );
+    return {
+      rate: round(ratio(retained, firstPaid)),
+      repeatedWallets: retained,
+      totalWallets: firstPaid,
+      note: `${retained}/${firstPaid} first-paid wallets repeat by W2`,
+    };
+  }
+
+  const repeatedWallets = [...sessionsByWallet.values()].filter(
+    (sessions) => sessions.size >= 2,
+  ).length;
+  const totalWallets = sessionsByWallet.size;
+  return {
+    rate: round(ratio(repeatedWallets, totalWallets)),
+    repeatedWallets,
+    totalWallets,
+    note: `${repeatedWallets}/${totalWallets} wallets with 2+ paid sessions`,
+  };
+}
+
+function buildOtherServiceCandidates(data: MacroMetricsDemoData): ApiGrowthServiceCandidate[] {
+  if (data.events.length === 0) return [];
+
+  const primaryWallets = new Set(
+    data.events
+      .filter((event) => event.serviceId === data.primaryProviderId)
+      .map((event) => event.walletAddress),
+  );
+
+  return data.services
+    .filter((service) => service.id !== data.primaryProviderId)
+    .map((service): ApiGrowthServiceCandidate => {
+      const sharedEvents = data.events.filter(
+        (event) => event.serviceId === service.id && primaryWallets.has(event.walletAddress),
+      );
+      const sharedWallets = new Set(sharedEvents.map((event) => event.walletAddress));
+      const sharedSpendAtomic = sharedEvents.reduce(
+        (acc, event) => addAtomic(acc, event.spendAtomic),
+        "0",
+      );
+      const confidence = primaryWallets.size === 0 ? 0 : sharedWallets.size / primaryWallets.size;
+      return {
+        serviceId: service.id,
+        serviceName: serviceName(data, service.id),
+        sharedWallets: sharedWallets.size,
+        sharedSpendAtomic,
+        confidence: round(confidence),
+        owner: ownerForService(service.id),
+        reason: `Shared by ${sharedWallets.size} wallets after primary API workflows`,
+      };
+    })
+    .filter((candidate) => candidate.sharedWallets > 0)
+    .sort((left, right) => {
+      if (BigInt(right.sharedSpendAtomic) !== BigInt(left.sharedSpendAtomic)) {
+        return BigInt(right.sharedSpendAtomic) > BigInt(left.sharedSpendAtomic) ? 1 : -1;
+      }
+      return right.confidence - left.confidence;
+    });
 }
 
 function buildSourceMediumRows(
@@ -307,19 +489,25 @@ function buildSourceMediumRows(
       const profile = sourceProfileByName.get(source);
       const wallets = profile?.wallets ?? observedWallets;
       const firstPaid = profile?.firstPaid ?? observedWallets;
-      const repeatRate = profile ? ratio(profile.retainedW2, profile.firstPaid) : ratio(row.repeated.size, observedWallets);
+      const repeatRate = profile
+        ? ratio(profile.retainedW2, profile.firstPaid)
+        : ratio(row.repeated.size, observedWallets);
       const totalEndpointCalls = profile
         ? Object.values(profile.endpointCalls).reduce((acc, calls) => acc + (calls ?? 0), 0)
         : row.eventCount;
       const endpointFrequency = wallets === 0 ? 0 : totalEndpointCalls / wallets;
-      const volumeShare = profile ? ratio(profile.wallets, maxSourceProfileWallets) : observedVolumeShare;
+      const volumeShare = profile
+        ? ratio(profile.wallets, maxSourceProfileWallets)
+        : observedVolumeShare;
       const repeatQuality = repeatRate;
       const qualityScore = clamp(
         repeatQuality * 0.55 + Math.min(endpointFrequency / 50, 1) * 0.35 + volumeShare * 0.1,
       );
-      const useCaseMix = (profile
-        ? (Object.entries(profile.useCases) as Array<[string, number]>)
-        : [...row.segments.entries()])
+      const useCaseMix = (
+        profile
+          ? (Object.entries(profile.useCases) as Array<[string, number]>)
+          : [...row.segments.entries()]
+      )
         .sort((left, right) => right[1] - left[1])
         .map(([segment]) => segment)
         .slice(0, 2)
@@ -348,14 +536,29 @@ function buildEndpointRows(
   totalEvents: number,
 ): EndpointFrequencyRow[] {
   if (data.wallets.length > 0) {
-    const endpointRows = new Map<MacroEndpointCategory, { wallets: number; calls: number; repeatSessions: number }>();
+    const endpointRows = new Map<
+      MacroEndpointCategory,
+      { wallets: number; calls: number; repeatSessions: number }
+    >();
     for (const profile of API_GROWTH_CHANNEL_PROFILES) {
-      for (const [endpoint, calls = 0] of Object.entries(profile.endpointCalls) as Array<[MacroEndpointCategory, number]>) {
+      for (const [endpoint, calls = 0] of Object.entries(profile.endpointCalls) as Array<
+        [MacroEndpointCategory, number]
+      >) {
         const existing = endpointRows.get(endpoint) ?? { wallets: 0, calls: 0, repeatSessions: 0 };
-        const endpointShare = calls / Math.max(1, Object.values(profile.endpointCalls).reduce((acc, value) => acc + (value ?? 0), 0));
-        existing.wallets += Math.max(1, Math.round(profile.firstPaid * Math.min(0.95, 0.42 + endpointShare)));
+        const endpointShare =
+          calls /
+          Math.max(
+            1,
+            Object.values(profile.endpointCalls).reduce((acc, value) => acc + (value ?? 0), 0),
+          );
+        existing.wallets += Math.max(
+          1,
+          Math.round(profile.firstPaid * Math.min(0.95, 0.42 + endpointShare)),
+        );
         existing.calls += calls;
-        existing.repeatSessions += Math.round(profile.repeatSessions * Math.min(0.9, 0.35 + endpointShare));
+        existing.repeatSessions += Math.round(
+          profile.repeatSessions * Math.min(0.9, 0.35 + endpointShare),
+        );
         endpointRows.set(endpoint, existing);
       }
     }
@@ -470,12 +673,23 @@ function buildUseCaseCards(
 function buildProfileUseCaseCards(): UseCaseFitCard[] {
   const byUseCase = new Map<
     UseCaseFitCard["useCase"],
-    { wallets: number; sources: Map<string, number>; calls: number; repeatSessions: number; endpointCalls: Map<MacroEndpointCategory, number> }
+    {
+      wallets: number;
+      sources: Map<string, number>;
+      calls: number;
+      repeatSessions: number;
+      endpointCalls: Map<MacroEndpointCategory, number>;
+    }
   >();
 
   for (const profile of API_GROWTH_CHANNEL_PROFILES) {
-    const profileCalls = Object.values(profile.endpointCalls).reduce((acc, calls) => acc + (calls ?? 0), 0);
-    for (const [useCase, wallets = 0] of Object.entries(profile.useCases) as Array<[UseCaseFitCard["useCase"], number]>) {
+    const profileCalls = Object.values(profile.endpointCalls).reduce(
+      (acc, calls) => acc + (calls ?? 0),
+      0,
+    );
+    for (const [useCase, wallets = 0] of Object.entries(profile.useCases) as Array<
+      [UseCaseFitCard["useCase"], number]
+    >) {
       const row = byUseCase.get(useCase) ?? {
         wallets: 0,
         sources: new Map<string, number>(),
@@ -488,8 +702,13 @@ function buildProfileUseCaseCards(): UseCaseFitCard[] {
       row.calls += Math.round(profileCalls * useCaseShare);
       row.repeatSessions += Math.round(profile.repeatSessions * useCaseShare);
       row.sources.set(profile.source, (row.sources.get(profile.source) ?? 0) + wallets);
-      for (const [endpoint, calls = 0] of Object.entries(profile.endpointCalls) as Array<[MacroEndpointCategory, number]>) {
-        row.endpointCalls.set(endpoint, (row.endpointCalls.get(endpoint) ?? 0) + Math.round(calls * useCaseShare));
+      for (const [endpoint, calls = 0] of Object.entries(profile.endpointCalls) as Array<
+        [MacroEndpointCategory, number]
+      >) {
+        row.endpointCalls.set(
+          endpoint,
+          (row.endpointCalls.get(endpoint) ?? 0) + Math.round(calls * useCaseShare),
+        );
       }
       byUseCase.set(useCase, row);
     }
@@ -499,10 +718,20 @@ function buildProfileUseCaseCards(): UseCaseFitCard[] {
     .map(([useCase, row]) => {
       const frequency = row.wallets === 0 ? 0 : row.calls / row.wallets;
       const repeatRate = ratio(row.repeatSessions, Math.max(1, row.wallets * 6));
-      const endpointSet = new Set([...row.endpointCalls.entries()].filter(([, calls]) => calls > 0).map(([endpoint]) => endpoint));
+      const endpointSet = new Set(
+        [...row.endpointCalls.entries()]
+          .filter(([, calls]) => calls > 0)
+          .map(([endpoint]) => endpoint),
+      );
       const hasAgentFlow = AGENT_FLOW.every((endpoint) => endpointSet.has(endpoint));
-      const agentFit = clamp((hasAgentFlow ? 0.28 : 0.04) + repeatRate * 0.42 + Math.min(frequency / 42, 1) * 0.3);
-      const x402Fit = clamp(repeatRate * 0.45 + Math.min(frequency / 40, 1) * 0.35 + (endpointSet.has("token_detail") ? 0.2 : 0));
+      const agentFit = clamp(
+        (hasAgentFlow ? 0.28 : 0.04) + repeatRate * 0.42 + Math.min(frequency / 42, 1) * 0.3,
+      );
+      const x402Fit = clamp(
+        repeatRate * 0.45 +
+          Math.min(frequency / 40, 1) * 0.35 +
+          (endpointSet.has("token_detail") ? 0.2 : 0),
+      );
       const sourceMix = [...row.sources.entries()]
         .sort((left, right) => right[1] - left[1])
         .map(([source]) => source)

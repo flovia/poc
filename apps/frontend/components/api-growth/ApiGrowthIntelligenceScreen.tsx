@@ -1,7 +1,8 @@
 import type { CSSProperties, ReactNode } from "react";
 import { EndpointSankey, type EndpointSankeyFlow } from "@/components/macro-metrics/EndpointSankey";
-import { formatRatioPct } from "@/lib/format";
+import { formatAtomic, formatRatioPct } from "@/lib/format";
 import type {
+  ApiGrowthServiceCandidate,
   ApiGrowthInsightCard,
   ApiGrowthIntelligence,
   ApiGrowthEndpointFlow,
@@ -47,7 +48,7 @@ export function ApiGrowthIntelligenceScreen({ intelligence }: Props) {
             <EndpointFlow flows={intelligence.endpointFrequency.flows} />
           </SectionCard>
 
-          <SectionCard eyebrow="Use Case & x402 / Agents Fit" title="What they are trying to do">
+          <SectionCard eyebrow="Use Case & x402 / Agents Fit" title="Inferred use cases">
             <UseCaseCards cards={intelligence.useCaseFit.cards} />
             <FitMatrix cards={intelligence.useCaseFit.cards} />
           </SectionCard>
@@ -55,22 +56,30 @@ export function ApiGrowthIntelligenceScreen({ intelligence }: Props) {
 
         <section style={{ marginTop: 18 }}>
           <div className="eyebrow" style={{ marginBottom: 8 }}>
-            GTM & Product Recommendations
+            Growth Action Bridge
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 12 }}>
-            {intelligence.recommendations.map((recommendation) => (
-              <div key={recommendation.title} className="card" style={{ padding: 16, background: "var(--surface-card)", borderColor: "var(--line)" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", gap: 12, marginBottom: 8 }}>
-                  <strong style={{ fontSize: 14 }}>{recommendation.title}</strong>
-                  <PriorityBadge priority={recommendation.priority} />
-                </div>
-                <p style={bodyText}>{recommendation.reason}</p>
-                <div style={{ display: "flex", justifyContent: "space-between", gap: 10, color: "var(--text-3)", fontSize: 12 }}>
-                  <span>{recommendation.target}</span>
-                  <span className="mono">{recommendation.metric}</span>
-                </div>
+          <div style={{ display: "grid", gridTemplateColumns: "minmax(340px, 0.86fr) minmax(420px, 1.14fr)", gap: 14, alignItems: "start" }}>
+            <SectionCard eyebrow="Other Service Candidates" title="Assigned expansion targets">
+              <OtherServiceCandidates candidates={intelligence.otherServiceCandidates} />
+            </SectionCard>
+
+            <SectionCard eyebrow="GTM & Product Recommendations" title="What to improve next">
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
+                {intelligence.recommendations.map((recommendation) => (
+                  <div key={recommendation.title} style={{ padding: 14, border: "1px solid var(--line)", borderRadius: 8, background: "var(--surface-card)" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", gap: 12, marginBottom: 8 }}>
+                      <strong style={{ fontSize: 14 }}>{recommendation.title}</strong>
+                      <PriorityBadge priority={recommendation.priority} />
+                    </div>
+                    <p style={bodyText}>{recommendation.reason}</p>
+                    <div style={{ display: "flex", justifyContent: "space-between", gap: 10, color: "var(--text-3)", fontSize: 12 }}>
+                      <span>{recommendation.target}</span>
+                      <span className="mono">{recommendation.metric}</span>
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
+            </SectionCard>
           </div>
           <p style={{ color: "var(--text-mute)", fontSize: 12, margin: "12px 0 0" }}>{intelligence.proxyNote}</p>
         </section>
@@ -303,6 +312,33 @@ function ScorePills({ agentFit, x402Fit, confidence }: { agentFit: number; x402F
       <span style={scorePillStyle}>Agent fit {formatRatioPct(agentFit)}</span>
       <span style={scorePillStyle}>x402 fit {formatRatioPct(x402Fit)}</span>
       <span style={scorePillStyle}>confidence {formatRatioPct(confidence)}</span>
+    </div>
+  );
+}
+
+function OtherServiceCandidates({ candidates }: { candidates: ApiGrowthServiceCandidate[] }) {
+  if (candidates.length === 0) {
+    return <p style={{ ...bodyText, margin: 0 }}>No cross-service candidates in this offline snapshot.</p>;
+  }
+
+  return (
+    <div style={{ display: "grid", gap: 10 }}>
+      {candidates.slice(0, 4).map((candidate) => (
+        <div key={candidate.serviceId} style={{ padding: 12, border: "1px solid var(--line)", borderRadius: 8, background: "var(--surface-card)" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "start", marginBottom: 8 }}>
+            <div>
+              <strong style={{ fontSize: 14 }}>{candidate.serviceName}</strong>
+              <div style={{ color: "var(--text-mute)", fontSize: 11, marginTop: 2 }}>owner: {candidate.owner}</div>
+            </div>
+            <span className="mono" style={{ color: "var(--mesh-blue)", fontSize: 12, fontWeight: 800 }}>{formatRatioPct(candidate.confidence)} fit</span>
+          </div>
+          <p style={bodyText}>{candidate.reason}</p>
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 10, color: "var(--text-3)", fontSize: 12 }}>
+            <span>{candidate.sharedWallets} shared wallets</span>
+            <span className="mono">${formatAtomic(candidate.sharedSpendAtomic, 6, 0)} paid spend</span>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

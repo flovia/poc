@@ -321,7 +321,10 @@ function buildEvents(): MacroWorkflowEvent[] {
       const sessionId = `${wallet.address}:s${sessionIndex + 1}`;
       const baseTimestamp = T0 - dayOffset * DAY + walletIndex * 900 + sessionIndex * 180;
       flow.forEach((step, stepIndex) => {
-        const spendMultiplier = endpointSpendMultiplier[step.endpointCategory] + stepIndex * 0.14 + (sessionIndex % 4) * 0.05;
+        const spendMultiplier =
+          endpointSpendMultiplier[step.endpointCategory] +
+          stepIndex * 0.14 +
+          (sessionIndex % 4) * 0.05;
         events.push({
           eventId: `macro-${String(eventNo++).padStart(4, "0")}`,
           sessionId,
@@ -331,7 +334,10 @@ function buildEvents(): MacroWorkflowEvent[] {
           endpointLabel: labelByCategory[step.endpointCategory],
           timestamp: baseTimestamp + stepIndex * 75,
           spendAtomic: atomicUsd(spendUsdBySegment[wallet.segment] * spendMultiplier),
-          txCount: step.endpointCategory === "simple_price" || step.endpointCategory === "token_price" ? 2 : 1,
+          txCount:
+            step.endpointCategory === "simple_price" || step.endpointCategory === "token_price"
+              ? 2
+              : 1,
         });
       });
     }
