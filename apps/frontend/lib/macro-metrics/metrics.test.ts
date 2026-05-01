@@ -1,5 +1,9 @@
 import { describe, expect, test } from "bun:test";
-import { MACRO_METRICS_DEMO_DATA, type MacroEndpointCategory, type MacroMetricsDemoData } from "./demo";
+import {
+  MACRO_METRICS_DEMO_DATA,
+  type MacroEndpointCategory,
+  type MacroMetricsDemoData,
+} from "./demo";
 import { buildMacroMetrics, buildTrend } from "./metrics";
 
 describe("buildMacroMetrics", () => {

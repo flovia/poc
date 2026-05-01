@@ -56,7 +56,13 @@ export type CatalogPreview = {
     | "cluster";
   headline: string;
   rows?: Array<{ label: string; value: string; share?: number; note?: string }>;
-  flows?: Array<{ from: string; to: string; fromStep?: 0 | 1; toStep?: 1 | 2; occurrences: number }>;
+  flows?: Array<{
+    from: string;
+    to: string;
+    fromStep?: 0 | 1;
+    toStep?: 1 | 2;
+    occurrences: number;
+  }>;
   cells?: Array<{ x: string; y: string; value: number; label?: string }>;
   points?: Array<{ label: string; x: number; y: number; size?: number; note?: string }>;
 };
