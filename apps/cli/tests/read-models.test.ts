@@ -274,6 +274,18 @@ describe("service analytics read model generation", () => {
       store.persistCdpResources(resources);
       store.persistPayToAggregates(aggregates);
       store.detectAndPersistMappingPatterns();
+      store.persistTransferFacts([
+        {
+          network: "base",
+          asset: "USDC",
+          payTo,
+          txHash: "0x6248880ec36541e6783ab756afdb427939f6209551b751cec5a2c97f71176d94",
+          transferIndex: 0,
+          payerWallet: customer.customerAddress,
+          amountAtomic: "10000",
+          blockTimestamp: "2026-01-02T00:00:00.000Z",
+        },
+      ]);
       store.persistCustomerIntelligenceSnapshots([customer]);
       store.close();
 
@@ -292,6 +304,13 @@ describe("service analytics read model generation", () => {
       });
       expect(payload.serviceSummary.comparedToX402.sampleBasis).toContain("analytics data store");
       expect(payload.serviceQuadrants.points[0].attributionConfidence).toBeGreaterThan(0);
+      expect(payload.providers.providers[0]).toMatchObject({
+        payTo,
+        serviceId: "coingecko",
+        endpointAttributionStatus: "direct_payto_endpoint",
+        hasCustomerFacts: true,
+        customerFactCount: 1,
+      });
       expect(payload.customers.customerCount).toBe(1);
       expect(payload.profilesByAddress[customer.customerAddress].profile.identity.address).toBe(
         customer.customerAddress,
@@ -300,6 +319,68 @@ describe("service analytics read model generation", () => {
         customer.customerAddress,
       );
       expect(payload.walletUsageGraph.graph.providerWallets[0].payerWallets).toHaveLength(1);
+    }));
+
+  test("generates provider catalog rows for bundled, unresolved, and no-customer-fact payTos", async () =>
+    withTempDir("provider-catalog", (directory) => {
+      const dbPath = path.join(directory, "analytics.sqlite");
+      const outputPath = path.join(directory, "analytics.json");
+      const store = createAnalyticsStore({ path: dbPath });
+      const bundledPayTo = "0x1111111111111111111111111111111111111111";
+      const secondPayTo = "0x2222222222222222222222222222222222222222";
+      const unresolvedPayTo = "0x3333333333333333333333333333333333333333";
+
+      store.persistCdpResources([
+        resource("bundle-a", "https://bundle.example/a", "Bundle", "Bundle API", bundledPayTo),
+        resource("bundle-b", "https://bundle.example/b", "Bundle", "Bundle API", bundledPayTo),
+        resource("second", "https://second.example", "Second", "Second API", secondPayTo),
+      ]);
+      store.persistPayToAggregates([
+        aggregate(bundledPayTo, 20, 3),
+        aggregate(secondPayTo, 2, 1),
+        aggregate(unresolvedPayTo, 1, 1),
+      ]);
+      store.detectAndPersistMappingPatterns([
+        { network: "base", asset: "USDC", payTo: unresolvedPayTo },
+      ]);
+      store.persistTransferFacts([
+        {
+          network: "base",
+          asset: "USDC",
+          payTo: bundledPayTo,
+          txHash: "0x6248880ec36541e6783ab756afdb427939f6209551b751cec5a2c97f71176d94",
+          payerWallet: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          amountAtomic: "10000",
+          blockTimestamp: "2026-01-02T00:00:00.000Z",
+        },
+      ]);
+      store.close();
+
+      const result = generateServiceAnalyticsReadModels({
+        analyticsDbPath: dbPath,
+        outputPath,
+        generatedAt: "2026-01-01T00:00:00.000Z",
+      });
+
+      const bundled = result.providers.providers.find(
+        (provider) => provider.payTo === bundledPayTo,
+      );
+      const unresolved = result.providers.providers.find(
+        (provider) => provider.payTo === unresolvedPayTo,
+      );
+      const withoutFacts = result.providers.providers.find(
+        (provider) => provider.payTo === secondPayTo,
+      );
+
+      expect(bundled).toMatchObject({
+        endpointAttributionStatus: "bundled_payto_unknown_endpoint",
+        hasCustomerFacts: true,
+      });
+      expect(unresolved).toMatchObject({
+        endpointAttributionStatus: "unresolved_payto",
+        hasCustomerFacts: false,
+      });
+      expect(withoutFacts).toMatchObject({ hasCustomerFacts: false });
     }));
 
   test("scopes coingecko top endpoints and deduplicates service payment sink joins", async () =>

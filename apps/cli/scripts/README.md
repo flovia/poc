@@ -130,6 +130,8 @@ bun --cwd apps/cli analytics:read-models -- \
   --out reports/service-read-models/analytics.json
 ```
 
+The generated read model includes service analytics, customer projections, wallet usage graph data, and a provider catalog derived from CDP/payment-sink census rows. Provider catalog drilldown is meaningful only for payTos with sampled transfer facts (`hasCustomerFacts=true`); rerun `analytics:capture-full` with suitable payTo and wallet budgets to refresh those local ignored outputs for demos.
+
 Serve those read models in the BFF without live external calls:
 
 ```sh
@@ -176,7 +178,7 @@ Generated analytics data is private-by-default and ignored by git. Do not commit
 5. `coingecko:transactions` with arbitrary `--provider-id` / `--pay-to` captures sampled transfer facts and can time-slice high-volume payTos.
 6. `buildWalletSamplingPlan` selects sampled wallets from coingecko repeat/high-spend, one-shot, peer, cross-service, bundled-payTo, recent, and random long-tail strata.
 7. `runCustomerIntelligenceBatchCapture` captures sampled wallet intelligence with explicit portfolio enrichment caps and source coverage.
-8. `analytics:read-models` builds BFF service summary, comparison, and quadrant payloads from SQLite.
+8. `analytics:read-models` builds BFF service summary, comparison, quadrant, customer, wallet usage graph, and provider catalog payloads from SQLite.
 9. The BFF reads `BFF_ANALYTICS_READ_MODEL_PATH` when present, otherwise falls back to small committed fixtures during migration. Request handlers do not call CDP, Bitquery, RPC, CoinGecko, Zerion, or other live services.
 
 ## Architecture

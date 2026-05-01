@@ -8,6 +8,7 @@ import type {
   CustomerListItemDto,
   CustomerProfileDto,
   PaymentObservationDto,
+  ProviderCatalogItemDto,
   ReportSummaryDto,
   WalletUsageGraphDto,
 } from "./api/types";
@@ -25,9 +26,15 @@ async function sdkModule() {
   return import("./sdk-fixtures");
 }
 
-export async function getCustomers(): Promise<CustomerListItemDto[]> {
+export async function getProviders(): Promise<ProviderCatalogItemDto[]> {
   const mode = await getServerDashboardMode();
-  if (mode === "onChainOnly") return live.getCustomers();
+  if (mode === "sdkConnected") return [];
+  return live.getProviders();
+}
+
+export async function getCustomers(payTo?: string): Promise<CustomerListItemDto[]> {
+  const mode = await getServerDashboardMode();
+  if (mode === "onChainOnly") return live.getCustomers(payTo);
   const v = await sdkModule();
   return v.getCustomers();
 }
@@ -53,9 +60,9 @@ export async function getObservations(): Promise<PaymentObservationDto[]> {
   return v.getObservations();
 }
 
-export async function getSummary(): Promise<ReportSummaryDto> {
+export async function getSummary(payTo?: string): Promise<ReportSummaryDto> {
   const mode = await getServerDashboardMode();
-  if (mode === "onChainOnly") return live.getSummary();
+  if (mode === "onChainOnly") return live.getSummary(payTo);
   const v = await sdkModule();
   return v.getSummary();
 }

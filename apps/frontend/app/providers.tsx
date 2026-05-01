@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { StoredProvider } from "@/lib/types";
+import { getProviders as getBffProviders } from "@/lib/api/client";
 import {
   getDemoOptedIn,
   getSeedVersion,
@@ -37,6 +38,8 @@ export function ProvidersContextProvider({ children }: { children: React.ReactNo
   const [userProviders, setUserProviders] = useState<StoredProvider[]>([]);
   const [demoOpted, setDemoOpted] = useState<boolean>(false);
   const [hydrated, setHydrated] = useState<boolean>(false);
+  const [providerCatalogSettled, setProviderCatalogSettled] = useState<boolean>(false);
+  const [generatedProviders, setGeneratedProviders] = useState<StoredProvider[]>([]);
   // demo 配列を hydrate 時に 1 回だけ固定化する。seedProviders() は内部で
   // Date.now() を使うため、useMemo の度に呼ぶと createdAt が揺れる。
   const [demoProvidersFixed, setDemoProvidersFixed] = useState<StoredProvider[]>([]);
@@ -109,13 +112,46 @@ export function ProvidersContextProvider({ children }: { children: React.ReactNo
     setHydrated(true);
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+    getBffProviders()
+      .then((providers) => {
+        if (cancelled) return;
+        setGeneratedProviders(
+          providers.slice(0, 10).map((provider) => ({
+            providerId: provider.providerId,
+            name: provider.name,
+            mode: "simple" as const,
+            payTo: provider.payTo,
+            createdAt: Date.now(),
+            source: "generated" as const,
+            network: provider.network,
+            asset: provider.asset,
+            transactionCount: provider.transactionCount,
+            uniqueSenderCount: provider.uniqueSenderCount,
+            hasCustomerFacts: provider.hasCustomerFacts,
+          })),
+        );
+      })
+      .catch(() => {
+        if (!cancelled) setGeneratedProviders([]);
+      })
+      .finally(() => {
+        if (!cancelled) setProviderCatalogSettled(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const stored = useMemo<StoredProvider[]>(() => {
+    if (generatedProviders.length > 0) return [...generatedProviders, ...userProviders];
     if (!demoOpted) return userProviders;
     const userIds = new Set(userProviders.map((p) => p.providerId));
     // demo first、衝突時は user を採用 (= demo を間引く)。
     const demoFiltered = demoProvidersFixed.filter((p) => !userIds.has(p.providerId));
     return [...demoFiltered, ...userProviders];
-  }, [userProviders, demoOpted, demoProvidersFixed]);
+  }, [userProviders, demoOpted, demoProvidersFixed, generatedProviders]);
 
   const addProvider = useCallback((p: StoredProvider) => {
     setUserProviders((prev) => {
@@ -159,7 +195,7 @@ export function ProvidersContextProvider({ children }: { children: React.ReactNo
     () => ({
       stored,
       userProviders,
-      hydrated,
+      hydrated: hydrated && providerCatalogSettled,
       demoOpted,
       addProvider,
       removeProvider,
@@ -170,6 +206,7 @@ export function ProvidersContextProvider({ children }: { children: React.ReactNo
       stored,
       userProviders,
       hydrated,
+      providerCatalogSettled,
       demoOpted,
       addProvider,
       removeProvider,

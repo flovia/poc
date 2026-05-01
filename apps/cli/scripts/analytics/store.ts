@@ -104,6 +104,8 @@ export type PayToCensusQueryRow = ScopedPaymentSink & {
   serviceName?: string;
   endpointCount: number;
   resourceCount: number;
+  hasCustomerFacts: boolean;
+  customerFactCount: number;
 };
 
 export type PayToCensusQueryScope = {
@@ -829,12 +831,14 @@ export class AnalyticsStore {
            COALESCE(ea.resource_count, 0) AS resource_count,
            COUNT(DISTINCT sc.resource_id) AS endpoint_count,
            MIN(sc.service_key) AS service_id,
-           MIN(COALESCE(sc.service, sc.provider, sc.domain)) AS service_name
+           MIN(COALESCE(sc.service, sc.provider, sc.domain)) AS service_name,
+           COUNT(DISTINCT tf.payer_wallet) AS customer_fact_count
          FROM payment_sinks ps
          LEFT JOIN payto_aggregates pa ON pa.sink_key = ps.sink_key ${aggregateRunFilter} ${windowFromFilter} ${windowToFilter}
          LEFT JOIN payment_options po ON po.network = ps.network AND po.asset = ps.asset AND po.pay_to = ps.pay_to ${cdpRunFilter}
          LEFT JOIN endpoint_attribution ea ON ea.sink_key = ps.sink_key
          LEFT JOIN service_candidates sc ON sc.sink_key = ps.sink_key
+         LEFT JOIN transfer_facts tf ON tf.network = ps.network AND tf.asset = ps.asset AND tf.pay_to = ps.pay_to
          WHERE (? IS NULL OR ps.network = ?) AND (? IS NULL OR ps.asset = ?)
          ${runScopeFilter}
          GROUP BY ps.sink_key
@@ -858,6 +862,8 @@ export class AnalyticsStore {
       serviceName: (row.service_name as string | null) ?? undefined,
       endpointCount: Number(row.endpoint_count ?? 0),
       resourceCount: Number(row.resource_count ?? 0),
+      hasCustomerFacts: Number(row.customer_fact_count ?? 0) > 0,
+      customerFactCount: Number(row.customer_fact_count ?? 0),
     }));
   }
 

@@ -1,6 +1,7 @@
 import type {
   PhaseBCustomerListResponse,
   PhaseBCustomerProfileResponse,
+  ProviderCatalogResponse,
   WalletUsageGraphResponse,
 } from "contracts";
 import type {
@@ -10,6 +11,7 @@ import type {
   CustomerProviderUsageDto,
   CustomerTimelineEventType,
   PaymentObservationDto,
+  ProviderCatalogItemDto,
   ReportSummaryDto,
   WalletUsageGraphDto,
 } from "./types";
@@ -108,6 +110,46 @@ export function adaptCustomerList(response: PhaseBCustomerListResponse): Custome
     provenanceByField: customer.provenanceByField ?? {},
     reasons: customer.reasons ?? [],
   }));
+}
+
+export function adaptProviderCatalog(response: ProviderCatalogResponse): ProviderCatalogItemDto[] {
+  return response.providers
+    .map((provider) => ({
+      providerId: provider.providerId,
+      name: provider.name,
+      serviceId: provider.serviceId,
+      serviceName: provider.serviceName,
+      network: provider.network,
+      asset: provider.asset,
+      payTo: provider.payTo,
+      transactionCount: provider.transactionCount,
+      uniqueSenderCount: provider.uniqueSenderCount,
+      totalVolumeAtomic: provider.totalVolumeAtomic,
+      endpointCount: provider.endpointCount,
+      resourceCount: provider.resourceCount,
+      endpointAttributionStatus: provider.endpointAttributionStatus,
+      attributionConfidence: provider.attributionConfidence,
+      hasCustomerFacts: provider.hasCustomerFacts,
+      customerFactCount: provider.customerFactCount,
+      provenance: provider.provenance,
+      provenanceByField: provider.provenanceByField ?? {},
+      reasons: provider.reasons ?? [],
+    }))
+    .sort((left, right) => {
+      const leftScore = providerRank(left);
+      const rightScore = providerRank(right);
+      if (leftScore !== rightScore) return rightScore - leftScore;
+      return right.transactionCount - left.transactionCount;
+    });
+}
+
+function providerRank(provider: ProviderCatalogItemDto): number {
+  return (
+    (provider.hasCustomerFacts ? 1_000_000 : 0) +
+    (provider.endpointAttributionStatus !== "unresolved_payto" ? 100_000 : 0) +
+    Math.round(provider.attributionConfidence * 10_000) +
+    Math.min(provider.uniqueSenderCount, 9_999)
+  );
 }
 
 export function adaptCustomerProfile(response: PhaseBCustomerProfileResponse): CustomerProfileDto {
