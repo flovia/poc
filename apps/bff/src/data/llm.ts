@@ -1,3 +1,6 @@
+import { createHash } from "node:crypto";
+import fs from "node:fs/promises";
+import path from "node:path";
 import { BedrockRuntimeClient, ConverseCommand } from "@aws-sdk/client-bedrock-runtime";
 import {
   type CustomerIntelligenceResponse,
@@ -17,6 +20,8 @@ const UPSSELL_EXPLANATION_GENERATED_FROM = "phase-b-bedrock-upsell-explanation-v
 const DEFAULT_BEDROCK_PROMPT_VERSION = "upsell-explanation-v1";
 const DEFAULT_BEDROCK_MAX_TOKENS = 500;
 const DEFAULT_BEDROCK_TEMPERATURE = 0.2;
+const DEFAULT_BEDROCK_BRANCH_NAME = "unknown-branch";
+const DEFAULT_BEDROCK_CACHE_DIRNAME = "bff-llm-cache";
 const GENERIC_BEDROCK_INFERENCE_ERROR_MESSAGE =
   "Bedrock upsell explanation inference failed.";
 const RECENT_ACTIVITY_DAYS = 7;
@@ -24,6 +29,7 @@ const HIGH_TX_COUNT_THRESHOLD = 5;
 const FREE_TIER_NEAR_LIMIT_THRESHOLD = 0.8;
 const TOP_SPENDER_PERCENTILE_THRESHOLD = 0.95;
 const DAY_MS = 86_400_000;
+const DEFAULT_BEDROCK_CACHE_TTL_MS = DAY_MS;
 
 const onchainReason: EvidenceLabel = {
   provenance: "onchain_fact",
@@ -168,6 +174,166 @@ const describeErrorCause = (error: unknown) => {
   return parts.join(" <- ");
 };
 
+const normalizeConfiguredValue = (value: string | undefined) => {
+  const normalized = value?.trim();
+  return normalized ? normalized : undefined;
+};
+
+const resolveDefaultCacheDirectory = () => {
+  const configuredDirectory = normalizeConfiguredValue(process.env.BFF_LLM_CACHE_DIR);
+  if (configuredDirectory) {
+    return configuredDirectory;
+  }
+
+  const databaseUrl = normalizeConfiguredValue(process.env.DATABASE_URL);
+  if (databaseUrl?.startsWith("file:")) {
+    try {
+      return path.join(path.dirname(new URL(databaseUrl).pathname), DEFAULT_BEDROCK_CACHE_DIRNAME);
+    } catch {
+      return path.join(process.cwd(), "tmp", DEFAULT_BEDROCK_CACHE_DIRNAME);
+    }
+  }
+
+  if (databaseUrl) {
+    return path.join(path.dirname(databaseUrl), DEFAULT_BEDROCK_CACHE_DIRNAME);
+  }
+
+  return path.join(process.cwd(), "tmp", DEFAULT_BEDROCK_CACHE_DIRNAME);
+};
+
+const resolveDefaultBranchName = () =>
+  normalizeConfiguredValue(process.env.BFF_BRANCH_NAME ?? process.env.DEPLOY_BRANCH) ??
+  DEFAULT_BEDROCK_BRANCH_NAME;
+
+const resolveDefaultDeploymentId = () => normalizeConfiguredValue(process.env.BFF_DEPLOY_ID);
+
+const resolveDefaultRuntimeInstanceId = () => normalizeConfiguredValue(process.env.HOSTNAME);
+
+const resolveDefaultCacheTtlMs = () => {
+  const raw = normalizeConfiguredValue(process.env.BFF_LLM_CACHE_TTL_MS);
+  if (!raw) {
+    return DEFAULT_BEDROCK_CACHE_TTL_MS;
+  }
+
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : DEFAULT_BEDROCK_CACHE_TTL_MS;
+};
+
+const isNodeErrorWithCode = (error: unknown, code: string) =>
+  typeof error === "object" &&
+  error !== null &&
+  "code" in error &&
+  (error as { code?: string }).code === code;
+
+const buildUpsellExplanationCacheKey = (input: {
+  branchName: string;
+  modelId: string;
+  region: string;
+  promptVersion: string;
+  deploymentId?: string;
+  runtimeInstanceId?: string;
+  address: string;
+  sourceGeneratedAt: string;
+  explanationInput: PhaseBCustomerUpsellExplanationInput;
+}) =>
+  createHash("sha256")
+    .update(
+      JSON.stringify({
+        version: 1,
+        branchName: input.branchName,
+        model: {
+          provider: "bedrock",
+          modelId: input.modelId,
+          region: input.region,
+          promptVersion: input.promptVersion,
+        },
+        cacheScope: {
+          deploymentId: input.deploymentId,
+          runtimeInstanceId: input.runtimeInstanceId,
+        },
+        request: {
+          address: input.address,
+          sourceGeneratedAt: input.sourceGeneratedAt,
+          input: input.explanationInput,
+        },
+      }),
+    )
+    .digest("hex");
+
+const buildUpsellExplanationCacheFilePath = (cacheDirectory: string, cacheKey: string) =>
+  path.join(cacheDirectory, `${cacheKey}.json`);
+
+const isCachedUpsellExplanationFresh = (
+  value: PhaseBCustomerUpsellExplanationResponse,
+  nowMs: number,
+  cacheTtlMs: number,
+) => {
+  if (cacheTtlMs <= 0) {
+    return false;
+  }
+
+  const generatedAtMs = Date.parse(value.generatedAt);
+  if (!Number.isFinite(generatedAtMs)) {
+    return false;
+  }
+
+  return nowMs - generatedAtMs <= cacheTtlMs;
+};
+
+const readCachedUpsellExplanation = async (
+  cacheDirectory: string,
+  cacheKey: string,
+  nowMs: number,
+  cacheTtlMs: number,
+): Promise<PhaseBCustomerUpsellExplanationResponse | null> => {
+  const filePath = buildUpsellExplanationCacheFilePath(cacheDirectory, cacheKey);
+
+  try {
+    const payload = JSON.parse(await fs.readFile(filePath, "utf8")) as unknown;
+    const validated = validatePhaseBCustomerUpsellExplanationResponse(payload);
+    if (isCachedUpsellExplanationFresh(validated, nowMs, cacheTtlMs)) {
+      return validated;
+    }
+
+    await fs.rm(filePath, { force: true });
+    return null;
+  } catch (error) {
+    if (isNodeErrorWithCode(error, "ENOENT")) {
+      return null;
+    }
+
+    try {
+      await fs.rm(filePath, { force: true });
+    } catch {
+      // Ignore cache cleanup failures and allow regeneration below.
+    }
+
+    return null;
+  }
+};
+
+const writeCachedUpsellExplanation = async (
+  cacheDirectory: string,
+  cacheKey: string,
+  value: PhaseBCustomerUpsellExplanationResponse,
+) => {
+  await fs.mkdir(cacheDirectory, { recursive: true });
+
+  const filePath = buildUpsellExplanationCacheFilePath(cacheDirectory, cacheKey);
+  const tempPath = `${filePath}.${process.pid}.${Date.now()}.tmp`;
+
+  try {
+    await fs.writeFile(tempPath, JSON.stringify(value, null, 2));
+    await fs.rename(tempPath, filePath);
+  } finally {
+    try {
+      await fs.rm(tempPath, { force: true });
+    } catch {
+      // Ignore temp cleanup failures after write attempts.
+    }
+  }
+};
+
 type BuildUpsellMetricsByAddressInput = {
   customers: PhaseBCustomerListResponse;
   profilesByAddress: Record<string, PhaseBCustomerProfileResponse>;
@@ -179,6 +345,12 @@ type ResolveBffLlmServiceOptions = {
   modelId?: string;
   promptVersion?: string;
   region?: string;
+  branchName?: string;
+  cacheDirectory?: string;
+  cacheTtlMs?: number;
+  deploymentId?: string;
+  runtimeInstanceId?: string;
+  now?: () => number;
 };
 
 type BedrockUpsellExplanationServiceOptions = {
@@ -186,6 +358,12 @@ type BedrockUpsellExplanationServiceOptions = {
   modelId: string;
   promptVersion: string;
   region: string;
+  branchName: string;
+  cacheDirectory: string;
+  cacheTtlMs: number;
+  deploymentId?: string;
+  runtimeInstanceId?: string;
+  now: () => number;
 };
 
 export type BffLlmService = {
@@ -213,16 +391,88 @@ class BedrockUpsellExplanationService implements BffLlmService {
   readonly #modelId: string;
   readonly #promptVersion: string;
   readonly #region: string;
+  readonly #branchName: string;
+  readonly #cacheDirectory: string;
+  readonly #cacheTtlMs: number;
+  readonly #deploymentId?: string;
+  readonly #runtimeInstanceId?: string;
+  readonly #now: () => number;
+  readonly #inflightByCacheKey = new Map<
+    string,
+    Promise<PhaseBCustomerUpsellExplanationResponse>
+  >();
 
   constructor(options: BedrockUpsellExplanationServiceOptions) {
     this.#client = options.client;
     this.#modelId = options.modelId;
     this.#promptVersion = options.promptVersion;
     this.#region = options.region;
+    this.#branchName = options.branchName;
+    this.#cacheDirectory = options.cacheDirectory;
+    this.#cacheTtlMs = options.cacheTtlMs;
+    this.#deploymentId = options.deploymentId;
+    this.#runtimeInstanceId = options.runtimeInstanceId;
+    this.#now = options.now;
   }
 
   async generateUpsellExplanation(
     input: PhaseBCustomerUpsellMetricsResponse,
+  ): Promise<PhaseBCustomerUpsellExplanationResponse> {
+    const explanationInput = buildUpsellExplanationInput(input);
+    const cacheKey = buildUpsellExplanationCacheKey({
+      branchName: this.#branchName,
+      modelId: this.#modelId,
+      region: this.#region,
+      promptVersion: this.#promptVersion,
+      deploymentId: this.#deploymentId,
+      runtimeInstanceId: this.#runtimeInstanceId,
+      address: input.address,
+      sourceGeneratedAt: input.sourceGeneratedAt,
+      explanationInput,
+    });
+    const cached = await readCachedUpsellExplanation(
+      this.#cacheDirectory,
+      cacheKey,
+      this.#now(),
+      this.#cacheTtlMs,
+    );
+
+    if (cached) {
+      return cached;
+    }
+
+    const inflight = this.#inflightByCacheKey.get(cacheKey);
+    if (inflight) {
+      return await inflight;
+    }
+
+    const generation = this.#generateAndCacheUpsellExplanation(
+      input,
+      explanationInput,
+      cacheKey,
+    );
+    this.#inflightByCacheKey.set(cacheKey, generation);
+
+    try {
+      return await generation;
+    } finally {
+      this.#inflightByCacheKey.delete(cacheKey);
+    }
+  }
+
+  async #generateAndCacheUpsellExplanation(
+    input: PhaseBCustomerUpsellMetricsResponse,
+    explanationInput: PhaseBCustomerUpsellExplanationInput,
+    cacheKey: string,
+  ) {
+    const response = await this.#generateUpsellExplanationUncached(input, explanationInput);
+    await writeCachedUpsellExplanation(this.#cacheDirectory, cacheKey, response);
+    return response;
+  }
+
+  async #generateUpsellExplanationUncached(
+    input: PhaseBCustomerUpsellMetricsResponse,
+    explanationInput: PhaseBCustomerUpsellExplanationInput,
   ): Promise<PhaseBCustomerUpsellExplanationResponse> {
     const command = new ConverseCommand({
       modelId: this.#modelId,
@@ -236,7 +486,16 @@ class BedrockUpsellExplanationService implements BffLlmService {
           role: "user",
           content: [
             {
-              text: buildUpsellExplanationUserPrompt(input, this.#promptVersion),
+              text: buildUpsellExplanationUserPrompt(
+                {
+                  ...input,
+                  signals: explanationInput.signals,
+                  flags: explanationInput.flags,
+                  reasonCodes: explanationInput.reasonCodes,
+                  caveats: explanationInput.caveats,
+                },
+                this.#promptVersion,
+              ),
             },
           ],
         },
@@ -269,17 +528,17 @@ class BedrockUpsellExplanationService implements BffLlmService {
     }
 
     return validatePhaseBCustomerUpsellExplanationResponse({
-      generatedAt: new Date().toISOString(),
+      generatedAt: new Date(this.#now()).toISOString(),
       generatedFrom: UPSSELL_EXPLANATION_GENERATED_FROM,
       address: input.address,
       sourceGeneratedAt: input.sourceGeneratedAt,
-      model: {
-        provider: "bedrock",
-        modelId: this.#modelId,
-        region: this.#region,
-        promptVersion: this.#promptVersion,
-      },
-      input: buildUpsellExplanationInput(input),
+        model: {
+          provider: "bedrock",
+          modelId: this.#modelId,
+          region: this.#region,
+          promptVersion: this.#promptVersion,
+        },
+      input: explanationInput,
       explanation,
       provenance: "derived_insight",
       provenanceByField: {
@@ -304,6 +563,13 @@ export const resolveBffLlmService = (
     options.promptVersion ??
     process.env.BFF_BEDROCK_PROMPT_VERSION ??
     DEFAULT_BEDROCK_PROMPT_VERSION;
+  const branchName = options.branchName ?? resolveDefaultBranchName();
+  const cacheDirectory = options.cacheDirectory ?? resolveDefaultCacheDirectory();
+  const cacheTtlMs = options.cacheTtlMs ?? resolveDefaultCacheTtlMs();
+  const deploymentId = options.deploymentId ?? resolveDefaultDeploymentId();
+  const runtimeInstanceId =
+    options.runtimeInstanceId ?? resolveDefaultRuntimeInstanceId();
+  const now = options.now ?? Date.now;
 
   if (!modelId || !region) {
     return null;
@@ -316,6 +582,12 @@ export const resolveBffLlmService = (
     modelId,
     promptVersion,
     region,
+    branchName,
+    cacheDirectory,
+    cacheTtlMs,
+    deploymentId,
+    runtimeInstanceId,
+    now,
   });
 };
 
