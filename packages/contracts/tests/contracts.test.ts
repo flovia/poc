@@ -492,6 +492,24 @@ describe("contracts schema validation", () => {
     });
   });
 
+  test("accepts non-EVM payTo in Phase B response scope", () => {
+    const parsed = validatePhaseBCustomerListResponse({
+      generatedAt: "2026-01-01T00:00:00Z",
+      generatedFrom: "phase-b-demo",
+      customerCount: 0,
+      scope: {
+        network: "solana:mainnet",
+        asset: "USDC",
+        payTo: "8xhngtrittcujmiadj6azw8grsifppwhnmv3hyqlhupl",
+      },
+      provenance: "derived_insight",
+      reasons: [{ provenance: "derived_insight", label: "scoped empty customer list" }],
+      customers: [],
+    });
+
+    expect(parsed.scope?.payTo).toBe("8xhngtrittcujmiadj6azw8grsifppwhnmv3hyqlhupl");
+  });
+
   test("rejects customer list responses with mismatched customerCount", () => {
     expect(() =>
       validatePhaseBCustomerListResponse({
@@ -754,12 +772,11 @@ describe("contracts schema validation", () => {
           "external_x402_usage",
           "high_upsell_score",
         ],
-        caveats: [
-          "freeTierProgress is a PoC heuristic and not an actual commercial plan limit.",
-        ],
+        caveats: ["freeTierProgress is a PoC heuristic and not an actual commercial plan limit."],
       },
       explanation: {
-        summary: "This wallet remains active and uses multiple providers, so it is a strong upsell candidate.",
+        summary:
+          "This wallet remains active and uses multiple providers, so it is a strong upsell candidate.",
         reasons: [
           "Recent activity was observed within the last 7 days.",
           "The wallet paid multiple providers and may be part of a broader workflow.",
@@ -775,7 +792,9 @@ describe("contracts schema validation", () => {
         input: "derived_insight",
         explanation: "derived_insight",
       },
-      reasons: [{ provenance: "derived_insight", label: "bedrock explanation from upsell metrics" }],
+      reasons: [
+        { provenance: "derived_insight", label: "bedrock explanation from upsell metrics" },
+      ],
     });
 
     expect(parsed.address).toBe("0xac5a07c44a4f971667b3df4b6551fb6991b2142d");

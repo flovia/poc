@@ -144,11 +144,17 @@ export function adaptProviderCatalog(response: ProviderCatalogResponse): Provide
 }
 
 function providerRank(provider: ProviderCatalogItemDto): number {
+  const identity = `${provider.providerId} ${provider.serviceId ?? ""} ${provider.name} ${
+    provider.serviceName ?? ""
+  }`.toLowerCase();
+  const isCoinGecko = identity.includes("coingecko");
   return (
-    (provider.hasCustomerFacts ? 1_000_000 : 0) +
+    (isCoinGecko ? 10_000_000_000 : 0) +
+    provider.transactionCount +
+    provider.uniqueSenderCount * 100 +
     (provider.endpointAttributionStatus !== "unresolved_payto" ? 100_000 : 0) +
-    Math.round(provider.attributionConfidence * 10_000) +
-    Math.min(provider.uniqueSenderCount, 9_999)
+    (provider.hasCustomerFacts ? 50_000 : 0) +
+    Math.round(provider.attributionConfidence * 10_000)
   );
 }
 

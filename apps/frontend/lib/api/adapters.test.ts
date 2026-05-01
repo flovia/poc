@@ -94,7 +94,7 @@ describe("BFF canonical adapters", () => {
     const response: ProviderCatalogResponse = {
       generatedAt: "2026-04-29T00:00:00.000Z",
       generatedFrom: "test",
-      providerCount: 2,
+      providerCount: 4,
       provenance: "derived_insight",
       provenanceByField: { providers: "derived_insight" },
       reasons: [evidence],
@@ -113,6 +113,50 @@ describe("BFF canonical adapters", () => {
           mappingPattern: "unresolved_payto",
           endpointAttributionStatus: "unresolved_payto",
           attributionConfidence: 0,
+          hasCustomerFacts: false,
+          customerFactCount: 0,
+          provenance: "derived_insight",
+          provenanceByField,
+          reasons: [evidence],
+        },
+        {
+          providerId: "coingecko",
+          name: "CoinGecko x402",
+          serviceId: "coingecko",
+          serviceName: "CoinGecko x402",
+          network: "base",
+          asset: "USDC",
+          payTo: "0x0000000000000000000000000000000000000005",
+          transactionCount: 1,
+          uniqueSenderCount: 1,
+          totalVolumeAtomic: "1000",
+          endpointCount: 1,
+          resourceCount: 1,
+          mappingPattern: "one_payto_one_endpoint",
+          endpointAttributionStatus: "direct_payto_endpoint",
+          attributionConfidence: 0.9,
+          hasCustomerFacts: false,
+          customerFactCount: 0,
+          provenance: "derived_insight",
+          provenanceByField,
+          reasons: [evidence],
+        },
+        {
+          providerId: "large-service",
+          name: "Large Service",
+          serviceId: "large-service",
+          serviceName: "Large Service",
+          network: "base",
+          asset: "USDC",
+          payTo: "0x0000000000000000000000000000000000000006",
+          transactionCount: 10_000,
+          uniqueSenderCount: 500,
+          totalVolumeAtomic: "1000",
+          endpointCount: 1,
+          resourceCount: 1,
+          mappingPattern: "one_payto_one_endpoint",
+          endpointAttributionStatus: "direct_payto_endpoint",
+          attributionConfidence: 0.9,
           hasCustomerFacts: false,
           customerFactCount: 0,
           provenance: "derived_insight",
@@ -145,8 +189,12 @@ describe("BFF canonical adapters", () => {
     };
 
     const providers = adaptProviderCatalog(response);
-    expect(providers[0]?.providerId).toBe("real");
-    expect(providers[0]?.payTo).toBe("0x0000000000000000000000000000000000000004");
+    expect(providers.map((provider) => provider.providerId)).toEqual([
+      "coingecko",
+      "large-service",
+      "real",
+      "unresolved",
+    ]);
   });
 
   test("adapts customer profile envelope to wallet screen view model", () => {
