@@ -2,11 +2,13 @@ import {
   validatePhaseBCustomerListResponse,
   validatePhaseBCustomerProfileResponse,
   validatePhaseBWalletUsageGraphResponse,
+  validateProviderCatalogResponse,
 } from "contracts";
 import {
   adaptCustomerList,
   adaptCustomerProfile,
   adaptObservationsFromGraph,
+  adaptProviderCatalog,
   adaptSummaryFromCustomers,
   adaptWalletUsageGraph,
 } from "./adapters";
@@ -14,6 +16,7 @@ import type {
   CustomerListItemDto,
   CustomerProfileDto,
   PaymentObservationDto,
+  ProviderCatalogItemDto,
   ReportSummaryDto,
   WalletUsageGraphDto,
 } from "./types";
@@ -64,9 +67,16 @@ export async function getCustomerProfile(address: string): Promise<CustomerProfi
   return adaptCustomerProfile(validatePhaseBCustomerProfileResponse(await response.json()));
 }
 
-export async function getCustomers(): Promise<CustomerListItemDto[]> {
+export async function getProviders(): Promise<ProviderCatalogItemDto[]> {
+  return adaptProviderCatalog(
+    validateProviderCatalogResponse(await bffFetch<unknown>("/providers")),
+  );
+}
+
+export async function getCustomers(payTo?: string): Promise<CustomerListItemDto[]> {
+  const query = payTo ? `?payTo=${encodeURIComponent(payTo)}` : "";
   return adaptCustomerList(
-    validatePhaseBCustomerListResponse(await bffFetch<unknown>("/customers")),
+    validatePhaseBCustomerListResponse(await bffFetch<unknown>(`/customers${query}`)),
   );
 }
 
@@ -87,9 +97,10 @@ export async function getObservations(): Promise<PaymentObservationDto[]> {
 // Phase B BFF は /summary を提供しないため、/customers から合成する。
 // freshness indicator (撤去済) 再導入用のヘルパー。詳細は
 // docs/future-work.md "Data freshness indicator" を参照。
-export async function getSummary(): Promise<ReportSummaryDto> {
+export async function getSummary(payTo?: string): Promise<ReportSummaryDto> {
+  const query = payTo ? `?payTo=${encodeURIComponent(payTo)}` : "";
   return adaptSummaryFromCustomers(
-    validatePhaseBCustomerListResponse(await bffFetch<unknown>("/customers")),
+    validatePhaseBCustomerListResponse(await bffFetch<unknown>(`/customers${query}`)),
   );
 }
 

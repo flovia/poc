@@ -2,9 +2,15 @@ import { describe, expect, test } from "bun:test";
 import type {
   PhaseBCustomerListResponse,
   PhaseBCustomerProfileResponse,
+  ProviderCatalogResponse,
   WalletUsageGraphResponse,
 } from "contracts";
-import { adaptCustomerList, adaptCustomerProfile, adaptWalletUsageGraph } from "./adapters";
+import {
+  adaptCustomerList,
+  adaptCustomerProfile,
+  adaptProviderCatalog,
+  adaptWalletUsageGraph,
+} from "./adapters";
 
 const evidence = {
   provenance: "onchain_fact" as const,
@@ -82,6 +88,65 @@ describe("BFF canonical adapters", () => {
     expect(item.provenance).toBe("onchain_fact");
     expect(item.provenanceByField).toEqual({});
     expect(item.reasons).toEqual([]);
+  });
+
+  test("adapts and ranks provider catalog rows", () => {
+    const response: ProviderCatalogResponse = {
+      generatedAt: "2026-04-29T00:00:00.000Z",
+      generatedFrom: "test",
+      providerCount: 2,
+      provenance: "derived_insight",
+      provenanceByField: { providers: "derived_insight" },
+      reasons: [evidence],
+      providers: [
+        {
+          providerId: "unresolved",
+          name: "Unresolved",
+          network: "base",
+          asset: "USDC",
+          payTo: "0x0000000000000000000000000000000000000003",
+          transactionCount: 100,
+          uniqueSenderCount: 100,
+          totalVolumeAtomic: "1000",
+          endpointCount: 0,
+          resourceCount: 0,
+          mappingPattern: "unresolved_payto",
+          endpointAttributionStatus: "unresolved_payto",
+          attributionConfidence: 0,
+          hasCustomerFacts: false,
+          customerFactCount: 0,
+          provenance: "derived_insight",
+          provenanceByField,
+          reasons: [evidence],
+        },
+        {
+          providerId: "real",
+          name: "Real Provider",
+          serviceId: "real-service",
+          serviceName: "Real Provider",
+          network: "base",
+          asset: "USDC",
+          payTo: "0x0000000000000000000000000000000000000004",
+          transactionCount: 10,
+          uniqueSenderCount: 2,
+          totalVolumeAtomic: "1000",
+          endpointCount: 1,
+          resourceCount: 1,
+          mappingPattern: "one_payto_one_endpoint",
+          endpointAttributionStatus: "direct_payto_endpoint",
+          attributionConfidence: 0.9,
+          hasCustomerFacts: true,
+          customerFactCount: 2,
+          provenance: "derived_insight",
+          provenanceByField,
+          reasons: [evidence],
+        },
+      ],
+    };
+
+    const providers = adaptProviderCatalog(response);
+    expect(providers[0]?.providerId).toBe("real");
+    expect(providers[0]?.payTo).toBe("0x0000000000000000000000000000000000000004");
   });
 
   test("adapts customer profile envelope to wallet screen view model", () => {

@@ -1,6 +1,7 @@
 import path from "node:path";
 import {
   type CustomerIntelligenceResponse,
+  validateProviderCatalogResponse,
   validateServiceAnalyticsComparisonResponse,
   validateServiceAnalyticsQuadrantResponse,
   validateServiceAnalyticsSummaryResponse,
@@ -52,6 +53,20 @@ type ServiceAnalyticsRow = {
 
 const serviceIdForKey = (serviceKey: string) =>
   serviceKey.toLowerCase().includes("coingecko") ? "coingecko" : serviceKey.toLowerCase();
+
+const slug = (value: string) =>
+  value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "") || "provider";
+
+const providerIdFor = (input: {
+  serviceId?: string;
+  payTo: string;
+  network: string;
+  asset: string;
+}) =>
+  `${slug(input.serviceId ?? input.payTo)}--${slug(input.network)}--${slug(input.asset)}--${input.payTo.toLowerCase()}`;
 
 const topEndpointsForService = (serviceRows: ServiceAnalyticsRow[], limit: number) => {
   const rowsByIdentity = new Map<string, ServiceAnalyticsRow>();
@@ -593,7 +608,50 @@ export const generateServiceAnalyticsReadModels = (
     generatedFrom,
   );
 
+  const providerRows = store.listPayToCensusRows();
+  const providers = validateProviderCatalogResponse({
+    generatedAt,
+    generatedFrom,
+    providers: providerRows.map((row) => ({
+      providerId: providerIdFor({
+        serviceId: row.serviceId,
+        payTo: row.payTo,
+        network: row.network,
+        asset: row.asset,
+      }),
+      name: row.serviceName ?? row.serviceId ?? row.payTo,
+      serviceId: row.serviceId,
+      serviceName: row.serviceName,
+      network: row.network,
+      asset: row.asset,
+      payTo: row.payTo,
+      transactionCount: row.transactionCount,
+      uniqueSenderCount: row.uniqueSenderCount,
+      totalVolumeAtomic: row.totalVolumeAtomic,
+      endpointCount: row.endpointCount,
+      resourceCount: row.resourceCount,
+      mappingPattern: row.mappingPattern,
+      endpointAttributionStatus: row.endpointAttributionStatus,
+      attributionConfidence: row.attributionConfidence,
+      hasCustomerFacts: row.hasCustomerFacts,
+      customerFactCount: row.customerFactCount,
+      provenance: "derived_insight" as const,
+      provenanceByField: {
+        payTo: "onchain_fact" as const,
+        transactionCount: "onchain_fact" as const,
+        uniqueSenderCount: "onchain_fact" as const,
+        name: "derived_insight" as const,
+      },
+      reasons: [reason],
+    })),
+    providerCount: providerRows.length,
+    provenance: "derived_insight" as const,
+    provenanceByField: { providers: "derived_insight" as const },
+    reasons: [reason],
+  });
+
   const output = {
+    providers,
     serviceSummary: summary,
     serviceComparison: comparison,
     serviceQuadrants: quadrants,
@@ -635,6 +693,12 @@ export const generateServiceAnalyticsReadModels = (
       modelKind: "wallet_usage_graph",
       modelKey: "default",
       payload: customerReadModels.walletUsageGraph,
+      sourceRunId: runId,
+    });
+    store.persistGeneratedReadModel({
+      modelKind: "provider_catalog",
+      modelKey: "default",
+      payload: providers,
       sourceRunId: runId,
     });
     writeAtomically(options.outputPath ?? DEFAULT_OUTPUT, `${JSON.stringify(output, null, 2)}\n`);

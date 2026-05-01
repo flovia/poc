@@ -26,6 +26,7 @@ import {
   validatePhaseBWalletUsageGraphResponse,
   validateMockEndpointAttributionFixture,
   validateCustomerIntelligenceResponse,
+  validateProviderCatalogResponse,
   validateRealTransactionFixture,
   validateServiceAnalyticsComparisonResponse,
   validateServiceAnalyticsQuadrantResponse,
@@ -88,6 +89,36 @@ describe("BFF routes", () => {
     expect(response.status).toBe(200);
     expect(parsed.customerCount).toBe(parsed.customers.length);
     expect(parsed.customerCount).toBeGreaterThan(0);
+  });
+
+  test("serves provider catalog with schema validation", async () => {
+    const handler = createBffHandler(fixtureAnalyticsDataSource);
+
+    const response = await handler(request("/providers"));
+    const parsed = validateProviderCatalogResponse(await response.json());
+
+    expect(response.status).toBe(200);
+    expect(parsed.providerCount).toBe(parsed.providers.length);
+    expect(parsed.providers.some((provider) => provider.hasCustomerFacts)).toBe(true);
+  });
+
+  test("filters customers by payTo without fabricating unknown payTo rows", async () => {
+    const handler = createBffHandler(fixtureAnalyticsDataSource);
+    const payTo = fixtureAnalyticsDataSource.providers.providers[0]?.payTo;
+    if (!payTo) throw new Error("fixture provider missing payTo");
+
+    const scoped = validatePhaseBCustomerListResponse(
+      await (await handler(request(`/customers?payTo=${payTo}`))).json(),
+    );
+    const empty = validatePhaseBCustomerListResponse(
+      await (
+        await handler(request("/customers?payTo=0x9999999999999999999999999999999999999999"))
+      ).json(),
+    );
+
+    expect(scoped.scope?.payTo).toBe(payTo.toLowerCase());
+    expect(scoped.customerCount).toBeGreaterThan(0);
+    expect(empty.customerCount).toBe(0);
   });
 
   test("returns a validated profile for a known customer wallet", async () => {
@@ -205,7 +236,8 @@ describe("BFF routes", () => {
             caveats: input.caveats,
           },
           explanation: {
-            summary: "This wallet remains active and shows multi-provider usage, making it a strong upsell candidate.",
+            summary:
+              "This wallet remains active and shows multi-provider usage, making it a strong upsell candidate.",
             reasons: [
               "Recent activity was observed within the last 7 days.",
               "The wallet interacted with multiple providers and has a high transaction count.",
@@ -324,12 +356,35 @@ describe("BFF routes", () => {
           },
         ],
       };
-      fs.writeFileSync(filePath, JSON.stringify({ serviceSummary: generatedSummary }, null, 2));
+      const generatedProviders = {
+        ...fixtureAnalyticsDataSource.providers,
+        generatedFrom: "generated-read-model-test",
+        providers: [
+          {
+            ...fixtureAnalyticsDataSource.providers.providers[0],
+            providerId: "generated-provider",
+            name: "Generated Provider",
+          },
+        ],
+        providerCount: 1,
+      };
+      fs.writeFileSync(
+        filePath,
+        JSON.stringify(
+          { serviceSummary: generatedSummary, providers: generatedProviders },
+          null,
+          2,
+        ),
+      );
       const handler = createBffHandler(loadGeneratedAnalyticsDataSource(filePath));
       const response = await handler(request("/analytics/services/coingecko/summary"));
       const parsed = validateServiceAnalyticsSummaryResponse(await response.json());
+      const providers = validateProviderCatalogResponse(
+        await (await handler(request("/providers"))).json(),
+      );
 
       expect(parsed.generatedFrom).toBe("generated-read-model-test");
+      expect(providers.providers[0]?.providerId).toBe("generated-provider");
       expect(parsed.transactionCount).toBe(42);
       expect(parsed.topEndpoints.map((endpoint) => endpoint.endpointAttributionStatus)).toEqual([
         "direct_payto_endpoint",
@@ -420,6 +475,7 @@ describe("BFF routes", () => {
 
     const paths = [
       "/customers",
+      "/providers",
       `/customers/${knownCustomerProfileAddress}/profile`,
       `/customers/${knownCustomerIntelligenceAddress}/intelligence`,
       `/customers/${knownCustomerIntelligenceAddress}/llm/upsell-metrics`,

@@ -492,6 +492,65 @@ export const PhaseBCustomerListResponseSchema = withDerivedInsightReasons(
 
 export type PhaseBCustomerListResponse = z.infer<typeof PhaseBCustomerListResponseSchema>;
 
+export const ProviderCatalogRowSchema = withDerivedInsightReasons(
+  z
+    .object({
+      providerId: z.string().min(1),
+      name: z.string().min(1),
+      serviceId: z.string().min(1).optional(),
+      serviceName: z.string().min(1).optional(),
+      network: z.string().min(1),
+      asset: z.string().min(1),
+      payTo: z.string().min(1),
+      transactionCount: z.number().int().nonnegative(),
+      uniqueSenderCount: z.number().int().nonnegative(),
+      totalVolumeAtomic: AtomicAmountSchema,
+      endpointCount: z.number().int().nonnegative(),
+      resourceCount: z.number().int().nonnegative(),
+      mappingPattern: z.enum([
+        "one_payto_one_endpoint",
+        "one_payto_many_endpoints",
+        "many_paytos_one_service",
+        "unresolved_payto",
+      ]),
+      endpointAttributionStatus: EndpointAttributionStatusSchema,
+      attributionConfidence: z.number().min(0).max(1),
+      hasCustomerFacts: z.boolean(),
+      customerFactCount: z.number().int().nonnegative(),
+      provenance: DataProvenanceSchema,
+      provenanceByField: ProvenanceByFieldSchema,
+      reasons: z.array(EvidenceLabelSchema).optional(),
+    })
+    .strict(),
+);
+
+export type ProviderCatalogRow = z.infer<typeof ProviderCatalogRowSchema>;
+
+export const ProviderCatalogResponseSchema = withDerivedInsightReasons(
+  z
+    .object({
+      generatedAt: z.string().datetime(),
+      generatedFrom: z.string().min(1),
+      providers: z.array(ProviderCatalogRowSchema).min(0),
+      providerCount: z.number().int().nonnegative(),
+      provenance: DataProvenanceSchema,
+      provenanceByField: ProvenanceByFieldSchema,
+      reasons: z.array(EvidenceLabelSchema).optional(),
+    })
+    .strict()
+    .superRefine((value, ctx) => {
+      if (value.providerCount !== value.providers.length) {
+        ctx.addIssue({
+          code: "custom",
+          message: "providerCount must equal providers.length",
+          path: ["providerCount"],
+        });
+      }
+    }),
+);
+
+export type ProviderCatalogResponse = z.infer<typeof ProviderCatalogResponseSchema>;
+
 export const PhaseBCustomerProfileIdentitySchema = withDerivedInsightReasons(
   z
     .object({
@@ -1334,6 +1393,9 @@ export const validateMockEndpointAttributionFixture = (
 
 export const validatePhaseBCustomerListResponse = (value: unknown): PhaseBCustomerListResponse =>
   PhaseBCustomerListResponseSchema.parse(value);
+
+export const validateProviderCatalogResponse = (value: unknown): ProviderCatalogResponse =>
+  ProviderCatalogResponseSchema.parse(value);
 
 export const validatePhaseBCustomerProfileResponse = (
   value: unknown,

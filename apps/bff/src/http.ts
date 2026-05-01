@@ -21,6 +21,7 @@ const json = (body: JsonValue, init: ResponseInit = {}) =>
 const readonlyRoutes = new Set([
   "/",
   "/health",
+  "/providers",
   "/customers",
   "/wallet-usage-graph",
   "/analytics/services/coingecko/summary",
@@ -108,8 +109,10 @@ export const createBffHandler =
         return json({ service: "flovia-bff", status: "ok" });
       case "/health":
         return json({ status: "ok", service: "flovia-bff" });
+      case "/providers":
+        return json(dataSource.providers);
       case "/customers":
-        return json(dataSource.customers);
+        return json(dataSource.getCustomers(url.searchParams.get("payTo") ?? undefined));
       case "/wallet-usage-graph":
         return json(dataSource.walletUsageGraph);
       case "/analytics/services/coingecko/summary":

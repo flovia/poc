@@ -4,7 +4,7 @@ import { CustomersHeader } from "@/components/customers/CustomersHeader";
 import { CustomersOverview } from "@/components/customers/overview/CustomersOverview";
 import { SnapshotIndicator } from "@/components/customers/SnapshotIndicator";
 import { SummaryChip } from "@/components/customers/SummaryChip";
-import { getCustomers, getSdkExtrasMap, getSummary } from "@/lib/data-source";
+import { getCustomers, getProviders, getSdkExtrasMap, getSummary } from "@/lib/data-source";
 import { formatAtomic } from "@/lib/format";
 import { getTopBarPageContext } from "@/lib/server/page-context";
 
@@ -14,11 +14,13 @@ export default async function CustomersPage({
   params: Promise<{ providerId: string }>;
 }) {
   const { providerId } = await params;
+  const providers = await getProviders();
+  const payTo = providers.find((provider) => provider.providerId === providerId)?.payTo;
   const [customers, extrasMap, pageCtx, summary] = await Promise.all([
-    getCustomers(),
+    getCustomers(payTo),
     getSdkExtrasMap(),
     getTopBarPageContext(),
-    getSummary(),
+    getSummary(payTo),
   ]);
 
   const totalSpendAtomic = customers

@@ -12,6 +12,7 @@ import {
   validatePhaseBCustomerUpsellExplanationResponse,
   validatePhaseBWalletUsageGraphResponse,
   validatePortfolioSourceResult,
+  validateProviderCatalogResponse,
   validateRealTransactionFixture,
 } from "../src/index";
 
@@ -264,6 +265,46 @@ describe("contracts schema validation", () => {
         },
       }),
     ).toThrow();
+  });
+
+  test("accepts a valid provider catalog response and validates counts", () => {
+    const valid = {
+      generatedAt: "2026-01-01T00:00:00.000Z",
+      generatedFrom: "analytics-data-store:service-read-model-generation",
+      providers: [
+        {
+          providerId: "coingecko--base--usdc--0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
+          name: "CoinGecko x402",
+          serviceId: "coingecko",
+          serviceName: "CoinGecko x402",
+          network: "base",
+          asset: "USDC",
+          payTo: "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
+          transactionCount: 10,
+          uniqueSenderCount: 4,
+          totalVolumeAtomic: "100000",
+          endpointCount: 1,
+          resourceCount: 1,
+          mappingPattern: "one_payto_one_endpoint",
+          endpointAttributionStatus: "direct_payto_endpoint",
+          attributionConfidence: 0.9,
+          hasCustomerFacts: true,
+          customerFactCount: 2,
+          provenance: "derived_insight",
+          provenanceByField: { payTo: "onchain_fact", name: "derived_insight" },
+          reasons: [{ provenance: "derived_insight", label: "provider catalog row" }],
+        },
+      ],
+      providerCount: 1,
+      provenance: "derived_insight",
+      provenanceByField: { providers: "derived_insight" },
+      reasons: [{ provenance: "derived_insight", label: "provider catalog" }],
+    };
+
+    expect(validateProviderCatalogResponse(valid).providers[0]?.payTo).toBe(
+      "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
+    );
+    expect(() => validateProviderCatalogResponse({ ...valid, providerCount: 2 })).toThrow();
   });
 
   test("rejects invalid EVM address in Phase B customer list", () => {
