@@ -370,6 +370,98 @@ information gain. The badge component, its tests, and the wiring inside
 
 ---
 
+## Surface per-wallet chain & asset on the Customers list
+
+Render the chain (e.g. Base, Solana) and asset (e.g. USDC, USDT) each
+payer wallet **mainly** transacts in, both as a column on the Customers
+table and as a Toolbar filter alongside the existing `Sort` / `Upsell`
+selects.
+
+### Status
+
+Not implemented at the row level. The Customers page currently shows a
+single text chip
+([`ScopeChip`](../components/customers/ScopeChip.tsx)) at the top of the
+page that reads `Network: base · Asset: USDC` using **frontend-fixed
+values**. The chip exists because:
+
+- the BFF `/customers` envelope returns `scope: null`,
+- the populated `analytics.json` snapshot only contains Base / USDC
+  observations, so even if scope were emitted it would carry one value,
+- per-row chain / asset data is not part of `CustomerListItemDto` today.
+
+Using the chip honestly states "this dataset is currently scoped to one
+network / one asset" without inventing data the BFF cannot back.
+
+### Why deferred
+
+1. **No per-wallet chain / asset signal on the wire.** `CustomerListItem`
+   has neither a `chain` nor an `asset` field. The information appears
+   only in `CustomerProfile.identity.network` / `identity.asset`, which
+   would require N additional `/customers/:address/profile` fetches to
+   surface on the list.
+2. **The fixture is single-chain.** The active analytics generator
+   (`apps/cli/scripts/analytics/read-models.ts`) is fed a Base / USDC
+   capture; there are no Solana observations. Showing per-row icons would
+   either repeat Base for every row (no signal) or require a synthetic
+   distribution (dishonest).
+3. **Filtering depends on the same data.** A `Chain` Toolbar select is
+   only meaningful once at least two distinct values exist for real. With
+   one value, the select would read `[Base only]`.
+
+### What needs to change to ship it
+
+1. **BFF / contract**
+   - Add `chain` and `asset` to `PhaseBCustomerListItemSchema` in
+     `packages/contracts/src/index.ts` (likely `string` to keep room for
+     non-EVM ids), with `provenance` and matching `provenanceByField`
+     entries.
+   - Update the analytics generator to emit those fields per row from the
+     transfer facts that drove the projection, and to ingest at least one
+     Solana / non-USDC sample so the column has variation.
+2. **Frontend DTO + adapter**
+   - Mirror the new fields on `CustomerListItemDto`
+     (`apps/frontend/lib/api/types.ts`) and copy them through in
+     `adaptCustomerList`.
+3. **Customers table column**
+   - Add a `Chain` (and possibly `Asset`) cell next to `Wallet`. Render a
+     small chain icon + label; reuse the existing CSS tokens
+     (`--mesh-blue`, `--teal`, `--sdk-purple`) rather than introducing new
+     brand colors.
+   - Update the grid template in `app/globals.css` (`.cust-row` /
+     `.cust-row-sdk`) to accommodate the extra column.
+   - Pair the icon with `HeaderTooltip` so the column is self-explanatory.
+4. **Toolbar filter**
+   - Extend `CustomerFilterState` with a `chain` field and a matching
+     `Select` in
+     [`components/customers/Toolbar.tsx`](../components/customers/Toolbar.tsx),
+     mirroring the existing `Upsell` select pattern (`All` plus the
+     concrete options seeded by the data).
+   - Build the option list dynamically from the customers array so the
+     select degrades gracefully when only one chain is present.
+5. **Top-of-page ScopeChip**
+   - Keep the chip as a global summary, but switch it to consume
+     BFF-emitted scope (envelope `scope.network` / `scope.asset`) when
+     available. Drop the fixed `network="base" asset="USDC"` props once
+     the BFF returns the value.
+6. **Tests**
+   - Aggregation and filter tests for the new chain dimension
+     (`filterAndSortCustomers`, plus a chain-spread aggregation if we
+     extend `CustomersOverview`).
+   - Adapter test that asserts the new fields propagate through.
+
+### Open questions
+
+- Do we need a separate column for `asset`, or fold it into the chain
+  cell as a sub-line (e.g. `Base · USDC`)?
+- Is the value the wallet's *most-used* chain (`max-by-spend`) or a list
+  of every chain it has ever appeared on? The former is simpler; the
+  latter is closer to truth for cross-chain payers.
+- Should the SDK-connected mode keep the ScopeChip / chain column, or
+  hide it because the SDK fixture has its own chain story?
+
+---
+
 ## Data freshness indicator
 
 Surface the freshness of the underlying data (e.g. "last observation 19h ago",
