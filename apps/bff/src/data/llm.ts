@@ -242,6 +242,29 @@ class BedrockUpsellExplanationService implements BffLlmService {
       },
     });
 
+    console.log('debug::building command', {
+      modelId: this.#modelId,
+      system: [
+        {
+          text: buildUpsellExplanationSystemPrompt(this.#promptVersion),
+        },
+      ],
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              text: buildUpsellExplanationUserPrompt(input, this.#promptVersion),
+            },
+          ],
+        },
+      ],
+      inferenceConfig: {
+        maxTokens: DEFAULT_BEDROCK_MAX_TOKENS,
+        temperature: DEFAULT_BEDROCK_TEMPERATURE,
+      },
+    })
+
     let explanation: PhaseBCustomerUpsellExplanation;
 
     try {
