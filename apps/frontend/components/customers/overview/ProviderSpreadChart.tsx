@@ -5,7 +5,11 @@ type ProviderSpreadChartProps = {
   spread: ProviderSpread;
 };
 
-const ROW_COLOR = ["var(--mesh-blue)", "var(--teal)", "var(--sdk-purple)"] as const;
+const ROW_COLOR = [
+  "var(--series-primary)",
+  "var(--series-primary-muted)",
+  "var(--series-primary-soft)",
+] as const;
 
 export function ProviderSpreadChart({ spread }: ProviderSpreadChartProps) {
   const total = spread.totalWallets;
@@ -35,7 +39,7 @@ export function ProviderSpreadChart({ spread }: ProviderSpreadChartProps) {
               <div
                 style={{
                   height: 10,
-                  background: "var(--bg-elev-2)",
+                  background: "var(--surface-muted)",
                   borderRadius: 999,
                   overflow: "hidden",
                   position: "relative",
@@ -45,7 +49,7 @@ export function ProviderSpreadChart({ spread }: ProviderSpreadChartProps) {
                   style={{
                     width: `${widthPct.toFixed(1)}%`,
                     height: "100%",
-                    background: ROW_COLOR[idx] ?? "var(--mesh-blue)",
+                    background: ROW_COLOR[idx] ?? "var(--series-primary)",
                     transition: "width 200ms ease",
                   }}
                 />

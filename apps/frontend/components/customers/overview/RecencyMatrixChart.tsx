@@ -11,7 +11,7 @@ type CellSpec = {
   key: CellKey;
   label: string;
   hint: string;
-  accent: "primary" | "warm" | "muted" | "cool";
+  accent: "priority" | "attention" | "neutral";
 };
 
 const CELLS: CellSpec[] = [
@@ -19,40 +19,32 @@ const CELLS: CellSpec[] = [
     key: "recentHigh",
     label: "Active high spenders",
     hint: "Recent activity, above-median spend",
-    accent: "primary",
+    accent: "priority",
   },
   {
     key: "recentLow",
     label: "Active low spenders",
     hint: "Recent activity, below-median spend",
-    accent: "cool",
+    accent: "neutral",
   },
   {
     key: "staleHigh",
     label: "Dormant whales",
     hint: "Older activity, above-median spend",
-    accent: "warm",
+    accent: "attention",
   },
   {
     key: "staleLow",
     label: "Dormant low spenders",
     hint: "Older activity, below-median spend",
-    accent: "muted",
+    accent: "neutral",
   },
 ];
 
-const ACCENT_BG: Record<CellSpec["accent"], string> = {
-  primary: "var(--mesh-blue-soft)",
-  cool: "var(--teal-soft)",
-  warm: "var(--warn-soft)",
-  muted: "rgba(148, 163, 184, 0.10)",
-};
-
 const ACCENT_FG: Record<CellSpec["accent"], string> = {
-  primary: "var(--mesh-blue)",
-  cool: "var(--teal)",
-  warm: "var(--warn)",
-  muted: "var(--text-3)",
+  priority: "var(--signal-priority)",
+  attention: "var(--signal-attention)",
+  neutral: "var(--signal-neutral)",
 };
 
 export function RecencyMatrixChart({ matrix }: RecencyMatrixChartProps) {
@@ -81,7 +73,9 @@ export function RecencyMatrixChart({ matrix }: RecencyMatrixChartProps) {
             <div
               key={spec.key}
               style={{
-                background: ACCENT_BG[spec.accent],
+                background: "var(--surface-card)",
+                border: "1px solid var(--line)",
+                borderLeft: spec.accent === "neutral" ? "1px solid var(--line)" : `3px solid ${ACCENT_FG[spec.accent]}`,
                 borderRadius: "var(--radius)",
                 padding: "10px 12px",
                 display: "flex",
@@ -91,16 +85,30 @@ export function RecencyMatrixChart({ matrix }: RecencyMatrixChartProps) {
               }}
               title={`${spec.label}: ${count} of ${total} wallets (${formatPercent(share)})`}
             >
-              <div
-                style={{
-                  fontSize: 10,
-                  fontWeight: 600,
-                  letterSpacing: "0.06em",
-                  textTransform: "uppercase",
-                  color: ACCENT_FG[spec.accent],
-                }}
-              >
-                {spec.label}
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                {spec.accent !== "neutral" && (
+                  <span
+                    aria-hidden
+                    style={{
+                      width: 6,
+                      height: 6,
+                      borderRadius: "50%",
+                      background: ACCENT_FG[spec.accent],
+                      flexShrink: 0,
+                    }}
+                  />
+                )}
+                <div
+                  style={{
+                    fontSize: 10,
+                    fontWeight: 600,
+                    letterSpacing: "0.06em",
+                    textTransform: "uppercase",
+                    color: spec.accent === "neutral" ? "var(--text-3)" : ACCENT_FG[spec.accent],
+                  }}
+                >
+                  {spec.label}
+                </div>
               </div>
               <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
                 <span

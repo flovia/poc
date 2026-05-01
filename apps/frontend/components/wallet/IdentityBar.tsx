@@ -157,8 +157,8 @@ export function IdentityBar({ customer, metrics, dataMode, sdkExtras }: Identity
             value={
               <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                 <span
-                  className="mono"
-                  style={{ fontSize: 28, fontWeight: 600, color: "var(--mesh-blue)" }}
+                  className="mono display"
+                  style={{ fontSize: 32, fontWeight: 700, color: "var(--signal-priority)", letterSpacing: "-0.01em" }}
                 >
                   {growthDisplay}
                 </span>
@@ -175,11 +175,12 @@ export function IdentityBar({ customer, metrics, dataMode, sdkExtras }: Identity
             value={
               <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 2 }}>
                 <span
-                  className="mono"
+                  className="mono display"
                   style={{
-                    fontSize: 28,
-                    fontWeight: 600,
+                    fontSize: 32,
+                    fontWeight: 700,
                     color: freeTierPct >= 80 ? "var(--warn)" : "var(--text-1)",
+                    letterSpacing: "-0.01em",
                   }}
                 >
                   {freeTierPct}%
@@ -197,7 +198,7 @@ export function IdentityBar({ customer, metrics, dataMode, sdkExtras }: Identity
           style={{
             padding: "12px 14px",
             borderRadius: 4,
-            background: "#F8FAFC",
+            background: "var(--surface-subtle)",
             border: "1px solid var(--line-strong)",
             boxShadow: "none",
             minWidth: 220,
