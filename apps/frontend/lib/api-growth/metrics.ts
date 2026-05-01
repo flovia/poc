@@ -203,7 +203,7 @@ const API_GROWTH_CHANNEL_PROFILES: ApiGrowthChannelProfile[] = [
     },
   },
   {
-    source: "Coinbase AgentKit MCP",
+    source: "AgentKit MCP",
     wallets: 45,
     firstPaid: 35,
     retainedW2: 32,
@@ -252,7 +252,7 @@ const maxSourceProfileWallets = Math.max(
 );
 
 function sourceMediumFor(wallet: MacroWallet): string {
-  if (wallet.intermediary === "Circle Wallets") return "Coinbase AgentKit MCP";
+  if (wallet.intermediary === "Circle Wallets") return "AgentKit MCP";
   if (wallet.intermediary === "Coinbase CDP") return "Dexter";
   if (wallet.intermediary === "Privy") return "Sponge";
   if (wallet.intermediary === "Safe") return "Partner App";
@@ -761,7 +761,7 @@ function buildRecommendations(
   endpointRows: EndpointFrequencyRow[],
   useCaseCards: UseCaseFitCard[],
 ): ApiGrowthRecommendation[] {
-  const topSource = sourceRows[0]?.source ?? "Coinbase AgentKit MCP + Dexter";
+  const topSource = sourceRows[0]?.source ?? "AgentKit MCP + Dexter";
   const topEndpoint = endpointRows[0]?.endpoint ?? "pool_search";
   const topUseCase = useCaseCards[0]?.useCase ?? "Trading bot / agent workflow";
 

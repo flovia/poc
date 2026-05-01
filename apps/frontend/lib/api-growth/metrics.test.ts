@@ -9,7 +9,7 @@ describe("buildApiGrowthIntelligence", () => {
     expect(intelligence.insightCards).toHaveLength(5);
     expect(intelligence.insightCards.map((card) => card.label)).toContain("Repeat wallet rate");
     expect(intelligence.sourceMediumQuality.rows.map((row) => row.source)).toContain(
-      "Coinbase AgentKit MCP",
+      "AgentKit MCP",
     );
     expect(intelligence.sourceMediumQuality.rows.map((row) => row.source)).toContain("Dexter");
     expect(
@@ -23,7 +23,7 @@ describe("buildApiGrowthIntelligence", () => {
     ).toBe(60);
     expect(intelligence.sourceMediumQuality.rows[0].qualityScore).toBeGreaterThan(0);
     expect(
-      intelligence.sourceMediumQuality.rows.find((row) => row.source === "Coinbase AgentKit MCP")
+      intelligence.sourceMediumQuality.rows.find((row) => row.source === "AgentKit MCP")
         ?.endpointFrequency,
     ).toBeGreaterThan(50);
     expect(
