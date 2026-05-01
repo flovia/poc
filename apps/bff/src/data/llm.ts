@@ -86,10 +86,15 @@ const buildUpsellExplanationSystemPrompt = (promptVersion: string) =>
     'Use exactly these keys: "summary", "reasons", "recommendedAction", "caution".',
     '"summary" must be a concise business explanation of why this wallet is or is not an upsell candidate.',
     '"reasons" must be an array of 2 or 3 short evidence-based sentences.',
-    '"recommendedAction" must be one concise next action for sales, growth, or support.',
+    '"recommendedAction" must be one concise, evidence-based next step for sales, growth, or support.',
     '"caution" must mention uncertainty or heuristic limitations when relevant.',
     "Do not invent facts, rankings, or workflow claims that are not supported by the input.",
-    "Write the output in Japanese for an internal business user.",
+    "Base every claim only on the provided metrics, flags, reason codes, and caveats.",
+    'Prefer cautious language such as "suggests", "may indicate", "is consistent with", or "appears".',
+    "Do not infer customer intent, dependency, maturity, urgency, or growth unless the input directly supports it.",
+    "Do not mention exact deadlines, outreach timing, commercial plan limits, or imminent overage unless the input explicitly states them.",
+    "If the input uses PoC heuristics, reflect that uncertainty in the summary or caution instead of turning it into a hard business fact.",
+    "Write the output in English for an internal business user.",
   ].join("\n");
 
 const buildUpsellExplanationUserPrompt = (
@@ -241,30 +246,6 @@ class BedrockUpsellExplanationService implements BffLlmService {
         temperature: DEFAULT_BEDROCK_TEMPERATURE,
       },
     });
-
-    console.log('debug::building command', {
-      modelId: this.#modelId,
-      system: [
-        {
-          text: buildUpsellExplanationSystemPrompt(this.#promptVersion),
-        },
-      ],
-      messages: [
-        {
-          role: "user",
-          content: [
-            {
-              text: buildUpsellExplanationUserPrompt(input, this.#promptVersion),
-            },
-          ],
-        },
-      ],
-      inferenceConfig: {
-        maxTokens: DEFAULT_BEDROCK_MAX_TOKENS,
-        temperature: DEFAULT_BEDROCK_TEMPERATURE,
-      },
-    })
-
     let explanation: PhaseBCustomerUpsellExplanation;
 
     try {
