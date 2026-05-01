@@ -7,6 +7,7 @@ import type {
   CustomerProfileDto,
   PaymentObservationDto,
   ReportSummaryDto,
+  WalletUsageGraphDto,
 } from "@/lib/api/types";
 import type { SdkExtras, SdkForceNetwork } from "./types";
 import {
@@ -22,6 +23,7 @@ import {
   getSecondaryProfile,
 } from "./secondaries";
 import { buildSdkObservations, buildSdkSummary } from "./patterns";
+import { buildSdkWalletUsageGraph } from "./graph";
 import { PROTAGONIST_ADDRESS } from "./shared";
 
 export async function getCustomers(): Promise<CustomerListItemDto[]> {
@@ -39,6 +41,10 @@ export async function getObservations(): Promise<PaymentObservationDto[]> {
 
 export async function getSummary(): Promise<ReportSummaryDto> {
   return buildSdkSummary();
+}
+
+export async function getWalletUsageGraph(): Promise<WalletUsageGraphDto> {
+  return buildSdkWalletUsageGraph();
 }
 
 export async function getExtras(address: string): Promise<SdkExtras | null> {

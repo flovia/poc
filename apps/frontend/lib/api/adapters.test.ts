@@ -504,4 +504,76 @@ describe("BFF canonical adapters", () => {
     expect(graph.providerWallets[0]?.claimIds).toContain("Provider A");
     expect(graph.providerWallets[0]?.payerWallets[0]?.observations).toHaveLength(1);
   });
+
+  test("adaptWalletUsageGraph preserves external provider candidate fields", () => {
+    const provenanceByField = { foo: "demo_label" } as const;
+    const evidence = {
+      provenance: "demo_label" as const,
+      label: "demo",
+      description: "demo evidence",
+    };
+    const response: WalletUsageGraphResponse = {
+      generatedAt: "2026-04-29T00:00:00.000Z",
+      provenance: "derived_insight",
+      reasons: [evidence],
+      graph: {
+        generatedFrom: "phase-b-demo-fixtures",
+        payerWalletLanguage: "real",
+        identityFieldsExcluded: [],
+        confidence: 0.8,
+        reasons: [evidence],
+        provenance: "derived_insight",
+        provenanceByField,
+        providerWallets: [
+          {
+            providerId: "own-provider",
+            providerName: "Own Provider",
+            name: "Own",
+            payToWallet: "0x0000000000000000000000000000000000000010",
+            confidence: 0.9,
+            provenance: "onchain_fact",
+            provenanceByField,
+            payerWallets: [
+              {
+                address: "0x0000000000000000000000000000000000000020",
+                label: null,
+                sharedSpendAtomic: "100",
+                sharedTransactionCount: 5,
+                overlapProviderCount: 1,
+                confidence: 0.7,
+                firstSeenAt: "2026-04-20T00:00:00.000Z",
+                lastSeenAt: "2026-04-28T00:00:00.000Z",
+                provenance: "derived_insight",
+                provenanceByField,
+                reasons: [evidence],
+                observations: [],
+                otherServiceCandidates: [
+                  {
+                    providerId: "ext:dex-quote-api",
+                    providerName: "DEX Quote API",
+                    serviceName: "Aggregated swap quote",
+                    coUsageCount: 7,
+                    confidence: 0.66,
+                    payToWallet: "0x00000000000000000000000000000000000000aa",
+                    provenance: "future_sdk_field",
+                    provenanceByField,
+                    reasons: [evidence],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    };
+
+    const graph = adaptWalletUsageGraph(response);
+    const candidate = graph.providerWallets[0]?.payerWallets[0]?.otherServiceCandidates[0];
+    expect(candidate?.providerId).toBe("ext:dex-quote-api");
+    expect(candidate?.providerName).toBe("DEX Quote API");
+    expect(candidate?.serviceName).toBe("Aggregated swap quote");
+    expect(candidate?.coUsageCount).toBe(7);
+    expect(candidate?.confidence).toBe(0.66);
+    expect(candidate?.payToWallet).toBe("0x00000000000000000000000000000000000000aa");
+  });
 });

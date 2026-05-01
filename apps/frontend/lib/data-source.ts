@@ -10,6 +10,7 @@ import type {
   PaymentObservationDto,
   ProviderCatalogItemDto,
   ReportSummaryDto,
+  WalletUsageGraphDto,
 } from "./api/types";
 import type { SdkExtras, SdkForceNetwork } from "./sdk-fixtures/types";
 
@@ -73,6 +74,13 @@ export async function getSdkForceNetwork(address: string): Promise<SdkForceNetwo
   if (mode === "onChainOnly") return null;
   const v = await sdkModule();
   return v.getForceNetwork(address);
+}
+
+export async function getWalletUsageGraph(): Promise<WalletUsageGraphDto | null> {
+  const mode = await getServerDashboardMode();
+  if (mode === "onChainOnly") return live.getWalletUsageGraph();
+  const v = await sdkModule();
+  return v.getWalletUsageGraph();
 }
 
 // freshness indicator (撤去済) を再導入する際のヘルパー。

@@ -120,12 +120,23 @@ export type WalletUsageGraphDto = {
       wallet: string;
       observations: Array<{ caseId: string; txHash: string; evidenceRefs: string[] }>;
       otherServiceCandidates: Array<{
+        // Legacy aliases kept for backward compatibility with the original
+        // patterns view model. New consumers should prefer the explicit
+        // providerId / serviceName / payToWallet fields below.
+        /** @deprecated use providerId */
         caseId: string;
+        /** @deprecated use serviceName */
         candidateType: string;
+        /** @deprecated use payToWallet */
         entityId: string | null;
         confidence: number;
         reasons: string[];
         evidenceRefs: string[];
+        providerId: string;
+        providerName: string;
+        serviceName: string;
+        coUsageCount: number;
+        payToWallet: string | null;
       }>;
     }>;
   }>;
