@@ -8,6 +8,7 @@ describe("buildApiGrowthIntelligence", () => {
 
     expect(intelligence.insightCards).toHaveLength(5);
     expect(intelligence.insightCards.map((card) => card.label)).toContain("Repeat wallet rate");
+    expect(intelligence.insightCards[0].value).not.toBe(intelligence.insightCards[1].value);
     expect(intelligence.sourceMediumQuality.rows.map((row) => row.source)).toContain(
       "AgentKit MCP",
     );

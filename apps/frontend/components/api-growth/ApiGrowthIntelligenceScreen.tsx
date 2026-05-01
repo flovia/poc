@@ -31,7 +31,6 @@ export function ApiGrowthIntelligenceScreen({ intelligence }: Props) {
               See where API users come from, what endpoints they repeat, which workflows look
               agent-ready, and where x402 / Agents packaging should improve adoption.
             </p>
-            <FilterChips />
           </div>
         </header>
 
@@ -143,18 +142,6 @@ const eyebrowStyle: CSSProperties = {
   letterSpacing: "0.08em",
   textTransform: "uppercase",
 };
-
-function FilterChips() {
-  return (
-    <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
-      {["30d", "All sources", "All endpoints", "x402 fit", "Confidence"].map((label) => (
-        <span key={label} style={chipStyle}>
-          {label}
-        </span>
-      ))}
-    </div>
-  );
-}
 
 function InsightGrid({ cards }: { cards: ApiGrowthInsightCard[] }) {
   return (

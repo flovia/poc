@@ -298,8 +298,11 @@ export function buildApiGrowthIntelligence(data: MacroMetricsDemoData): ApiGrowt
   const useCaseCards = buildUseCaseCards(data, sessionsByWallet, walletByAddress);
   const repeatWalletRate = buildRepeatWalletRate(data, sessionsByWallet);
   const otherServiceCandidates = buildOtherServiceCandidates(data);
-  const bestChannel = topBy(sourceRows, (row) => row.qualityScore);
   const highestFrequencyChannel = topBy(sourceRows, (row) => row.endpointFrequency);
+  const bestChannel = topBy(
+    sourceRows.filter((row) => row.source !== highestFrequencyChannel?.source),
+    (row) => row.qualityScore,
+  );
   const topEndpoint = topBy(endpointRows, (row) => row.paidFrequency);
   const bestFit = topBy(useCaseCards, (card) => card.x402Fit + card.agentFit);
 
