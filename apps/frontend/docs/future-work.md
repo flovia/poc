@@ -382,9 +382,6 @@ selects.
 **Partially implemented with frontend-fixed values.** The Customers page
 ships:
 
-- a top-of-page text chip
-  ([`ScopeChip`](../components/customers/ScopeChip.tsx)) reading
-  `Network: base · Asset: USDC`,
 - a per-row `Chain` column rendering a
   [`ChainBadge`](../components/customers/ChainBadge.tsx) (`Base · USDC`
   for every wallet today),
@@ -393,7 +390,15 @@ ships:
   `Solana` options, wired through `CustomerFilterState.chain` in
   [`filter.ts`](../lib/customers/filter.ts).
 
-All three sources read from a single helper,
+An earlier iteration also surfaced a top-of-page `ScopeChip`
+(`Network: base · Asset: USDC`) above the Customers table. It was
+removed once the per-row `Chain` column landed because the chip
+duplicated the same single-value answer in two places. If a future
+multi-chain or multi-asset rollout reintroduces a need for a global
+scope summary, prefer reviving it from the BFF envelope `scope` rather
+than from a frontend constant.
+
+Both sources read from a single helper,
 [`getCustomerChainAttribution`](../lib/customers/chain.ts), which
 currently returns `{ chain: "base", asset: "USDC" }` for every customer.
 Selecting `Solana` correctly resolves to **0 rows** under the present
@@ -456,11 +461,12 @@ address) was rejected because it would invent data the BFF cannot back.
    - Build the option list dynamically from the customers array so the
      select degrades gracefully when only one chain is present (today the
      options are hard-coded to `All` / `Base` / `Solana`).
-5. **Top-of-page ScopeChip**
-   - Keep the chip as a global summary, but switch it to consume
-     BFF-emitted scope (envelope `scope.network` / `scope.asset`) when
-     available. Drop the fixed `network="base" asset="USDC"` props once
-     the BFF returns the value.
+5. **Top-of-page scope summary (optional revival)**
+   - The earlier `ScopeChip` was removed because it duplicated the
+     per-row `Chain` column. If a multi-chain dataset later wants a
+     dataset-level summary again (e.g. "this snapshot covers 3 chains,
+     2 assets"), revive the chip and source it from the BFF envelope
+     `scope` rather than a frontend constant.
 6. **Tests**
    - The chain dimension is already covered in
      [`filter.test.ts`](../lib/customers/filter.test.ts). When per-wallet
@@ -475,8 +481,8 @@ address) was rejected because it would invent data the BFF cannot back.
 - Is the value the wallet's *most-used* chain (`max-by-spend`) or a list
   of every chain it has ever appeared on? The former is simpler; the
   latter is closer to truth for cross-chain payers.
-- Should the SDK-connected mode keep the ScopeChip / chain column, or
-  hide it because the SDK fixture has its own chain story?
+- Should the SDK-connected mode keep the chain column, or hide it
+  because the SDK fixture has its own chain story?
 - Should we hide the `Chain` column entirely while every row still
   resolves to the same value, or keep it visible as a UI affordance for
   the eventual multi-chain reality?

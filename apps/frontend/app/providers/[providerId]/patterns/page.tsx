@@ -1,7 +1,6 @@
 import { TopBar } from "@/components/shell/TopBar";
 import { PatternsScreen } from "@/components/patterns/PatternsScreen";
 import {
-  getObservations,
   getSdkRetentionByAgent,
   getSdkWorkflowClusters,
   getWalletUsageGraph,
@@ -14,14 +13,12 @@ export default async function PatternsPage({
   params: Promise<{ providerId: string }>;
 }) {
   const { providerId } = await params;
-  const [graph, observations, sdkWorkflowClusters, sdkRetentionByAgent, pageCtx] =
-    await Promise.all([
-      getWalletUsageGraph(),
-      getObservations(),
-      getSdkWorkflowClusters(),
-      getSdkRetentionByAgent(),
-      getTopBarPageContext(),
-    ]);
+  const [graph, sdkWorkflowClusters, sdkRetentionByAgent, pageCtx] = await Promise.all([
+    getWalletUsageGraph(),
+    getSdkWorkflowClusters(),
+    getSdkRetentionByAgent(),
+    getTopBarPageContext(),
+  ]);
 
   return (
     <>
@@ -33,7 +30,6 @@ export default async function PatternsPage({
       <div className="scroll">
         <PatternsScreen
           graph={graph}
-          observations={observations}
           providerId={providerId}
           dataMode={pageCtx.dataMode}
           sdkWorkflowClusters={sdkWorkflowClusters}
