@@ -6,6 +6,13 @@ services:
     environment:
       DATABASE_URL: ${DATABASE_URL:-/data/flovia.db}
       PORT: 3001
+      # AWS_BEARER_TOKEN_BEDROCK: ${AWS_BEARER_TOKEN_BEDROCK:-}
+      # AWS_REGION: ${AWS_REGION:-}
+      # AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-}
+      # BFF_BEDROCK_MODEL_ID: ${BFF_BEDROCK_MODEL_ID:-}
+      # BFF_BEDROCK_PROMPT_VERSION: ${BFF_BEDROCK_PROMPT_VERSION:-}
+      # BFF_BRANCH_NAME: ${BFF_BRANCH_NAME:-local}
+      # BFF_DEPLOY_ID: ${BFF_DEPLOY_ID:-}
     volumes:
       - ${FLOVIA_DATA_DIR:-./docker-data}:${BFF_DATA_MOUNT_PATH:-/data}
     ports:
@@ -29,5 +36,5 @@ services:
       NEXT_PUBLIC_BFF_URL: /api
       NEXT_TELEMETRY_DISABLED: 1
     ports:
-      - "${FRONTEND_PORT:-3000}:3000"
+      - "${FRONTEND_PORT:-3333}:3000"
     restart: unless-stopped

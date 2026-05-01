@@ -22,6 +22,28 @@ export type CustomerListItemDto = {
   reasons: EvidenceLabel[];
 };
 
+export type ProviderCatalogItemDto = {
+  providerId: string;
+  name: string;
+  serviceId?: string;
+  serviceName?: string;
+  network: string;
+  asset: string;
+  payTo: string;
+  transactionCount: number;
+  uniqueSenderCount: number;
+  totalVolumeAtomic: string;
+  endpointCount: number;
+  resourceCount: number;
+  endpointAttributionStatus: string;
+  attributionConfidence: number;
+  hasCustomerFacts: boolean;
+  customerFactCount: number;
+  provenance: DataProvenance;
+  provenanceByField: Record<string, DataProvenance>;
+  reasons: EvidenceLabel[];
+};
+
 export type CustomerIdentityDto = {
   address: string;
   label: string | null;

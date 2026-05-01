@@ -16,6 +16,12 @@ type StoredProviderBase = {
   providerId: ProviderId;
   name: string;
   createdAt: number;
+  source?: "user" | "demo" | "generated";
+  network?: string;
+  asset?: string;
+  transactionCount?: number;
+  uniqueSenderCount?: number;
+  hasCustomerFacts?: boolean;
 };
 
 export type StoredProvider =

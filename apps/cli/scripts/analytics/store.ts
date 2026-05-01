@@ -104,6 +104,8 @@ export type PayToCensusQueryRow = ScopedPaymentSink & {
   serviceName?: string;
   endpointCount: number;
   resourceCount: number;
+  hasCustomerFacts: boolean;
+  customerFactCount: number;
 };
 
 export type PayToCensusQueryScope = {
@@ -791,16 +793,20 @@ export class AnalyticsStore {
     const aggregateRunIds = scope.aggregateRunIds ?? [];
     const cdpRunIds = scope.cdpRunIds ?? [];
     const aggregateRunFilter = aggregateRunIds.length
-      ? `AND pa.source_run_id IN (${aggregateRunIds.map(() => "?").join(", ")})`
+      ? `WHERE source_run_id IN (${aggregateRunIds.map(() => "?").join(", ")})`
       : "";
     const cdpRunFilter = cdpRunIds.length
-      ? `AND po.source_run_id IN (${cdpRunIds.map(() => "?").join(", ")})`
+      ? `WHERE source_run_id IN (${cdpRunIds.map(() => "?").join(", ")})`
       : "";
-    const windowFromFilter = scope.timeWindow?.from ? "AND pa.window_from >= ?" : "";
-    const windowToFilter = scope.timeWindow?.to ? "AND pa.window_to <= ?" : "";
+    const aggregateWindowPrefix = aggregateRunIds.length ? "AND" : "WHERE";
+    const windowFromFilter = scope.timeWindow?.from
+      ? `${aggregateWindowPrefix} window_from >= ?`
+      : "";
+    const windowToPrefix = aggregateRunIds.length || scope.timeWindow?.from ? "AND" : "WHERE";
+    const windowToFilter = scope.timeWindow?.to ? `${windowToPrefix} window_to <= ?` : "";
     const runScopeFilter =
       aggregateRunIds.length || cdpRunIds.length
-        ? "AND (pa.source_run_id IS NOT NULL OR po.source_run_id IS NOT NULL)"
+        ? "AND (pa.sink_key IS NOT NULL OR po.has_payment_option IS NOT NULL)"
         : "";
     const params: Array<string | number | null> = [
       ...aggregateRunIds,
@@ -814,31 +820,63 @@ export class AnalyticsStore {
     ];
     const rows = this.db
       .prepare(
-        `SELECT
+        `WITH pa AS (
+           SELECT
+             sink_key,
+             MAX(transaction_count) AS transaction_count,
+             MAX(unique_sender_count) AS unique_sender_count,
+             MAX(total_volume_atomic) AS total_volume_atomic,
+             MAX(latest_block_timestamp) AS latest_block_timestamp
+           FROM payto_aggregates
+           ${aggregateRunFilter} ${windowFromFilter} ${windowToFilter}
+           GROUP BY sink_key
+         ),
+         po AS (
+           SELECT network, asset, pay_to, 1 AS has_payment_option
+           FROM payment_options
+           ${cdpRunFilter}
+           GROUP BY network, asset, pay_to
+         ),
+         sc AS (
+           SELECT
+             sink_key,
+             COUNT(DISTINCT resource_id) AS endpoint_count,
+             MIN(service_key) AS service_id,
+             MIN(COALESCE(service, provider, domain)) AS service_name
+           FROM service_candidates
+           GROUP BY sink_key
+         ),
+         tfc AS (
+           SELECT network, asset, pay_to, COUNT(DISTINCT payer_wallet) AS customer_fact_count
+           FROM transfer_facts
+           GROUP BY network, asset, pay_to
+         )
+         SELECT
            ps.network,
            ps.asset,
            ps.pay_to,
-           COALESCE(MAX(pa.transaction_count), 0) AS transaction_count,
-           COALESCE(MAX(pa.unique_sender_count), 0) AS unique_sender_count,
-           COALESCE(MAX(pa.total_volume_atomic), '0') AS total_volume_atomic,
-           MAX(pa.latest_block_timestamp) AS latest_block_timestamp,
+           COALESCE(pa.transaction_count, 0) AS transaction_count,
+           COALESCE(pa.unique_sender_count, 0) AS unique_sender_count,
+           COALESCE(pa.total_volume_atomic, '0') AS total_volume_atomic,
+           pa.latest_block_timestamp AS latest_block_timestamp,
            COALESCE(ea.mapping_pattern, 'unresolved_payto') AS mapping_pattern,
            COALESCE(ea.endpoint_attribution_status, 'unresolved_payto') AS endpoint_attribution_status,
            COALESCE(ea.confidence, 0) AS confidence,
            COALESCE(ea.provenance_json, '{}') AS attribution_json,
            COALESCE(ea.resource_count, 0) AS resource_count,
-           COUNT(DISTINCT sc.resource_id) AS endpoint_count,
-           MIN(sc.service_key) AS service_id,
-           MIN(COALESCE(sc.service, sc.provider, sc.domain)) AS service_name
-         FROM payment_sinks ps
-         LEFT JOIN payto_aggregates pa ON pa.sink_key = ps.sink_key ${aggregateRunFilter} ${windowFromFilter} ${windowToFilter}
-         LEFT JOIN payment_options po ON po.network = ps.network AND po.asset = ps.asset AND po.pay_to = ps.pay_to ${cdpRunFilter}
-         LEFT JOIN endpoint_attribution ea ON ea.sink_key = ps.sink_key
-         LEFT JOIN service_candidates sc ON sc.sink_key = ps.sink_key
-         WHERE (? IS NULL OR ps.network = ?) AND (? IS NULL OR ps.asset = ?)
-         ${runScopeFilter}
-         GROUP BY ps.sink_key
-         ORDER BY transaction_count DESC, ps.pay_to ASC`,
+           COALESCE(sc.endpoint_count, 0) AS endpoint_count,
+           sc.service_id AS service_id,
+           sc.service_name AS service_name,
+           COALESCE(tfc.customer_fact_count, 0) AS customer_fact_count
+          FROM payment_sinks ps
+          LEFT JOIN pa ON pa.sink_key = ps.sink_key
+          LEFT JOIN po ON po.network = ps.network AND po.asset = ps.asset AND po.pay_to = ps.pay_to
+          LEFT JOIN endpoint_attribution ea ON ea.sink_key = ps.sink_key
+          LEFT JOIN sc ON sc.sink_key = ps.sink_key
+          LEFT JOIN tfc ON tfc.network = ps.network AND tfc.asset = ps.asset AND tfc.pay_to = ps.pay_to
+          WHERE (? IS NULL OR ps.network = ?) AND (? IS NULL OR ps.asset = ?)
+          ${runScopeFilter}
+          ORDER BY transaction_count DESC, ps.pay_to ASC`,
       )
       .all(...params) as Array<Record<string, unknown>>;
 
@@ -858,6 +896,8 @@ export class AnalyticsStore {
       serviceName: (row.service_name as string | null) ?? undefined,
       endpointCount: Number(row.endpoint_count ?? 0),
       resourceCount: Number(row.resource_count ?? 0),
+      hasCustomerFacts: Number(row.customer_fact_count ?? 0) > 0,
+      customerFactCount: Number(row.customer_fact_count ?? 0),
     }));
   }
 

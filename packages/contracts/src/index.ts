@@ -440,7 +440,7 @@ export const PhaseBResponseScopeSchema = z
     providerId: z.string().min(1).optional(),
     network: z.string().min(1).optional(),
     asset: z.string().min(1).optional(),
-    payTo: EvmAddressSchema.optional(),
+    payTo: z.string().min(1).optional(),
   })
   .strict();
 
@@ -491,6 +491,65 @@ export const PhaseBCustomerListResponseSchema = withDerivedInsightReasons(
 );
 
 export type PhaseBCustomerListResponse = z.infer<typeof PhaseBCustomerListResponseSchema>;
+
+export const ProviderCatalogRowSchema = withDerivedInsightReasons(
+  z
+    .object({
+      providerId: z.string().min(1),
+      name: z.string().min(1),
+      serviceId: z.string().min(1).optional(),
+      serviceName: z.string().min(1).optional(),
+      network: z.string().min(1),
+      asset: z.string().min(1),
+      payTo: z.string().min(1),
+      transactionCount: z.number().int().nonnegative(),
+      uniqueSenderCount: z.number().int().nonnegative(),
+      totalVolumeAtomic: AtomicAmountSchema,
+      endpointCount: z.number().int().nonnegative(),
+      resourceCount: z.number().int().nonnegative(),
+      mappingPattern: z.enum([
+        "one_payto_one_endpoint",
+        "one_payto_many_endpoints",
+        "many_paytos_one_service",
+        "unresolved_payto",
+      ]),
+      endpointAttributionStatus: EndpointAttributionStatusSchema,
+      attributionConfidence: z.number().min(0).max(1),
+      hasCustomerFacts: z.boolean(),
+      customerFactCount: z.number().int().nonnegative(),
+      provenance: DataProvenanceSchema,
+      provenanceByField: ProvenanceByFieldSchema,
+      reasons: z.array(EvidenceLabelSchema).optional(),
+    })
+    .strict(),
+);
+
+export type ProviderCatalogRow = z.infer<typeof ProviderCatalogRowSchema>;
+
+export const ProviderCatalogResponseSchema = withDerivedInsightReasons(
+  z
+    .object({
+      generatedAt: z.string().datetime(),
+      generatedFrom: z.string().min(1),
+      providers: z.array(ProviderCatalogRowSchema).min(0),
+      providerCount: z.number().int().nonnegative(),
+      provenance: DataProvenanceSchema,
+      provenanceByField: ProvenanceByFieldSchema,
+      reasons: z.array(EvidenceLabelSchema).optional(),
+    })
+    .strict()
+    .superRefine((value, ctx) => {
+      if (value.providerCount !== value.providers.length) {
+        ctx.addIssue({
+          code: "custom",
+          message: "providerCount must equal providers.length",
+          path: ["providerCount"],
+        });
+      }
+    }),
+);
+
+export type ProviderCatalogResponse = z.infer<typeof ProviderCatalogResponseSchema>;
 
 export const PhaseBCustomerProfileIdentitySchema = withDerivedInsightReasons(
   z
@@ -632,6 +691,143 @@ export const PhaseBCustomerProfileResponseSchema = withDerivedInsightReasons(
 );
 
 export type PhaseBCustomerProfileResponse = z.infer<typeof PhaseBCustomerProfileResponseSchema>;
+
+export const PhaseBUpsellReasonCodeSchema = z.enum([
+  "top_spender",
+  "recently_active",
+  "multi_provider_usage",
+  "high_transaction_count",
+  "free_tier_near_limit",
+  "external_x402_usage",
+  "high_upsell_score",
+]);
+
+export type PhaseBUpsellReasonCode = z.infer<typeof PhaseBUpsellReasonCodeSchema>;
+
+export const PhaseBCustomerUpsellSignalsSchema = z
+  .object({
+    spendAtomic: AtomicAmountSchema,
+    spendRank: z.number().int().positive(),
+    spendPercentile: z.number().min(0).max(1),
+    customerCount: z.number().int().positive(),
+    observationCount: z.number().int().nonnegative(),
+    providerCount: z.number().int().nonnegative(),
+    txCount: z.number().int().nonnegative().nullable(),
+    averageSpendAtomic: AtomicAmountSchema.nullable(),
+    firstSeenAt: z.string().datetime().nullable(),
+    lastSeenAt: z.string().datetime().nullable(),
+    daysSinceLastSeen: z.number().int().nonnegative().nullable(),
+    freeTierProgress: z.number().min(0).max(1),
+    activityGrowth: z.number(),
+    entryPointRatio: z.number().min(0).max(1),
+    upsellOpportunity: z.enum(["low", "medium", "high"]),
+    x402ServiceCount: z.number().int().nonnegative(),
+  })
+  .strict();
+
+export type PhaseBCustomerUpsellSignals = z.infer<typeof PhaseBCustomerUpsellSignalsSchema>;
+
+export const PhaseBCustomerUpsellFlagsSchema = z
+  .object({
+    isTopSpender: z.boolean(),
+    isRecentlyActive: z.boolean(),
+    isMultiProvider: z.boolean(),
+    hasHighTransactionCount: z.boolean(),
+    isNearFreeTierLimit: z.boolean(),
+    hasExternalX402Usage: z.boolean(),
+    isHighUpsellCandidate: z.boolean(),
+  })
+  .strict();
+
+export type PhaseBCustomerUpsellFlags = z.infer<typeof PhaseBCustomerUpsellFlagsSchema>;
+
+export const PhaseBCustomerUpsellMetricsResponseSchema = withDerivedInsightReasons(
+  z
+    .object({
+      generatedAt: z.string().datetime(),
+      generatedFrom: z.string().min(1),
+      address: EvmAddressSchema,
+      sourceGeneratedAt: z.string().datetime(),
+      signals: PhaseBCustomerUpsellSignalsSchema,
+      flags: PhaseBCustomerUpsellFlagsSchema,
+      reasonCodes: z.array(PhaseBUpsellReasonCodeSchema).min(0),
+      caveats: z.array(z.string().min(1)).min(1),
+      provenance: DataProvenanceSchema,
+      provenanceByField: ProvenanceByFieldSchema,
+      evidence: z.array(EvidenceLabelSchema).optional(),
+      reasons: z.array(EvidenceLabelSchema).min(1),
+    })
+    .strict(),
+);
+
+export type PhaseBCustomerUpsellMetricsResponse = z.infer<
+  typeof PhaseBCustomerUpsellMetricsResponseSchema
+>;
+
+export const validatePhaseBCustomerUpsellMetricsResponse = (value: unknown) =>
+  PhaseBCustomerUpsellMetricsResponseSchema.parse(value);
+
+export const PhaseBCustomerUpsellExplanationModelSchema = z
+  .object({
+    provider: z.literal("bedrock"),
+    modelId: z.string().min(1),
+    region: z.string().min(1),
+    promptVersion: z.string().min(1),
+  })
+  .strict();
+
+export type PhaseBCustomerUpsellExplanationModel = z.infer<
+  typeof PhaseBCustomerUpsellExplanationModelSchema
+>;
+
+export const PhaseBCustomerUpsellExplanationInputSchema = z
+  .object({
+    signals: PhaseBCustomerUpsellSignalsSchema,
+    flags: PhaseBCustomerUpsellFlagsSchema,
+    reasonCodes: z.array(PhaseBUpsellReasonCodeSchema).min(0),
+    caveats: z.array(z.string().min(1)).min(1),
+  })
+  .strict();
+
+export type PhaseBCustomerUpsellExplanationInput = z.infer<
+  typeof PhaseBCustomerUpsellExplanationInputSchema
+>;
+
+export const PhaseBCustomerUpsellExplanationSchema = z
+  .object({
+    summary: z.string().min(1),
+    reasons: z.array(z.string().min(1)).min(1),
+    recommendedAction: z.string().min(1),
+    caution: z.string().min(1),
+  })
+  .strict();
+
+export type PhaseBCustomerUpsellExplanation = z.infer<typeof PhaseBCustomerUpsellExplanationSchema>;
+
+export const PhaseBCustomerUpsellExplanationResponseSchema = withDerivedInsightReasons(
+  z
+    .object({
+      generatedAt: z.string().datetime(),
+      generatedFrom: z.string().min(1),
+      address: EvmAddressSchema,
+      sourceGeneratedAt: z.string().datetime(),
+      model: PhaseBCustomerUpsellExplanationModelSchema,
+      input: PhaseBCustomerUpsellExplanationInputSchema,
+      explanation: PhaseBCustomerUpsellExplanationSchema,
+      provenance: DataProvenanceSchema,
+      provenanceByField: ProvenanceByFieldSchema,
+      evidence: z.array(EvidenceLabelSchema).optional(),
+      reasons: z.array(EvidenceLabelSchema).min(1),
+    })
+    .strict(),
+);
+
+export type PhaseBCustomerUpsellExplanationResponse = z.infer<
+  typeof PhaseBCustomerUpsellExplanationResponseSchema
+>;
+
+export const validatePhaseBCustomerUpsellExplanationResponse = (value: unknown) =>
+  PhaseBCustomerUpsellExplanationResponseSchema.parse(value);
 
 export const PhaseBWalletUsageGraphObservationSchema = withDerivedInsightReasons(
   z
@@ -1195,6 +1391,9 @@ export const validateMockEndpointAttributionFixture = (
 
 export const validatePhaseBCustomerListResponse = (value: unknown): PhaseBCustomerListResponse =>
   PhaseBCustomerListResponseSchema.parse(value);
+
+export const validateProviderCatalogResponse = (value: unknown): ProviderCatalogResponse =>
+  ProviderCatalogResponseSchema.parse(value);
 
 export const validatePhaseBCustomerProfileResponse = (
   value: unknown,
