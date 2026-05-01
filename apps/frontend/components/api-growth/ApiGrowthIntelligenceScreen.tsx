@@ -63,18 +63,43 @@ export function ApiGrowthIntelligenceScreen({ intelligence }: Props) {
               <OtherServiceCandidates candidates={intelligence.otherServiceCandidates} />
             </SectionCard>
 
-            <SectionCard eyebrow="GTM & Product Recommendations" title="What to improve next">
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
+            <SectionCard
+              eyebrow="Growth Actions"
+              title={(
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                  Recommended growth actions
+                  <AiGeneratedTooltip />
+                </span>
+              )}
+            >
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 12 }}>
                 {intelligence.recommendations.map((recommendation) => (
-                  <div key={recommendation.title} style={{ padding: 14, border: "1px solid var(--line)", borderRadius: 8, background: "var(--surface-card)" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", gap: 12, marginBottom: 8 }}>
-                      <strong style={{ fontSize: 14 }}>{recommendation.title}</strong>
+                  <div
+                    key={recommendation.title}
+                    style={{
+                      display: "grid",
+                      gridTemplateRows: "auto 1fr auto",
+                      minHeight: 172,
+                      padding: 14,
+                      border: "1px solid var(--line)",
+                      borderRadius: 8,
+                      background: "var(--surface-card)",
+                    }}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", gap: 10, marginBottom: 8 }}>
+                      <strong style={{ fontSize: 14, lineHeight: 1.35 }}>{recommendation.title}</strong>
                       <PriorityBadge priority={recommendation.priority} />
                     </div>
-                    <p style={bodyText}>{recommendation.reason}</p>
-                    <div style={{ display: "flex", justifyContent: "space-between", gap: 10, color: "var(--text-3)", fontSize: 12 }}>
-                      <span>{recommendation.target}</span>
-                      <span className="mono">{recommendation.metric}</span>
+                    <p style={{ ...bodyText, margin: "0 0 12px" }}>{recommendation.reason}</p>
+                    <div style={{ display: "grid", gap: 8, paddingTop: 10, borderTop: "1px solid var(--line)", color: "var(--text-3)", fontSize: 12 }}>
+                      <div style={actionMetaRowStyle}>
+                        <span style={actionMetaLabelStyle}>Next step</span>
+                        <span style={actionMetaValueStyle}>{recommendation.target}</span>
+                      </div>
+                      <div style={actionMetaRowStyle}>
+                        <span style={actionMetaLabelStyle}>Evidence</span>
+                        <span className="mono" style={actionMetaValueStyle}>{recommendation.metric}</span>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -89,6 +114,27 @@ export function ApiGrowthIntelligenceScreen({ intelligence }: Props) {
 }
 
 const bodyText: CSSProperties = { color: "var(--text-3)", fontSize: 13, lineHeight: 1.55, margin: "6px 0 12px" };
+
+const actionMetaRowStyle: CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "72px minmax(0, 1fr)",
+  gap: 10,
+  alignItems: "baseline",
+};
+
+const actionMetaLabelStyle: CSSProperties = {
+  color: "var(--text-mute)",
+  fontSize: 11,
+  fontWeight: 700,
+  letterSpacing: "0.04em",
+  textTransform: "uppercase",
+};
+
+const actionMetaValueStyle: CSSProperties = {
+  minWidth: 0,
+  color: "var(--text-2)",
+  lineHeight: 1.35,
+};
 
 const eyebrowStyle: CSSProperties = {
   fontSize: 11,
@@ -126,7 +172,7 @@ function InsightGrid({ cards }: { cards: ApiGrowthInsightCard[] }) {
   );
 }
 
-function SectionCard({ eyebrow, title, children }: { eyebrow: string; title: string; children: ReactNode }) {
+function SectionCard({ eyebrow, title, children }: { eyebrow: string; title: ReactNode; children: ReactNode }) {
   return (
     <section className="card" style={{ padding: 0, overflow: "hidden", background: "var(--surface-card)", borderColor: "var(--line)", minWidth: 0 }}>
       <div style={{ padding: "12px 16px 10px", borderBottom: "1px solid var(--line)" }}>
@@ -135,6 +181,63 @@ function SectionCard({ eyebrow, title, children }: { eyebrow: string; title: str
       </div>
       <div style={{ padding: 16 }}>{children}</div>
     </section>
+  );
+}
+
+function AiGeneratedTooltip() {
+  return (
+    <span style={{ position: "relative", display: "inline-flex", alignItems: "center" }}>
+      <span
+        aria-label="AI-generated actions"
+        className="api-growth-ai-trigger"
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          width: 20,
+          height: 20,
+          borderRadius: 6,
+          border: "1px solid var(--line)",
+          background: "var(--surface-muted)",
+          color: "var(--text-3)",
+          cursor: "help",
+        }}
+      >
+        <svg width="13" height="13" viewBox="0 0 16 16" aria-hidden="true" fill="none">
+          <rect x="3" y="5" width="10" height="8" rx="2" stroke="currentColor" strokeWidth="1.4" />
+          <path d="M8 5V2.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+          <circle cx="8" cy="2.2" r="1" fill="currentColor" />
+          <circle cx="6.2" cy="8.7" r="0.8" fill="currentColor" />
+          <circle cx="9.8" cy="8.7" r="0.8" fill="currentColor" />
+          <path d="M6.2 11h3.6" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+        </svg>
+      </span>
+      <span
+        style={{
+          position: "absolute",
+          zIndex: 10,
+          left: "50%",
+          top: "calc(100% + 8px)",
+          width: 260,
+          transform: "translateX(-50%)",
+          padding: "9px 10px",
+          borderRadius: 8,
+          border: "1px solid var(--line)",
+          background: "var(--surface-card)",
+          boxShadow: "var(--shadow-2)",
+          color: "var(--text-2)",
+          fontSize: 12,
+          fontWeight: 500,
+          lineHeight: 1.45,
+          opacity: 0,
+          pointerEvents: "none",
+        }}
+        className="api-growth-ai-tooltip"
+      >
+        Generated by AI from source, repeat wallet, endpoint frequency, and adjacent API signals.
+      </span>
+      <style>{`.api-growth-ai-trigger:hover + .api-growth-ai-tooltip, .api-growth-ai-trigger:focus + .api-growth-ai-tooltip { opacity: 1 !important; }`}</style>
+    </span>
   );
 }
 
