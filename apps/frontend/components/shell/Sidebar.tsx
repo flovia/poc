@@ -14,7 +14,7 @@ import { SDK_DEMO_PROVIDER_ID, SDK_DEMO_PROVIDER_NAME } from "@/lib/sdk-fixtures
 // "wallet" is intentionally treated as a child of "customers" for nav
 // highlighting — there's no top-level Wallet entry, the wallet detail page
 // is reached by drilling in from the customers list.
-type ActiveRoute = "customers" | "patterns" | "macro-metrics" | "metrics-catalog" | "setup" | "wallet" | undefined;
+type ActiveRoute = "customers" | "patterns" | "api-growth" | "macro-metrics" | "metrics-catalog" | "setup" | "wallet" | undefined;
 
 type SidebarProps = {
   activeProviderId: string | undefined;
@@ -26,9 +26,10 @@ type SidebarProps = {
 // user on whichever section they were already viewing. Wallet detail can't
 // carry over (the wallet address belongs to one provider's view), so it
 // falls back to that provider's customers list.
-function sectionFor(activeRoute: ActiveRoute): "customers" | "patterns" | "macro-metrics" | "metrics-catalog" {
+function sectionFor(activeRoute: ActiveRoute): "customers" | "patterns" | "api-growth" | "macro-metrics" | "metrics-catalog" {
   if (activeRoute === "metrics-catalog") return "metrics-catalog";
   if (activeRoute === "macro-metrics") return "macro-metrics";
+  if (activeRoute === "api-growth") return "api-growth";
   return activeRoute === "patterns" ? "patterns" : "customers";
 }
 
@@ -99,7 +100,7 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
     };
   }, [open, close]);
 
-  const navHrefFor = (segment: "customers" | "patterns" | "macro-metrics" | "metrics-catalog") => {
+  const navHrefFor = (segment: "customers" | "patterns" | "api-growth" | "macro-metrics" | "metrics-catalog") => {
     const id =
       activeProviderId
       ?? stored[0]?.providerId
@@ -195,6 +196,27 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
           <Link href={navHrefFor("patterns")} className="nav-item" aria-current={activeRoute === "patterns"}>
             <Icon.patterns />
             Co-usage Patterns
+          </Link>
+        )}
+
+        {navDisabled ? (
+          <span
+            role="link"
+            className="nav-item disabled"
+            aria-disabled="true"
+            aria-label="API Growth, setup required"
+          >
+            <Icon.spark width={16} height={16} />
+            API Growth
+          </span>
+        ) : (
+          <Link
+            href={navHrefFor("api-growth")}
+            className="nav-item"
+            aria-current={activeRoute === "api-growth"}
+          >
+            <Icon.spark width={16} height={16} />
+            API Growth
           </Link>
         )}
 
