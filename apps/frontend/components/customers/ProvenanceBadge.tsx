@@ -22,17 +22,17 @@ const VISUALS: Record<DataProvenance, ProvenanceVisual> = {
   demo_label: {
     shortLabel: "demo",
     fullLabel: "Demo label",
-    color: "var(--text-mute)",
+    color: "var(--sdk-purple)",
   },
   future_sdk_field: {
     shortLabel: "sdk",
     fullLabel: "Future SDK field",
-    color: "var(--mesh-blue)",
+    color: "var(--sdk-purple)",
   },
   derived_insight: {
     shortLabel: "hypothesis",
     fullLabel: "Derived insight (hypothesis)",
-    color: "var(--sdk-purple)",
+    color: "var(--meta-hypothesis)",
   },
 };
 

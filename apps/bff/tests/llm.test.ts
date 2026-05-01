@@ -289,6 +289,7 @@ describe("BFF llm service", () => {
       const systemPrompt = capturedCommandInput?.system?.[0]?.text;
       expect(systemPrompt).toBeTruthy();
       expect(systemPrompt).toContain("Write the output in English");
+      expect(systemPrompt).toContain('"summary" must be a short headline of 3 to 6 words.');
       expect(systemPrompt).toContain("Prefer cautious language");
       expect(systemPrompt).toContain("Do not infer customer intent");
       expect(systemPrompt).toContain("Do not mention exact deadlines");

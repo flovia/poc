@@ -99,6 +99,16 @@ export type CustomerProfileDto = {
   insights: CustomerInsightDto[];
 };
 
+export type CustomerUpsellExplanationDto = {
+  generatedAt: string;
+  address: string;
+  modelId: string;
+  summary: string;
+  reasons: string[];
+  recommendedAction: string;
+  caution: string;
+};
+
 export type WalletUsageGraphDto = {
   generatedFrom: "payment_observations+provider_endpoint_claims+attribution_candidates";
   payerWalletLanguage: true;

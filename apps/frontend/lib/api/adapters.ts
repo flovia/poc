@@ -1,5 +1,6 @@
 import type {
   PhaseBCustomerListResponse,
+  PhaseBCustomerUpsellExplanationResponse,
   PhaseBCustomerProfileResponse,
   ProviderCatalogResponse,
   WalletUsageGraphResponse,
@@ -9,6 +10,7 @@ import type {
   CustomerListItemDto,
   CustomerProfileDto,
   CustomerProviderUsageDto,
+  CustomerUpsellExplanationDto,
   CustomerTimelineEventType,
   PaymentObservationDto,
   ProviderCatalogItemDto,
@@ -193,6 +195,20 @@ export function adaptCustomerProfile(response: PhaseBCustomerProfileResponse): C
       title: insight.title,
       description: `${insight.summary} Confidence: ${Math.round(insight.confidence * 100)}%.`,
     })),
+  };
+}
+
+export function adaptCustomerUpsellExplanation(
+  response: PhaseBCustomerUpsellExplanationResponse,
+): CustomerUpsellExplanationDto {
+  return {
+    generatedAt: response.generatedAt,
+    address: response.address,
+    modelId: response.model.modelId,
+    summary: response.explanation.summary,
+    reasons: response.explanation.reasons,
+    recommendedAction: response.explanation.recommendedAction,
+    caution: response.explanation.caution,
   };
 }
 

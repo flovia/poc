@@ -9,6 +9,7 @@ import type { DashboardMode } from "@/lib/data-mode";
 import type { SdkExtras } from "@/lib/sdk-fixtures/types";
 import { formatAtomic, formatGrowth, formatRatioPct, formatTimestamp, shortAddr } from "@/lib/format";
 import { InsightCard } from "./InsightCard";
+import { UpsellExplanationPanel } from "./UpsellExplanationPanel";
 
 const SEVERITY_TONE: Record<CustomerInsightSeverity, "default" | "upsell" | "blue"> = {
   info: "default",
@@ -25,10 +26,12 @@ function formatUsd(value: number): string {
 }
 
 export function UpsellCard({
+  address,
   metrics,
   dataMode,
   sdkExtras,
 }: {
+  address: string;
   metrics: CustomerMetricsDto;
   dataMode: DashboardMode;
   sdkExtras: SdkExtras | null;
@@ -64,7 +67,7 @@ export function UpsellCard({
               MRR
             </div>
           </div>
-          <span className="chip teal">high</span>
+          <span className="chip blue">high</span>
         </div>
         <div
           style={{
@@ -92,14 +95,23 @@ export function UpsellCard({
             ))}
           </ul>
         </div>
+        <div style={{ marginTop: 10 }}>
+          <UpsellExplanationPanel address={address} />
+        </div>
       </InsightCard>
     );
   }
 
-  return <UpsellCardLive metrics={metrics} />;
+  return <UpsellCardLive address={address} metrics={metrics} />;
 }
 
-function UpsellCardLive({ metrics }: { metrics: CustomerMetricsDto }) {
+function UpsellCardLive({
+  address,
+  metrics,
+}: {
+  address: string;
+  metrics: CustomerMetricsDto;
+}) {
   const opp = metrics.upsellOpportunity;
   const headline =
     opp === "high"
@@ -132,7 +144,7 @@ function UpsellCardLive({ metrics }: { metrics: CustomerMetricsDto }) {
             Derived from spend, provider count, growth, and entry-point ratio
           </div>
         </div>
-        <span className={`chip ${opp === "high" ? "teal" : ""}`}>{opp}</span>
+        <span className={`chip ${opp === "high" ? "blue" : ""}`}>{opp}</span>
       </div>
 
       <div
@@ -195,6 +207,10 @@ function UpsellCardLive({ metrics }: { metrics: CustomerMetricsDto }) {
 
       <div style={{ fontSize: 12, color: "var(--text-mute)", lineHeight: 1.5 }}>
         Heuristics are PoC-grade. The BFF README warns these are not production revenue analytics.
+      </div>
+
+      <div style={{ marginTop: 10 }}>
+        <UpsellExplanationPanel address={address} />
       </div>
     </InsightCard>
   );
