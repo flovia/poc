@@ -1,13 +1,8 @@
 import { type BffAnalyticsDataSource, resolveAnalyticsDataSource } from "./data/analytics-source";
-import {
-  BffLlmInferenceError,
-  type BffLlmService,
-  resolveBffLlmService,
-} from "./data/llm";
+import { BffLlmInferenceError, type BffLlmService, resolveBffLlmService } from "./data/llm";
 
 type JsonValue = unknown;
-const GENERIC_BEDROCK_INFERENCE_ERROR_MESSAGE =
-  "Bedrock upsell explanation inference failed.";
+const GENERIC_BEDROCK_INFERENCE_ERROR_MESSAGE = "Bedrock upsell explanation inference failed.";
 
 const json = (body: JsonValue, init: ResponseInit = {}) =>
   Response.json(body, {
