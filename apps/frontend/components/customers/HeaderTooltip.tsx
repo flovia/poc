@@ -5,14 +5,16 @@ import { useId, useState } from "react";
 type HeaderTooltipProps = {
   label: string;
   description: string;
+  align?: "left" | "right";
 };
 
-export function HeaderTooltip({ label, description }: HeaderTooltipProps) {
+export function HeaderTooltip({ label, description, align = "left" }: HeaderTooltipProps) {
   const [open, setOpen] = useState(false);
   const tooltipId = useId();
 
   const show = () => setOpen(true);
   const hide = () => setOpen(false);
+  const isRight = align === "right";
 
   return (
     <span
@@ -45,7 +47,7 @@ export function HeaderTooltip({ label, description }: HeaderTooltipProps) {
           style={{
             position: "absolute",
             top: "calc(100% + 8px)",
-            left: 0,
+            ...(isRight ? { right: 0 } : { left: 0 }),
             zIndex: 50,
             width: 240,
             padding: "10px 12px",
@@ -67,7 +69,7 @@ export function HeaderTooltip({ label, description }: HeaderTooltipProps) {
             style={{
               position: "absolute",
               top: -5,
-              left: 14,
+              ...(isRight ? { right: 14 } : { left: 14 }),
               width: 10,
               height: 10,
               background: "var(--text-1)",

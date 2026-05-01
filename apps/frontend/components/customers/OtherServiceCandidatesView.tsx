@@ -75,24 +75,28 @@ export function OtherServiceCandidatesView({ rows }: { rows: OtherServiceCandida
                 <HeaderTooltip
                   label="Shared wallets"
                   description="Number of distinct payer wallets that pay both your provider and this external provider through x402."
+                  align="right"
                 />
               </th>
               <th style={{ textAlign: "right" }}>
                 <HeaderTooltip
                   label="Shared tx"
                   description="Total observed x402 transactions from your customers to this external provider, summed across all shared wallets."
+                  align="right"
                 />
               </th>
               <th style={{ textAlign: "right" }}>
                 <HeaderTooltip
                   label="Correlation"
                   description="Average co-usage confidence (0–1) reported by the BFF. Higher values mean the overlap is more likely to be a meaningful behavioral signal rather than coincidental."
+                  align="right"
                 />
               </th>
               <th>
                 <HeaderTooltip
                   label="Opportunity"
                   description="Bundling / partnership opportunity bucketed from the correlation score. High ≥ 0.70, Medium 0.40–0.69, Low < 0.40."
+                  align="right"
                 />
               </th>
             </tr>
