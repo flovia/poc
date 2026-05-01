@@ -135,8 +135,8 @@ describe("BFF canonical adapters", () => {
           mappingPattern: "one_payto_one_endpoint",
           endpointAttributionStatus: "direct_payto_endpoint",
           attributionConfidence: 0.9,
-          hasCustomerFacts: false,
-          customerFactCount: 0,
+          hasCustomerFacts: true,
+          customerFactCount: 1,
           provenance: "derived_insight",
           provenanceByField,
           reasons: [evidence],
@@ -191,8 +191,8 @@ describe("BFF canonical adapters", () => {
     const providers = adaptProviderCatalog(response);
     expect(providers.map((provider) => provider.providerId)).toEqual([
       "coingecko",
-      "large-service",
       "real",
+      "large-service",
       "unresolved",
     ]);
   });
