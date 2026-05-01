@@ -7,7 +7,7 @@ import type {
 } from "@/lib/api/types";
 import type { DashboardMode } from "@/lib/data-mode";
 import type { SdkExtras } from "@/lib/sdk-fixtures/types";
-import { formatAtomic, formatGrowth, formatRatioPct, formatTimestamp, shortAddr } from "@/lib/format";
+import { formatAtomic, formatGrowth, formatRatioPct } from "@/lib/format";
 import { InsightCard } from "./InsightCard";
 import { UpsellExplanationPanel } from "./UpsellExplanationPanel";
 
@@ -309,60 +309,6 @@ export function RecentActivityInsight({
           <>No recent activity baseline available yet.</>
         )}
       </div>
-    </InsightCard>
-  );
-}
-
-export function ProviderUsageList({ providers }: { providers: CustomerProviderUsageDto[] }) {
-  return (
-    <InsightCard
-      tone="blue"
-      icon={<Icon.spark width="11" height="11" />}
-      label={`Providers used (${providers.length})`}
-      delay={120}
-    >
-      {providers.length === 0 ? (
-        <div style={{ fontSize: 13, color: "var(--text-3)" }}>
-          No provider usage in this projection.
-        </div>
-      ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          {providers.map((p) => (
-            <div
-              key={p.providerId + p.payToWallet}
-              style={{
-                display: "grid",
-                gridTemplateColumns: "minmax(0, 1fr) auto",
-                gap: 8,
-                alignItems: "baseline",
-              }}
-            >
-              <div style={{ minWidth: 0 }}>
-                <div
-                  style={{
-                    fontSize: 14,
-                    fontWeight: 500,
-                    color: "var(--text-1)",
-                    whiteSpace: "nowrap",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                  }}
-                  title={p.name}
-                >
-                  {p.name}
-                </div>
-                <div className="mono" style={{ fontSize: 11, color: "var(--text-mute)", marginTop: 2 }}>
-                  pay-to {shortAddr(p.payToWallet)} · {p.transactionCount} tx · last{" "}
-                  {formatTimestamp(p.lastSeenAt)}
-                </div>
-              </div>
-              <span className="mono" style={{ fontSize: 13, color: "var(--text-2)" }}>
-                {formatAtomic(p.spendAtomic)}
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
     </InsightCard>
   );
 }
