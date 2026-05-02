@@ -215,10 +215,11 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
             role="link"
             className="nav-item disabled"
             aria-disabled="true"
-            aria-label="API Growth (mock), setup required"
+            aria-label="API Growth (demo), setup required"
           >
             <Icon.spark width={16} height={16} />
-            API Growth <span style={{ color: "var(--text-mute)", fontWeight: 400 }}>(mock)</span>
+            <span style={{ flex: 1 }}>API Growth</span>
+            <DemoNavBadge />
           </span>
         ) : (
           <Link
@@ -227,7 +228,8 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
             aria-current={activeRoute === "api-growth"}
           >
             <Icon.spark width={16} height={16} />
-            API Growth <span style={{ color: "var(--text-mute)", fontWeight: 400 }}>(mock)</span>
+            <span style={{ flex: 1 }}>API Growth</span>
+            <DemoNavBadge />
           </Link>
         )}
 
@@ -343,5 +345,25 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
         <span>Mock data · v0.4</span>
       </div>
     </aside>
+  );
+}
+
+function DemoNavBadge() {
+  return (
+    <span
+      style={{
+        fontSize: 11,
+        fontWeight: 600,
+        padding: "1px 5px",
+        borderRadius: 3,
+        background: "rgba(148,163,184,0.18)",
+        color: "var(--text-3)",
+        letterSpacing: "0.04em",
+        textTransform: "uppercase",
+        flexShrink: 0,
+      }}
+    >
+      demo
+    </span>
   );
 }

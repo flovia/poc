@@ -24,9 +24,12 @@ export function ApiGrowthIntelligenceScreen({ intelligence }: Props) {
           <div className="eyebrow" style={{ marginBottom: 8 }}>
             Growth intelligence · API adoption
           </div>
-          <h1 className="display" style={{ fontSize: 28, fontWeight: 700, margin: 0, letterSpacing: "-0.01em" }}>
-            API Growth Intelligence
-          </h1>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <DemoBadge />
+            <h1 className="display" style={{ fontSize: 28, fontWeight: 700, margin: 0, letterSpacing: "-0.01em" }}>
+              API Growth Intelligence
+            </h1>
+          </div>
           <div style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "end", flexWrap: "wrap" }}>
             <p style={{ maxWidth: 880, color: "var(--text-2)", fontSize: 15, lineHeight: 1.6, margin: "8px 0 0" }}>
               See where API users come from, what endpoints they repeat, why wallets come back,
@@ -87,6 +90,26 @@ const eyebrowStyle: CSSProperties = {
   letterSpacing: "0.08em",
   textTransform: "uppercase",
 };
+
+function DemoBadge() {
+  return (
+    <span
+      style={{
+        fontSize: 11,
+        fontWeight: 700,
+        padding: "2px 6px",
+        borderRadius: 4,
+        background: "rgba(148,163,184,0.18)",
+        color: "var(--text-3)",
+        letterSpacing: "0.06em",
+        textTransform: "uppercase",
+        flexShrink: 0,
+      }}
+    >
+      demo
+    </span>
+  );
+}
 
 function InsightGrid({ cards }: { cards: ApiGrowthInsightCard[] }) {
   return (
