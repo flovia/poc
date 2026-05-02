@@ -344,10 +344,6 @@ function SourceRepeatCohort({ cohorts }: { cohorts: ApiGrowthRepeatCohort[] }) {
 
   return (
     <div style={{ display: "grid", gap: 10, marginBottom: 14 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "baseline" }}>
-        <div style={eyebrowStyle}>Source repeat cohort</div>
-        <span style={{ color: "var(--text-mute)", fontSize: 12 }}>share of paid wallets active again</span>
-      </div>
       <div style={{ display: "grid", gap: 6 }}>
         <div style={{ display: "grid", gridTemplateColumns: "1.15fr repeat(3, 0.55fr)", gap: 6, color: "var(--text-mute)", fontSize: 12, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" }}>
           <span>Source cohort</span>
