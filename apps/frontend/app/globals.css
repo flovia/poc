@@ -313,7 +313,7 @@ a { color: inherit; text-decoration: none; }
 }
 
 .provider-block {
-  margin: 6px 10px 14px;
+  margin: 16px 10px 14px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--surface-subtle);
