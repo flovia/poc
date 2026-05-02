@@ -136,7 +136,7 @@ function BubbleMatrix({ rows }: { rows: SourceMediumQualityRow[] }) {
   const labels = spreadBubbleLabels(
     bubbles.map((bubble) => ({
       source: bubble.row.source,
-      x: bubble.x,
+      x: bubble.x < plot.splitX ? bubble.x - bubble.r - 18 : bubble.x + bubble.r + 18,
       y: bubble.y + bubble.r + 13,
     })),
     plot.top + 14,
@@ -157,10 +157,21 @@ function BubbleMatrix({ rows }: { rows: SourceMediumQualityRow[] }) {
         <text x={plot.splitX + 40} y={plot.bottom - 10} fill="var(--text-3)" fontSize="10" fontWeight="700">Improve retention</text>
         {bubbles.map(({ row, index, r, x, y }) => {
           const label = labels[index];
+          const labelWidth = bubbleLabelWidth(row.source);
           return (
             <g key={row.source}>
               <circle cx={x} cy={y} r={r} fill={index % 2 === 0 ? "var(--mesh-blue)" : "var(--teal)"} opacity="0.82" stroke="var(--surface-card)" strokeWidth="2" />
-              <line x1={x} y1={y + r + 2} x2={label.x} y2={label.y - 9} stroke="var(--line-strong)" strokeWidth="1" opacity="0.65" />
+              <line x1={x} y1={y + r + 2} x2={label.x} y2={label.y - 9} stroke="var(--line-strong)" strokeWidth="1" opacity="0.58" />
+              <rect
+                x={label.x - labelWidth / 2}
+                y={label.y - 11}
+                width={labelWidth}
+                height="14"
+                rx="4"
+                fill="var(--surface-card)"
+                stroke="var(--line)"
+                opacity="0.94"
+              />
               <text x={label.x} y={label.y} textAnchor="middle" fill="var(--text-2)" fontSize="10" fontWeight="700">{row.source}</text>
             </g>
           );
@@ -181,9 +192,14 @@ function spreadBubbleLabels(
   minY: number,
   maxY: number,
 ): Array<{ source: string; x: number; y: number }> {
-  const minGap = 14;
+  const minGap = 18;
   const sorted = labels
-    .map((label, index) => ({ ...label, index, x: clamp(label.x, 52, 326), y: clamp(label.y, minY, maxY) }))
+    .map((label, index) => ({
+      ...label,
+      index,
+      x: clamp(label.x, 66 + bubbleLabelWidth(label.source) / 2, 318 - bubbleLabelWidth(label.source) / 2),
+      y: clamp(label.y, minY, maxY),
+    }))
     .sort((left, right) => left.y - right.y);
 
   for (let index = 1; index < sorted.length; index += 1) {
@@ -198,6 +214,10 @@ function spreadBubbleLabels(
   return sorted
     .sort((left, right) => left.index - right.index)
     .map(({ source, x, y }) => ({ source, x, y }));
+}
+
+function bubbleLabelWidth(label: string): number {
+  return Math.max(42, label.length * 5.8 + 12);
 }
 
 function clamp(value: number, min: number, max: number): number {
