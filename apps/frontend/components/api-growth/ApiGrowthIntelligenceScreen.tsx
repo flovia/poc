@@ -427,10 +427,9 @@ function InboundApiCohort({ cohorts }: { cohorts: ApiGrowthInboundApiCohort[] })
   if (cohorts.length === 0) return null;
 
   const columns: Array<{ key: keyof ApiGrowthInboundApiCohort; label: string }> = [
-    { key: "week0", label: "W0" },
-    { key: "week1", label: "W1" },
-    { key: "week2", label: "W2" },
-    { key: "week3", label: "W3" },
+    { key: "week1", label: "D1(W1)" },
+    { key: "week2", label: "D7(W2)" },
+    { key: "week3", label: "D14(W3)" },
   ];
 
   return (
@@ -443,7 +442,7 @@ function InboundApiCohort({ cohorts }: { cohorts: ApiGrowthInboundApiCohort[] })
         whether they returned after trying this API.
       </p>
       <div style={{ display: "grid", gap: 6 }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1.15fr 0.5fr repeat(4, 0.48fr)", gap: 6, color: "var(--text-mute)", fontSize: 12, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1.15fr 0.5fr repeat(3, 0.48fr)", gap: 6, color: "var(--text-mute)", fontSize: 12, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" }}>
           <span>Origin API</span>
           <span style={{ textAlign: "right" }}>Tried</span>
           {columns.map((column) => (
@@ -451,7 +450,7 @@ function InboundApiCohort({ cohorts }: { cohorts: ApiGrowthInboundApiCohort[] })
           ))}
         </div>
         {cohorts.map((cohort) => (
-          <div key={cohort.originApi} style={{ display: "grid", gridTemplateColumns: "1.15fr 0.5fr repeat(4, 0.48fr)", gap: 6, alignItems: "center" }}>
+          <div key={cohort.originApi} style={{ display: "grid", gridTemplateColumns: "1.15fr 0.5fr repeat(3, 0.48fr)", gap: 6, alignItems: "center" }}>
             <strong style={{ display: "block", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 14 }}>{cohort.originApi}</strong>
             <span className="mono" style={{ color: "var(--text-2)", fontSize: 12, fontWeight: 750, textAlign: "right" }}>{cohort.triedWallets}</span>
             {columns.map((column) => {
