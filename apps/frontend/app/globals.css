@@ -292,7 +292,6 @@ a { color: inherit; text-decoration: none; }
 .nav-sub {
   margin: 2px 0 4px 22px;
   padding-left: 8px;
-  border-left: 1px solid var(--line);
   display: flex;
   flex-direction: column;
   gap: 2px;

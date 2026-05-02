@@ -317,12 +317,12 @@ function EndpointFlow({ flows }: { flows: ApiGrowthEndpointFlow[] }) {
           </span>
         )}
       </div>
-      <div style={{ overflow: "hidden", display: "flex", justifyContent: "center", minWidth: 0 }}>
+      <div style={{ overflow: "visible", display: "flex", justifyContent: "center", minWidth: 0 }}>
         <EndpointSankey
           flows={sankeyFlows}
           compact
           minWidth={0}
-          margin={{ top: 12, right: 72, bottom: 12, left: 72 }}
+          margin={{ top: 12, right: 116, bottom: 12, left: 116 }}
           labelFontSize={12}
         />
       </div>
