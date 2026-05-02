@@ -1,4 +1,3 @@
-# Use a public DNS name here on Lightsail to get ACME certificates automatically.
 api.flovia402.com {
 	handle / {
 		header Content-Type application/json

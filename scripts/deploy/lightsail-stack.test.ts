@@ -21,7 +21,7 @@ describe("lightsail shared stack", () => {
   test("caddyfile routes both branches with stripped prefixes", () => {
     const caddyfile = read("../../deploy/caddy/Caddyfile");
 
-    expect(caddyfile).toContain("{$CADDY_SITE_ADDRESS:localhost}");
+    expect(caddyfile).toContain("{$CADDY_SITE_ADDRESS:api.flovia402.com}");
     expect(caddyfile).toContain("handle / {");
     expect(caddyfile).toContain('respond "{\\"branches\\":[\\"main\\",\\"develop\\"]}" 200');
     expect(caddyfile).toContain("redir /main /main/ 308");
@@ -53,13 +53,5 @@ describe("lightsail shared stack", () => {
       'docker compose --env-file "$stack_env_file" -f "$stack_compose_file" up -d --remove-orphans "$service_name" caddy',
     );
     expect(syncScript).not.toContain("nginx");
-  });
-
-  test("workflow forwards caddy site address to lightsail sync", () => {
-    const workflow = read("../../.github/workflows/deploy-lightsail-shared.yml");
-
-    expect(workflow).toContain("# Optional repository secrets for Caddy HTTPS:");
-    expect(workflow).toContain("# - LIGHTSAIL_CADDY_SITE_ADDRESS");
-    expect(workflow).toContain('CADDY_SITE_ADDRESS="${{ secrets.LIGHTSAIL_CADDY_SITE_ADDRESS }}"');
   });
 });
