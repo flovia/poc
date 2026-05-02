@@ -530,7 +530,6 @@ a { color: inherit; text-decoration: none; }
     120px              /* Observations */
     100px              /* Providers */
     140px              /* Last seen */
-    180px              /* Upsell */
     28px;              /* Arrow */
   align-items: center;
   gap: 14px;
@@ -553,7 +552,6 @@ a { color: inherit; text-decoration: none; }
     minmax(160px, 1fr)  /* Used endpoint (sdk) */
     100px               /* Sparkline (sdk) */
     140px               /* Last seen */
-    180px               /* Upsell */
     28px;               /* Arrow */
 }
 .cust-row:last-child { border-bottom: none; }

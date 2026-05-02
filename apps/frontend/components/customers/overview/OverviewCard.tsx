@@ -18,6 +18,8 @@ export function OverviewCard({ eyebrow, title, hint, children }: OverviewCardPro
         background: "var(--surface-card)",
         display: "flex",
         flexDirection: "column",
+        flex: 1,
+        minWidth: 0,
       }}
     >
       <div

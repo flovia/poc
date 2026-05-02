@@ -4,7 +4,6 @@ import Link from "next/link";
 import { Icon } from "@/components/ui/Icon";
 import { ChainBadge } from "./ChainBadge";
 import { HeaderTooltip } from "./HeaderTooltip";
-import { UpsellPill } from "./UpsellPill";
 import { Sparkline7d } from "@/components/wallet/Sparkline7d";
 import { classNames, formatAtomic, formatTimestamp } from "@/lib/format";
 import type { CustomerListItemDto } from "@/lib/api/types";
@@ -118,13 +117,6 @@ export function CustomersTable({
             align="right"
           />
         </div>
-        <div>
-          <HeaderTooltip
-            label="Upsell"
-            description="Suggested upsell opportunity inferred from this wallet's behavior, with provenance and reasons."
-            align="right"
-          />
-        </div>
         <div aria-hidden />
       </div>
       {customers.length === 0 && (
@@ -158,6 +150,11 @@ export function CustomersTable({
                   whiteSpace: "nowrap",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
+                  color: "var(--mesh-blue)",
+                  textDecoration: "underline",
+                  textDecorationStyle: "dotted",
+                  textDecorationColor: "var(--text-mute)",
+                  textUnderlineOffset: 2,
                 }}
                 title={c.address}
               >
@@ -219,9 +216,6 @@ export function CustomersTable({
 
             <div className="mono" style={{ fontSize: 12, color: "var(--text-3)" }}>
               {formatTimestamp(c.lastSeenAt)}
-            </div>
-            <div>
-              <UpsellPill opportunity={c.upsellOpportunity} />
             </div>
             <div className="row-arrow" style={{ display: "flex", justifyContent: "flex-end" }}>
               <Icon.arrow width="14" height="14" />
