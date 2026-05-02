@@ -62,12 +62,12 @@ export function ApiGrowthIntelligenceScreen({ intelligence }: Props) {
           <div className="eyebrow" style={{ marginBottom: 8 }}>
             Growth Action Bridge
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "minmax(340px, 1fr)", gap: 14, alignItems: "start" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "minmax(280px, 0.9fr) minmax(360px, 1.1fr)", gap: 14, alignItems: "start" }}>
             <SectionCard eyebrow="Other Service Candidates" title="Adjacent API opportunities">
-              <OtherServiceCandidates
-                candidates={intelligence.otherServiceCandidates}
-                inboundCohorts={intelligence.inboundApiCohorts}
-              />
+              <OtherServiceCandidates candidates={intelligence.otherServiceCandidates} />
+            </SectionCard>
+            <SectionCard eyebrow="Inbound API cohorts">
+              <InboundApiCohort cohorts={intelligence.inboundApiCohorts} />
             </SectionCard>
           </div>
           <p style={{ color: "var(--text-mute)", fontSize: 12, margin: "12px 0 0" }}>{intelligence.proxyNote}</p>
@@ -266,8 +266,13 @@ function EndpointFlow({ flows }: { flows: ApiGrowthEndpointFlow[] }) {
           </span>
         )}
       </div>
-      <div style={{ overflowX: "auto" }}>
-        <EndpointSankey flows={sankeyFlows} compact />
+      <div style={{ overflowX: "auto", display: "flex", justifyContent: "center" }}>
+        <EndpointSankey
+          flows={sankeyFlows}
+          compact
+          minWidth={480}
+          margin={{ top: 12, right: 96, bottom: 12, left: 96 }}
+        />
       </div>
       <div style={{ color: "var(--text-mute)", fontSize: 11, marginTop: 8 }}>
         Wider links indicate more observed paid transitions across repeated API sessions.
@@ -343,38 +348,33 @@ function repeatCohortCellColor(value: number): string {
 
 function OtherServiceCandidates({
   candidates,
-  inboundCohorts,
 }: {
   candidates: ApiGrowthServiceCandidate[];
-  inboundCohorts: ApiGrowthInboundApiCohort[];
 }) {
   if (candidates.length === 0) {
     return <p style={{ ...bodyText, margin: 0 }}>No cross-service candidates in this offline snapshot.</p>;
   }
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "minmax(280px, 0.9fr) minmax(360px, 1.1fr)", gap: 14, alignItems: "start" }}>
-      <div style={{ display: "grid", gap: 10 }}>
-        <p style={{ ...bodyText, margin: "0 0 2px" }}>
-          APIs with high overlap among repeat wallets using this provider. Ranked by shared wallet
-          count, spend, and workflow fit.
-        </p>
-        {candidates.slice(0, 4).map((candidate) => (
-          <div key={candidate.serviceId} style={{ padding: 12, border: "1px solid var(--line)", borderRadius: 8, background: "var(--surface-card)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "start", marginBottom: 8 }}>
-              <div>
-                <strong style={{ fontSize: 14 }}>{candidate.serviceName}</strong>
-              </div>
-              <span className="mono" style={{ color: "var(--mesh-blue)", fontSize: 12, fontWeight: 800 }}>{formatRatioPct(candidate.confidence)} fit</span>
+    <div style={{ display: "grid", gap: 10 }}>
+      <p style={{ ...bodyText, margin: "0 0 2px" }}>
+        APIs with high overlap among repeat wallets using this provider. Ranked by shared wallet
+        count, spend, and workflow fit.
+      </p>
+      {candidates.slice(0, 4).map((candidate) => (
+        <div key={candidate.serviceId} style={{ padding: 12, border: "1px solid var(--line)", borderRadius: 8, background: "var(--surface-card)" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "start", marginBottom: 8 }}>
+            <div>
+              <strong style={{ fontSize: 14 }}>{candidate.serviceName}</strong>
             </div>
-            <div style={{ display: "flex", justifyContent: "space-between", gap: 10, color: "var(--text-3)", fontSize: 12 }}>
-              <span>{candidate.sharedWallets} shared wallets</span>
-              <span className="mono">${formatAtomic(candidate.sharedSpendAtomic, 6, 0)} paid spend</span>
-            </div>
+            <span className="mono" style={{ color: "var(--mesh-blue)", fontSize: 12, fontWeight: 800 }}>{formatRatioPct(candidate.confidence)} fit</span>
           </div>
-        ))}
-      </div>
-      <InboundApiCohort cohorts={inboundCohorts} />
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 10, color: "var(--text-3)", fontSize: 12 }}>
+            <span>{candidate.sharedWallets} shared wallets</span>
+            <span className="mono">${formatAtomic(candidate.sharedSpendAtomic, 6, 0)} paid spend</span>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
@@ -390,9 +390,8 @@ function InboundApiCohort({ cohorts }: { cohorts: ApiGrowthInboundApiCohort[] })
   ];
 
   return (
-    <div style={{ borderLeft: "1px solid var(--line)", paddingLeft: 14 }}>
+    <div>
       <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "baseline", marginBottom: 8 }}>
-        <div style={eyebrowStyle}>Inbound API cohorts</div>
         <span style={{ color: "var(--text-mute)", fontSize: 11 }}>return after trying this API</span>
       </div>
       <p style={{ ...bodyText, margin: "0 0 8px", fontSize: 12 }}>
