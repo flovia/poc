@@ -175,7 +175,7 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
           priority
         />
         <div className="brand-name">
-          Flovia<em>x402 co-usage</em>
+          Flovia<em>x402 analytics</em>
         </div>
       </div>
 
@@ -283,11 +283,6 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
             Macro Metrics
           </Link>
         )}
-
-        <Link href="/setup" className="nav-item" aria-current={activeRoute === "setup"}>
-          <Icon.setup />
-          Setup
-        </Link>
 
         <div className="provider-block" ref={providerBlockRef}>
           <div className="label">Currently viewing</div>
