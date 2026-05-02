@@ -85,7 +85,7 @@ export function PageOnboarding({ content }: PageOnboardingProps) {
               <Icon.x />
             </button>
             <div className="onboarding-modal-icon">
-              <Icon.spark />
+              <Icon.bulb />
             </div>
             <h2 id={titleId} className="onboarding-modal-title">
               {content.title}
