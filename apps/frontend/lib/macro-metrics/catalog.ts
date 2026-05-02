@@ -88,7 +88,7 @@ const topWalletRows = macro.spendConcentration.rankedWallets.slice(0, 4).map((wa
   share: wallet.share,
 }));
 
-const serviceRows = macro.otherServiceCandidates.slice(0, 4).map((candidate) => ({
+const serviceRows = macro.coUsageProviders.slice(0, 4).map((candidate) => ({
   label: candidate.serviceName,
   value: formatAtomic(candidate.sharedSpendAtomic, 6, 1),
   share: candidate.confidence,
@@ -129,7 +129,7 @@ export const EXPECTED_CATALOG_METRIC_IDS = [
   "wallet-provider-co-usage",
   "shared-transaction-count",
   "shared-spend",
-  "other-service-candidates",
+  "co-usage-providers",
   "source-intermediary-ranking",
   "source-repeat-rate",
   "endpoint-category-usage",
@@ -390,8 +390,8 @@ export const METRICS_CATALOG: CatalogMetric[] = [
     { kind: "table", headline: "Shared spend ranking", rows: serviceRows },
   ),
   metric(
-    "other-service-candidates",
-    "Other Service Candidates",
+    "co-usage-providers",
+    "Co-Usage Providers",
     "P0",
     "Co-usage / Ecosystem",
     "supported",

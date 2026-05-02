@@ -12,12 +12,7 @@ import type {
   ReportSummaryDto,
   WalletUsageGraphDto,
 } from "./api/types";
-import type {
-  SdkExtras,
-  SdkForceNetwork,
-  SdkRetentionByAgentRow,
-  SdkWorkflowCluster,
-} from "./sdk-fixtures/types";
+import type { SdkExtras, SdkForceNetwork } from "./sdk-fixtures/types";
 
 // 主役 wallet の正規アドレス. wallet/[address]/page.tsx の redirect で使う.
 export const SDK_PROTAGONIST_ADDRESS = "0x7A91...C4E8";
@@ -44,13 +39,6 @@ export async function getCustomerProfile(address: string): Promise<CustomerProfi
   if (mode === "onChainOnly") return live.getCustomerProfile(address);
   const v = await sdkModule();
   return v.getCustomerProfile(address);
-}
-
-export async function getWalletUsageGraph(): Promise<WalletUsageGraphDto> {
-  const mode = await getServerDashboardMode();
-  if (mode === "onChainOnly") return live.getWalletUsageGraph();
-  const v = await sdkModule();
-  return v.getWalletUsageGraph();
 }
 
 export async function getObservations(): Promise<PaymentObservationDto[]> {
@@ -81,25 +69,18 @@ export async function getSdkExtrasMap(): Promise<Map<string, SdkExtras>> {
   return v.getExtrasMap();
 }
 
-export async function getSdkWorkflowClusters(): Promise<SdkWorkflowCluster[]> {
-  const mode = await getServerDashboardMode();
-  if (mode === "onChainOnly") return [];
-  const v = await sdkModule();
-  return v.getWorkflowClusters();
-}
-
-export async function getSdkRetentionByAgent(): Promise<SdkRetentionByAgentRow[]> {
-  const mode = await getServerDashboardMode();
-  if (mode === "onChainOnly") return [];
-  const v = await sdkModule();
-  return v.getRetentionByAgent();
-}
-
 export async function getSdkForceNetwork(address: string): Promise<SdkForceNetwork | null> {
   const mode = await getServerDashboardMode();
   if (mode === "onChainOnly") return null;
   const v = await sdkModule();
   return v.getForceNetwork(address);
+}
+
+export async function getWalletUsageGraph(): Promise<WalletUsageGraphDto | null> {
+  const mode = await getServerDashboardMode();
+  if (mode === "onChainOnly") return live.getWalletUsageGraph();
+  const v = await sdkModule();
+  return v.getWalletUsageGraph();
 }
 
 // freshness indicator (撤去済) を再導入する際のヘルパー。

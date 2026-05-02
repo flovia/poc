@@ -1,6 +1,7 @@
 import type { CSSProperties, ReactNode } from "react";
 import Link from "next/link";
 import { EndpointSankey } from "./EndpointSankey";
+import { MacroRouteSankeySection } from "./MacroRouteSankeySection";
 import { formatAtomic, formatRatioPct, shortAddr } from "@/lib/format";
 import type { MacroMetricsViewModel, TrendPoint } from "@/lib/macro-metrics/metrics";
 
@@ -90,10 +91,10 @@ export function MacroMetricsScreen({ metrics, providerId }: Props) {
 
         <Section title="Co-usage / Ecosystem" eyebrow="Other services and shared value">
           <TwoColumn>
-            <Card title="Other service candidates" eyebrow="P0 · owner-ready">
+            <Card title="Co-Usage Providers" eyebrow="P0 · owner-ready">
               <DataTable
                 columns={["Service", "Wallets", "Spend", "Confidence", "Owner"]}
-                rows={metrics.otherServiceCandidates.slice(0, 5).map((candidate) => [
+                rows={metrics.coUsageProviders.slice(0, 5).map((candidate) => [
                   candidate.serviceName,
                   candidate.sharedWallets,
                   formatAtomic(candidate.sharedSpendAtomic, 6, 1),
@@ -105,7 +106,7 @@ export function MacroMetricsScreen({ metrics, providerId }: Props) {
             <Card title="Shared spend / shared tx ranked table" eyebrow="P0">
               <DataTable
                 columns={["Service", "Shared spend", "Shared tx", "Reason"]}
-                rows={metrics.otherServiceCandidates.slice(0, 5).map((candidate) => [
+                rows={metrics.coUsageProviders.slice(0, 5).map((candidate) => [
                   candidate.serviceName,
                   formatAtomic(candidate.sharedSpendAtomic, 6, 1),
                   candidate.sharedTxCount,
@@ -164,6 +165,13 @@ export function MacroMetricsScreen({ metrics, providerId }: Props) {
             </Card>
           </TwoColumn>
         </Section>
+
+        <div style={{ marginTop: 28 }}>
+          <MacroRouteSankeySection
+            chart={metrics.routeSankey}
+            periodLabel="Last 30 days demo"
+          />
+        </div>
       </div>
     </div>
   );

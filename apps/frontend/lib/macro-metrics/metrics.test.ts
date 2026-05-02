@@ -15,9 +15,12 @@ describe("buildMacroMetrics", () => {
     expect(metrics.overview.trend7d).toHaveLength(7);
     expect(metrics.overview.trend30d).toHaveLength(30);
     expect(metrics.repeatSummary.repeatWalletRate).toBeGreaterThan(0.7);
-    expect(metrics.otherServiceCandidates[0].sharedSpendAtomic).not.toBe("0");
+    expect(metrics.coUsageProviders[0].sharedSpendAtomic).not.toBe("0");
     expect(metrics.endpointUsage[0].txCount).toBeGreaterThan(0);
     expect(metrics.endpointFlows[0].occurrences).toBeGreaterThan(0);
+    expect(metrics.routeSankey.flows[0]?.flow_count).toBeGreaterThan(0);
+    expect(metrics.routeSankey.flows[0]?.paid_count).toBeGreaterThan(0);
+    expect(metrics.routeSankey.flows[0]?.settled_usdc).toBeGreaterThan(0);
     expect(metrics.sourceRankings[0].spendAtomic).not.toBe("0");
     expect(metrics.recommendations.some((recommendation) => recommendation.proxy)).toBe(true);
   });
@@ -39,6 +42,7 @@ describe("buildMacroMetrics", () => {
     expect(metrics.repeatSummary.repeatWalletRate).toBe(0);
     expect(metrics.spendConcentration.rankedWallets).toEqual([]);
     expect(metrics.endpointFlows).toEqual([]);
+    expect(metrics.routeSankey.flows).toEqual([]);
   });
 
   test("keeps CoinGecko endpoints visible across all workflow steps", () => {
@@ -61,6 +65,28 @@ describe("buildMacroMetrics", () => {
 
       expect(endpointsAtStep).toEqual(expectedEndpoints);
     }
+  });
+
+  test("builds a start to intermediary to next-category sankey with route quality metrics", () => {
+    const metrics = buildMacroMetrics(MACRO_METRICS_DEMO_DATA);
+
+    expect(metrics.routeSankey.layer_labels).toEqual({
+      left: "Start",
+      mid: "Intermediary",
+      right: "Next category",
+    });
+    expect(new Set(metrics.routeSankey.flows.map((flow) => flow.middle_label)).size).toBeGreaterThan(
+      1,
+    );
+    expect(
+      metrics.routeSankey.flows.some(
+        (flow) =>
+          flow.success_rate > 0.9 &&
+          flow.error_rate > 0 &&
+          flow.p95_latency_ms > 100 &&
+          flow.right_detail,
+      ),
+    ).toBe(true);
   });
 });
 

@@ -7,7 +7,6 @@ import { IdentityBar } from "./IdentityBar";
 import {
   EntryPointInsight,
   InsightsList,
-  ProviderUsageList,
   RecentActivityInsight,
   UpsellCard,
 } from "./Insights";
@@ -78,7 +77,6 @@ export function WalletScreen({
             />
             <EntryPointInsight metrics={profile.metrics} dataMode={dataMode} sdkExtras={sdkExtras} />
             <RecentActivityInsight metrics={profile.metrics} providers={profile.providers} />
-            <ProviderUsageList providers={profile.providers} />
             <InsightsList insights={profile.insights} />
           </div>
         </div>

@@ -1,7 +1,6 @@
-// Phase 7 C4a + C4b: Patterns 画面用 fixture (live 互換 DTO + SDK 専用 extras).
+// SDK preview 用 observations / summary fixture.
 
-import type { PaymentObservationDto, ReportSummaryDto, WalletUsageGraphDto } from "@/lib/api/types";
-import type { SdkRetentionByAgentRow, SdkWorkflowCluster } from "./types";
+import type { PaymentObservationDto, ReportSummaryDto } from "@/lib/api/types";
 import { PROTAGONIST_ADDRESS, PROVIDER_PAY_TO, T0 } from "./shared";
 import { SECONDARIES } from "./secondaries";
 
@@ -100,44 +99,6 @@ export function buildSdkObservations(): PaymentObservationDto[] {
   return [...protagonistObservations(), ...secondaryObservations()];
 }
 
-export function buildSdkWalletUsageGraph(): WalletUsageGraphDto {
-  const observations = buildSdkObservations();
-  // recipient ごとに payer の集合を作って providerWallets を組み立てる.
-  const byRecipient = new Map<string, Map<string, PaymentObservationDto[]>>();
-  for (const obs of observations) {
-    const rec = obs.recipientWallet;
-    const payer = obs.payerWallet;
-    if (!byRecipient.has(rec)) byRecipient.set(rec, new Map());
-    const inner = byRecipient.get(rec)!;
-    if (!inner.has(payer)) inner.set(payer, []);
-    inner.get(payer)!.push(obs);
-  }
-
-  return {
-    generatedFrom: "payment_observations+provider_endpoint_claims+attribution_candidates",
-    payerWalletLanguage: true,
-    identityFieldsExcluded: ["payer_wallet.user_id", "payer_wallet.email"],
-    providerWallets: [...byRecipient.entries()].map(([recipient, payerMap]) => {
-      const providerId = Object.entries(PROVIDER_PAY_TO).find(
-        ([, payTo]) => payTo === recipient,
-      )?.[0];
-      return {
-        payTo: recipient,
-        claimIds: providerId ? [providerId] : [],
-        payerWallets: [...payerMap.entries()].map(([wallet, obsList]) => ({
-          wallet,
-          observations: obsList.map((o) => ({
-            caseId: o.caseId,
-            txHash: o.txHash,
-            evidenceRefs: [],
-          })),
-          otherServiceCandidates: [],
-        })),
-      };
-    }),
-  };
-}
-
 export function buildSdkSummary(): ReportSummaryDto {
   const observations = buildSdkObservations();
   return {
@@ -156,33 +117,3 @@ export function buildSdkSummary(): ReportSummaryDto {
     dailyMetrics: [],
   };
 }
-
-// C4b: Workflow Clusters / Retention by Agent (SDK preview 専用追加 UI 用).
-export const SDK_WORKFLOW_CLUSTERS: SdkWorkflowCluster[] = [
-  {
-    clusterId: 1,
-    label: "Hourly trading loop",
-    sequence: ["Northwind Price", "VectorMind AI", "RouteZero DEX", "SignalPort"],
-    walletPercentage: 52,
-  },
-  {
-    clusterId: 2,
-    label: "Image gen → Storage → Notify",
-    sequence: ["VectorMind AI", "Northwind Price", "SignalPort"],
-    walletPercentage: 28,
-  },
-  {
-    clusterId: 3,
-    label: "Single-call price lookup",
-    sequence: ["Northwind Price"],
-    walletPercentage: 15,
-  },
-];
-
-export const SDK_RETENTION_BY_AGENT: SdkRetentionByAgentRow[] = [
-  { agentType: "Self-hosted DeFi Trading Bot", retainedPercentage: 92, walletCount: 1 },
-  { agentType: "Claude Code", retainedPercentage: 86, walletCount: 24 },
-  { agentType: "Cursor", retainedPercentage: 59, walletCount: 18 },
-  { agentType: "n8n / workflow", retainedPercentage: 41, walletCount: 9 },
-  { agentType: "curl / unknown", retainedPercentage: 14, walletCount: 4 },
-];

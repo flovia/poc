@@ -309,6 +309,34 @@ describe("BFF routes", () => {
     ).toBeGreaterThan(0);
   });
 
+  test("phase-b projection assigns external x402 provider candidates per payer", () => {
+    const fixture = validateRealTransactionFixture(transactionFixture);
+    const attribution = validateMockEndpointAttributionFixture(attributionFixture);
+    const projections = buildPhaseBProjections(fixture, attribution);
+    const graph = validatePhaseBWalletUsageGraphResponse(projections.walletUsageGraph).graph;
+
+    const ownPayTo = graph.providerWallets[0]?.payToWallet;
+    expect(ownPayTo).toBeTruthy();
+
+    const allCandidates = graph.providerWallets.flatMap((provider) =>
+      provider.payerWallets.flatMap((payer) => payer.otherServiceCandidates),
+    );
+    const externalCandidates = allCandidates.filter(
+      (candidate) => candidate.payToWallet !== ownPayTo,
+    );
+    const externalProviderIds = new Set(externalCandidates.map((c) => c.providerId));
+    const externalProviderNames = new Set(externalCandidates.map((c) => c.providerName));
+
+    expect(externalCandidates.length).toBeGreaterThan(0);
+    expect(externalProviderIds.size).toBeGreaterThanOrEqual(3);
+    expect(externalProviderNames.has("CoinGecko x402")).toBe(false);
+    for (const candidate of externalCandidates) {
+      expect(candidate.coUsageCount).toBeGreaterThan(0);
+      expect(candidate.confidence).toBeGreaterThan(0);
+      expect(candidate.payToWallet).toMatch(/^0x[a-f0-9]{40}$/);
+    }
+  });
+
   test("serves coingecko service summary analytics", async () => {
     const handler = createBffHandler();
 

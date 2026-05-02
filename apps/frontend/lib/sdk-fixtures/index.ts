@@ -9,12 +9,7 @@ import type {
   ReportSummaryDto,
   WalletUsageGraphDto,
 } from "@/lib/api/types";
-import type {
-  SdkExtras,
-  SdkForceNetwork,
-  SdkRetentionByAgentRow,
-  SdkWorkflowCluster,
-} from "./types";
+import type { SdkExtras, SdkForceNetwork } from "./types";
 import {
   PROTAGONIST_EXTRAS,
   PROTAGONIST_LIST_ITEM,
@@ -27,13 +22,8 @@ import {
   getSecondaryExtras,
   getSecondaryProfile,
 } from "./secondaries";
-import {
-  SDK_RETENTION_BY_AGENT,
-  SDK_WORKFLOW_CLUSTERS,
-  buildSdkObservations,
-  buildSdkSummary,
-  buildSdkWalletUsageGraph,
-} from "./patterns";
+import { buildSdkObservations, buildSdkSummary } from "./patterns";
+import { buildSdkWalletUsageGraph } from "./graph";
 import { PROTAGONIST_ADDRESS } from "./shared";
 
 export async function getCustomers(): Promise<CustomerListItemDto[]> {
@@ -45,16 +35,16 @@ export async function getCustomerProfile(address: string): Promise<CustomerProfi
   return getSecondaryProfile(address);
 }
 
-export async function getWalletUsageGraph(): Promise<WalletUsageGraphDto> {
-  return buildSdkWalletUsageGraph();
-}
-
 export async function getObservations(): Promise<PaymentObservationDto[]> {
   return buildSdkObservations();
 }
 
 export async function getSummary(): Promise<ReportSummaryDto> {
   return buildSdkSummary();
+}
+
+export async function getWalletUsageGraph(): Promise<WalletUsageGraphDto> {
+  return buildSdkWalletUsageGraph();
 }
 
 export async function getExtras(address: string): Promise<SdkExtras | null> {
@@ -70,14 +60,6 @@ export async function getExtrasMap(): Promise<Map<string, SdkExtras>> {
     if (ex) map.set(s.address, ex);
   }
   return map;
-}
-
-export async function getWorkflowClusters(): Promise<SdkWorkflowCluster[]> {
-  return SDK_WORKFLOW_CLUSTERS;
-}
-
-export async function getRetentionByAgent(): Promise<SdkRetentionByAgentRow[]> {
-  return SDK_RETENTION_BY_AGENT;
 }
 
 export async function getForceNetwork(address: string): Promise<SdkForceNetwork | null> {

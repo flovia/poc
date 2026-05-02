@@ -9,6 +9,8 @@ import type {
 import type { DashboardMode } from "@/lib/data-mode";
 import type { SdkExtras, SdkTimelineExtra } from "@/lib/sdk-fixtures/types";
 import { resolveApiPaths } from "@/lib/api-path";
+import { extractHost } from "@/lib/customers/co-usage";
+import { resolveProviderLabel } from "@/lib/customers/provider-label";
 import { formatAtomic, formatTimestamp, shortAddr } from "@/lib/format";
 import type { StoredProvider } from "@/lib/types";
 
@@ -47,6 +49,16 @@ export function ActivityTimeline({
     [providers],
   );
 
+  // timeline.providerId が実際は payToWallet アドレス (relatedProviderId) で
+  // 来るケース向けに、payToWallet → host 名への逆引き Map も用意する.
+  const hostByPayToWallet = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const p of providers) {
+      m.set(p.payToWallet.toLowerCase(), extractHost(p.name));
+    }
+    return m;
+  }, [providers]);
+
   const sdkExtrasByTxHash = useMemo(() => {
     if (dataMode !== "sdkConnected" || !sdkExtras) return null;
     const m = new Map<string, SdkTimelineExtra>();
@@ -74,8 +86,7 @@ export function ActivityTimeline({
           Activity timeline
         </div>
         <div className="display" style={{ fontSize: 20, fontWeight: 600, letterSpacing: "-0.01em" }}>
-          {timeline.length} event{timeline.length === 1 ? "" : "s"}{" "}
-          {showGrouping ? "from SDK telemetry preview" : "from BFF projection"}
+          {timeline.length} event{timeline.length === 1 ? "" : "s"}
         </div>
       </div>
 
@@ -87,8 +98,13 @@ export function ActivityTimeline({
         )}
         {timeline.map((event, i) => {
           const badge = TYPE_BADGE[event.type];
-          const providerName = event.providerId ? nameByProviderId.get(event.providerId) : undefined;
-          const payTo = event.providerId ? payToByProviderId.get(event.providerId) : undefined;
+          const rawId = event.providerId;
+          const providerLabel = resolveProviderLabel(
+            rawId,
+            nameByProviderId,
+            hostByPayToWallet,
+          );
+          const payTo = rawId ? payToByProviderId.get(rawId) : undefined;
           const sdkExtra = event.txHash
             ? sdkExtrasByTxHash?.get(event.txHash)
             : undefined;
@@ -194,8 +210,8 @@ export function ActivityTimeline({
                       flexWrap: "wrap",
                     }}
                   >
-                    {event.providerId && (
-                      <span>provider: {providerName ?? event.providerId}</span>
+                    {event.providerId && providerLabel && (
+                      <span>provider: {providerLabel}</span>
                     )}
                     {event.txHash && <span>tx: {shortAddr(event.txHash)}</span>}
                   </div>

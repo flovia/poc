@@ -39,19 +39,6 @@ export type SdkExtras = {
   usedEndpointsTopK: string[];
 };
 
-export type SdkWorkflowCluster = {
-  clusterId: number;
-  label: string;
-  sequence: string[];
-  walletPercentage: number;
-};
-
-export type SdkRetentionByAgentRow = {
-  agentType: string;
-  retainedPercentage: number;
-  walletCount: number;
-};
-
 // Force-directed network のノード位置は静的 (design.md §H1).
 export type SdkForceNetworkNode = {
   id: string;

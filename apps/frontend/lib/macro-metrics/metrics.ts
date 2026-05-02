@@ -5,6 +5,8 @@ import type {
   MacroServiceId,
   MacroWorkflowEvent,
 } from "./demo";
+import { buildMacroRouteSankeyChart } from "./route-sankey";
+import type { X402SankeyChartModel } from "@/lib/x402-analysis/transform";
 
 export type MacroOverview = {
   paidActiveWallets: number;
@@ -48,7 +50,7 @@ export type RepeatSummary = {
   }>;
 };
 
-export type OtherServiceCandidate = {
+export type CoUsageProvider = {
   serviceId: MacroServiceId;
   serviceName: string;
   sharedWallets: number;
@@ -89,9 +91,10 @@ export type MacroMetricsViewModel = {
   overview: MacroOverview;
   spendConcentration: SpendConcentration;
   repeatSummary: RepeatSummary;
-  otherServiceCandidates: OtherServiceCandidate[];
+  coUsageProviders: CoUsageProvider[];
   endpointUsage: EndpointUsage[];
   endpointFlows: EndpointFlow[];
+  routeSankey: X402SankeyChartModel;
   sourceRankings: SourceRanking[];
   recommendations: MacroRecommendation[];
   executiveTakeaways: string[];
@@ -222,7 +225,7 @@ export function buildMacroMetrics(data: MacroMetricsDemoData): MacroMetricsViewM
   );
   const candidates = data.services
     .filter((service) => service.id !== data.primaryProviderId)
-    .map((service): OtherServiceCandidate => {
+    .map((service): CoUsageProvider => {
       const sharedEvents = data.events.filter(
         (event) => event.serviceId === service.id && primaryWallets.has(event.walletAddress),
       );
@@ -256,6 +259,7 @@ export function buildMacroMetrics(data: MacroMetricsDemoData): MacroMetricsViewM
 
   const endpointUsage = buildEndpointUsage(data);
   const endpointFlows = buildEndpointFlows(data);
+  const routeSankey = buildMacroRouteSankeyChart(data);
   const sourceRankings = buildSourceRankings(data, repeatedWalletSet);
   const repeatedWallets = repeatedWalletSet.size;
   const averageSessionsPerRepeatedWallet =
@@ -290,9 +294,10 @@ export function buildMacroMetrics(data: MacroMetricsDemoData): MacroMetricsViewM
       averageSessionsPerRepeatedWallet,
       bySegment,
     },
-    otherServiceCandidates: candidates,
+    coUsageProviders: candidates,
     endpointUsage,
     endpointFlows,
+    routeSankey,
     sourceRankings,
     recommendations: data.recommendations,
     executiveTakeaways: buildExecutiveTakeaways(
@@ -408,7 +413,7 @@ function buildSourceRankings(
 
 function buildExecutiveTakeaways(
   data: MacroMetricsDemoData,
-  candidates: OtherServiceCandidate[],
+  candidates: CoUsageProvider[],
   repeatedWallets: number,
   totalWallets: number,
 ): string[] {
