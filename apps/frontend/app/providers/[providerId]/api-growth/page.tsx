@@ -30,7 +30,7 @@ export default async function ApiGrowthPage({
             { label: "Repeat usage", description: "Why wallets return after the first interaction.", icon: "repeat" },
             { label: "Growth opportunities", description: "Where to improve activation, packaging, or positioning.", icon: "growth" },
           ],
-          note: "API Growth is designed to come alive with the Flovia SDK. Until your SDK data is connected, we’ll show an illustrative demo.",
+          note: 'The "API Growth" menu is designed to come alive by connecting your internal data with the Flovia SDK. Until your data is connected, we are showing tentative demo data for reference.',
         }}
       />
       <div className="scroll">
