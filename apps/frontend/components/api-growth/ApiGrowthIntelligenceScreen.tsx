@@ -396,6 +396,13 @@ function repeatCohortCellColor(value: number): string {
   return "var(--surface-muted)";
 }
 
+function inboundCohortCellColor(value: number): string {
+  if (value >= 0.85) return "var(--warn)";
+  if (value >= 0.72) return "rgba(180, 83, 9, 0.72)";
+  if (value >= 0.55) return "var(--warn-soft)";
+  return "var(--surface-muted)";
+}
+
 function OtherServiceCandidates({
   candidates,
 }: {
@@ -468,7 +475,7 @@ function InboundApiCohort({ cohorts }: { cohorts: ApiGrowthInboundApiCohort[] })
                     alignItems: "center",
                     minHeight: 26,
                     borderRadius: 6,
-                    background: repeatCohortCellColor(value),
+                    background: inboundCohortCellColor(value),
                     color: value >= 0.72 ? "#ffffff" : "var(--text-2)",
                     fontSize: 10,
                     fontWeight: 750,
