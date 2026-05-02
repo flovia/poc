@@ -25,26 +25,14 @@ function parseLegacyMode(raw: string | undefined | null): DashboardMode | null {
   return "onChainOnly";
 }
 
-// Server Component / Route Handler 専用. next/headers の cookies() を使う.
-// 優先順位: 新 cookie > 旧 cookie > default ("onChainOnly").
+// Server Component / Route Handler 専用.
+// The mode switch UI is hidden; default to the on-chain view regardless of
+// stale cookies left by older sessions.
 export async function getServerDashboardMode(): Promise<DashboardMode> {
-  const { cookies } = await import("next/headers");
-  const store = await cookies();
-  const fromNew = parseDashboardMode(store.get(DASHBOARD_MODE_COOKIE)?.value);
-  if (fromNew) return fromNew;
-  const fromLegacy = parseLegacyMode(store.get(LEGACY_COOKIE)?.value);
-  if (fromLegacy) return fromLegacy;
   return "onChainOnly";
 }
 
 export function readClientDashboardMode(): DashboardMode {
-  if (typeof document === "undefined") return "onChainOnly";
-  const newMatch = document.cookie.match(/(?:^|;\s*)flovia-dashboard-mode=([^;]+)/);
-  const fromNew = parseDashboardMode(newMatch ? decodeURIComponent(newMatch[1]) : undefined);
-  if (fromNew) return fromNew;
-  const legacyMatch = document.cookie.match(/(?:^|;\s*)flovia-demo-mode=([^;]+)/);
-  const fromLegacy = parseLegacyMode(legacyMatch ? decodeURIComponent(legacyMatch[1]) : undefined);
-  if (fromLegacy) return fromLegacy;
   return "onChainOnly";
 }
 

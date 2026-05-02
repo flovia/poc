@@ -75,7 +75,7 @@ export function CustomersTable({
         <div>
           <HeaderTooltip
             label="Chain"
-            description="Chain and asset this payer wallet mainly transacts in. Currently fixed to Base / USDC across all rows; per-wallet detection ships when the BFF emits per-wallet chain data (see future-work.md)."
+            description="Chain and asset this payer wallet mainly transacts in. Currently fixed to Base / USDC across all rows."
           />
         </div>
         <div>
@@ -123,7 +123,7 @@ export function CustomersTable({
       {customers.length === 0 && (
         <div style={{ padding: 24, color: "var(--text-3)", fontSize: 14 }}>
           {totalBeforeFilter === 0
-            ? "No payer wallets in BFF projection yet."
+            ? "No payer wallets found yet."
             : "No payer wallets match the current filters."}
         </div>
       )}

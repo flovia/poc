@@ -52,7 +52,7 @@ async function bffFetch<T>(path: string): Promise<T> {
   });
 
   if (!response.ok) {
-    throw new Error(`BFF request failed: ${response.status} ${response.statusText} (${path})`);
+    throw new Error(`Data request failed: ${response.status} ${response.statusText} (${path})`);
   }
 
   return (await response.json()) as T;
@@ -74,7 +74,7 @@ export async function getCustomerProfileRaw(
   if (response.status === 404) return null;
   if (!response.ok) {
     throw new Error(
-      `BFF request failed: ${response.status} ${response.statusText} (/customers/${address}/profile)`,
+      `Data request failed: ${response.status} ${response.statusText} (/customers/${address}/profile)`,
     );
   }
   return validatePhaseBCustomerProfileResponse(await response.json());
@@ -94,7 +94,7 @@ export async function getCustomerUpsellExplanation(
   if (response.status === 404 || response.status === 503) return null;
   if (!response.ok) {
     throw new Error(
-      `BFF request failed: ${response.status} ${response.statusText} (/customers/${address}/llm/upsell-explanation)`,
+      `Data request failed: ${response.status} ${response.statusText} (/customers/${address}/llm/upsell-explanation)`,
     );
   }
 

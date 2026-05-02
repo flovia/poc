@@ -112,7 +112,7 @@ export function buildSdkSummary(): ReportSummaryDto {
       relayerSummaries: 1,
       walletUsageGraphProviderWallets: 4,
     },
-    scopeNote: "SDK preview (mock data). Not derived from BFF.",
+    scopeNote: "SDK preview (mock data).",
     observations,
     dailyMetrics: [],
   };

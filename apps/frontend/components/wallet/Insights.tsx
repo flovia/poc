@@ -206,7 +206,7 @@ function UpsellCardLive({
       </div>
 
       <div style={{ fontSize: 12, color: "var(--text-mute)", lineHeight: 1.5 }}>
-        Heuristics are PoC-grade. The BFF README warns these are not production revenue analytics.
+        Heuristics are PoC-grade and are not production revenue analytics.
       </div>
 
       <div style={{ marginTop: 10 }}>
