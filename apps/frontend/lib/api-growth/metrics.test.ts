@@ -25,6 +25,8 @@ describe("buildApiGrowthIntelligence", () => {
     expect(
       intelligence.sourceMediumQuality.rows.find((row) => row.source === "Dexter")?.activationRate,
     ).toBeGreaterThan(0.7);
+    expect(intelligence.sourceMediumQuality.intentRouteFlows).toHaveLength(6);
+    expect(intelligence.sourceMediumQuality.intentRouteFlows[0].middleman).toBe("AgentKit MCP");
     expect(intelligence.sourceMediumQuality.rows[0].qualityScore).toBeGreaterThan(0);
     expect(
       intelligence.sourceMediumQuality.rows.find((row) => row.source === "AgentKit MCP")
@@ -83,6 +85,7 @@ describe("buildApiGrowthIntelligence", () => {
     const intelligence = buildApiGrowthIntelligence(empty);
 
     expect(intelligence.sourceMediumQuality.rows).toEqual([]);
+    expect(intelligence.sourceMediumQuality.intentRouteFlows).toEqual([]);
     expect(intelligence.endpointFrequency.rows).toEqual([]);
     expect(intelligence.useCaseFit.cards).toEqual([]);
     expect(intelligence.repeatWalletRate).toEqual({

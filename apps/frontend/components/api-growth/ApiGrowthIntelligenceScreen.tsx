@@ -2,6 +2,7 @@ import type { CSSProperties, ReactNode } from "react";
 import { EndpointSankey, type EndpointSankeyFlow } from "@/components/macro-metrics/EndpointSankey";
 import { formatAtomic, formatRatioPct } from "@/lib/format";
 import type {
+  ApiGrowthIntentRouteFlow,
   ApiGrowthServiceCandidate,
   ApiGrowthInsightCard,
   ApiGrowthInboundApiCohort,
@@ -43,6 +44,7 @@ export function ApiGrowthIntelligenceScreen({ intelligence }: Props) {
         <div style={{ display: "grid", gridTemplateColumns: "minmax(320px, 1fr) minmax(320px, 1fr) minmax(340px, 1fr)", gap: 14, alignItems: "start" }}>
           <SectionCard eyebrow="Source / Medium Adoption" title="Where users come from">
             <BubbleMatrix rows={intelligence.sourceMediumQuality.rows} />
+            <IntentRouteFlows flows={intelligence.sourceMediumQuality.intentRouteFlows} />
             <SourceTable rows={intelligence.sourceMediumQuality.rows} />
           </SectionCard>
 
@@ -319,6 +321,48 @@ function SourceTable({ rows }: { rows: SourceMediumQualityRow[] }) {
           <span className="mono" style={{ textAlign: "right", color: "var(--mesh-blue)", fontWeight: 700 }}>{row.endpointFrequency.toFixed(1)}</span>
         </div>
       ))}
+    </div>
+  );
+}
+
+function IntentRouteFlows({ flows }: { flows: ApiGrowthIntentRouteFlow[] }) {
+  if (flows.length === 0) return null;
+  const sankeyFlows: EndpointSankeyFlow[] = flows.flatMap((flow) => [
+    {
+      from: flow.intentCategory,
+      to: flow.middleman,
+      fromStep: 0,
+      toStep: 1,
+      occurrences: flow.wallets,
+    },
+    {
+      from: flow.middleman,
+      to: flow.targetApiCategory,
+      fromStep: 1,
+      toStep: 2,
+      occurrences: flow.wallets,
+    },
+  ]);
+  const topFlow = [...flows].sort((left, right) => right.wallets - left.wallets)[0];
+
+  return (
+    <div style={{ borderTop: "1px solid var(--line)", paddingTop: 12, marginBottom: 12 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "baseline", marginBottom: 8 }}>
+        <div style={eyebrowStyle}>Intent → middleman → target API</div>
+        {topFlow && (
+          <span className="mono" style={{ color: "var(--text-3)", fontSize: 11 }}>
+            top route: {topFlow.middleman}
+          </span>
+        )}
+      </div>
+      <div style={{ padding: 12, borderRadius: 6, border: "1px solid var(--line)", background: "var(--surface-card)" }}>
+        <div style={{ overflowX: "auto" }}>
+          <EndpointSankey flows={sankeyFlows} compact />
+        </div>
+        <div style={{ color: "var(--text-mute)", fontSize: 11, marginTop: 8 }}>
+          Wider links indicate more wallets moving from intent through middleman to target API category.
+        </div>
+      </div>
     </div>
   );
 }

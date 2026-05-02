@@ -25,6 +25,14 @@ export type SourceMediumQualityRow = {
   useCaseMix: string;
 };
 
+export type ApiGrowthIntentRouteFlow = {
+  intentCategory: string;
+  middleman: string;
+  targetApiCategory: string;
+  wallets: number;
+  repeatRate: number;
+};
+
 export type EndpointFrequencyRow = {
   endpoint: MacroEndpointCategory;
   label: string;
@@ -125,6 +133,7 @@ export type ApiGrowthIntelligence = {
   insightCards: ApiGrowthInsightCard[];
   sourceMediumQuality: {
     rows: SourceMediumQualityRow[];
+    intentRouteFlows: ApiGrowthIntentRouteFlow[];
   };
   endpointFrequency: {
     rows: EndpointFrequencyRow[];
@@ -342,6 +351,7 @@ export function buildApiGrowthIntelligence(data: MacroMetricsDemoData): ApiGrowt
   }
 
   const sourceRows = buildSourceMediumRows(data, sessionsByWallet);
+  const intentRouteFlows = buildIntentRouteFlows(data);
   const endpointRows = buildEndpointRows(data, eventsByEndpoint, totalEvents);
   const useCaseCards = buildUseCaseCards(data, sessionsByWallet, walletByAddress);
   const repeatWalletRate = buildRepeatWalletRate(data, sessionsByWallet);
@@ -401,7 +411,7 @@ export function buildApiGrowthIntelligence(data: MacroMetricsDemoData): ApiGrowt
         tone: "warn",
       },
     ],
-    sourceMediumQuality: { rows: sourceRows },
+    sourceMediumQuality: { rows: sourceRows, intentRouteFlows },
     endpointFrequency: { rows: endpointRows, flow: AGENT_FLOW, flows: API_GROWTH_ENDPOINT_FLOWS },
     useCaseFit: { cards: useCaseCards },
     repeatWalletRate,
@@ -455,6 +465,55 @@ function buildTimeToSecondPaidSession(data: MacroMetricsDemoData): ApiGrowthTime
       medianHours: 46,
       within24hRate: 0.34,
       within7dRate: 0.59,
+    },
+  ];
+}
+
+function buildIntentRouteFlows(data: MacroMetricsDemoData): ApiGrowthIntentRouteFlow[] {
+  if (data.wallets.length === 0) return [];
+
+  return [
+    {
+      intentCategory: "Market discovery",
+      middleman: "AgentKit MCP",
+      targetApiCategory: "Price / token data",
+      wallets: 48,
+      repeatRate: 0.88,
+    },
+    {
+      intentCategory: "Trading automation",
+      middleman: "AgentKit MCP",
+      targetApiCategory: "Swap / execution",
+      wallets: 34,
+      repeatRate: 0.81,
+    },
+    {
+      intentCategory: "Research enrichment",
+      middleman: "Router / aggregator",
+      targetApiCategory: "Price / token data",
+      wallets: 29,
+      repeatRate: 0.73,
+    },
+    {
+      intentCategory: "Market discovery",
+      middleman: "Router / aggregator",
+      targetApiCategory: "Swap / execution",
+      wallets: 22,
+      repeatRate: 0.66,
+    },
+    {
+      intentCategory: "Research enrichment",
+      middleman: "AI agent framework",
+      targetApiCategory: "Search / knowledge API",
+      wallets: 26,
+      repeatRate: 0.71,
+    },
+    {
+      intentCategory: "Portfolio monitoring",
+      middleman: "AI agent framework",
+      targetApiCategory: "Price / token data",
+      wallets: 18,
+      repeatRate: 0.58,
     },
   ];
 }

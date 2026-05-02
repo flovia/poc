@@ -35,10 +35,10 @@ export function EndpointSankey({ flows, compact = false }: EndpointSankeyProps) 
   const data = buildSankeyData(flows);
 
   return (
-    <div style={{ height: compact ? 220 : 320, minWidth: compact ? 420 : 560 }}>
+    <div style={{ height: compact ? 220 : 320, minWidth: compact ? 480 : 560 }}>
       <ResponsiveSankey<SankeyNode, SankeyLink>
         data={data}
-        margin={compact ? { top: 6, right: 96, bottom: 6, left: 72 } : { top: 10, right: 132, bottom: 10, left: 16 }}
+        margin={compact ? { top: 12, right: 96, bottom: 12, left: 96 } : { top: 16, right: 120, bottom: 16, left: 120 }}
         align="justify"
         sort="input"
         colors={(node) => ENDPOINT_COLORS[endpointFromNodeId(node.id)] ?? "#94A3B8"}
@@ -80,22 +80,22 @@ export function EndpointSankey({ flows, compact = false }: EndpointSankeyProps) 
 }
 
 function buildSankeyData(flows: EndpointSankeyFlow[]): { nodes: SankeyNode[]; links: SankeyLink[] } {
-  const endpoints = [...new Set(flows.flatMap((flow) => [flow.from, flow.to]))];
-  const nodes = endpoints.flatMap((endpoint) =>
-    Array.from({ length: STEP_COUNT }, (_, step) => ({ id: nodeId(step, endpoint) })),
-  );
-
+  const nodeIds = new Set<string>();
   const linksByKey = new Map<string, SankeyLink>();
   flows.forEach((flow, index) => {
     const fromStep = flow.fromStep ?? (index % 2 === 0 ? 0 : 1);
     const toStep = flow.toStep ?? ((fromStep + 1) as 1 | 2);
     const source = nodeId(fromStep, flow.from);
     const target = nodeId(toStep, flow.to);
+    nodeIds.add(source);
+    nodeIds.add(target);
     const key = `${source}->${target}`;
     const link = linksByKey.get(key) ?? { source, target, value: 0 };
     link.value += flow.occurrences;
     linksByKey.set(key, link);
   });
+
+  const nodes = [...nodeIds].map((id) => ({ id }));
 
   return { nodes, links: [...linksByKey.values()].filter((link) => link.value > 0) };
 }
