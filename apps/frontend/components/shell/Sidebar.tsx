@@ -231,27 +231,6 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
           </Link>
         )}
 
-        {navDisabled ? (
-          <span
-            role="link"
-            className="nav-item disabled"
-            aria-disabled="true"
-            aria-label="Macro Metrics, setup required"
-          >
-            <Icon.bolt width={16} height={16} />
-            Macro Metrics
-          </span>
-        ) : (
-          <Link
-            href={navHrefFor("macro-metrics")}
-            className="nav-item"
-            aria-current={activeRoute === "macro-metrics" || activeRoute === "metrics-catalog"}
-          >
-            <Icon.bolt width={16} height={16} />
-            Macro Metrics
-          </Link>
-        )}
-
         <div className="provider-block">
           <div className="label">Select API Provider</div>
 
