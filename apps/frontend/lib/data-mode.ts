@@ -1,4 +1,4 @@
-// Server / Client 両対応の dashboard mode helper.
+// Client dashboard mode helper.
 // cookie が source of truth、localStorage は CSR ミラー (TopBar の useEffect で片方向再同期).
 
 export type DashboardMode = "onChainOnly" | "sdkConnected";

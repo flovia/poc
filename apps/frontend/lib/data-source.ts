@@ -1,8 +1,8 @@
-// On-chain only (BFF) と SDK connected (fixture) の data source dispatcher.
-// dynamic import で sdk モジュールを on-chain only モード時に評価しないようにし,
+// Server data source dispatcher. DashboardMode は UI 状態、ServerDataSource は
+// SSR がどこから DTO を読むかの infra 状態として分離する.
+// dynamic import で fixture モジュールを BFF モード時に評価しないようにし,
 // production build で別チャンクに分離する.
 
-import { getServerDashboardMode } from "./data-mode";
 import * as live from "./api/client";
 import type {
   CustomerListItemDto,
@@ -13,6 +13,7 @@ import type {
   WalletUsageGraphDto,
 } from "./api/types";
 import type { SdkExtras, SdkForceNetwork } from "./sdk-fixtures/types";
+import { resolveServerDataSource } from "./data-source-env";
 
 // 主役 wallet の正規アドレス. wallet/[address]/page.tsx の redirect で使う.
 export const SDK_PROTAGONIST_ADDRESS = "0x7A91...C4E8";
@@ -21,64 +22,59 @@ async function sdkModule() {
   return import("./sdk-fixtures");
 }
 
+function shouldUseFixture(): boolean {
+  return resolveServerDataSource() === "fixture";
+}
+
 export async function getProviders(): Promise<ProviderCatalogItemDto[]> {
-  const mode = await getServerDashboardMode();
-  if (mode === "sdkConnected") return [];
+  if (shouldUseFixture()) return [];
   return live.getProviders();
 }
 
 export async function getCustomers(payTo?: string): Promise<CustomerListItemDto[]> {
-  const mode = await getServerDashboardMode();
-  if (mode === "onChainOnly") return live.getCustomers(payTo);
+  if (!shouldUseFixture()) return live.getCustomers(payTo);
   const v = await sdkModule();
   return v.getCustomers();
 }
 
 export async function getCustomerProfile(address: string): Promise<CustomerProfileDto | null> {
-  const mode = await getServerDashboardMode();
-  if (mode === "onChainOnly") return live.getCustomerProfile(address);
+  if (!shouldUseFixture()) return live.getCustomerProfile(address);
   const v = await sdkModule();
   return v.getCustomerProfile(address);
 }
 
 export async function getObservations(): Promise<PaymentObservationDto[]> {
-  const mode = await getServerDashboardMode();
-  if (mode === "onChainOnly") return live.getObservations();
+  if (!shouldUseFixture()) return live.getObservations();
   const v = await sdkModule();
   return v.getObservations();
 }
 
 export async function getSummary(payTo?: string): Promise<ReportSummaryDto> {
-  const mode = await getServerDashboardMode();
-  if (mode === "onChainOnly") return live.getSummary(payTo);
+  if (!shouldUseFixture()) return live.getSummary(payTo);
   const v = await sdkModule();
   return v.getSummary();
 }
 
 export async function getSdkExtras(address: string): Promise<SdkExtras | null> {
-  const mode = await getServerDashboardMode();
-  if (mode === "onChainOnly") return null;
+  if (!shouldUseFixture()) return null;
   const v = await sdkModule();
   return v.getExtras(address);
 }
 
 export async function getSdkExtrasMap(): Promise<Map<string, SdkExtras>> {
-  const mode = await getServerDashboardMode();
-  if (mode === "onChainOnly") return new Map();
+  if (!shouldUseFixture()) return new Map();
   const v = await sdkModule();
   return v.getExtrasMap();
 }
 
 export async function getSdkForceNetwork(address: string): Promise<SdkForceNetwork | null> {
-  const mode = await getServerDashboardMode();
-  if (mode === "onChainOnly") return null;
+  if (!shouldUseFixture()) return null;
   const v = await sdkModule();
   return v.getForceNetwork(address);
 }
 
 export async function getWalletUsageGraph(): Promise<WalletUsageGraphDto | null> {
-  const mode = await getServerDashboardMode();
-  if (mode === "onChainOnly") return live.getWalletUsageGraph();
+  if (!shouldUseFixture()) return live.getWalletUsageGraph();
   const v = await sdkModule();
   return v.getWalletUsageGraph();
 }
