@@ -100,7 +100,7 @@ export function CoUsageProvidersView({
               <th style={{ textAlign: "right" }}>
                 <HeaderTooltip
                   label="Correlation"
-                  description="Average co-usage confidence (0–1) reported by the BFF. Higher values mean the overlap is more likely to be a meaningful behavioral signal rather than coincidental."
+                  description="Average co-usage confidence (0–1). Higher values mean the overlap is more likely to be a meaningful behavioral signal rather than coincidental."
                   align="right"
                 />
               </th>

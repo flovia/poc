@@ -61,7 +61,7 @@ export function CustomersTable({
         <div>
           <HeaderTooltip
             label="Wallet"
-            description="Payer wallet address. The on-chain account that has paid this provider."
+            description="Payer wallet address. Click a wallet to open its profile: spend history, AI agent context, endpoint usage, and cross-provider activity."
           />
         </div>
         {isSdkConnected && (
@@ -75,7 +75,7 @@ export function CustomersTable({
         <div>
           <HeaderTooltip
             label="Chain"
-            description="Chain and asset this payer wallet mainly transacts in. Currently fixed to Base / USDC across all rows; per-wallet detection ships when the BFF emits per-wallet chain data (see future-work.md)."
+            description="Chain and asset this payer wallet mainly transacts in. Currently fixed to Base / USDC across all rows."
           />
         </div>
         <div>
@@ -123,7 +123,7 @@ export function CustomersTable({
       {customers.length === 0 && (
         <div style={{ padding: 24, color: "var(--text-3)", fontSize: 14 }}>
           {totalBeforeFilter === 0
-            ? "No payer wallets in BFF projection yet."
+            ? "No payer wallets found yet."
             : "No payer wallets match the current filters."}
         </div>
       )}
@@ -134,7 +134,8 @@ export function CustomersTable({
           <Link
             key={c.address}
             href={`/providers/${providerId}/wallet/${encodeURIComponent(c.address)}`}
-            className={classNames(rowClass)}
+            className={classNames(rowClass, "cust-row-link")}
+            aria-label={`Open wallet profile for ${c.address}`}
             style={{
               animation: `fade-up 240ms ${Math.min(i * 25, 200)}ms both ease-out`,
               textDecoration: "none",
@@ -143,23 +144,24 @@ export function CustomersTable({
           >
             <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
               <span className="row-indicator" />
-              <span
-                className="mono"
-                style={{
-                  fontSize: 14,
-                  fontWeight: 500,
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  color: "var(--mesh-blue)",
-                  textDecoration: "underline",
-                  textDecorationStyle: "dotted",
-                  textDecorationColor: "var(--text-mute)",
-                  textUnderlineOffset: 2,
-                }}
-                title={c.address}
-              >
-                {c.address}
+              <span style={{ minWidth: 0 }}>
+                <span
+                  className="mono wallet-address-link"
+                  style={{
+                    display: "block",
+                    fontSize: 14,
+                    fontWeight: 600,
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}
+                  title={c.address}
+                >
+                  {c.address}
+                </span>
+                <span className="wallet-profile-hint" aria-hidden="true">
+                  Wallet profile →
+                </span>
               </span>
               {c.label && (
                 <span className="chip" style={{ fontSize: 11, padding: "1px 6px" }}>

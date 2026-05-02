@@ -273,7 +273,7 @@ export function CoUsageProviderDrawer({ row, providerId, onClose }: Props) {
             )}
           </Section>
 
-          <Section title={`Your customers paying this provider (${row.payerWallets.length})`}>
+          <Section title={`Your customer wallet profiles (${row.payerWallets.length})`}>
             {row.payerWallets.length === 0 ? (
               <div style={{ color: "var(--text-mute)", fontSize: 14 }}>—</div>
             ) : (
@@ -304,19 +304,35 @@ export function CoUsageProviderDrawer({ row, providerId, onClose }: Props) {
                       href={`/providers/${providerId}/wallet/${encodeURIComponent(p.wallet)}`}
                       onClick={onClose}
                       className="mono"
-                      title={`Open wallet detail for ${p.wallet}`}
+                      title={`Open wallet profile for ${p.wallet}`}
+                      aria-label={`Open wallet profile for ${p.wallet}`}
                       style={{
                         flex: 1,
                         minWidth: 0,
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 2,
                         fontSize: 13,
                         color: "var(--mesh-blue)",
-                        textDecoration: "underline",
-                        textDecorationStyle: "dotted",
-                        textDecorationColor: "var(--text-mute)",
+                        textDecoration: "none",
                         wordBreak: "break-all",
                       }}
                     >
-                      {p.wallet}
+                      <span style={{ textDecoration: "underline", textDecorationStyle: "dotted" }}>
+                        {p.wallet}
+                      </span>
+                      <span
+                        aria-hidden="true"
+                        style={{
+                          fontFamily: "var(--sans)",
+                          fontSize: 11,
+                          fontWeight: 600,
+                          color: "var(--text-3)",
+                          wordBreak: "normal",
+                        }}
+                      >
+                        View wallet profile →
+                      </span>
                     </Link>
                     <span
                       style={{ fontSize: 12, color: "var(--text-3)", whiteSpace: "nowrap" }}

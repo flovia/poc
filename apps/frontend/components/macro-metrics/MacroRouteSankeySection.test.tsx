@@ -16,5 +16,8 @@ describe("MacroRouteSankeySection", () => {
     expect(html).toContain("API workflow paths");
     expect(html).toContain("Request count");
     expect(html).toContain("Settled USDC");
+    expect(html).toContain("Token price");
+    expect(html).not.toContain("1 flows");
+    expect(html).not.toContain("2 flows");
   });
 });

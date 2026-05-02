@@ -58,6 +58,25 @@ export const Icon = {
       />
     </svg>
   ),
+  info: (p: IconProps) => (
+    <svg viewBox="0 0 16 16" fill="none" {...A11Y_DEFAULTS} {...p}>
+      <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.3" />
+      <path d="M8 7.2v4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+      <circle cx="8" cy="4.8" r="0.8" fill="currentColor" />
+    </svg>
+  ),
+  bulb: (p: IconProps) => (
+    <svg viewBox="0 0 16 16" fill="none" {...A11Y_DEFAULTS} {...p}>
+      <path
+        d="M5.2 7.1a2.8 2.8 0 1 1 5.6 0c0 1-.5 1.7-1.1 2.3-.4.4-.7.8-.8 1.3H7.1c-.1-.5-.4-.9-.8-1.3-.6-.6-1.1-1.3-1.1-2.3Z"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinejoin="round"
+      />
+      <path d="M6.9 12.3h2.2M7.2 14h1.6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+      <path d="M8 1.6v1M3.6 3.4l.7.7M12.4 3.4l-.7.7" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+    </svg>
+  ),
   filter: (p: IconProps) => (
     <svg viewBox="0 0 16 16" fill="none" {...A11Y_DEFAULTS} {...p}>
       <path d="M2 3h12 M4 7h8 M6 11h4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />

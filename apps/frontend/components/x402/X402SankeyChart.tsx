@@ -4,8 +4,10 @@ import type { ReactNode } from "react";
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { X402MetricMode } from "@/lib/x402-analysis/types";
 import {
+  filterSankeyRowsByFlowCount,
   formatSankeyMetricValue,
   getSankeyLabelLayout,
+  getSankeyLabelPillHeights,
   getSankeyLabelPillWidth,
   getSankeyLinkLabelPosition,
   getSankeyTooltipPosition,
@@ -29,10 +31,15 @@ type X402SankeyChartProps = {
 
 const WIDTH = 1220;
 const HEIGHT = 560;
+const MIN_VISIBLE_FLOW_COUNT_EXCLUSIVE = 2;
+// Keep the hover card below the densest top flow pills in headerless sankey sections.
+const TOOLTIP_MIN_TOP = 136;
 const TOOLTIP_DEFAULT_SIZE = {
-  width: 320,
-  height: 248,
+  width: 296,
+  height: 220,
 };
+const { pillHeight: LINK_LABEL_HEIGHT, maskHeight: LINK_LABEL_MASK_HEIGHT } = getSankeyLabelPillHeights();
+const LINK_LABEL_TEXT_OFFSET_Y = 1;
 
 type HoverState = {
   key: string;
@@ -81,44 +88,51 @@ export function X402SankeyChart({
     () => buildX402SankeyLayout(chart.flows, metric, WIDTH, HEIGHT, chart.layer_order),
     [chart.flows, chart.layer_order, metric],
   );
+  const visibleLinks = useMemo(
+    () =>
+      filterSankeyRowsByFlowCount(layout.links, {
+        minFlowCountExclusive: MIN_VISIBLE_FLOW_COUNT_EXCLUSIVE,
+      }),
+    [layout.links],
+  );
   const linkLabelWidth = useMemo(
     () =>
       getSankeyLabelPillWidth(
-        layout.links
+        visibleLinks
           .filter((link) => link.segment === "left_mid" || link.segment === "mid_right")
           .map((link) => formatSankeyMetricValue(metric, link.value)),
       ),
-    [layout.links, metric],
+    [metric, visibleLinks],
   );
   const leftLabelLayout = useMemo(
     () =>
       new Map(
         getSankeyLabelLayout(
-          layout.links.filter((link) => link.segment === "left_mid"),
+          visibleLinks.filter((link) => link.segment === "left_mid"),
           {
-            minGap: 34,
+            minGap: 30,
             minY: 84,
             maxY: HEIGHT - 32,
             pullFactor: 0.18,
           },
         ).map((item) => [item.id, item]),
       ),
-    [layout.links],
+    [visibleLinks],
   );
   const rightLabelLayout = useMemo(
     () =>
       new Map(
         getSankeyLabelLayout(
-          layout.links.filter((link) => link.segment === "mid_right"),
+          visibleLinks.filter((link) => link.segment === "mid_right"),
           {
-            minGap: 34,
+            minGap: 30,
             minY: 84,
             maxY: HEIGHT - 32,
             pullFactor: 0.18,
           },
         ).map((item) => [item.id, item]),
       ),
-    [layout.links],
+    [visibleLinks],
   );
   const [hovered, setHovered] = useState<HoverState | null>(null);
   const [tooltipSize, setTooltipSize] = useState(TOOLTIP_DEFAULT_SIZE);
@@ -126,7 +140,7 @@ export function X402SankeyChart({
   const tooltipRef = useRef<HTMLDivElement>(null);
 
   const hoveredKey = hovered?.key ?? null;
-  const hoveredLink = hoveredKey ? layout.links.find((link) => link.id === hoveredKey) ?? null : null;
+  const hoveredLink = hoveredKey ? visibleLinks.find((link) => link.id === hoveredKey) ?? null : null;
   const hoveredNodeIds = hoveredLink
     ? new Set([
         `left:${hoveredLink.left_label}`,
@@ -163,6 +177,7 @@ export function X402SankeyChart({
           containerHeight: chartBodyRef.current.clientHeight,
           tooltipWidth,
           tooltipHeight: tooltipSize.height,
+          minTop: TOOLTIP_MIN_TOP,
         })
       : null;
 
@@ -266,7 +281,10 @@ export function X402SankeyChart({
         </div>
       ) : null}
 
-      <div ref={chartBodyRef} style={{ padding: "14px 18px 18px", position: "relative" }}>
+      <div
+        ref={chartBodyRef}
+        style={{ padding: "14px 18px 18px", position: "relative", isolation: "isolate" }}
+      >
         <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} width="100%" style={{ display: "block" }}>
           <defs>
             <linearGradient id="x402-link-gradient-left" x1="0%" x2="100%" y1="0%" y2="0%">
@@ -300,7 +318,7 @@ export function X402SankeyChart({
             ) : null,
           )}
 
-	          {layout.links.map((link) => {
+	          {visibleLinks.map((link) => {
 	            const baseKey = link.id.replace(/::right$/, "");
 	            const isHovered = hoveredKey === baseKey;
 	            const isDimmed = !!hoveredKey && !isHovered;
@@ -368,7 +386,7 @@ export function X402SankeyChart({
             );
           })}
 
-          {layout.links
+          {visibleLinks
             .filter((link) => link.segment === "left_mid" || link.segment === "mid_right")
             .map((link) => {
               const baseKey = link.id.replace(/::right$/, "");
@@ -378,11 +396,12 @@ export function X402SankeyChart({
               const point =
                 (link.segment === "left_mid" ? leftLabelLayout.get(link.id) : rightLabelLayout.get(link.id)) ??
                 getSankeyLinkLabelPosition(link);
-              const labelMaskHeight = Math.max(24, getSankeyVisibleLinkWidth(link.value * layout.scale) + 10);
+              const renderX = Math.round(point.x * 2) / 2;
+              const renderY = Math.round(point.y * 2) / 2;
               return (
                 <g
                   key={`${link.id}::label`}
-                  transform={`translate(${point.x}, ${point.y})`}
+                  transform={`translate(${renderX}, ${renderY})`}
                   opacity={isDimmed ? 0.32 : 1}
                   style={{ transition: "opacity 160ms ease", cursor: "pointer" }}
                   onMouseEnter={(event) => updateHover(baseKey, event)}
@@ -391,27 +410,27 @@ export function X402SankeyChart({
                 >
                   <rect
                     x={-(linkLabelWidth + 8) / 2}
-                    y={-labelMaskHeight / 2}
+                    y={-LINK_LABEL_MASK_HEIGHT / 2}
                     width={linkLabelWidth + 8}
-                    height={labelMaskHeight}
+                    height={LINK_LABEL_MASK_HEIGHT}
                     rx="999"
                     fill="rgba(255,255,255,0.98)"
                   />
                   <rect
                     x={-linkLabelWidth / 2}
-                    y={-11}
+                    y={-10}
                     width={linkLabelWidth}
-                    height={22}
+                    height={LINK_LABEL_HEIGHT}
                     rx="999"
                     fill="rgb(255,255,255)"
                   />
                   <text
                     x="0"
-                    y="0"
+                    y={LINK_LABEL_TEXT_OFFSET_Y}
                     textAnchor="middle"
                     dominantBaseline="middle"
                     fontFamily="var(--mono)"
-                    fontSize="10.5"
+                    fontSize="10"
                     fontWeight="600"
                     fill="var(--text-1)"
                   >
@@ -430,23 +449,23 @@ export function X402SankeyChart({
               position: "absolute",
               left: tooltipPosition.left,
               top: tooltipPosition.top,
+              zIndex: 2,
               width: tooltipWidth,
-              padding: 14,
+              padding: 12,
               pointerEvents: "none",
               borderColor: "rgba(47, 93, 154, 0.18)",
-              background: "rgba(255, 255, 255, 0.96)",
-              boxShadow: "0 10px 30px rgba(15, 23, 42, 0.10)",
-              backdropFilter: "blur(10px)",
+              background: "rgb(255, 255, 255)",
+              boxShadow: "0 12px 28px rgba(15, 23, 42, 0.12)",
             }}
           >
             <div
               style={{
-                fontSize: 11,
+                fontSize: 10.5,
                 fontWeight: 700,
                 letterSpacing: "0.08em",
                 textTransform: "uppercase",
                 color: "var(--mesh-blue)",
-                marginBottom: 8,
+                marginBottom: 6,
               }}
             >
               Hover details
@@ -454,10 +473,10 @@ export function X402SankeyChart({
             <div
               className="display"
               style={{
-                fontSize: 15,
+                fontSize: 14,
                 fontWeight: 600,
                 color: "var(--text-1)",
-                lineHeight: 1.35,
+                lineHeight: 1.3,
                 overflowWrap: "anywhere",
               }}
             >
@@ -466,9 +485,9 @@ export function X402SankeyChart({
             <div
               style={{
                 display: "grid",
-                gap: 10,
-                marginTop: 12,
-                fontSize: 12,
+                gap: 8,
+                marginTop: 10,
+                fontSize: 11.5,
               }}
             >
               {detailRows.map((row) => (
@@ -480,7 +499,7 @@ export function X402SankeyChart({
                     style={{
                       marginTop: 4,
                       color: "var(--text-1)",
-                      lineHeight: 1.4,
+                      lineHeight: 1.35,
                       overflowWrap: "anywhere",
                     }}
                   >
@@ -492,10 +511,10 @@ export function X402SankeyChart({
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-                gap: 10,
-                marginTop: 12,
-                fontSize: 12,
+                gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+                gap: 8,
+                marginTop: 10,
+                fontSize: 11.5,
               }}
             >
               {metricRows.map((row) => (
