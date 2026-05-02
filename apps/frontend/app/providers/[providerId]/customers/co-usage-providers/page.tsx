@@ -46,10 +46,10 @@ export default async function CoUsageProvidersPage({
           description:
             "See which x402 providers your customers use alongside your API, and spot partnership or bundling opportunities.",
           metrics: [
-            { label: "Co-used providers", description: "External services that appear with your API usage." },
-            { label: "Shared wallets", description: "Customers who overlap across providers." },
-            { label: "Co-usage frequency", description: "Which relationships show the strongest usage signal." },
-            { label: "Opportunity level", description: "Where the next partnership conversation may start." },
+            { label: "Co-used providers", description: "External services that appear with your API usage.", icon: "external" },
+            { label: "Shared wallets", description: "Customers who overlap across providers.", icon: "customers" },
+            { label: "Co-usage frequency", description: "Which relationships show the strongest usage signal.", icon: "activity" },
+            { label: "Opportunity level", description: "Where the next partnership conversation may start.", icon: "spark" },
           ],
         }}
       />
@@ -99,12 +99,6 @@ export default async function CoUsageProvidersPage({
               />
             </div>
           </div>
-
-          <p style={{ marginTop: 0, marginBottom: 20, color: "var(--text-2)", maxWidth: 720 }}>
-            External x402 API providers your customers also pay. Higher shared-wallet reach and
-            denser tx volume both signal stronger synergy — surface candidates worth a partnership
-            or bundling conversation. Click any provider to open detailed usage.
-          </p>
 
           {rows.length === 0 ? (
             <div

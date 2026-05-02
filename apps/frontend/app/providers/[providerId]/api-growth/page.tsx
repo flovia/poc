@@ -25,10 +25,10 @@ export default async function ApiGrowthPage({
           description:
             "Understand where adoption comes from, what users repeat, and where packaging can unlock more growth.",
           metrics: [
-            { label: "Source quality", description: "Which channels bring meaningful API activity." },
-            { label: "Endpoint frequency", description: "What users call often enough to become habits." },
-            { label: "Repeat usage", description: "Why wallets return after the first interaction." },
-            { label: "Growth opportunities", description: "Where to improve activation, packaging, or positioning." },
+            { label: "Source quality", description: "Which channels bring meaningful API activity.", icon: "spark" },
+            { label: "Endpoint frequency", description: "What users call often enough to become habits.", icon: "activity" },
+            { label: "Repeat usage", description: "Why wallets return after the first interaction.", icon: "repeat" },
+            { label: "Growth opportunities", description: "Where to improve activation, packaging, or positioning.", icon: "growth" },
           ],
         }}
       />

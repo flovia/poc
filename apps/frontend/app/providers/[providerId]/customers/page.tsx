@@ -38,10 +38,10 @@ export default async function CustomersPage({
           description:
             "See who is adopting your API, where usage is growing, and which accounts are worth your attention.",
           metrics: [
-            { label: "Customer count", description: "The scale of your active customer base." },
-            { label: "Request volume", description: "Which customers drive the most API usage." },
-            { label: "Growth trend", description: "Where adoption is gaining or losing momentum." },
-            { label: "Retention", description: "How consistently customers keep coming back." },
+            { label: "Customer count", description: "The scale of your active customer base.", icon: "customers" },
+            { label: "Request volume", description: "Which customers drive the most API usage.", icon: "activity" },
+            { label: "Growth trend", description: "Where adoption is gaining or losing momentum.", icon: "growth" },
+            { label: "Retention", description: "How consistently customers keep coming back.", icon: "repeat" },
           ],
         }}
       />

@@ -6,6 +6,7 @@ import { Icon } from "@/components/ui/Icon";
 export type PageOnboardingMetric = {
   label: string;
   description: string;
+  icon?: "activity" | "customers" | "external" | "growth" | "repeat" | "spark";
 };
 
 export type PageOnboardingContent = {
@@ -91,9 +92,11 @@ export function PageOnboarding({ content }: PageOnboardingProps) {
             </h2>
             <p className="onboarding-modal-description">{content.description}</p>
             <div className="onboarding-modal-metrics">
-              {content.metrics.map((metric) => (
+              {content.metrics.map((metric, index) => (
                 <div key={metric.label} className="onboarding-modal-metric">
-                  <span className="onboarding-modal-metric-dot" />
+                  <span className="onboarding-modal-metric-icon">
+                    <MetricIcon icon={metric.icon} fallbackIndex={index} />
+                  </span>
                   <div>
                     <div className="onboarding-modal-metric-label">{metric.label}</div>
                     <div className="onboarding-modal-metric-description">
@@ -111,4 +114,21 @@ export function PageOnboarding({ content }: PageOnboardingProps) {
       ) : null}
     </>
   );
+}
+
+function MetricIcon({
+  icon,
+  fallbackIndex,
+}: {
+  icon: PageOnboardingMetric["icon"];
+  fallbackIndex: number;
+}) {
+  if (icon === "activity") return <Icon.bolt />;
+  if (icon === "customers") return <Icon.customers />;
+  if (icon === "external") return <Icon.external />;
+  if (icon === "growth") return <Icon.arrow />;
+  if (icon === "repeat") return <Icon.refresh />;
+  if (icon === "spark") return <Icon.spark />;
+
+  return <span className="onboarding-modal-metric-fallback">{fallbackIndex + 1}</span>;
 }
