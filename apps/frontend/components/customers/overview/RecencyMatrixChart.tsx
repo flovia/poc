@@ -49,21 +49,19 @@ const ACCENT_FG: Record<CellSpec["accent"], string> = {
 
 export function RecencyMatrixChart({ matrix }: RecencyMatrixChartProps) {
   const total = matrix.totalWallets;
-  const hint = total === 0 ? "No payer wallets to summarize." : describeHint(matrix);
 
   return (
     <OverviewCard
-      eyebrow="Recency × Spend"
-      title="Where attention pays off"
-      hint={hint}
+      title="Account Segmentation by Recency × Spend"
     >
       <div
         style={{
           display: "grid",
           gridTemplateColumns: "1fr 1fr",
-          gridTemplateRows: "1fr 1fr",
+          gridTemplateRows: "repeat(2, minmax(0, 1fr))",
           gap: 8,
-          minHeight: 160,
+          height: "100%",
+          minHeight: 0,
         }}
       >
         {CELLS.map((spec) => {
@@ -129,13 +127,6 @@ export function RecencyMatrixChart({ matrix }: RecencyMatrixChartProps) {
       </div>
     </OverviewCard>
   );
-}
-
-function describeHint(matrix: RecencyMatrix): string {
-  const { recentHigh, recentLow, staleHigh, staleLow } = matrix.cells;
-  const total = matrix.totalWallets;
-  const recent = recentHigh + recentLow;
-  return `Split by spend & recency medians · ${recent}/${total} wallets active recently · ${staleHigh + staleLow} dormant`;
 }
 
 function formatPercent(value: number): string {

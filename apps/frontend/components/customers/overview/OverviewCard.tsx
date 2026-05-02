@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
 type OverviewCardProps = {
-  eyebrow: string;
+  eyebrow?: string;
   title: string;
   hint?: string;
   children: ReactNode;
@@ -28,18 +28,20 @@ export function OverviewCard({ eyebrow, title, hint, children }: OverviewCardPro
           borderBottom: "1px solid var(--line)",
         }}
       >
-        <div
-          style={{
-            fontSize: 11,
-            color: "var(--text-mute)",
-            fontWeight: 600,
-            letterSpacing: "0.08em",
-            textTransform: "uppercase",
-            marginBottom: 2,
-          }}
-        >
-          {eyebrow}
-        </div>
+        {eyebrow && (
+          <div
+            style={{
+              fontSize: 11,
+              color: "var(--text-mute)",
+              fontWeight: 600,
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+              marginBottom: 2,
+            }}
+          >
+            {eyebrow}
+          </div>
+        )}
         <div className="display" style={{ fontSize: 15, fontWeight: 600, color: "var(--text-1)" }}>
           {title}
         </div>
