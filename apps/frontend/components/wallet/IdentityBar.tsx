@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import { Icon } from "@/components/ui/Icon";
 import type { CustomerIdentityDto, CustomerMetricsDto } from "@/lib/api/types";
 import type { DashboardMode } from "@/lib/data-mode";
@@ -20,6 +23,7 @@ function formatUsd(value: number): string {
 }
 
 export function IdentityBar({ customer, metrics, dataMode, sdkExtras }: IdentityBarProps) {
+  const [copied, setCopied] = useState(false);
   const isSdkConnected = dataMode === "sdkConnected" && sdkExtras !== null;
   const hasSdkUpsell = isSdkConnected && sdkExtras!.upsell !== null; // 主役のみ
   const totalSpendDisplay =
@@ -28,6 +32,13 @@ export function IdentityBar({ customer, metrics, dataMode, sdkExtras }: Identity
       : formatAtomic(metrics.spendAtomic);
   const totalSpendSub =
     isSdkConnected && hasSdkUpsell ? "USD · SDK preview (mock)" : "atomic units (USDC*)";
+  const baseScanUrl = `https://basescan.org/address/${customer.address}#tokentxns`;
+  const copyAddress = async () => {
+    await navigator.clipboard.writeText(customer.address);
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1400);
+  };
+
   return (
     <div
       className="card"
@@ -83,12 +94,32 @@ export function IdentityBar({ customer, metrics, dataMode, sdkExtras }: Identity
               {customer.address}
             </span>
             <button
+              type="button"
               className="btn ghost"
               style={{ padding: "4px 6px", color: "var(--text-3)", flexShrink: 0 }}
-              title="Copy"
+              title={copied ? "Copied" : "Copy address"}
+              aria-label={copied ? "Address copied" : "Copy address"}
+              onClick={copyAddress}
             >
-              <Icon.copy width="13" height="13" />
+              {copied ? <Icon.check width="13" height="13" /> : <Icon.copy width="13" height="13" />}
             </button>
+            <a
+              className="btn ghost"
+              href={baseScanUrl}
+              target="_blank"
+              rel="noreferrer"
+              style={{ padding: "4px 7px", color: "var(--text-3)", flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 5 }}
+              title="Open on BaseScan"
+              aria-label="Open wallet on BaseScan"
+            >
+              <Icon.external width="13" height="13" />
+              <span style={{ fontSize: 12, fontWeight: 600 }}>BaseScan</span>
+            </a>
+            {copied && (
+              <span style={{ color: "var(--teal)", fontSize: 12, fontWeight: 600, flexShrink: 0 }}>
+                Copied
+              </span>
+            )}
           </div>
           <div
             style={{
