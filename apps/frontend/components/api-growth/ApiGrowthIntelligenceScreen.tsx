@@ -336,9 +336,9 @@ function SourceRepeatCohort({ cohorts }: { cohorts: ApiGrowthRepeatCohort[] }) {
   if (cohorts.length === 0) return <p style={{ ...bodyText, margin: 0 }}>No repeat cohort in this offline snapshot.</p>;
 
   const columns: Array<{ key: keyof ApiGrowthRepeatCohort; label: string }> = [
-    { key: "week1", label: "Day 1" },
-    { key: "week2", label: "Day 7" },
-    { key: "week3", label: "Day 14" },
+    { key: "week1", label: "D1(W1)" },
+    { key: "week2", label: "D7(W2)" },
+    { key: "week3", label: "D14(W3)" },
   ];
 
   return (
