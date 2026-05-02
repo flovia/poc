@@ -336,10 +336,9 @@ function SourceRepeatCohort({ cohorts }: { cohorts: ApiGrowthRepeatCohort[] }) {
   if (cohorts.length === 0) return <p style={{ ...bodyText, margin: 0 }}>No repeat cohort in this offline snapshot.</p>;
 
   const columns: Array<{ key: keyof ApiGrowthRepeatCohort; label: string }> = [
-    { key: "week0", label: "W0" },
-    { key: "week1", label: "W1" },
-    { key: "week2", label: "W2" },
-    { key: "week3", label: "W3" },
+    { key: "week1", label: "Day 1" },
+    { key: "week2", label: "Day 7" },
+    { key: "week3", label: "Day 14" },
   ];
 
   return (
@@ -349,14 +348,14 @@ function SourceRepeatCohort({ cohorts }: { cohorts: ApiGrowthRepeatCohort[] }) {
         <span style={{ color: "var(--text-mute)", fontSize: 11 }}>share of paid wallets active again</span>
       </div>
       <div style={{ display: "grid", gap: 6 }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1.15fr repeat(4, 0.55fr)", gap: 6, color: "var(--text-mute)", fontSize: 10, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1.15fr repeat(3, 0.55fr)", gap: 6, color: "var(--text-mute)", fontSize: 10, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" }}>
           <span>Source cohort</span>
           {columns.map((column) => (
             <span key={column.label} style={{ textAlign: "center" }}>{column.label}</span>
           ))}
         </div>
         {cohorts.slice(0, 6).map((cohort) => (
-          <div key={cohort.cohort} style={{ display: "grid", gridTemplateColumns: "1.15fr repeat(4, 0.55fr)", gap: 6, alignItems: "center" }}>
+          <div key={cohort.cohort} style={{ display: "grid", gridTemplateColumns: "1.15fr repeat(3, 0.55fr)", gap: 6, alignItems: "center" }}>
             <div style={{ minWidth: 0 }}>
               <strong style={{ display: "block", fontSize: 12, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{cohort.cohort}</strong>
               <span style={{ color: "var(--text-mute)", fontSize: 10 }}>{cohort.paidWallets} paid wallets</span>
