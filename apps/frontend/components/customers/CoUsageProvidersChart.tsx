@@ -57,7 +57,6 @@ export function CoUsageProvidersChart({
     <OverviewCard
       eyebrow="Synergy candidates"
       title="Other providers your customers also pay"
-      hint={synergyHint}
     >
       <svg
         role="img"
@@ -151,6 +150,10 @@ export function CoUsageProvidersChart({
           );
         })}
       </svg>
+
+      <div style={{ marginTop: 10, fontSize: 13, lineHeight: 1.45, color: "var(--text-2)" }}>
+        {synergyHint}
+      </div>
 
       <div
         style={{
