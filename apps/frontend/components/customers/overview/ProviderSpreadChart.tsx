@@ -3,6 +3,7 @@ import { OverviewCard } from "./OverviewCard";
 
 type ProviderSpreadChartProps = {
   spread: ProviderSpread;
+  providerName: string;
 };
 
 const ROW_COLOR = [
@@ -11,12 +12,12 @@ const ROW_COLOR = [
   "var(--series-primary-soft)",
 ] as const;
 
-export function ProviderSpreadChart({ spread }: ProviderSpreadChartProps) {
+export function ProviderSpreadChart({ spread, providerName }: ProviderSpreadChartProps) {
   const total = spread.totalWallets;
   const hint =
     total === 0
       ? "No payer wallets to summarize."
-      : describeHint(spread);
+      : describeHint(spread, providerName);
 
   const maxShare = Math.max(0.0001, ...spread.buckets.map((b) => b.share));
 
@@ -71,13 +72,13 @@ export function ProviderSpreadChart({ spread }: ProviderSpreadChartProps) {
   );
 }
 
-function describeHint(spread: ProviderSpread): string {
+function describeHint(spread: ProviderSpread, providerName: string): string {
   const single = spread.buckets.find((b) => b.label === "1 provider");
   if (!single || spread.totalWallets === 0) {
     return `${spread.totalWallets} payer wallets observed`;
   }
   const multi = spread.totalWallets - single.count;
-  return `${formatPercent(single.share)} stick to a single provider · ${multi} payers cross over`;
+  return `${formatPercent(single.share)} stick to ${providerName} · ${multi} payers cross over`;
 }
 
 function formatPercent(value: number): string {
