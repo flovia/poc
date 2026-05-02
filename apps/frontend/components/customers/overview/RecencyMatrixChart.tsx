@@ -49,21 +49,19 @@ const ACCENT_FG: Record<CellSpec["accent"], string> = {
 
 export function RecencyMatrixChart({ matrix }: RecencyMatrixChartProps) {
   const total = matrix.totalWallets;
-  const hint = total === 0 ? "No payer wallets to summarize." : describeHint(matrix);
 
   return (
     <OverviewCard
-      eyebrow="Recency × Spend"
-      title="Where attention pays off"
-      hint={hint}
+      title="Account Segmentation by Recency × Spend"
     >
       <div
         style={{
           display: "grid",
           gridTemplateColumns: "1fr 1fr",
-          gridTemplateRows: "1fr 1fr",
+          gridTemplateRows: "repeat(2, minmax(0, 1fr))",
           gap: 8,
-          minHeight: 160,
+          height: "100%",
+          minHeight: 0,
         }}
       >
         {CELLS.map((spec) => {
@@ -97,7 +95,7 @@ export function RecencyMatrixChart({ matrix }: RecencyMatrixChartProps) {
                 />
                 <div
                   style={{
-                    fontSize: 11,
+                    fontSize: 12,
                     fontWeight: 600,
                     letterSpacing: "0.02em",
                     color: "var(--text-2)",
@@ -110,7 +108,7 @@ export function RecencyMatrixChart({ matrix }: RecencyMatrixChartProps) {
                 <span
                   className="display"
                   style={{
-                    fontSize: 24,
+                    fontSize: 26,
                     fontWeight: 600,
                     lineHeight: 1,
                     color: isEmphasized ? ACCENT_FG[spec.accent] : "var(--text-1)",
@@ -118,24 +116,17 @@ export function RecencyMatrixChart({ matrix }: RecencyMatrixChartProps) {
                 >
                   {count}
                 </span>
-                <span style={{ fontSize: 12, fontWeight: 500, color: "var(--text-3)" }}>
+                <span style={{ fontSize: 13, fontWeight: 500, color: "var(--text-3)" }}>
                   {formatPercent(share)}
                 </span>
               </div>
-              <div style={{ fontSize: 11, color: "var(--text-3)", lineHeight: 1.3 }}>{spec.hint}</div>
+              <div style={{ fontSize: 12, color: "var(--text-3)", lineHeight: 1.35 }}>{spec.hint}</div>
             </div>
           );
         })}
       </div>
     </OverviewCard>
   );
-}
-
-function describeHint(matrix: RecencyMatrix): string {
-  const { recentHigh, recentLow, staleHigh, staleLow } = matrix.cells;
-  const total = matrix.totalWallets;
-  const recent = recentHigh + recentLow;
-  return `Split by spend & recency medians · ${recent}/${total} wallets active recently · ${staleHigh + staleLow} dormant`;
 }
 
 function formatPercent(value: number): string {

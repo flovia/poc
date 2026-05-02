@@ -3,10 +3,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useCallback, useEffect, useId, useMemo, useState } from "react";
+import { useId, useMemo } from "react";
 import { useProviders } from "@/app/providers";
 import { Icon } from "@/components/ui/Icon";
-import { formatPayToShort, getDisplayPayTo, isDemoProvider } from "@/lib/providers";
+import { isDemoProvider } from "@/lib/providers";
 import type { DashboardMode } from "@/lib/data-mode";
 // Phase 9: barrel ではなく leaf module から直 import (sdk-fixtures の他データを引き込まないため).
 import { SDK_DEMO_PROVIDER_ID, SDK_DEMO_PROVIDER_NAME } from "@/lib/sdk-fixtures/shared";
@@ -68,25 +68,7 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
   // Phase 9: SDK connected モードでは disabled にしない.
   const navDisabled = isOnChainOnlyEmpty;
 
-  // My Customers サブナビは default 展開. localStorage で永続化, アクティブ時は強制展開.
   const customersGroupActive = activeRoute === "customers" || activeRoute === "wallet";
-  const [customersSubOpen, setCustomersSubOpen] = useState(true);
-  useEffect(() => {
-    try {
-      const v = localStorage.getItem("flovia.sidebar.customersSubOpen");
-      if (v === "0") setCustomersSubOpen(false);
-    } catch {}
-  }, []);
-  const toggleCustomersSub = useCallback(() => {
-    setCustomersSubOpen((prev) => {
-      const next = !prev;
-      try {
-        localStorage.setItem("flovia.sidebar.customersSubOpen", next ? "1" : "0");
-      } catch {}
-      return next;
-    });
-  }, []);
-  const customersSubVisible = customersGroupActive || customersSubOpen;
   const providerListId = useId();
 
   const navHrefFor = (segment: "customers" | "api-growth" | "macro-metrics" | "metrics-catalog") => {
@@ -158,7 +140,8 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
             aria-label="My Customers, setup required"
           >
             <Icon.customers />
-            My Customers
+            <span style={{ flex: 1 }}>My Customers</span>
+            <RealNavBadge />
           </span>
         ) : (
           <>
@@ -169,20 +152,9 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
                 aria-current={customersGroupActive}
               >
                 <Icon.customers />
-                My Customers
+                <span style={{ flex: 1 }}>My Customers</span>
+                <RealNavBadge />
               </Link>
-              <button
-                type="button"
-                className="nav-toggle"
-                aria-expanded={customersSubVisible}
-                aria-controls="nav-sub-customers"
-                aria-label={customersSubVisible ? "Collapse My Customers" : "Expand My Customers"}
-                onClick={toggleCustomersSub}
-                disabled={customersGroupActive}
-                title={customersGroupActive ? "Sub-pages of the active section" : undefined}
-              >
-                <span className="caret" aria-hidden="true">{customersSubVisible ? "▾" : "▸"}</span>
-              </button>
             </div>
             {(() => {
               const id =
@@ -195,7 +167,6 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
                 <div
                   id="nav-sub-customers"
                   className="nav-sub"
-                  hidden={!customersSubVisible}
                 >
                   <Link
                     href={coUsageHref}
@@ -215,10 +186,11 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
             role="link"
             className="nav-item disabled"
             aria-disabled="true"
-            aria-label="API Growth (mock), setup required"
+            aria-label="API Growth (demo), setup required"
           >
             <Icon.spark width={16} height={16} />
-            API Growth <span style={{ color: "var(--text-mute)", fontWeight: 400 }}>(mock)</span>
+            <span style={{ flex: 1 }}>API Growth</span>
+            <DemoNavBadge />
           </span>
         ) : (
           <Link
@@ -227,12 +199,13 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
             aria-current={activeRoute === "api-growth"}
           >
             <Icon.spark width={16} height={16} />
-            API Growth <span style={{ color: "var(--text-mute)", fontWeight: 400 }}>(mock)</span>
+            <span style={{ flex: 1 }}>API Growth</span>
+            <DemoNavBadge />
           </Link>
         )}
 
         <div className="provider-block">
-          <div className="label">Select API Provider</div>
+          <div className="label">API Providers</div>
 
           {!hydrated ? (
             <div className="provider-list">
@@ -256,7 +229,6 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
               {stored.map((p) => {
                 const isActive = p.providerId === activeProviderId;
                 const isDemo = isDemoProvider(p, demoOpted, userIds);
-                const isGenerated = p.source === "generated";
                 return (
                   <div key={p.providerId} className="provider-row" aria-current={isActive}>
                     <Link
@@ -300,26 +272,8 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
                           demo
                         </span>
                       )}
-                      {isGenerated && (
-                        <span
-                          style={{
-                            fontSize: 11,
-                            fontWeight: 600,
-                            padding: "1px 5px",
-                            borderRadius: 3,
-                            background: "rgba(45,127,249,0.14)",
-                            color: "var(--mesh-blue)",
-                            letterSpacing: "0.04em",
-                            textTransform: "uppercase",
-                            flexShrink: 0,
-                          }}
-                        >
-                          real
-                        </span>
-                      )}
-                      <span className="pay">{formatPayToShort(getDisplayPayTo(p))}</span>
                     </Link>
-                    {!isGenerated && (
+                    {p.source !== "generated" && (
                       <button
                         type="button"
                         className="x"
@@ -343,5 +297,45 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
         <span>Mock data · v0.4</span>
       </div>
     </aside>
+  );
+}
+
+function DemoNavBadge() {
+  return (
+    <span
+      style={{
+        fontSize: 11,
+        fontWeight: 600,
+        padding: "1px 5px",
+        borderRadius: 3,
+        background: "rgba(148,163,184,0.18)",
+        color: "var(--text-3)",
+        letterSpacing: "0.04em",
+        textTransform: "uppercase",
+        flexShrink: 0,
+      }}
+    >
+      demo
+    </span>
+  );
+}
+
+function RealNavBadge() {
+  return (
+    <span
+      style={{
+        fontSize: 11,
+        fontWeight: 600,
+        padding: "1px 5px",
+        borderRadius: 3,
+        background: "rgba(45,127,249,0.14)",
+        color: "var(--mesh-blue)",
+        letterSpacing: "0.04em",
+        textTransform: "uppercase",
+        flexShrink: 0,
+      }}
+    >
+      real
+    </span>
   );
 }

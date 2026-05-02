@@ -116,7 +116,7 @@ export function CoUsageProviderDrawer({ row, providerId, onClose }: Props) {
           <div style={{ minWidth: 0 }}>
             <div
               style={{
-                fontSize: 11,
+                fontSize: 12,
                 fontWeight: 600,
                 letterSpacing: "0.08em",
                 textTransform: "uppercase",
@@ -128,7 +128,7 @@ export function CoUsageProviderDrawer({ row, providerId, onClose }: Props) {
             </div>
             <h2
               style={{
-                fontSize: 18,
+                fontSize: 20,
                 fontWeight: 700,
                 margin: 0,
                 lineHeight: 1.3,
@@ -167,11 +167,11 @@ export function CoUsageProviderDrawer({ row, providerId, onClose }: Props) {
               <Stat label="Endpoints used" value={row.endpoints.length.toLocaleString()} />
             </div>
             <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 10 }}>
-              <span style={{ fontSize: 12, color: "var(--text-3)" }}>Opportunity</span>
+              <span style={{ fontSize: 13, color: "var(--text-3)" }}>Opportunity</span>
               <span className={opportunityChipClass(row.opportunity)}>
                 {opportunityLabel(row.opportunity)}
               </span>
-              <span style={{ fontSize: 12, color: "var(--text-3)" }}>
+              <span style={{ fontSize: 13, color: "var(--text-3)" }}>
                 Correlation {row.confidence.toFixed(2)}
               </span>
             </div>
@@ -183,7 +183,7 @@ export function CoUsageProviderDrawer({ row, providerId, onClose }: Props) {
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <code
                     style={{
-                      fontSize: 12,
+                      fontSize: 13,
                       background: "var(--surface-muted)",
                       padding: "4px 8px",
                       borderRadius: 4,
@@ -197,7 +197,7 @@ export function CoUsageProviderDrawer({ row, providerId, onClose }: Props) {
                     type="button"
                     onClick={handleCopy}
                     className="btn ghost"
-                    style={{ fontSize: 12, padding: "4px 8px" }}
+                    style={{ fontSize: 13, padding: "4px 8px" }}
                   >
                     {copied ? "Copied" : "Copy"}
                   </button>
@@ -207,26 +207,22 @@ export function CoUsageProviderDrawer({ row, providerId, onClose }: Props) {
               )}
             </Field>
             {externalSiteUrl && (
-              <Field label="Hostname">
+              <Field label="Provider site">
                 <a
                   href={externalSiteUrl}
                   target="_blank"
                   rel="noreferrer noopener"
-                  style={{ fontSize: 13 }}
+                  style={{ fontSize: 14 }}
                 >
                   {externalSiteUrl} ↗
                 </a>
-                <div style={{ fontSize: 11, color: "var(--text-mute)", marginTop: 2 }}>
-                  Opens in a new tab. Hostname is inferred from the BFF projection; verify
-                  ownership before reaching out.
-                </div>
               </Field>
             )}
           </Section>
 
           <Section title={`Endpoints (${row.endpoints.length})`}>
             {row.endpoints.length === 0 ? (
-              <div style={{ color: "var(--text-mute)", fontSize: 13 }}>
+              <div style={{ color: "var(--text-mute)", fontSize: 14 }}>
                 No endpoint detail available.
               </div>
             ) : (
@@ -256,7 +252,7 @@ export function CoUsageProviderDrawer({ row, providerId, onClose }: Props) {
                     <code
                       style={{
                         flex: 1,
-                        fontSize: 12,
+                        fontSize: 13,
                         wordBreak: "break-all",
                         color: "var(--text-1)",
                         background: "transparent",
@@ -267,7 +263,7 @@ export function CoUsageProviderDrawer({ row, providerId, onClose }: Props) {
                     </code>
                     <span
                       className="mono"
-                      style={{ fontSize: 11, color: "var(--text-2)", whiteSpace: "nowrap" }}
+                      style={{ fontSize: 12, color: "var(--text-2)", whiteSpace: "nowrap" }}
                     >
                       {ep.sharedTxCount} tx · {ep.sharedWallets} wallets
                     </span>
@@ -279,7 +275,7 @@ export function CoUsageProviderDrawer({ row, providerId, onClose }: Props) {
 
           <Section title={`Your customers paying this provider (${row.payerWallets.length})`}>
             {row.payerWallets.length === 0 ? (
-              <div style={{ color: "var(--text-mute)", fontSize: 13 }}>—</div>
+              <div style={{ color: "var(--text-mute)", fontSize: 14 }}>—</div>
             ) : (
               <ul
                 style={{
@@ -312,7 +308,7 @@ export function CoUsageProviderDrawer({ row, providerId, onClose }: Props) {
                       style={{
                         flex: 1,
                         minWidth: 0,
-                        fontSize: 12,
+                        fontSize: 13,
                         color: "var(--mesh-blue)",
                         textDecoration: "underline",
                         textDecorationStyle: "dotted",
@@ -323,7 +319,7 @@ export function CoUsageProviderDrawer({ row, providerId, onClose }: Props) {
                       {p.wallet}
                     </Link>
                     <span
-                      style={{ fontSize: 11, color: "var(--text-3)", whiteSpace: "nowrap" }}
+                      style={{ fontSize: 12, color: "var(--text-3)", whiteSpace: "nowrap" }}
                     >
                       {p.sharedTxCount} tx
                     </span>
@@ -331,23 +327,6 @@ export function CoUsageProviderDrawer({ row, providerId, onClose }: Props) {
                 ))}
               </ul>
             )}
-          </Section>
-
-          <Section title="Service description (coming soon)">
-            <div
-              style={{
-                fontSize: 13,
-                color: "var(--text-3)",
-                padding: 12,
-                border: "1px dashed var(--line)",
-                borderRadius: 4,
-                background: "var(--surface-subtle)",
-              }}
-            >
-              The BFF projection currently does not include a textual description, category, or
-              market-wide usage stats for external x402 providers. These will be filled in when
-              integration with an x402 directory / service registry lands.
-            </div>
           </Section>
         </div>
       </aside>
@@ -360,7 +339,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
     <section style={{ marginTop: 4, marginBottom: 22 }}>
       <h3
         style={{
-          fontSize: 11,
+          fontSize: 12,
           fontWeight: 600,
           letterSpacing: "0.08em",
           textTransform: "uppercase",
@@ -387,7 +366,7 @@ function Stat({ label, value }: { label: string; value: string }) {
     >
       <div
         style={{
-          fontSize: 10,
+          fontSize: 11,
           fontWeight: 600,
           letterSpacing: "0.06em",
           textTransform: "uppercase",
@@ -397,7 +376,7 @@ function Stat({ label, value }: { label: string; value: string }) {
       >
         {label}
       </div>
-      <div className="mono" style={{ fontSize: 18, fontWeight: 600, color: "var(--text-1)" }}>
+      <div className="mono" style={{ fontSize: 20, fontWeight: 600, color: "var(--text-1)" }}>
         {value}
       </div>
     </div>
@@ -409,7 +388,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     <div style={{ marginBottom: 10 }}>
       <div
         style={{
-          fontSize: 11,
+          fontSize: 12,
           fontWeight: 600,
           letterSpacing: "0.06em",
           textTransform: "uppercase",

@@ -70,7 +70,7 @@ describe("buildApiGrowthIntelligence", () => {
     expect(intelligence.useCaseFit.cards[0].frequency).toBeGreaterThan(10);
     expect(intelligence.useCaseFit.cards[0].agentFit).toBeGreaterThan(0);
     expect(intelligence.recommendations).toHaveLength(4);
-    expect(intelligence.routeSankey.title).toBe("Start → Intermediary → Next Category");
+    expect(intelligence.routeSankey.title).toBe("Initial Query → Intermediary → Downstream API");
     expect(intelligence.routeSankey.flows.length).toBeGreaterThan(0);
   });
 

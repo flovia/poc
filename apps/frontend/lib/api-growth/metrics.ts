@@ -246,7 +246,7 @@ const API_GROWTH_CHANNEL_PROFILES: ApiGrowthChannelProfile[] = [
     source: "Partner App",
     wallets: 55,
     firstPaid: 34,
-    retainedW2: 26,
+    retainedW2: 20,
     repeatSessions: 132,
     endpointCalls: {
       token_detail: 420,

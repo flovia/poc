@@ -10,9 +10,10 @@ import { WalletsSpendCard } from "./WalletsSpendCard";
 type CustomersOverviewProps = {
   customers: CustomerListItemDto[];
   totalSpendAtomic: string;
+  providerName: string;
 };
 
-export function CustomersOverview({ customers, totalSpendAtomic }: CustomersOverviewProps) {
+export function CustomersOverview({ customers, totalSpendAtomic, providerName }: CustomersOverviewProps) {
   const matrix = computeRecencyMatrix(customers);
   const spread = computeProviderSpread(customers);
 
@@ -31,7 +32,7 @@ export function CustomersOverview({ customers, totalSpendAtomic }: CustomersOver
         <WalletsSpendCard walletCount={customers.length} totalSpendAtomic={totalSpendAtomic} />
       </div>
       <div style={{ gridArea: "spread", display: "flex", minWidth: 0 }}>
-        <ProviderSpreadChart spread={spread} />
+        <ProviderSpreadChart spread={spread} providerName={providerName} />
       </div>
       <div style={{ gridArea: "recency", display: "flex", minWidth: 0 }}>
         <RecencyMatrixChart matrix={matrix} />

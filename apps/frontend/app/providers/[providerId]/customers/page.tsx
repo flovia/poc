@@ -13,7 +13,8 @@ export default async function CustomersPage({
 }) {
   const { providerId } = await params;
   const providers = await getProviders();
-  const payTo = providers.find((provider) => provider.providerId === providerId)?.payTo;
+  const activeProvider = providers.find((provider) => provider.providerId === providerId);
+  const payTo = activeProvider?.payTo;
   const [customers, extrasMap, pageCtx, summary] = await Promise.all([
     getCustomers(payTo),
     getSdkExtrasMap(),
@@ -46,7 +47,11 @@ export default async function CustomersPage({
             <SnapshotIndicator generatedAt={summary.generatedAt} />
           </div>
 
-          <CustomersOverview customers={customers} totalSpendAtomic={totalSpendAtomic} />
+          <CustomersOverview
+            customers={customers}
+            totalSpendAtomic={totalSpendAtomic}
+            providerName={activeProvider?.name ?? providerId}
+          />
 
           <CustomersBrowser
             customers={customers}

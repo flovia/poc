@@ -32,13 +32,13 @@ export function MacroRouteSankeySection({
       >
         <div>
           <div className="eyebrow" style={{ marginBottom: 6 }}>
-            P1 workflow routing
+            {chart.eyebrow}
           </div>
           <h3
             className="display"
             style={{ margin: 0, fontSize: 20, fontWeight: 650, letterSpacing: "-0.015em" }}
           >
-            Start → Intermediary → Next Category
+            {chart.title}
           </h3>
           <p
             style={{
@@ -49,9 +49,7 @@ export function MacroRouteSankeySection({
               maxWidth: 840,
             }}
           >
-            Shows which starting request categories route through each intermediary service and
-            which category users reach next. Hover a route to inspect request count, success rate,
-            p95 latency, error rate, and settled USDC.
+            {chart.description}
           </p>
         </div>
 

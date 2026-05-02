@@ -9,9 +9,7 @@ type WalletsSpendCardProps = {
 export function WalletsSpendCard({ walletCount, totalSpendAtomic }: WalletsSpendCardProps) {
   return (
     <OverviewCard
-      eyebrow="Snapshot totals"
       title="Wallets and spend"
-      hint="Aggregated across all payer wallets in this snapshot."
     >
       <div
         style={{
