@@ -30,12 +30,6 @@ export function ApiGrowthIntelligenceScreen({ intelligence }: Props) {
               API Growth Intelligence
             </h1>
           </div>
-          <div style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "end", flexWrap: "wrap" }}>
-            <p style={{ maxWidth: 880, color: "var(--text-2)", fontSize: 15, lineHeight: 1.6, margin: "8px 0 0" }}>
-              See where API users come from, what endpoints they repeat, why wallets come back,
-              and where x402 / Agents packaging should improve adoption.
-            </p>
-          </div>
         </header>
 
         <InsightGrid cards={intelligence.insightCards} />
