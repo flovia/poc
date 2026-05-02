@@ -2,15 +2,12 @@ import type { CSSProperties, ReactNode } from "react";
 import { EndpointSankey, type EndpointSankeyFlow } from "@/components/macro-metrics/EndpointSankey";
 import { formatAtomic, formatRatioPct } from "@/lib/format";
 import type {
-  ApiGrowthIntentRouteFlow,
   ApiGrowthServiceCandidate,
   ApiGrowthInsightCard,
   ApiGrowthInboundApiCohort,
   ApiGrowthIntelligence,
   ApiGrowthEndpointFlow,
-  ApiGrowthEndpointEntryCohort,
   ApiGrowthRepeatCohort,
-  ApiGrowthTimeToSecondPaidSession,
   SourceMediumQualityRow,
 } from "@/lib/api-growth/metrics";
 
@@ -42,7 +39,6 @@ export function ApiGrowthIntelligenceScreen({ intelligence }: Props) {
         <div style={{ display: "grid", gridTemplateColumns: "minmax(320px, 1fr) minmax(320px, 1fr) minmax(340px, 1fr)", gap: 14, alignItems: "start" }}>
           <SectionCard eyebrow="Source / Medium Adoption">
             <BubbleMatrix rows={intelligence.sourceMediumQuality.rows} />
-            <IntentRouteFlows flows={intelligence.sourceMediumQuality.intentRouteFlows} />
           </SectionCard>
 
           <SectionCard eyebrow="Endpoint & Frequency">
@@ -51,8 +47,6 @@ export function ApiGrowthIntelligenceScreen({ intelligence }: Props) {
 
           <SectionCard eyebrow="Repeat Intelligence">
             <SourceRepeatCohort cohorts={intelligence.repeatCohorts} />
-            <EndpointEntryCohort cohorts={intelligence.endpointEntryCohorts} />
-            <TimeToSecondPaidSession rows={intelligence.timeToSecondPaidSession} />
           </SectionCard>
         </div>
 
@@ -250,48 +244,6 @@ function SourceTable({ rows }: { rows: SourceMediumQualityRow[] }) {
   );
 }
 
-function IntentRouteFlows({ flows }: { flows: ApiGrowthIntentRouteFlow[] }) {
-  if (flows.length === 0) return null;
-  const sankeyFlows: EndpointSankeyFlow[] = flows.flatMap((flow) => [
-    {
-      from: flow.intentCategory,
-      to: flow.middleman,
-      fromStep: 0,
-      toStep: 1,
-      occurrences: flow.wallets,
-    },
-    {
-      from: flow.middleman,
-      to: flow.targetApiCategory,
-      fromStep: 1,
-      toStep: 2,
-      occurrences: flow.wallets,
-    },
-  ]);
-  const topFlow = [...flows].sort((left, right) => right.wallets - left.wallets)[0];
-
-  return (
-    <div style={{ borderTop: "1px solid var(--line)", paddingTop: 12, marginBottom: 12 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "baseline", marginBottom: 8 }}>
-        <div style={eyebrowStyle}>Intent → middleman → target API</div>
-        {topFlow && (
-          <span className="mono" style={{ color: "var(--text-3)", fontSize: 11 }}>
-            top route: {topFlow.middleman}
-          </span>
-        )}
-      </div>
-      <div style={{ padding: 12, borderRadius: 6, border: "1px solid var(--line)", background: "var(--surface-card)" }}>
-        <div style={{ overflowX: "auto" }}>
-          <EndpointSankey flows={sankeyFlows} compact />
-        </div>
-        <div style={{ color: "var(--text-mute)", fontSize: 11, marginTop: 8 }}>
-          Wider links indicate more wallets moving from intent through middleman to target API category.
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function EndpointFlow({ flows }: { flows: ApiGrowthEndpointFlow[] }) {
   const sankeyFlows: EndpointSankeyFlow[] = flows;
   const strongestFlow = [...flows].sort((left, right) => right.occurrences - left.occurrences)[0];
@@ -311,64 +263,6 @@ function EndpointFlow({ flows }: { flows: ApiGrowthEndpointFlow[] }) {
       </div>
       <div style={{ color: "var(--text-mute)", fontSize: 11, marginTop: 8 }}>
         Wider links indicate more observed paid transitions across repeated API sessions.
-      </div>
-    </div>
-  );
-}
-
-function EndpointEntryCohort({ cohorts }: { cohorts: ApiGrowthEndpointEntryCohort[] }) {
-  if (cohorts.length === 0) return null;
-
-  const columns: Array<{ key: keyof ApiGrowthEndpointEntryCohort; label: string }> = [
-    { key: "week0", label: "W0" },
-    { key: "week1", label: "W1" },
-    { key: "week2", label: "W2" },
-    { key: "week3", label: "W3" },
-  ];
-
-  return (
-    <div style={{ borderTop: "1px solid var(--line)", paddingTop: 12 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "baseline", marginBottom: 8 }}>
-        <div style={eyebrowStyle}>Endpoint entry cohort</div>
-        <span style={{ color: "var(--text-mute)", fontSize: 11 }}>provider return after first endpoint behavior</span>
-      </div>
-      <div style={{ display: "grid", gap: 6 }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1.25fr repeat(4, 0.55fr)", gap: 6, color: "var(--text-mute)", fontSize: 10, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" }}>
-          <span>First behavior</span>
-          {columns.map((column) => (
-            <span key={column.label} style={{ textAlign: "center" }}>{column.label}</span>
-          ))}
-        </div>
-        {cohorts.slice(0, 4).map((cohort) => (
-          <div key={cohort.behavior} style={{ display: "grid", gridTemplateColumns: "1.25fr repeat(4, 0.55fr)", gap: 6, alignItems: "center" }}>
-            <div style={{ minWidth: 0 }}>
-              <strong style={{ display: "block", fontSize: 12, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{cohort.behavior}</strong>
-              <span style={{ color: "var(--text-mute)", fontSize: 10 }}>{cohort.wallets} wallets</span>
-            </div>
-            {columns.map((column) => {
-              const value = Number(cohort[column.key]);
-              return (
-                <span
-                  key={column.label}
-                  className="mono"
-                  style={{
-                    display: "inline-flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    minHeight: 28,
-                    borderRadius: 6,
-                    background: repeatCohortCellColor(value),
-                    color: value >= 0.72 ? "#ffffff" : "var(--text-2)",
-                    fontSize: 11,
-                    fontWeight: 750,
-                  }}
-                >
-                  {formatRatioPct(value)}
-                </span>
-              );
-            })}
-          </div>
-        ))}
       </div>
     </div>
   );
@@ -439,39 +333,6 @@ function repeatCohortCellColor(value: number): string {
   return "var(--surface-muted)";
 }
 
-function TimeToSecondPaidSession({ rows }: { rows: ApiGrowthTimeToSecondPaidSession[] }) {
-  if (rows.length === 0) return null;
-  const maxHours = Math.max(...rows.map((row) => row.medianHours), 1);
-
-  return (
-    <div style={{ borderTop: "1px solid var(--line)", marginTop: 14, paddingTop: 12 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "baseline", marginBottom: 8 }}>
-        <div style={eyebrowStyle}>Time to second paid session</div>
-        <span style={{ color: "var(--text-mute)", fontSize: 11 }}>speed of repeat activation</span>
-      </div>
-      <div style={{ display: "grid", gap: 8 }}>
-        {rows.map((row) => (
-          <div key={row.source}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 10, alignItems: "baseline", marginBottom: 5 }}>
-              <strong style={{ fontSize: 12 }}>{row.source}</strong>
-              <span className="mono" style={{ color: row.medianHours <= 24 ? "var(--teal)" : "var(--text-2)", fontWeight: 800 }}>
-                {row.medianHours}h median
-              </span>
-            </div>
-            <div style={{ height: 7, borderRadius: 999, background: "var(--surface-muted)", overflow: "hidden" }}>
-              <div style={{ width: `${Math.max(6, (1 - row.medianHours / maxHours) * 94 + 6)}%`, height: "100%", background: row.medianHours <= 24 ? "var(--teal)" : "var(--mesh-blue)" }} />
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between", gap: 8, color: "var(--text-mute)", fontSize: 11, marginTop: 3 }}>
-              <span>{row.repeatedWallets} repeated wallets</span>
-              <span>{formatRatioPct(row.within24hRate)} within 24h · {formatRatioPct(row.within7dRate)} within 7d</span>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 function OtherServiceCandidates({
   candidates,
   inboundCohorts,
@@ -484,25 +345,27 @@ function OtherServiceCandidates({
   }
 
   return (
-    <div style={{ display: "grid", gap: 10 }}>
-      <p style={{ ...bodyText, margin: "0 0 2px" }}>
-        APIs with high overlap among repeat wallets using this provider. Ranked by shared wallet
-        count, spend, and workflow fit.
-      </p>
-      {candidates.slice(0, 4).map((candidate) => (
-        <div key={candidate.serviceId} style={{ padding: 12, border: "1px solid var(--line)", borderRadius: 8, background: "var(--surface-card)" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "start", marginBottom: 8 }}>
-            <div>
-              <strong style={{ fontSize: 14 }}>{candidate.serviceName}</strong>
+    <div style={{ display: "grid", gridTemplateColumns: "minmax(280px, 0.9fr) minmax(360px, 1.1fr)", gap: 14, alignItems: "start" }}>
+      <div style={{ display: "grid", gap: 10 }}>
+        <p style={{ ...bodyText, margin: "0 0 2px" }}>
+          APIs with high overlap among repeat wallets using this provider. Ranked by shared wallet
+          count, spend, and workflow fit.
+        </p>
+        {candidates.slice(0, 4).map((candidate) => (
+          <div key={candidate.serviceId} style={{ padding: 12, border: "1px solid var(--line)", borderRadius: 8, background: "var(--surface-card)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "start", marginBottom: 8 }}>
+              <div>
+                <strong style={{ fontSize: 14 }}>{candidate.serviceName}</strong>
+              </div>
+              <span className="mono" style={{ color: "var(--mesh-blue)", fontSize: 12, fontWeight: 800 }}>{formatRatioPct(candidate.confidence)} fit</span>
             </div>
-            <span className="mono" style={{ color: "var(--mesh-blue)", fontSize: 12, fontWeight: 800 }}>{formatRatioPct(candidate.confidence)} fit</span>
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 10, color: "var(--text-3)", fontSize: 12 }}>
+              <span>{candidate.sharedWallets} shared wallets</span>
+              <span className="mono">${formatAtomic(candidate.sharedSpendAtomic, 6, 0)} paid spend</span>
+            </div>
           </div>
-          <div style={{ display: "flex", justifyContent: "space-between", gap: 10, color: "var(--text-3)", fontSize: 12 }}>
-            <span>{candidate.sharedWallets} shared wallets</span>
-            <span className="mono">${formatAtomic(candidate.sharedSpendAtomic, 6, 0)} paid spend</span>
-          </div>
-        </div>
-      ))}
+        ))}
+      </div>
       <InboundApiCohort cohorts={inboundCohorts} />
     </div>
   );
@@ -519,7 +382,7 @@ function InboundApiCohort({ cohorts }: { cohorts: ApiGrowthInboundApiCohort[] })
   ];
 
   return (
-    <div style={{ borderTop: "1px solid var(--line)", marginTop: 4, paddingTop: 12 }}>
+    <div style={{ borderLeft: "1px solid var(--line)", paddingLeft: 14 }}>
       <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "baseline", marginBottom: 8 }}>
         <div style={eyebrowStyle}>Inbound API cohorts</div>
         <span style={{ color: "var(--text-mute)", fontSize: 11 }}>return after trying this API</span>
