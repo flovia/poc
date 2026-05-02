@@ -16,6 +16,7 @@ export type SourceMediumQualityRow = {
   source: string;
   wallets: number;
   firstPaid: number;
+  activationRate: number;
   repeatRate: number;
   endpointFrequency: number;
   qualityScore: number;
@@ -776,6 +777,7 @@ function buildSourceMediumRows(
         source,
         wallets,
         firstPaid,
+        activationRate: round(ratio(firstPaid, wallets)),
         repeatRate: round(repeatRate),
         endpointFrequency: round(endpointFrequency, 1),
         qualityScore: round(qualityScore),

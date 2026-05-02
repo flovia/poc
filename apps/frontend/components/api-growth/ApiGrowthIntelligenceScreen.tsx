@@ -279,7 +279,7 @@ function SourceTable({ rows }: { rows: SourceMediumQualityRow[] }) {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "1.25fr 0.6fr 0.7fr 0.7fr 0.85fr",
+          gridTemplateColumns: "1.2fr 0.55fr 0.85fr 0.7fr 0.85fr",
           gap: 8,
           padding: "8px 0",
           color: "var(--text-mute)",
@@ -291,7 +291,7 @@ function SourceTable({ rows }: { rows: SourceMediumQualityRow[] }) {
       >
         <span>Source</span>
         <span style={{ textAlign: "right" }}>Wallets</span>
-        <span style={{ textAlign: "right" }}>First paid</span>
+        <span style={{ textAlign: "right" }}>Activated</span>
         <span style={{ textAlign: "right" }}>W2 repeat</span>
         <span style={{ textAlign: "right" }}>Calls / wallet</span>
       </div>
@@ -300,7 +300,7 @@ function SourceTable({ rows }: { rows: SourceMediumQualityRow[] }) {
           key={row.source}
           style={{
             display: "grid",
-            gridTemplateColumns: "1.25fr 0.6fr 0.7fr 0.7fr 0.85fr",
+            gridTemplateColumns: "1.2fr 0.55fr 0.85fr 0.7fr 0.85fr",
             gap: 8,
             alignItems: "center",
             padding: "10px 0",
@@ -312,7 +312,7 @@ function SourceTable({ rows }: { rows: SourceMediumQualityRow[] }) {
             <strong style={{ fontSize: 13 }}>{row.source}</strong>
           </div>
           <span className="mono" style={{ textAlign: "right", color: "var(--text-1)", fontWeight: 650 }}>{row.wallets}</span>
-          <span className="mono" style={{ textAlign: "right", color: "var(--text-1)", fontWeight: 650 }}>{row.firstPaid}</span>
+          <span className="mono" style={{ textAlign: "right", color: "var(--text-1)", fontWeight: 650 }}>{row.firstPaid} · {formatRatioPct(row.activationRate)}</span>
           <span className="mono" style={{ textAlign: "right", color: row.repeatQuality >= 0.7 ? "var(--teal)" : "var(--text-2)", fontWeight: 700 }}>{formatRatioPct(row.repeatQuality)}</span>
           <span className="mono" style={{ textAlign: "right", color: "var(--mesh-blue)", fontWeight: 700 }}>{row.endpointFrequency.toFixed(1)}</span>
         </div>

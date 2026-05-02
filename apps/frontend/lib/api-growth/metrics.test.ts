@@ -22,6 +22,9 @@ describe("buildApiGrowthIntelligence", () => {
     expect(
       intelligence.sourceMediumQuality.rows.find((row) => row.source === "Dexter")?.wallets,
     ).toBe(60);
+    expect(
+      intelligence.sourceMediumQuality.rows.find((row) => row.source === "Dexter")?.activationRate,
+    ).toBeGreaterThan(0.7);
     expect(intelligence.sourceMediumQuality.rows[0].qualityScore).toBeGreaterThan(0);
     expect(
       intelligence.sourceMediumQuality.rows.find((row) => row.source === "AgentKit MCP")
