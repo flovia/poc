@@ -1,9 +1,9 @@
 import type { CoUsageProviderRow } from "@/lib/customers/co-usage-providers";
 import { OverviewCard } from "./overview/OverviewCard";
 
-const TOP_N = 8;
-const ROW_HEIGHT = 26;
-const ROW_GAP = 4;
+const TOP_N = 6;
+const ROW_HEIGHT = 22;
+const ROW_GAP = 3;
 const LABEL_WIDTH = 200;
 const VALUE_WIDTH = 144;
 const PAD = { l: 12, r: 12, t: 8, b: 8 };
@@ -70,8 +70,8 @@ export function CoUsageProvidersChart({
           const y = PAD.t + index * (ROW_HEIGHT + ROW_GAP);
           const barX = PAD.l + LABEL_WIDTH;
           const barLength = (row.sharedWallets / maxWallets) * barAreaWidth;
-          const barY = y + 6;
-          const barH = ROW_HEIGHT - 12;
+          const barY = y + 5;
+          const barH = ROW_HEIGHT - 10;
           const valueX = barX + barAreaWidth + 6;
           const opacity = txOpacity(row.sharedTxCount, maxTx);
 
@@ -107,7 +107,7 @@ export function CoUsageProvidersChart({
                 y={y + ROW_HEIGHT / 2}
                 dy="0.32em"
                 textAnchor="end"
-                fontSize={12}
+                fontSize={11}
                 fill="var(--text-1)"
                 style={{ textDecoration: clickable ? "underline" : undefined, textDecorationStyle: "dotted", textDecorationColor: "var(--text-mute)" }}
               >
@@ -140,7 +140,7 @@ export function CoUsageProvidersChart({
                 x={valueX}
                 y={y + ROW_HEIGHT / 2}
                 dy="0.32em"
-                fontSize={11}
+                fontSize={10.5}
                 fill="var(--text-2)"
                 className="mono"
               >
