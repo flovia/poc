@@ -11,7 +11,7 @@ describe("lightsail shared stack", () => {
     expect(compose).toContain("    image: caddy:2-alpine");
     expect(compose).toContain('      - "${CADDY_HTTP_PORT:-80}:80"');
     expect(compose).toContain('      - "${CADDY_HTTPS_PORT:-443}:443"');
-    expect(compose).toContain("      - ./deploy/caddy/Caddyfile:/etc/caddy/Caddyfile:ro");
+    expect(compose).toContain("      - ./deploy/caddy:/etc/caddy:ro");
     expect(compose).toContain("      - caddy_data:/data");
     expect(compose).toContain("      - caddy_config:/config");
     expect(compose).toContain("volumes:\n  caddy_data:\n  caddy_config:\n");
@@ -21,7 +21,7 @@ describe("lightsail shared stack", () => {
   test("caddyfile routes both branches with stripped prefixes", () => {
     const caddyfile = read("../../deploy/caddy/Caddyfile");
 
-    expect(caddyfile).toContain("{$CADDY_SITE_ADDRESS:api.flovia402.com}");
+    expect(caddyfile).toContain("(api_routes) {");
     expect(caddyfile).toContain("handle / {");
     expect(caddyfile).toContain('respond "{\\"branches\\":[\\"main\\",\\"develop\\"]}" 200');
     expect(caddyfile).toContain("redir /main /main/ 308");
@@ -33,6 +33,9 @@ describe("lightsail shared stack", () => {
     expect(caddyfile).toContain("reverse_proxy develop-bff:3001 {");
     expect(caddyfile).toContain("header_up X-Forwarded-Prefix /develop");
     expect(caddyfile).toContain('respond "not found" 404');
+    expect(caddyfile).toContain("api.flovia402.com {");
+    expect(caddyfile).toContain("http:// {");
+    expect(caddyfile).toContain("import api_routes");
   });
 
   test("deployment sync provisions caddy stack assets", () => {
@@ -44,13 +47,13 @@ describe("lightsail shared stack", () => {
     expect(syncScript).toContain('upsert_env_var "$stack_env_file" CADDY_HTTP_PORT "80"');
     expect(syncScript).toContain('upsert_env_var "$stack_env_file" CADDY_HTTPS_PORT "443"');
     expect(syncScript).toContain(
-      'sync_optional_env_var "$stack_env_file" CADDY_SITE_ADDRESS "${CADDY_SITE_ADDRESS:-}"',
-    );
-    expect(syncScript).toContain(
       'docker compose --env-file "$stack_env_file" -f "$stack_compose_file" pull "$service_name" caddy',
     );
     expect(syncScript).toContain(
       'docker compose --env-file "$stack_env_file" -f "$stack_compose_file" up -d --remove-orphans "$service_name" caddy',
+    );
+    expect(syncScript).toContain(
+      'docker compose --env-file "$stack_env_file" -f "$stack_compose_file" exec -T -w /etc/caddy caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile',
     );
     expect(syncScript).not.toContain("nginx");
   });
