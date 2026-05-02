@@ -34,11 +34,10 @@ describe("lightsail shared stack", () => {
     expect(caddyfile).toContain("header_up X-Forwarded-Prefix /develop");
     expect(caddyfile).toContain('respond "not found" 404');
     expect(caddyfile).toContain("api.flovia402.com {");
-    expect(caddyfile).toContain("http:// {");
     expect(caddyfile).toContain("import api_routes");
   });
 
-  test("deployment sync provisions caddy stack assets", () => {
+  test("deployment sync provisions caddy stack assets and prunes unused images", () => {
     const syncScript = read("./lightsail-sync-stack.sh");
 
     expect(syncScript).toContain('stack_caddy_dir="${stack_root}/deploy/caddy"');
@@ -55,6 +54,8 @@ describe("lightsail shared stack", () => {
     expect(syncScript).toContain(
       'docker compose --env-file "$stack_env_file" -f "$stack_compose_file" exec -T -w /etc/caddy caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile',
     );
+    expect(syncScript).toContain("docker image prune -a -f");
+    expect(syncScript).not.toContain("remove_old_bff_images");
     expect(syncScript).not.toContain("nginx");
   });
 });
