@@ -215,10 +215,10 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
             role="link"
             className="nav-item disabled"
             aria-disabled="true"
-            aria-label="API Growth, setup required"
+            aria-label="API Growth (mock), setup required"
           >
             <Icon.spark width={16} height={16} />
-            API Growth
+            API Growth <span style={{ color: "var(--text-mute)", fontWeight: 400 }}>(mock)</span>
           </span>
         ) : (
           <Link
@@ -227,7 +227,7 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
             aria-current={activeRoute === "api-growth"}
           >
             <Icon.spark width={16} height={16} />
-            API Growth
+            API Growth <span style={{ color: "var(--text-mute)", fontWeight: 400 }}>(mock)</span>
           </Link>
         )}
 
