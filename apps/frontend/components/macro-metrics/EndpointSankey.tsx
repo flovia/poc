@@ -19,6 +19,7 @@ type EndpointSankeyProps = {
   emptyMessage?: string;
   height?: number;
   minWidth?: number;
+  labelFontSize?: number;
   margin?: {
     top: number;
     right: number;
@@ -51,6 +52,7 @@ export function EndpointSankey({
   emptyMessage = "No endpoint flow detected.",
   height,
   minWidth,
+  labelFontSize,
   margin,
 }: EndpointSankeyProps) {
   if (flows.length === 0) {
@@ -60,6 +62,7 @@ export function EndpointSankey({
   const data = buildSankeyData(flows);
   const resolvedHeight = height ?? (compact ? 220 : 320);
   const resolvedMinWidth = minWidth ?? (compact ? 420 : 560);
+  const resolvedLabelFontSize = labelFontSize ?? (compact ? 10 : 12);
   const resolvedMargin =
     margin ??
     (compact
@@ -94,7 +97,7 @@ export function EndpointSankey({
         ariaLabel={ariaLabel}
         animate={false}
         theme={{
-          text: { fill: "var(--text-2)", fontSize: compact ? 10 : 12 },
+          text: { fill: "var(--text-2)", fontSize: resolvedLabelFontSize },
           tooltip: {
             container: {
               background: "var(--bg-elev-1)",

@@ -180,10 +180,10 @@ function BubbleMatrix({ rows }: { rows: SourceMediumQualityRow[] }) {
         <line x1={plot.left} y1={plot.top} x2={plot.left} y2={plot.bottom} stroke="var(--line-strong)" />
         <line x1={plot.splitX} y1={plot.top} x2={plot.splitX} y2={plot.bottom} stroke="var(--line-strong)" strokeDasharray="4 4" />
         <line x1={plot.left} y1={plot.splitY} x2={plot.right} y2={plot.splitY} stroke="var(--line-strong)" strokeDasharray="4 4" />
-        <text x={plot.left + 10} y={plot.top + 16} fill="var(--text-3)" fontSize="10" fontWeight="700">Niche adoption</text>
-        <text x={plot.splitX + 56} y={plot.top + 16} fill="var(--mesh-blue)" fontSize="10" fontWeight="700">Scale / double down</text>
-        <text x={plot.left + 10} y={plot.bottom - 10} fill="var(--text-mute)" fontSize="10">Low priority</text>
-        <text x={plot.splitX + 40} y={plot.bottom - 10} fill="var(--text-3)" fontSize="10" fontWeight="700">Improve retention</text>
+        <text x={plot.left + 10} y={plot.top + 16} fill="var(--text-3)" fontSize="12" fontWeight="700">Niche adoption</text>
+        <text x={plot.splitX + 56} y={plot.top + 16} fill="var(--mesh-blue)" fontSize="12" fontWeight="700">Scale / double down</text>
+        <text x={plot.left + 10} y={plot.bottom - 10} fill="var(--text-mute)" fontSize="12">Low priority</text>
+        <text x={plot.splitX + 40} y={plot.bottom - 10} fill="var(--text-3)" fontSize="12" fontWeight="700">Improve retention</text>
         {bubbles.map(({ row, index, r, x, y }) => {
           const label = labels[index];
           const labelWidth = bubbleLabelWidth(row.source);
@@ -196,18 +196,18 @@ function BubbleMatrix({ rows }: { rows: SourceMediumQualityRow[] }) {
                 x={label.x - labelWidth / 2}
                 y={label.y - 11}
                 width={labelWidth}
-                height="14"
+                height="16"
                 rx="4"
                 fill="var(--surface-card)"
                 stroke="var(--line)"
                 opacity="0.94"
               />
-              <text x={label.x} y={label.y} textAnchor="middle" fill="var(--text-2)" fontSize="10" fontWeight="700">{row.source}</text>
+              <text x={label.x} y={label.y} textAnchor="middle" fill="var(--text-2)" fontSize="12" fontWeight="700">{row.source}</text>
             </g>
           );
         })}
-        <text x={(plot.left + plot.right) / 2} y="228" textAnchor="middle" fill="var(--text-3)" fontSize="11">Acquisition volume, normalized to largest source</text>
-        <text x="10" y={(plot.top + plot.bottom) / 2} transform={`rotate(-90 10 ${(plot.top + plot.bottom) / 2})`} textAnchor="middle" fill="var(--text-3)" fontSize="11">Repeat adoption</text>
+        <text x={(plot.left + plot.right) / 2} y="228" textAnchor="middle" fill="var(--text-3)" fontSize="12">Acquisition volume, normalized to largest source</text>
+        <text x="10" y={(plot.top + plot.bottom) / 2} transform={`rotate(-90 10 ${(plot.top + plot.bottom) / 2})`} textAnchor="middle" fill="var(--text-3)" fontSize="12">Repeat adoption</text>
       </svg>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
         <span style={chipStyle}>bubble = paid endpoint frequency</span>
@@ -323,9 +323,10 @@ function EndpointFlow({ flows }: { flows: ApiGrowthEndpointFlow[] }) {
           compact
           minWidth={0}
           margin={{ top: 12, right: 72, bottom: 12, left: 72 }}
+          labelFontSize={12}
         />
       </div>
-      <div style={{ color: "var(--text-mute)", fontSize: 11, marginTop: 8 }}>
+      <div style={{ color: "var(--text-mute)", fontSize: 12, marginTop: 8 }}>
         Wider links indicate more observed paid transitions across repeated API sessions.
       </div>
     </div>
@@ -345,10 +346,10 @@ function SourceRepeatCohort({ cohorts }: { cohorts: ApiGrowthRepeatCohort[] }) {
     <div style={{ display: "grid", gap: 10, marginBottom: 14 }}>
       <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "baseline" }}>
         <div style={eyebrowStyle}>Source repeat cohort</div>
-        <span style={{ color: "var(--text-mute)", fontSize: 11 }}>share of paid wallets active again</span>
+        <span style={{ color: "var(--text-mute)", fontSize: 12 }}>share of paid wallets active again</span>
       </div>
       <div style={{ display: "grid", gap: 6 }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1.15fr repeat(3, 0.55fr)", gap: 6, color: "var(--text-mute)", fontSize: 10, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1.15fr repeat(3, 0.55fr)", gap: 6, color: "var(--text-mute)", fontSize: 12, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" }}>
           <span>Source cohort</span>
           {columns.map((column) => (
             <span key={column.label} style={{ textAlign: "center" }}>{column.label}</span>
@@ -357,8 +358,8 @@ function SourceRepeatCohort({ cohorts }: { cohorts: ApiGrowthRepeatCohort[] }) {
         {cohorts.slice(0, 6).map((cohort) => (
           <div key={cohort.cohort} style={{ display: "grid", gridTemplateColumns: "1.15fr repeat(3, 0.55fr)", gap: 6, alignItems: "center" }}>
             <div style={{ minWidth: 0 }}>
-              <strong style={{ display: "block", fontSize: 12, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{cohort.cohort}</strong>
-              <span style={{ color: "var(--text-mute)", fontSize: 10 }}>{cohort.paidWallets} paid wallets</span>
+              <strong style={{ display: "block", fontSize: 14, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{cohort.cohort}</strong>
+              <span style={{ color: "var(--text-mute)", fontSize: 12 }}>{cohort.paidWallets} paid wallets</span>
             </div>
             {columns.map((column) => {
               const value = Number(cohort[column.key]);
@@ -374,7 +375,7 @@ function SourceRepeatCohort({ cohorts }: { cohorts: ApiGrowthRepeatCohort[] }) {
                     borderRadius: 6,
                     background: repeatCohortCellColor(value),
                     color: value >= 0.72 ? "#ffffff" : "var(--text-2)",
-                    fontSize: 11,
+                    fontSize: 12,
                     fontWeight: 750,
                   }}
                 >
@@ -445,14 +446,14 @@ function InboundApiCohort({ cohorts }: { cohorts: ApiGrowthInboundApiCohort[] })
   return (
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "baseline", marginBottom: 8 }}>
-        <span style={{ color: "var(--text-mute)", fontSize: 11 }}>return after trying this API</span>
+        <span style={{ color: "var(--text-mute)", fontSize: 12 }}>return after trying this API</span>
       </div>
-      <p style={{ ...bodyText, margin: "0 0 8px", fontSize: 12 }}>
+      <p style={{ ...bodyText, margin: "0 0 8px", fontSize: 13 }}>
         Customers with prior activity on another API, grouped by that observed API, then measured by
         whether they returned after trying this API.
       </p>
       <div style={{ display: "grid", gap: 6 }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1.15fr 0.5fr repeat(4, 0.48fr)", gap: 6, color: "var(--text-mute)", fontSize: 10, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1.15fr 0.5fr repeat(4, 0.48fr)", gap: 6, color: "var(--text-mute)", fontSize: 12, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" }}>
           <span>Origin API</span>
           <span style={{ textAlign: "right" }}>Tried</span>
           {columns.map((column) => (
@@ -461,8 +462,8 @@ function InboundApiCohort({ cohorts }: { cohorts: ApiGrowthInboundApiCohort[] })
         </div>
         {cohorts.map((cohort) => (
           <div key={cohort.originApi} style={{ display: "grid", gridTemplateColumns: "1.15fr 0.5fr repeat(4, 0.48fr)", gap: 6, alignItems: "center" }}>
-            <strong style={{ display: "block", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 12 }}>{cohort.originApi}</strong>
-            <span className="mono" style={{ color: "var(--text-2)", fontSize: 11, fontWeight: 750, textAlign: "right" }}>{cohort.triedWallets}</span>
+            <strong style={{ display: "block", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 14 }}>{cohort.originApi}</strong>
+            <span className="mono" style={{ color: "var(--text-2)", fontSize: 12, fontWeight: 750, textAlign: "right" }}>{cohort.triedWallets}</span>
             {columns.map((column) => {
               const value = Number(cohort[column.key]);
               return (
@@ -477,7 +478,7 @@ function InboundApiCohort({ cohorts }: { cohorts: ApiGrowthInboundApiCohort[] })
                     borderRadius: 6,
                     background: inboundCohortCellColor(value),
                     color: value >= 0.72 ? "#ffffff" : "var(--text-2)",
-                    fontSize: 10,
+                    fontSize: 12,
                     fontWeight: 750,
                   }}
                 >
