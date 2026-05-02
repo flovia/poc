@@ -37,7 +37,7 @@ export function ApiGrowthIntelligenceScreen({ intelligence }: Props) {
 
         <InsightGrid cards={intelligence.insightCards} />
 
-        <div style={{ display: "grid", gridTemplateColumns: "minmax(320px, 1fr) minmax(320px, 1fr) minmax(340px, 1fr)", gap: 14, alignItems: "start" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 600px), 1fr))", gap: 14, alignItems: "start" }}>
           <SectionCard eyebrow="Source / Medium Adoption">
             <BubbleMatrix rows={intelligence.sourceMediumQuality.rows} />
           </SectionCard>
@@ -48,6 +48,10 @@ export function ApiGrowthIntelligenceScreen({ intelligence }: Props) {
 
           <SectionCard eyebrow="Repeat Intelligence">
             <SourceRepeatCohort cohorts={intelligence.repeatCohorts} />
+          </SectionCard>
+
+          <SectionCard eyebrow="Other Service Candidates">
+            <OtherServiceCandidates candidates={intelligence.otherServiceCandidates} />
           </SectionCard>
         </div>
 
@@ -62,10 +66,7 @@ export function ApiGrowthIntelligenceScreen({ intelligence }: Props) {
           <div className="eyebrow" style={{ marginBottom: 8 }}>
             Growth Action Bridge
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "minmax(280px, 0.9fr) minmax(360px, 1.1fr)", gap: 14, alignItems: "start" }}>
-            <SectionCard eyebrow="Other Service Candidates" title="Adjacent API opportunities">
-              <OtherServiceCandidates candidates={intelligence.otherServiceCandidates} />
-            </SectionCard>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 600px), 1fr))", gap: 14, alignItems: "start" }}>
             <SectionCard eyebrow="Inbound API cohorts">
               <InboundApiCohort cohorts={intelligence.inboundApiCohorts} />
             </SectionCard>
@@ -121,7 +122,8 @@ function SectionCard({ eyebrow, title, children }: { eyebrow?: string; title?: R
 
 function BubbleMatrix({ rows }: { rows: SourceMediumQualityRow[] }) {
   const maxVolumeShare = Math.max(...rows.map((row) => row.volumeShare), 0.01);
-  const plot = { left: 28, top: 14, right: 346, bottom: 204, splitX: 187, splitY: 109 };
+  const chartWidth = 480;
+  const plot = { left: 28, top: 14, right: 466, bottom: 204, splitX: 247, splitY: 109 };
   const bubbles = rows.map((row, index) => {
     const normalizedVolume = row.volumeShare / maxVolumeShare;
     const r = 8 + Math.min(row.endpointFrequency / 3, 18);
@@ -136,16 +138,20 @@ function BubbleMatrix({ rows }: { rows: SourceMediumQualityRow[] }) {
   const labels = spreadBubbleLabels(
     bubbles.map((bubble) => ({
       source: bubble.row.source,
-      x: bubble.x < plot.splitX ? bubble.x - bubble.r - 18 : bubble.x + bubble.r + 18,
-      y: bubble.y + bubble.r + 13,
+      x:
+        bubble.x < plot.splitX
+          ? bubble.x - bubble.r - bubbleLabelWidth(bubble.row.source) / 2 - 5
+          : bubble.x + bubble.r + bubbleLabelWidth(bubble.row.source) / 2 + 5,
+      y: bubble.y + 4,
     })),
     plot.top + 14,
     plot.bottom - 12,
+    chartWidth,
   );
 
   return (
     <div style={{ border: "1px solid var(--line)", borderRadius: 6, padding: 12, background: "var(--surface-card)", marginBottom: 14 }}>
-      <svg viewBox="0 0 360 240" role="img" aria-label="Source medium quality bubble matrix" style={{ width: "100%", height: 240, display: "block" }}>
+      <svg viewBox={`0 0 ${chartWidth} 240`} role="img" aria-label="Source medium quality bubble matrix" style={{ width: "100%", height: 240, display: "block" }}>
         <rect x={plot.left} y={plot.top} width={plot.right - plot.left} height={plot.bottom - plot.top} fill="var(--surface-subtle)" />
         <line x1={plot.left} y1={plot.bottom} x2={plot.right} y2={plot.bottom} stroke="var(--line-strong)" />
         <line x1={plot.left} y1={plot.top} x2={plot.left} y2={plot.bottom} stroke="var(--line-strong)" />
@@ -158,10 +164,11 @@ function BubbleMatrix({ rows }: { rows: SourceMediumQualityRow[] }) {
         {bubbles.map(({ row, index, r, x, y }) => {
           const label = labels[index];
           const labelWidth = bubbleLabelWidth(row.source);
+          const labelSide = label.x < x ? -1 : 1;
           return (
             <g key={row.source}>
               <circle cx={x} cy={y} r={r} fill={index % 2 === 0 ? "var(--mesh-blue)" : "var(--teal)"} opacity="0.82" stroke="var(--surface-card)" strokeWidth="2" />
-              <line x1={x} y1={y + r + 2} x2={label.x} y2={label.y - 9} stroke="var(--line-strong)" strokeWidth="1" opacity="0.58" />
+              <line x1={x + labelSide * (r + 2)} y1={y} x2={label.x - labelSide * (labelWidth / 2 + 1)} y2={label.y - 4} stroke="var(--line-strong)" strokeWidth="1" opacity="0.58" />
               <rect
                 x={label.x - labelWidth / 2}
                 y={label.y - 11}
@@ -191,13 +198,14 @@ function spreadBubbleLabels(
   labels: Array<{ source: string; x: number; y: number }>,
   minY: number,
   maxY: number,
+  chartWidth: number,
 ): Array<{ source: string; x: number; y: number }> {
   const minGap = 18;
   const sorted = labels
     .map((label, index) => ({
       ...label,
       index,
-      x: clamp(label.x, 66 + bubbleLabelWidth(label.source) / 2, 318 - bubbleLabelWidth(label.source) / 2),
+      x: clamp(label.x, 16 + bubbleLabelWidth(label.source) / 2, chartWidth - 16 - bubbleLabelWidth(label.source) / 2),
       y: clamp(label.y, minY, maxY),
     }))
     .sort((left, right) => left.y - right.y);
@@ -286,12 +294,12 @@ function EndpointFlow({ flows }: { flows: ApiGrowthEndpointFlow[] }) {
           </span>
         )}
       </div>
-      <div style={{ overflowX: "auto", display: "flex", justifyContent: "center" }}>
+      <div style={{ overflow: "hidden", display: "flex", justifyContent: "center", minWidth: 0 }}>
         <EndpointSankey
           flows={sankeyFlows}
           compact
-          minWidth={480}
-          margin={{ top: 12, right: 96, bottom: 12, left: 96 }}
+          minWidth={0}
+          margin={{ top: 12, right: 72, bottom: 12, left: 72 }}
         />
       </div>
       <div style={{ color: "var(--text-mute)", fontSize: 11, marginTop: 8 }}>
@@ -376,14 +384,10 @@ function OtherServiceCandidates({
   }
 
   return (
-    <div style={{ display: "grid", gap: 10 }}>
-      <p style={{ ...bodyText, margin: "0 0 2px" }}>
-        APIs with high overlap among repeat wallets using this provider. Ranked by shared wallet
-        count, spend, and workflow fit.
-      </p>
+    <div style={{ display: "grid", gap: 8 }}>
       {candidates.slice(0, 4).map((candidate) => (
-        <div key={candidate.serviceId} style={{ padding: 12, border: "1px solid var(--line)", borderRadius: 8, background: "var(--surface-card)" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "start", marginBottom: 8 }}>
+        <div key={candidate.serviceId} style={{ padding: "10px 12px", border: "1px solid var(--line)", borderRadius: 8, background: "var(--surface-card)" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "start", marginBottom: 6 }}>
             <div>
               <strong style={{ fontSize: 14 }}>{candidate.serviceName}</strong>
             </div>
