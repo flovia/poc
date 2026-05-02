@@ -87,6 +87,22 @@ export type ApiGrowthRepeatCohort = {
   week3: number;
 };
 
+export type ApiGrowthEndpointEntryCohort = {
+  behavior: string;
+  wallets: number;
+  week0: number;
+  week1: number;
+  week2: number;
+  week3: number;
+};
+
+export type ApiGrowthRepeatWalletSegment = {
+  segment: string;
+  repeatRate: number;
+  wallets: number;
+  endpointFlow: string;
+};
+
 export type ApiGrowthIntelligence = {
   insightCards: ApiGrowthInsightCard[];
   sourceMediumQuality: {
@@ -102,6 +118,8 @@ export type ApiGrowthIntelligence = {
   };
   repeatWalletRate: ApiGrowthRepeatWalletRate;
   repeatCohorts: ApiGrowthRepeatCohort[];
+  endpointEntryCohorts: ApiGrowthEndpointEntryCohort[];
+  repeatWalletSegments: ApiGrowthRepeatWalletSegment[];
   otherServiceCandidates: ApiGrowthServiceCandidate[];
   recommendations: ApiGrowthRecommendation[];
   proxyNote: string;
@@ -308,6 +326,8 @@ export function buildApiGrowthIntelligence(data: MacroMetricsDemoData): ApiGrowt
   const useCaseCards = buildUseCaseCards(data, sessionsByWallet, walletByAddress);
   const repeatWalletRate = buildRepeatWalletRate(data, sessionsByWallet);
   const repeatCohorts = buildRepeatCohorts(data, sessionsByWallet);
+  const endpointEntryCohorts = buildEndpointEntryCohorts(data, endpointRows);
+  const repeatWalletSegments = buildRepeatWalletSegments(data, useCaseCards);
   const otherServiceCandidates = buildOtherServiceCandidates(data);
   const highestFrequencyChannel = topBy(sourceRows, (row) => row.endpointFrequency);
   const bestChannel = topBy(
@@ -364,6 +384,8 @@ export function buildApiGrowthIntelligence(data: MacroMetricsDemoData): ApiGrowt
     useCaseFit: { cards: useCaseCards },
     repeatWalletRate,
     repeatCohorts,
+    endpointEntryCohorts,
+    repeatWalletSegments,
     otherServiceCandidates,
     recommendations: buildRecommendations(sourceRows, endpointRows, useCaseCards),
     proxyNote:
@@ -401,6 +423,98 @@ function buildRepeatCohorts(
     week1: row.repeatQuality,
     week2: row.repeatQuality,
     week3: round(row.repeatQuality * 0.82),
+  }));
+}
+
+function buildEndpointEntryCohorts(
+  data: MacroMetricsDemoData,
+  endpointRows: EndpointFrequencyRow[],
+): ApiGrowthEndpointEntryCohort[] {
+  if (data.wallets.length > 0) {
+    return [
+      {
+        behavior: "pool_search → token_price",
+        wallets: 89,
+        week0: 1,
+        week1: 0.82,
+        week2: 0.71,
+        week3: 0.63,
+      },
+      {
+        behavior: "token_detail included",
+        wallets: 74,
+        week0: 1,
+        week1: 0.76,
+        week2: 0.68,
+        week3: 0.55,
+      },
+      {
+        behavior: "token_price only",
+        wallets: 63,
+        week0: 1,
+        week1: 0.54,
+        week2: 0.42,
+        week3: 0.31,
+      },
+      {
+        behavior: "simple_price only",
+        wallets: 48,
+        week0: 1,
+        week1: 0.44,
+        week2: 0.31,
+        week3: 0.18,
+      },
+    ];
+  }
+
+  return endpointRows.slice(0, 4).map((row) => ({
+    behavior: row.endpoint,
+    wallets: row.wallets,
+    week0: row.wallets === 0 ? 0 : 1,
+    week1: round(Math.min(0.9, row.callsPerWallet / 12)),
+    week2: round(Math.min(0.82, row.callsPerWallet / 15)),
+    week3: round(Math.min(0.72, row.callsPerWallet / 18)),
+  }));
+}
+
+function buildRepeatWalletSegments(
+  data: MacroMetricsDemoData,
+  useCaseCards: UseCaseFitCard[],
+): ApiGrowthRepeatWalletSegment[] {
+  if (data.wallets.length > 0) {
+    return [
+      {
+        segment: "Agent-like workflow",
+        repeatRate: 0.88,
+        wallets: 48,
+        endpointFlow: "pool_search → token_price → token_detail",
+      },
+      {
+        segment: "Research workflow",
+        repeatRate: 0.71,
+        wallets: 36,
+        endpointFlow: "trending_pools → pool_search",
+      },
+      {
+        segment: "Execution workflow",
+        repeatRate: 0.64,
+        wallets: 29,
+        endpointFlow: "token_detail → token_price",
+      },
+      {
+        segment: "One-off lookup",
+        repeatRate: 0.22,
+        wallets: 34,
+        endpointFlow: "simple_price only",
+      },
+    ];
+  }
+
+  return useCaseCards.map((card) => ({
+    segment: card.useCase,
+    repeatRate: card.confidence,
+    wallets: Math.max(0, Math.round(card.frequency)),
+    endpointFlow: card.endpointFlow,
   }));
 }
 
