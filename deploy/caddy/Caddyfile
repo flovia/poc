@@ -1,0 +1,23 @@
+# Use a public DNS name here on Lightsail to get ACME certificates automatically.
+{$CADDY_SITE_ADDRESS:localhost} {
+	handle / {
+		header Content-Type application/json
+		respond "{\"branches\":[\"main\",\"develop\"]}" 200
+	}
+
+	redir /main /main/ 308
+	handle_path /main/* {
+		reverse_proxy main-bff:3001 {
+			header_up X-Forwarded-Prefix /main
+		}
+	}
+
+	redir /develop /develop/ 308
+	handle_path /develop/* {
+		reverse_proxy develop-bff:3001 {
+			header_up X-Forwarded-Prefix /develop
+		}
+	}
+
+	respond "not found" 404
+}
