@@ -1,5 +1,5 @@
 # Use a public DNS name here on Lightsail to get ACME certificates automatically.
-{$CADDY_SITE_ADDRESS:localhost} {
+api.flovia402.com {
 	handle / {
 		header Content-Type application/json
 		respond "{\"branches\":[\"main\",\"develop\"]}" 200
