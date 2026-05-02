@@ -170,8 +170,7 @@ export function adaptCustomerProfile(response: PhaseBCustomerProfileResponse): C
       label: profile.identity.label,
       role: "payer_wallet",
       identityBasis: "wallet_address",
-      caveat:
-        profile.identity.caveat ?? "Payer wallet identity is inferred from BFF demo projection.",
+      caveat: profile.identity.caveat ?? "Payer wallet identity is inferred from demo data.",
     },
     metrics: {
       spendAtomic: profile.metrics.spendAtomic,
@@ -287,7 +286,7 @@ export function adaptSummaryFromCustomers(response: PhaseBCustomerListResponse):
       relayerSummaries: 0,
       walletUsageGraphProviderWallets: 0,
     },
-    scopeNote: "Synthetic summary derived from /customers (Phase B BFF does not expose /summary).",
+    scopeNote: "Synthetic summary derived from customer data.",
     observations,
     dailyMetrics: [],
   };
