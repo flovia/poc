@@ -45,4 +45,5 @@ packages/*/node_modules/
 /.claude/
 /.cursor/
 /.codex
+/.agents
 docker-data/
