@@ -26,6 +26,8 @@ function AgentBadge({ agentType }: { agentType: string }) {
     <span
       data-testid="customers-agent-badge"
       style={{
+        display: "inline-block",
+        verticalAlign: "middle",
         fontSize: 11,
         fontWeight: 600,
         padding: "2px 8px",
@@ -117,7 +119,6 @@ export function CustomersTable({
             align="right"
           />
         </div>
-        <div aria-hidden />
       </div>
       {customers.length === 0 && (
         <div style={{ padding: 24, color: "var(--text-3)", fontSize: 14 }}>
@@ -214,11 +215,20 @@ export function CustomersTable({
               </div>
             )}
 
-            <div className="mono" style={{ fontSize: 12, color: "var(--text-3)" }}>
-              {formatTimestamp(c.lastSeenAt)}
-            </div>
-            <div className="row-arrow" style={{ display: "flex", justifyContent: "flex-end" }}>
-              <Icon.arrow width="14" height="14" />
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "flex-end",
+                gap: 10,
+              }}
+            >
+              <span className="mono" style={{ fontSize: 12, color: "var(--text-3)" }}>
+                {formatTimestamp(c.lastSeenAt)}
+              </span>
+              <span className="row-arrow" style={{ display: "inline-flex", alignItems: "center" }}>
+                <Icon.arrow width="14" height="14" />
+              </span>
             </div>
           </Link>
         );

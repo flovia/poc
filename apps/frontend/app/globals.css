@@ -529,8 +529,7 @@ a { color: inherit; text-decoration: none; }
     140px              /* Spend */
     120px              /* Observations */
     100px              /* Providers */
-    140px              /* Last seen */
-    28px;              /* Arrow */
+    160px;             /* Last seen + arrow */
   align-items: center;
   gap: 14px;
   padding: 14px 18px;
@@ -551,8 +550,7 @@ a { color: inherit; text-decoration: none; }
     100px               /* Providers */
     minmax(160px, 1fr)  /* Used endpoint (sdk) */
     100px               /* Sparkline (sdk) */
-    140px               /* Last seen */
-    28px;               /* Arrow */
+    160px;              /* Last seen + arrow */
 }
 .cust-row:last-child { border-bottom: none; }
 .cust-row.cust-head {
