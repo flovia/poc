@@ -33,16 +33,26 @@ export default async function CustomersPage({
         crumbs={[{ label: "Customers" }]}
         dataMode={pageCtx.dataMode}
         onboarding={{
-          id: "my-customers",
+          id: "my-customers-wallet-profile",
           title: "Understand your customers",
           description:
-            "See who is adopting your API, where usage is growing, and which accounts are worth your attention.",
+            "Click a wallet address to open a Flovia profile for that payer: spend history, AI agent context, endpoint usage, and cross-provider activity in one place.",
           metrics: [
             { label: "Customer count", description: "The scale of your active customer base.", icon: "customers" },
-            { label: "Request volume", description: "Which customers drive the most API usage.", icon: "activity" },
-            { label: "Growth trend", description: "Where adoption is gaining or losing momentum.", icon: "growth" },
-            { label: "Retention", description: "How consistently customers keep coming back.", icon: "repeat" },
+            {
+              label: "Wallet profiles",
+              description:
+                "Click a wallet address to open an internal profile, not a block explorer: spend history, AI agent context, endpoint usage, and cross-provider activity.",
+              icon: "spark",
+            },
+            { label: "Request volume", description: "Which wallets drive the most API usage.", icon: "activity" },
+            {
+              label: "Network signals",
+              description: "How the same payer wallet appears across providers and use cases.",
+              icon: "external",
+            },
           ],
+          visual: "walletProfile",
         }}
       />
       <div className="scroll">

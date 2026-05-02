@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useState, type ReactNode } from "react";
 import { Icon } from "@/components/ui/Icon";
 
 export type PageOnboardingMetric = {
@@ -15,6 +15,7 @@ export type PageOnboardingContent = {
   description: string;
   metrics: PageOnboardingMetric[];
   note?: string;
+  visual?: "walletProfile";
 };
 
 type PageOnboardingProps = {
@@ -107,6 +108,7 @@ export function PageOnboarding({ content }: PageOnboardingProps) {
                 </div>
               ))}
             </div>
+            {content.visual === "walletProfile" ? <WalletProfileOnboardingVisual /> : null}
             {content.note ? (
               <div className="onboarding-modal-note">
                 <span>{content.note}</span>
@@ -119,6 +121,82 @@ export function PageOnboarding({ content }: PageOnboardingProps) {
         </div>
       ) : null}
     </>
+  );
+}
+
+export function WalletProfileOnboardingVisual() {
+  return (
+    <div className="onboarding-wallet-visual" aria-hidden="true">
+      <div className="onboarding-wallet-window-bar">
+        <span />
+        <span />
+        <span />
+      </div>
+      <div className="onboarding-wallet-mini-table">
+        <div className="onboarding-wallet-mini-head">
+          <span>Wallet</span>
+          <span>Spend</span>
+          <span>Providers</span>
+        </div>
+        <div className="onboarding-wallet-mini-row">
+          <div className="onboarding-wallet-mini-wallet">
+            <span className="mono">0x15c3...bc2b</span>
+            <small>Wallet profile →</small>
+          </div>
+          <span className="mono">12,450 USDC</span>
+          <span className="mono">4</span>
+        </div>
+        <span className="onboarding-wallet-cursor" />
+      </div>
+
+      <div className="onboarding-wallet-opened-label">↓ Click for detail analytics</div>
+
+      <div className="onboarding-wallet-preview-panel">
+        <div className="onboarding-wallet-preview-header">
+          <div>
+            <div className="onboarding-wallet-preview-kicker">Wallet profile</div>
+            <div className="mono onboarding-wallet-preview-address">0x15c3...bc2b</div>
+          </div>
+        </div>
+        <div className="onboarding-wallet-preview-grid">
+          <OnboardingWalletPreviewItem
+            icon={<Icon.spark />}
+            label="Spend history"
+            value="payments, last seen, 7d trend"
+          />
+          <OnboardingWalletPreviewItem
+            icon={<Icon.bolt />}
+            label="AI agent context"
+            value="agent type and top endpoint"
+          />
+          <OnboardingWalletPreviewItem
+            icon={<Icon.customers />}
+            label="Provider network"
+            value="other providers this wallet pays"
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function OnboardingWalletPreviewItem({
+  icon,
+  label,
+  value,
+}: {
+  icon: ReactNode;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="onboarding-wallet-preview-item">
+      <span className="onboarding-wallet-preview-icon">{icon}</span>
+      <div>
+        <div className="onboarding-wallet-preview-label">{label}</div>
+        <div className="onboarding-wallet-preview-value">{value}</div>
+      </div>
+    </div>
   );
 }
 
