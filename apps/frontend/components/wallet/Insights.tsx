@@ -7,7 +7,7 @@ import type {
 } from "@/lib/api/types";
 import type { DashboardMode } from "@/lib/data-mode";
 import type { SdkExtras } from "@/lib/sdk-fixtures/types";
-import { formatAtomic, formatGrowth, formatRatioPct, formatTimestamp, shortAddr } from "@/lib/format";
+import { formatAtomic, formatGrowth, formatRatioPct } from "@/lib/format";
 import { InsightCard } from "./InsightCard";
 import { UpsellExplanationPanel } from "./UpsellExplanationPanel";
 
@@ -267,6 +267,18 @@ export function EntryPointInsight({
           <>No attribution candidates matched this wallet&apos;s observations yet.</>
         )}
       </div>
+      <div
+        style={{
+          marginTop: 10,
+          paddingTop: 10,
+          borderTop: "1px solid var(--line)",
+          fontSize: 12,
+          lineHeight: 1.5,
+          color: "var(--text-mute)",
+        }}
+      >
+        Install the Flovia SDK on your API to capture exact step position and per-loop attribution.
+      </div>
     </InsightCard>
   );
 }
@@ -280,7 +292,7 @@ export function RecentActivityInsight({
 }) {
   const growth = metrics.activityGrowth;
   const providerCount = providers.length;
-  const hasSignal = growth !== 0 || providerCount > 0;
+  const hasGrowthSignal = growth !== 0;
 
   return (
     <InsightCard
@@ -290,7 +302,7 @@ export function RecentActivityInsight({
       delay={150}
     >
       <div style={{ fontSize: 14, lineHeight: 1.55, color: "var(--text-1)" }}>
-        {hasSignal ? (
+        {hasGrowthSignal ? (
           <>
             Recent activity is{" "}
             <span
@@ -303,76 +315,54 @@ export function RecentActivityInsight({
             <span className="mono" style={{ color: "var(--text-1)", fontWeight: 600 }}>
               {providerCount}
             </span>{" "}
-            provider {providerCount === 1 ? "wallet" : "wallets"} observed by the BFF.
+            provider {providerCount === 1 ? "wallet" : "wallets"} so far.
+          </>
+        ) : providerCount > 0 ? (
+          <>
+            This wallet has paid{" "}
+            <span className="mono" style={{ color: "var(--text-1)", fontWeight: 600 }}>
+              {providerCount}
+            </span>{" "}
+            provider {providerCount === 1 ? "wallet" : "wallets"} so far.
           </>
         ) : (
-          <>No recent activity baseline available yet.</>
+          <>No co-usage activity observed yet.</>
         )}
       </div>
-    </InsightCard>
-  );
-}
-
-export function ProviderUsageList({ providers }: { providers: CustomerProviderUsageDto[] }) {
-  return (
-    <InsightCard
-      tone="blue"
-      icon={<Icon.spark width="11" height="11" />}
-      label={`Providers used (${providers.length})`}
-      delay={120}
-    >
-      {providers.length === 0 ? (
-        <div style={{ fontSize: 13, color: "var(--text-3)" }}>
-          No provider usage in this projection.
-        </div>
-      ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          {providers.map((p) => (
-            <div
-              key={p.providerId + p.payToWallet}
-              style={{
-                display: "grid",
-                gridTemplateColumns: "minmax(0, 1fr) auto",
-                gap: 8,
-                alignItems: "baseline",
-              }}
-            >
-              <div style={{ minWidth: 0 }}>
-                <div
-                  style={{
-                    fontSize: 14,
-                    fontWeight: 500,
-                    color: "var(--text-1)",
-                    whiteSpace: "nowrap",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                  }}
-                  title={p.name}
-                >
-                  {p.name}
-                </div>
-                <div className="mono" style={{ fontSize: 11, color: "var(--text-mute)", marginTop: 2 }}>
-                  pay-to {shortAddr(p.payToWallet)} · {p.transactionCount} tx · last{" "}
-                  {formatTimestamp(p.lastSeenAt)}
-                </div>
-              </div>
-              <span className="mono" style={{ fontSize: 13, color: "var(--text-2)" }}>
-                {formatAtomic(p.spendAtomic)}
-              </span>
-            </div>
-          ))}
+      {!hasGrowthSignal && (
+        <div
+          style={{
+            marginTop: 10,
+            paddingTop: 10,
+            borderTop: "1px solid var(--line)",
+            fontSize: 12,
+            lineHeight: 1.5,
+            color: "var(--text-mute)",
+          }}
+        >
+          Growth versus an earlier baseline is not yet available. Install the Flovia SDK on your API
+          to track week-over-week activity changes for this wallet.
         </div>
       )}
     </InsightCard>
   );
 }
 
+// `info` (= partnership classification) は現状 Co-usage Map と情報が重複し、
+// API provider にとって読み取れるアクションが薄いため非表示にする。
+// upsell / retention のように具体的な営業判断につながる severity だけ残す。
 export function InsightsList({ insights }: { insights: CustomerInsightDto[] }) {
-  if (insights.length === 0) return null;
+  const actionable = insights.filter((insight) => insight.severity !== "info");
+  if (actionable.length === 0) return null;
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-      {insights.map((insight, i) => (
-        <InsightCard key={i} tone={SEVERITY_TONE[insight.severity]} label={insight.severity} delay={180 + i * 40}>
+      {actionable.map((insight, i) => (
+        <InsightCard
+          key={i}
+          tone={SEVERITY_TONE[insight.severity]}
+          label={insight.severity}
+          delay={180 + i * 40}
+        >
           <div style={{ fontSize: 14, fontWeight: 500, color: "var(--text-1)", marginBottom: 4 }}>
             {insight.title}
           </div>

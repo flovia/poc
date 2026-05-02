@@ -61,16 +61,23 @@ export function IdentityBar({ customer, metrics, dataMode, sdkExtras }: Identity
     >
       <div
         style={{
-          display: "grid",
-          gridTemplateColumns: "minmax(280px, auto) 1fr auto",
-          gap: 24,
-          alignItems: "center",
+          display: "flex",
+          flexDirection: "column",
+          gap: 20,
           position: "relative",
         }}
       >
-        {/* Left: Address + identity caveat */}
-        <div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+        {/* Top row: Address + identity caveat */}
+        <div style={{ minWidth: 0 }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              marginBottom: 8,
+              minWidth: 0,
+            }}
+          >
             <span
               style={{
                 width: 8,
@@ -78,17 +85,26 @@ export function IdentityBar({ customer, metrics, dataMode, sdkExtras }: Identity
                 borderRadius: "50%",
                 background: "var(--mesh-blue)",
                 boxShadow: "none",
+                flexShrink: 0,
               }}
             />
             <span
               className="mono display"
-              style={{ fontSize: 24, fontWeight: 600, letterSpacing: "0.01em" }}
+              style={{
+                fontSize: 22,
+                fontWeight: 600,
+                letterSpacing: "0.01em",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                minWidth: 0,
+              }}
             >
               {customer.address}
             </span>
             <button
               className="btn ghost"
-              style={{ padding: "4px 6px", color: "var(--text-3)" }}
+              style={{ padding: "4px 6px", color: "var(--text-3)", flexShrink: 0 }}
               title="Copy"
             >
               <Icon.copy width="13" height="13" />
@@ -142,89 +158,114 @@ export function IdentityBar({ customer, metrics, dataMode, sdkExtras }: Identity
           </div>
         </div>
 
-        {/* Center: KPIs derived from BFF metrics */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 16 }}>
-          <KPI
-            label="Total spend"
-            big
-            value={totalSpendDisplay}
-            sub={totalSpendSub}
-            hue="default"
-          />
-          <KPI
-            label="Activity growth"
-            big
-            value={
-              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                <span
-                  className="mono display"
-                  style={{ fontSize: 32, fontWeight: 700, color: "var(--signal-priority)", letterSpacing: "-0.01em" }}
-                >
-                  {growthDisplay}
-                </span>
-                {isSdkConnected && hasSdkUpsell && sdkExtras!.sparkline7d.length > 0 && (
-                  <Sparkline7d points={sdkExtras!.sparkline7d} width={140} height={36} />
-                )}
-              </div>
-            }
-            sub={growthSub}
-            hue="blue"
-          />
-          <KPI
-            label="Spend progress"
-            value={
-              <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 2 }}>
-                <span
-                  className="mono display"
-                  style={{
-                    fontSize: 32,
-                    fontWeight: 700,
-                    color: freeTierPct >= 80 ? "var(--warn)" : "var(--text-1)",
-                    letterSpacing: "-0.01em",
-                  }}
-                >
-                  {freeTierPct}%
-                </span>
-                <FreeTierBar pct={freeTierPct} height={6} />
-              </div>
-            }
-            sub="PoC heuristic: linear progress to 3M atomic units"
-            hue={freeTierPct >= 80 ? "warn" : "default"}
-          />
-        </div>
-
-        {/* Right: entry-point ratio */}
+        {/* Bottom row: KPIs + entry-point ratio */}
         <div
           style={{
-            padding: "12px 14px",
-            borderRadius: 4,
-            background: "var(--surface-subtle)",
-            border: "1px solid var(--line-strong)",
-            boxShadow: "none",
-            minWidth: 220,
-            position: "relative",
+            display: "grid",
+            gridTemplateColumns: "minmax(0, 1fr) minmax(220px, 280px)",
+            gap: 24,
+            alignItems: "stretch",
+            borderTop: "1px solid var(--line)",
+            paddingTop: 18,
           }}
         >
+          {/* KPIs derived from BFF metrics */}
           <div
             style={{
-              fontSize: 12,
-              fontWeight: 600,
-              letterSpacing: "0.06em",
-              textTransform: "uppercase",
-              color: "var(--teal)",
-              marginBottom: 6,
-              display: "flex",
-              alignItems: "center",
-              gap: 5,
+              display: "grid",
+              gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+              gap: 20,
+              minWidth: 0,
             }}
           >
-            <Icon.bolt width="11" height="11" /> Entry-point ratio
+            <KPI
+              label="Total spend"
+              big
+              value={totalSpendDisplay}
+              sub={totalSpendSub}
+              hue="default"
+            />
+            <KPI
+              label="Activity growth"
+              big
+              value={
+                <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                  <span
+                    className="mono display"
+                    style={{
+                      fontSize: 28,
+                      fontWeight: 700,
+                      color: "var(--signal-priority)",
+                      letterSpacing: "-0.01em",
+                      marginTop: 4,
+                    }}
+                  >
+                    {growthDisplay}
+                  </span>
+                  {isSdkConnected && hasSdkUpsell && sdkExtras!.sparkline7d.length > 0 && (
+                    <Sparkline7d points={sdkExtras!.sparkline7d} width={140} height={36} />
+                  )}
+                </div>
+              }
+              sub={growthSub}
+              hue="blue"
+            />
+            <KPI
+              label="Spend progress"
+              value={
+                <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 4 }}>
+                  <span
+                    className="mono display"
+                    style={{
+                      fontSize: 28,
+                      fontWeight: 700,
+                      color: freeTierPct >= 80 ? "var(--warn)" : "var(--text-1)",
+                      letterSpacing: "-0.01em",
+                    }}
+                  >
+                    {freeTierPct}%
+                  </span>
+                  <FreeTierBar pct={freeTierPct} height={6} />
+                </div>
+              }
+              sub="PoC heuristic: linear progress to 3M atomic units"
+              hue={freeTierPct >= 80 ? "warn" : "default"}
+            />
           </div>
-          <div className="display" style={{ fontSize: 18, fontWeight: 600, lineHeight: 1.3 }}>
-            <span className="mono" style={{ color: "var(--mesh-blue)" }}>
-              {formatRatioPct(metrics.entryPointRatio, 0)}
-            </span>{" "}
-            of observations matched an attribution candidate
+
+          {/* Entry-point ratio */}
+          <div
+            style={{
+              padding: "12px 14px",
+              borderRadius: 4,
+              background: "var(--surface-subtle)",
+              border: "1px solid var(--line-strong)",
+              boxShadow: "none",
+              position: "relative",
+              minWidth: 0,
+            }}
+          >
+            <div
+              style={{
+                fontSize: 12,
+                fontWeight: 600,
+                letterSpacing: "0.06em",
+                textTransform: "uppercase",
+                color: "var(--teal)",
+                marginBottom: 6,
+                display: "flex",
+                alignItems: "center",
+                gap: 5,
+              }}
+            >
+              <Icon.bolt width="11" height="11" /> Entry-point ratio
+            </div>
+            <div className="display" style={{ fontSize: 16, fontWeight: 600, lineHeight: 1.4 }}>
+              <span className="mono" style={{ color: "var(--mesh-blue)" }}>
+                {formatRatioPct(metrics.entryPointRatio, 0)}
+              </span>{" "}
+              of observations matched an attribution candidate
+            </div>
           </div>
         </div>
       </div>

@@ -15,14 +15,6 @@ export const Icon = {
       <circle cx="12.5" cy="6.5" r="1.6" stroke="currentColor" strokeWidth="1.4" />
     </svg>
   ),
-  patterns: ({ className, ...p }: IconProps) => (
-    <svg viewBox="0 0 16 16" fill="none" {...A11Y_DEFAULTS} {...p} className={navIcon(className)}>
-      <circle cx="3.5" cy="3.5" r="1.6" stroke="currentColor" strokeWidth="1.4" />
-      <circle cx="12.5" cy="4" r="1.6" stroke="currentColor" strokeWidth="1.4" />
-      <circle cx="8" cy="12.5" r="1.6" stroke="currentColor" strokeWidth="1.4" />
-      <path d="M5 4 L11 4.2 M4.5 5 L7.2 11.2 M11.5 5.5 L9 11.2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-    </svg>
-  ),
   setup: ({ className, ...p }: IconProps) => (
     <svg viewBox="0 0 16 16" fill="none" {...A11Y_DEFAULTS} {...p} className={navIcon(className)}>
       <circle cx="8" cy="8" r="2.2" stroke="currentColor" strokeWidth="1.4" />
@@ -51,8 +43,8 @@ export const Icon = {
       <path d="M3 11V4a1 1 0 0 1 1-1h7" stroke="currentColor" strokeWidth="1.3" />
     </svg>
   ),
-  bolt: (p: IconProps) => (
-    <svg viewBox="0 0 16 16" fill="none" {...A11Y_DEFAULTS} {...p}>
+  bolt: ({ className, ...p }: IconProps) => (
+    <svg viewBox="0 0 16 16" fill="none" {...A11Y_DEFAULTS} {...p} className={navIcon(className)}>
       <path d="M9 1.5 4 9h3.5L7 14.5 12 7H8.5z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
     </svg>
   ),

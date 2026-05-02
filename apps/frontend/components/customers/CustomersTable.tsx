@@ -2,11 +2,13 @@
 
 import Link from "next/link";
 import { Icon } from "@/components/ui/Icon";
+import { ChainBadge } from "./ChainBadge";
 import { HeaderTooltip } from "./HeaderTooltip";
 import { UpsellPill } from "./UpsellPill";
 import { Sparkline7d } from "@/components/wallet/Sparkline7d";
 import { classNames, formatAtomic, formatTimestamp } from "@/lib/format";
 import type { CustomerListItemDto } from "@/lib/api/types";
+import { getCustomerChainAttribution } from "@/lib/customers/chain";
 import type { DashboardMode } from "@/lib/data-mode";
 import type { SdkExtras } from "@/lib/sdk-fixtures/types";
 
@@ -15,6 +17,9 @@ type CustomersTableProps = {
   providerId: string;
   dataMode: DashboardMode;
   extrasMap: Map<string, SdkExtras>;
+  // フィルタ適用前の元件数。フィルタで 0 件になった場合と、BFF projection が
+  // 空の場合とで empty state の文言を出し分けるために使う。
+  totalBeforeFilter: number;
 };
 
 function AgentBadge({ agentType }: { agentType: string }) {
@@ -45,6 +50,7 @@ export function CustomersTable({
   providerId,
   dataMode,
   extrasMap,
+  totalBeforeFilter,
 }: CustomersTableProps) {
   const isSdkConnected = dataMode === "sdkConnected";
   const rowClass = isSdkConnected ? "cust-row cust-row-sdk" : "cust-row";
@@ -65,6 +71,12 @@ export function CustomersTable({
             />
           </div>
         )}
+        <div>
+          <HeaderTooltip
+            label="Chain"
+            description="Chain and asset this payer wallet mainly transacts in. Currently fixed to Base / USDC across all rows; per-wallet detection ships when the BFF emits per-wallet chain data (see future-work.md)."
+          />
+        </div>
         <div>
           <HeaderTooltip
             label="Spend (atomic)"
@@ -103,23 +115,28 @@ export function CustomersTable({
           <HeaderTooltip
             label="Last seen"
             description="Timestamp of the most recent payment observation from this wallet."
+            align="right"
           />
         </div>
         <div>
           <HeaderTooltip
             label="Upsell"
             description="Suggested upsell opportunity inferred from this wallet's behavior, with provenance and reasons."
+            align="right"
           />
         </div>
         <div aria-hidden />
       </div>
       {customers.length === 0 && (
         <div style={{ padding: 24, color: "var(--text-3)", fontSize: 14 }}>
-          No payer wallets in BFF projection yet.
+          {totalBeforeFilter === 0
+            ? "No payer wallets in BFF projection yet."
+            : "No payer wallets match the current filters."}
         </div>
       )}
       {customers.map((c, i) => {
         const extras = isSdkConnected ? extrasMap.get(c.address) ?? null : null;
+        const chainAttribution = getCustomerChainAttribution(c);
         return (
           <Link
             key={c.address}
@@ -158,6 +175,10 @@ export function CustomersTable({
                 {extras?.agentType ? <AgentBadge agentType={extras.agentType} /> : <span style={{ color: "var(--text-mute)" }}>—</span>}
               </div>
             )}
+
+            <div>
+              <ChainBadge chain={chainAttribution.chain} asset={chainAttribution.asset} />
+            </div>
 
             <div className="mono" style={{ fontSize: 14, color: "var(--text-1)" }}>
               {formatAtomic(c.spendAtomic)}
@@ -200,11 +221,7 @@ export function CustomersTable({
               {formatTimestamp(c.lastSeenAt)}
             </div>
             <div>
-              <UpsellPill
-                opportunity={c.upsellOpportunity}
-                provenance={c.provenanceByField.upsellOpportunity ?? c.provenance}
-                reasons={c.reasons}
-              />
+              <UpsellPill opportunity={c.upsellOpportunity} />
             </div>
             <div className="row-arrow" style={{ display: "flex", justifyContent: "flex-end" }}>
               <Icon.arrow width="14" height="14" />

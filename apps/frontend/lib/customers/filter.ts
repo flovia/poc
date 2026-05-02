@@ -1,4 +1,5 @@
 import type { CustomerListItemDto, UpsellOpportunity } from "@/lib/api/types";
+import { getCustomerChainAttribution, type CustomerChainFilter } from "./chain";
 
 export type CustomerSortKey = "spend" | "observations" | "lastSeen";
 
@@ -8,12 +9,14 @@ export type CustomerFilterState = {
   query: string;
   sort: CustomerSortKey;
   upsell: CustomerUpsellFilter;
+  chain: CustomerChainFilter;
 };
 
 export const DEFAULT_CUSTOMER_FILTER: CustomerFilterState = {
   query: "",
   sort: "spend",
   upsell: "all",
+  chain: "all",
 };
 
 const compareBigIntDesc = (a: string, b: string): number => {
@@ -40,6 +43,7 @@ export function filterAndSortCustomers(
   const filtered = customers.filter((c) => {
     if (state.upsell !== "all" && c.upsellOpportunity !== state.upsell) return false;
     if (trimmedQuery.length > 0 && !c.address.toLowerCase().includes(trimmedQuery)) return false;
+    if (state.chain !== "all" && getCustomerChainAttribution(c).chain !== state.chain) return false;
     return true;
   });
   return [...filtered].sort(sortComparators[state.sort]);
