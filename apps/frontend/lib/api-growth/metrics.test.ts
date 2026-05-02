@@ -54,6 +54,9 @@ describe("buildApiGrowthIntelligence", () => {
     expect(intelligence.otherServiceCandidates.length).toBeGreaterThan(0);
     expect(intelligence.otherServiceCandidates[0].owner).toBeTruthy();
     expect(intelligence.otherServiceCandidates[0].sharedWallets).toBeGreaterThan(0);
+    expect(intelligence.inboundApiCohorts.map((cohort) => cohort.originApi)).toContain("The Graph");
+    expect(intelligence.inboundApiCohorts[0].triedWallets).toBeGreaterThan(0);
+    expect(intelligence.inboundApiCohorts[0].week2).toBeGreaterThan(0);
     expect(
       intelligence.useCaseFit.cards.some((card) => card.useCase === "Trading bot / agent workflow"),
     ).toBe(true);
@@ -87,6 +90,7 @@ describe("buildApiGrowthIntelligence", () => {
     expect(intelligence.endpointEntryCohorts).toEqual([]);
     expect(intelligence.repeatWalletSegments).toEqual([]);
     expect(intelligence.otherServiceCandidates).toEqual([]);
+    expect(intelligence.inboundApiCohorts).toEqual([]);
     expect(intelligence.insightCards.every((card) => card.value === "—")).toBe(true);
     expect(intelligence.recommendations).toHaveLength(4);
   });

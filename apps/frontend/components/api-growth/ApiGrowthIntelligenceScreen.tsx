@@ -4,6 +4,7 @@ import { formatAtomic, formatRatioPct } from "@/lib/format";
 import type {
   ApiGrowthServiceCandidate,
   ApiGrowthInsightCard,
+  ApiGrowthInboundApiCohort,
   ApiGrowthIntelligence,
   ApiGrowthEndpointFlow,
   ApiGrowthEndpointEntryCohort,
@@ -47,12 +48,12 @@ export function ApiGrowthIntelligenceScreen({ intelligence }: Props) {
           <SectionCard eyebrow="Endpoint & Frequency" title="What they use repeatedly">
             <EndpointBars rows={intelligence.endpointFrequency.rows} />
             <EndpointFlow flows={intelligence.endpointFrequency.flows} />
-            <EndpointEntryCohort cohorts={intelligence.endpointEntryCohorts} />
+            <RepeatWalletSegments segments={intelligence.repeatWalletSegments} />
           </SectionCard>
 
           <SectionCard eyebrow="Repeat Intelligence" title="Why wallets come back">
             <SourceRepeatCohort cohorts={intelligence.repeatCohorts} />
-            <RepeatWalletSegments segments={intelligence.repeatWalletSegments} />
+            <EndpointEntryCohort cohorts={intelligence.endpointEntryCohorts} />
           </SectionCard>
         </div>
 
@@ -62,7 +63,10 @@ export function ApiGrowthIntelligenceScreen({ intelligence }: Props) {
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "minmax(340px, 0.86fr) minmax(420px, 1.14fr)", gap: 14, alignItems: "start" }}>
             <SectionCard eyebrow="Other Service Candidates" title="Adjacent API opportunities">
-              <OtherServiceCandidates candidates={intelligence.otherServiceCandidates} />
+              <OtherServiceCandidates
+                candidates={intelligence.otherServiceCandidates}
+                inboundCohorts={intelligence.inboundApiCohorts}
+              />
             </SectionCard>
 
             <SectionCard
@@ -372,7 +376,7 @@ function EndpointEntryCohort({ cohorts }: { cohorts: ApiGrowthEndpointEntryCohor
   ];
 
   return (
-    <div style={{ borderTop: "1px solid var(--line)", marginTop: 14, paddingTop: 12 }}>
+    <div style={{ borderTop: "1px solid var(--line)", paddingTop: 12 }}>
       <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "baseline", marginBottom: 8 }}>
         <div style={eyebrowStyle}>Endpoint entry cohort</div>
         <span style={{ color: "var(--text-mute)", fontSize: 11 }}>provider return after first endpoint behavior</span>
@@ -487,7 +491,7 @@ function repeatCohortCellColor(value: number): string {
 function RepeatWalletSegments({ segments }: { segments: ApiGrowthRepeatWalletSegment[] }) {
   if (segments.length === 0) return null;
   return (
-    <div style={{ borderTop: "1px solid var(--line)", paddingTop: 12 }}>
+    <div style={{ borderTop: "1px solid var(--line)", marginTop: 14, paddingTop: 12 }}>
       <div style={{ ...eyebrowStyle, marginBottom: 8 }}>Repeat wallet segments</div>
       <div style={{ display: "grid", gap: 8 }}>
         {segments.map((segment) => (
@@ -518,7 +522,13 @@ function RepeatRateRow({ label, value, note }: { label: string; value: number; n
   );
 }
 
-function OtherServiceCandidates({ candidates }: { candidates: ApiGrowthServiceCandidate[] }) {
+function OtherServiceCandidates({
+  candidates,
+  inboundCohorts,
+}: {
+  candidates: ApiGrowthServiceCandidate[];
+  inboundCohorts: ApiGrowthInboundApiCohort[];
+}) {
   if (candidates.length === 0) {
     return <p style={{ ...bodyText, margin: 0 }}>No cross-service candidates in this offline snapshot.</p>;
   }
@@ -543,6 +553,68 @@ function OtherServiceCandidates({ candidates }: { candidates: ApiGrowthServiceCa
           </div>
         </div>
       ))}
+      <InboundApiCohort cohorts={inboundCohorts} />
+    </div>
+  );
+}
+
+function InboundApiCohort({ cohorts }: { cohorts: ApiGrowthInboundApiCohort[] }) {
+  if (cohorts.length === 0) return null;
+
+  const columns: Array<{ key: keyof ApiGrowthInboundApiCohort; label: string }> = [
+    { key: "week0", label: "W0" },
+    { key: "week1", label: "W1" },
+    { key: "week2", label: "W2" },
+    { key: "week3", label: "W3" },
+  ];
+
+  return (
+    <div style={{ borderTop: "1px solid var(--line)", marginTop: 4, paddingTop: 12 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "baseline", marginBottom: 8 }}>
+        <div style={eyebrowStyle}>Inbound API cohorts</div>
+        <span style={{ color: "var(--text-mute)", fontSize: 11 }}>return after trying this API</span>
+      </div>
+      <p style={{ ...bodyText, margin: "0 0 8px", fontSize: 12 }}>
+        Customers with prior activity on another API, grouped by that observed API, then measured by
+        whether they returned after trying this API.
+      </p>
+      <div style={{ display: "grid", gap: 6 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1.15fr 0.5fr repeat(4, 0.48fr)", gap: 6, color: "var(--text-mute)", fontSize: 10, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" }}>
+          <span>Origin API</span>
+          <span style={{ textAlign: "right" }}>Tried</span>
+          {columns.map((column) => (
+            <span key={column.label} style={{ textAlign: "center" }}>{column.label}</span>
+          ))}
+        </div>
+        {cohorts.map((cohort) => (
+          <div key={cohort.originApi} style={{ display: "grid", gridTemplateColumns: "1.15fr 0.5fr repeat(4, 0.48fr)", gap: 6, alignItems: "center" }}>
+            <strong style={{ display: "block", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 12 }}>{cohort.originApi}</strong>
+            <span className="mono" style={{ color: "var(--text-2)", fontSize: 11, fontWeight: 750, textAlign: "right" }}>{cohort.triedWallets}</span>
+            {columns.map((column) => {
+              const value = Number(cohort[column.key]);
+              return (
+                <span
+                  key={column.label}
+                  className="mono"
+                  style={{
+                    display: "inline-flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    minHeight: 26,
+                    borderRadius: 6,
+                    background: repeatCohortCellColor(value),
+                    color: value >= 0.72 ? "#ffffff" : "var(--text-2)",
+                    fontSize: 10,
+                    fontWeight: 750,
+                  }}
+                >
+                  {formatRatioPct(value)}
+                </span>
+              );
+            })}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

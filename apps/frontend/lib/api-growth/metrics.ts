@@ -78,6 +78,15 @@ export type ApiGrowthServiceCandidate = {
   reason: string;
 };
 
+export type ApiGrowthInboundApiCohort = {
+  originApi: string;
+  triedWallets: number;
+  week0: number;
+  week1: number;
+  week2: number;
+  week3: number;
+};
+
 export type ApiGrowthRepeatCohort = {
   cohort: string;
   paidWallets: number;
@@ -121,6 +130,7 @@ export type ApiGrowthIntelligence = {
   endpointEntryCohorts: ApiGrowthEndpointEntryCohort[];
   repeatWalletSegments: ApiGrowthRepeatWalletSegment[];
   otherServiceCandidates: ApiGrowthServiceCandidate[];
+  inboundApiCohorts: ApiGrowthInboundApiCohort[];
   recommendations: ApiGrowthRecommendation[];
   proxyNote: string;
 };
@@ -329,6 +339,7 @@ export function buildApiGrowthIntelligence(data: MacroMetricsDemoData): ApiGrowt
   const endpointEntryCohorts = buildEndpointEntryCohorts(data, endpointRows);
   const repeatWalletSegments = buildRepeatWalletSegments(data, useCaseCards);
   const otherServiceCandidates = buildOtherServiceCandidates(data);
+  const inboundApiCohorts = buildInboundApiCohorts(data);
   const highestFrequencyChannel = topBy(sourceRows, (row) => row.endpointFrequency);
   const bestChannel = topBy(
     sourceRows.filter((row) => row.source !== highestFrequencyChannel?.source),
@@ -387,10 +398,50 @@ export function buildApiGrowthIntelligence(data: MacroMetricsDemoData): ApiGrowt
     endpointEntryCohorts,
     repeatWalletSegments,
     otherServiceCandidates,
+    inboundApiCohorts,
     recommendations: buildRecommendations(sourceRows, endpointRows, useCaseCards),
     proxyNote:
       "Offline demo model. Source / medium labels and x402 / Agent fit are directional product-growth proxies derived from wallet, session, endpoint, and repeat behavior.",
   };
+}
+
+function buildInboundApiCohorts(data: MacroMetricsDemoData): ApiGrowthInboundApiCohort[] {
+  if (data.wallets.length === 0) return [];
+
+  return [
+    {
+      originApi: "The Graph",
+      triedWallets: 54,
+      week0: 1,
+      week1: 0.78,
+      week2: 0.64,
+      week3: 0.51,
+    },
+    {
+      originApi: "Exa API",
+      triedWallets: 42,
+      week0: 1,
+      week1: 0.72,
+      week2: 0.58,
+      week3: 0.47,
+    },
+    {
+      originApi: "Alchemy API",
+      triedWallets: 39,
+      week0: 1,
+      week1: 0.69,
+      week2: 0.55,
+      week3: 0.43,
+    },
+    {
+      originApi: "CoinMarketCap API",
+      triedWallets: 31,
+      week0: 1,
+      week1: 0.61,
+      week2: 0.44,
+      week3: 0.32,
+    },
+  ];
 }
 
 function buildRepeatCohorts(
