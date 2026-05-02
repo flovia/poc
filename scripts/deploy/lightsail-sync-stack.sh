@@ -126,4 +126,5 @@ docker compose --env-file "$stack_env_file" -f "$stack_compose_file" config >/de
 docker compose --env-file "$stack_env_file" -f "$stack_compose_file" pull "$service_name" caddy
 docker compose --env-file "$stack_env_file" -f "$stack_compose_file" up -d --remove-orphans "$service_name" caddy
 docker compose --env-file "$stack_env_file" -f "$stack_compose_file" exec -T -w /etc/caddy caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile
+docker image prune -a -f
 docker logout ghcr.io >/dev/null 2>&1 || true
