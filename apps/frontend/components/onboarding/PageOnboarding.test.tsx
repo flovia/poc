@@ -11,6 +11,8 @@ describe("WalletProfileOnboardingVisual", () => {
     expect(html).toContain("Click for detail analytics");
     expect(html).toContain("Spend history");
     expect(html).toContain("AI agent context");
+    expect(html).toContain("SDK-reported agent metadata");
+    expect(html).not.toContain("agent type and top endpoint");
     expect(html).toContain("Providers");
     expect(html).toContain("Wallet profile");
     expect(html).not.toContain("<img");

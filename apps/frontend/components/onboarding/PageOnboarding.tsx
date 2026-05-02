@@ -167,7 +167,7 @@ export function WalletProfileOnboardingVisual() {
           <OnboardingWalletPreviewItem
             icon={<Icon.bolt />}
             label="AI agent context"
-            value="agent type and top endpoint"
+            value="SDK-reported agent metadata"
           />
           <OnboardingWalletPreviewItem
             icon={<Icon.customers />}
