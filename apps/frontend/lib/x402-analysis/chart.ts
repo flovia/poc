@@ -3,10 +3,10 @@ import type { X402SankeyLink } from "./transform";
 
 const DEFAULT_TOOLTIP_OFFSET = 16;
 const DEFAULT_TOOLTIP_PADDING = 8;
-const DEFAULT_TOOLTIP_MIN_WIDTH = 320;
-const DEFAULT_TOOLTIP_MAX_WIDTH = 420;
+const DEFAULT_TOOLTIP_MIN_WIDTH = 296;
+const DEFAULT_TOOLTIP_MAX_WIDTH = 392;
 const DEFAULT_TOOLTIP_CHAR_WIDTH = 7.1;
-const DEFAULT_TOOLTIP_CONTENT_PADDING = 78;
+const DEFAULT_TOOLTIP_CONTENT_PADDING = 70;
 const DEFAULT_LINK_MIN_WIDTH = 5;
 const DEFAULT_LINK_VISIBLE_RATIO = 0.5;
 const DEFAULT_LABEL_PILL_MIN_WIDTH = 112;
@@ -14,6 +14,8 @@ const DEFAULT_LABEL_PILL_MAX_WIDTH = 140;
 const DEFAULT_LABEL_PILL_STEP = 12;
 const DEFAULT_LABEL_PILL_CHAR_WIDTH = 6.8;
 const DEFAULT_LABEL_PILL_PADDING = 18;
+const DEFAULT_LABEL_PILL_HEIGHT = 20;
+const DEFAULT_LABEL_PILL_MASK_HEIGHT = 24;
 const DEFAULT_LABEL_VISUAL_PULL = 0.18;
 const DEFAULT_LABEL_OFFSET = 18;
 const DEFAULT_LABEL_MIN_GAP = 28;
@@ -29,6 +31,16 @@ export function formatSankeyMetricValue(metric: X402MetricMode, value: number): 
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(value);
+}
+
+export function filterSankeyRowsByFlowCount<T extends { flow_count: number }>(
+  rows: T[],
+  options?: {
+    minFlowCountExclusive?: number;
+  },
+) {
+  const minFlowCountExclusive = options?.minFlowCountExclusive ?? 2;
+  return rows.filter((row) => row.flow_count > minFlowCountExclusive);
 }
 
 export function getSankeyLinkLabelPosition(
@@ -126,23 +138,19 @@ export function getSankeyTooltipPosition(args: {
   tooltipHeight: number;
   offset?: number;
   padding?: number;
+  minTop?: number;
 }) {
   const offset = args.offset ?? DEFAULT_TOOLTIP_OFFSET;
   const padding = args.padding ?? DEFAULT_TOOLTIP_PADDING;
+  const maxTop = args.containerHeight - args.tooltipHeight - padding;
+  const minTop = Math.min(Math.max(padding, args.minTop ?? padding), maxTop);
 
   const preferredLeft = args.cursorX + offset;
-  const preferredTop = args.cursorY + offset;
-  const fallbackTop = args.cursorY - args.tooltipHeight - offset;
+  const preferredTop = args.cursorY - args.tooltipHeight / 2;
 
   return {
     left: clamp(preferredLeft, padding, args.containerWidth - args.tooltipWidth - padding),
-    top: clamp(
-      preferredTop + args.tooltipHeight <= args.containerHeight - padding
-        ? preferredTop
-        : fallbackTop,
-      padding,
-      args.containerHeight - args.tooltipHeight - padding,
-    ),
+    top: clamp(preferredTop, minTop, maxTop),
   };
 }
 
@@ -190,6 +198,13 @@ export function getSankeyLabelPillWidth(
   return clamp(steppedWidth, minWidth, maxWidth);
 }
 
+export function getSankeyLabelPillHeights() {
+  return {
+    pillHeight: DEFAULT_LABEL_PILL_HEIGHT,
+    maskHeight: DEFAULT_LABEL_PILL_MASK_HEIGHT,
+  };
+}
+
 export function getSankeyLabelRenderPosition(args: {
   labelX: number;
   labelY: number;
@@ -217,25 +232,29 @@ function resolveLabelSpacing<T extends { id: string; x: number; y: number }>(
   },
 ) {
   const sorted = placements.map((placement) => ({ ...placement })).sort((left, right) => left.y - right.y);
+  const availableRange = Math.max(0, options.maxY - options.minY);
+  const effectiveGap =
+    sorted.length <= 1
+      ? options.minGap
+      : Math.min(options.minGap, availableRange / Math.max(sorted.length - 1, 1));
 
-  for (let index = 1; index < sorted.length; index += 1) {
-    const previous = sorted[index - 1];
+  for (let index = 0; index < sorted.length; index += 1) {
     const current = sorted[index];
-    if (!previous || !current) continue;
-    if (current.y - previous.y < options.minGap) {
-      current.y = previous.y + options.minGap;
-    }
+    const previous = sorted[index - 1];
+    if (!current) continue;
+    const minAllowedY = previous ? previous.y + effectiveGap : options.minY;
+    const maxAllowedY = options.maxY - effectiveGap * (sorted.length - index - 1);
+    current.y = clamp(current.y, minAllowedY, Math.max(minAllowedY, maxAllowedY));
   }
 
-  for (let index = sorted.length - 1; index >= 0; index -= 1) {
+  for (let index = sorted.length - 2; index >= 0; index -= 1) {
     const current = sorted[index];
     const next = sorted[index + 1];
     if (!current) continue;
-    current.y = clamp(current.y, options.minY, options.maxY);
-    if (next && next.y - current.y < options.minGap) {
-      current.y = next.y - options.minGap;
-    }
-    current.y = clamp(current.y, options.minY, options.maxY);
+    if (!next) continue;
+    const minAllowedY = options.minY + effectiveGap * index;
+    const maxAllowedY = next.y - effectiveGap;
+    current.y = clamp(current.y, minAllowedY, Math.max(minAllowedY, maxAllowedY));
   }
 
   return placements.map(

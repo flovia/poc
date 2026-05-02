@@ -1,5 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
+  filterSankeyRowsByFlowCount,
+  getSankeyLabelPillHeights,
   getSankeyLabelPillWidth,
   getSankeyLabelRenderPosition,
   formatSankeyMetricValue,
@@ -19,8 +21,24 @@ describe("formatSankeyMetricValue", () => {
   });
 });
 
+describe("filterSankeyRowsByFlowCount", () => {
+  test("keeps only rows above the minimum flow-count threshold", () => {
+    expect(
+      filterSankeyRowsByFlowCount(
+        [
+          { id: "low-1", flow_count: 1 },
+          { id: "low-2", flow_count: 2 },
+          { id: "keep", flow_count: 3 },
+          { id: "keep-big", flow_count: 7 },
+        ],
+        { minFlowCountExclusive: 2 },
+      ).map((row) => row.id),
+    ).toEqual(["keep", "keep-big"]);
+  });
+});
+
 describe("getSankeyTooltipPosition", () => {
-  test("offsets the tooltip from the pointer when there is space", () => {
+  test("keeps the tooltip vertically centered on the pointer when there is space", () => {
     expect(
       getSankeyTooltipPosition({
         cursorX: 400,
@@ -32,7 +50,7 @@ describe("getSankeyTooltipPosition", () => {
       }),
     ).toEqual({
       left: 416,
-      top: 196,
+      top: 82,
     });
   });
 
@@ -48,7 +66,24 @@ describe("getSankeyTooltipPosition", () => {
       }),
     ).toEqual({
       left: 964,
-      top: 308,
+      top: 356,
+    });
+  });
+
+  test("respects a reserved top band when the pointer is near the chart heading", () => {
+    expect(
+      getSankeyTooltipPosition({
+        cursorX: 360,
+        cursorY: 32,
+        containerWidth: 1220,
+        containerHeight: 560,
+        tooltipWidth: 248,
+        tooltipHeight: 196,
+        minTop: 112,
+      }),
+    ).toEqual({
+      left: 376,
+      top: 112,
     });
   });
 });
@@ -60,7 +95,7 @@ describe("getSankeyTooltipWidth", () => {
         containerWidth: 1220,
         values: ["Extract", "PayRouter A", "Analyze"],
       }),
-    ).toBe(320);
+    ).toBe(296);
   });
 
   test("grows for longer tooltip content but stays inside the chart", () => {
@@ -73,8 +108,8 @@ describe("getSankeyTooltipWidth", () => {
       ],
     });
 
-    expect(width).toBeGreaterThan(360);
-    expect(width).toBeLessThanOrEqual(420);
+    expect(width).toBeGreaterThan(340);
+    expect(width).toBeLessThanOrEqual(392);
   });
 
   test("clamps to the available container width on narrow viewports", () => {
@@ -109,6 +144,15 @@ describe("getSankeyLabelPillWidth", () => {
 
   test("caps the width so a single outlier does not break consistency", () => {
     expect(getSankeyLabelPillWidth(["/this-is-an-extremely-long-label-that-should-not-keep-growing"])).toBe(140);
+  });
+});
+
+describe("getSankeyLabelPillHeights", () => {
+  test("keeps a shared fixed height for every flow pill", () => {
+    expect(getSankeyLabelPillHeights()).toEqual({
+      pillHeight: 20,
+      maskHeight: 24,
+    });
   });
 });
 
@@ -212,5 +256,26 @@ describe("getSankeyLabelLayout", () => {
     expect(labels).toHaveLength(2);
     expect((labels[0]?.y ?? 0) - (baseLabels[0]?.y ?? 0)).toBeGreaterThan(0);
     expect(Math.abs((labels[1]?.y ?? 0) - (labels[0]?.y ?? 0))).toBeGreaterThanOrEqual(28);
+  });
+
+  test("distributes dense labels across the available height instead of pinning them to the top", () => {
+    const labels = getSankeyLabelLayout(
+      [
+        { id: "one", fromX: 196, fromY: 200, toX: 532, toY: 200 },
+        { id: "two", fromX: 196, fromY: 200, toX: 532, toY: 200 },
+        { id: "three", fromX: 196, fromY: 200, toX: 532, toY: 200 },
+        { id: "four", fromX: 196, fromY: 200, toX: 532, toY: 200 },
+      ],
+      {
+        minGap: 34,
+        minY: 84,
+        maxY: 140,
+      },
+    );
+
+    expect(labels).toHaveLength(4);
+    expect(new Set(labels.map((label) => label.y)).size).toBe(4);
+    expect(labels[0]?.y).toBe(84);
+    expect(labels[3]?.y).toBe(140);
   });
 });
