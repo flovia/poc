@@ -425,6 +425,27 @@ a { color: inherit; text-decoration: none; }
   background: var(--mesh-blue-dim);
 }
 .topbar-info-button svg { width: 16px; height: 16px; }
+.topbar-locale-toggle {
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 9px;
+  border-radius: 999px;
+  color: var(--text-3);
+  border: 1px solid var(--line);
+  background: var(--surface-card);
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  transition: background 140ms ease, border-color 140ms ease, color 140ms ease;
+}
+.topbar-locale-toggle:hover {
+  color: var(--mesh-blue);
+  border-color: rgba(47, 93, 154, 0.28);
+  background: var(--mesh-blue-dim);
+}
+.topbar-locale-toggle .active { color: var(--text-1); }
 .topbar .pill {
   display: inline-flex; align-items: center; gap: 7px;
   padding: 5px 10px; border-radius: 4px;

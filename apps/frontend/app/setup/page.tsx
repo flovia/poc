@@ -4,6 +4,7 @@ import { EmptyStateCTA } from "@/components/setup/EmptyStateCTA";
 import { SetupForm } from "@/components/setup/SetupForm";
 import { SavedProviderList } from "@/components/setup/SavedProviderList";
 import { getTopBarPageContext } from "@/lib/server/page-context";
+import { UiText } from "@/lib/frontend-locale";
 
 export default async function SetupPage() {
   const { dataMode } = await getTopBarPageContext();
@@ -23,17 +24,20 @@ export default async function SetupPage() {
                 marginBottom: 10,
               }}
             >
-              Onboarding · 1 minute
+              <UiText en="Onboarding · 1 minute" ja="オンボーディング · 1分" />
             </div>
             <h1
               className="display"
               style={{ fontSize: 30, fontWeight: 700, margin: "0 0 10px", letterSpacing: "-0.015em" }}
             >
-              Connect your <span style={{ color: "var(--teal)" }}>pay_to</span> address
+              <UiText en="Connect a" ja="Connect a" /> <span style={{ color: "var(--teal)" }}>pay_to</span>{" "}
+              <UiText en="address" ja="address（pay_toアドレス）" />
             </h1>
             <p style={{ color: "var(--text-2)", fontSize: 15, margin: 0, maxWidth: 600 }}>
-              Flovia reads x402 facilitator data to map every wallet calling your API — and what
-              they call alongside it. No SDK, no auth.
+              <UiText
+                en="Flovia reads x402 facilitator data to map every wallet calling your API — and what they call alongside it. No SDK, no auth."
+                ja="Flovia は x402 facilitator データを読み取り、あなたのAPIを呼ぶウォレットと、その併用先を可視化します。SDKも認証も不要です。"
+              />
             </p>
           </div>
 

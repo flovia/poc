@@ -1,13 +1,15 @@
 "use client";
 
 import { useProviders } from "@/app/providers";
+import { useFrontendLocale } from "@/lib/frontend-locale";
 
 export function DemoModeBanner() {
+  const { text } = useFrontendLocale();
   const { hydrated, demoOpted, optOutDemo } = useProviders();
   if (!hydrated || !demoOpted) return null;
 
   const handleReset = () => {
-    if (window.confirm("Reset demo data? Your own providers will be kept.")) {
+    if (window.confirm(text("Reset demo data? Your own providers will be kept.", "デモデータをリセットしますか？自分で追加したプロバイダーは保持されます。"))) {
       optOutDemo();
     }
   };
@@ -29,7 +31,7 @@ export function DemoModeBanner() {
         color: "var(--text-2)",
       }}
     >
-      <span>Showing demo data</span>
+      <span>{text("Showing demo data", "デモデータを表示中")}</span>
       <button
         type="button"
         onClick={handleReset}
@@ -43,7 +45,7 @@ export function DemoModeBanner() {
           padding: 0,
         }}
       >
-        Reset demo
+        {text("Reset demo", "デモをリセット")}
       </button>
     </div>
   );

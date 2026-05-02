@@ -4,7 +4,9 @@ import Link from "next/link";
 import { Fragment } from "react";
 import { useActiveProvider } from "@/app/providers";
 import { PageOnboarding, type PageOnboardingContent } from "@/components/onboarding/PageOnboarding";
+import { DevLocaleToggle } from "@/components/shell/DevLocaleToggle";
 import type { DashboardMode } from "@/lib/data-mode";
+import { useFrontendLocale } from "@/lib/frontend-locale";
 
 export type Crumb = {
   label: string;
@@ -26,6 +28,7 @@ export function TopBar({
   crumbs,
   onboarding,
 }: TopBarProps) {
+  const { text } = useFrontendLocale();
   const { active, hydrated } = useActiveProvider(providerId);
 
   let providerName = fallbackProviderName;
@@ -45,15 +48,16 @@ export function TopBar({
             {i > 0 && <span className="sep">/</span>}
             {href ? (
               <Link href={href} className="ghost" style={{ color: "var(--text-2)" }}>
-                {label}
+                {topBarLabel(label, text)}
               </Link>
             ) : (
-              <span className="cur">{label}</span>
+              <span className="cur">{topBarLabel(label, text)}</span>
             )}
           </Fragment>
         ))}
       </div>
       <div className="spacer" />
+      <DevLocaleToggle />
       {onboarding ? <PageOnboarding content={onboarding} /> : null}
       {/*
         グローバル UI 要素 (期間セレクタ / freshness インジケータ) は撤去済み。
@@ -68,4 +72,14 @@ export function TopBar({
       */}
     </header>
   );
+}
+
+function topBarLabel(label: string, text: (english: string, japanese: string) => string) {
+  if (label === "Setup") return text("Setup", "セットアップ");
+  if (label === "Customers") return text("Customers", "Customers（顧客）");
+  if (label === "Co-Usage Providers") return text("Co-Usage Providers", "Co-Usage Providers（併用プロバイダー）");
+  if (label === "API Growth") return text("API Growth", "API Growth（API成長）");
+  if (label === "Macro Metrics") return text("Macro Metrics", "Macro Metrics（マクロ指標）");
+  if (label === "Metrics Catalog") return text("Metrics Catalog", "Metrics Catalog（指標カタログ）");
+  return label;
 }

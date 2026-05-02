@@ -5,6 +5,7 @@ import { useMemo } from "react";
 import { useProviders } from "@/app/providers";
 import { Icon } from "@/components/ui/Icon";
 import { classNames } from "@/lib/format";
+import { useFrontendLocale } from "@/lib/frontend-locale";
 import { getDisplayPayTo, getPathCount, isDemoProvider } from "@/lib/providers";
 
 function daysAgo(ts: number): number {
@@ -12,6 +13,7 @@ function daysAgo(ts: number): number {
 }
 
 export function SavedProviderList() {
+  const { text } = useFrontendLocale();
   const { stored, userProviders, hydrated, removeProvider, demoOpted } = useProviders();
   const userIds = useMemo(
     () => new Set(userProviders.map((p) => p.providerId)),
@@ -22,12 +24,12 @@ export function SavedProviderList() {
   return (
     <div style={{ marginTop: 36 }}>
       <div className="section-title">
-        <h2>Saved providers</h2>
+        <h2>{text("Saved providers", "保存済みプロバイダー")}</h2>
         <span style={{ fontSize: 13, color: "var(--text-3)" }}>
           {!hydrated
-            ? "loading…"
+            ? text("loading…", "読み込み中…")
             : demoOpted
-              ? `${stored.length} providers · ${userProviders.length} saved, ${demoCount} demo`
+              ? text(`${stored.length} providers · ${userProviders.length} saved, ${demoCount} demo`, `${stored.length}プロバイダー · 保存${userProviders.length}件、デモ${demoCount}件`)
               : `${stored.length} pay_to · localStorage`}
         </span>
       </div>
@@ -40,7 +42,7 @@ export function SavedProviderList() {
           </>
         ) : stored.length === 0 ? (
           <div style={{ padding: 18, color: "var(--text-3)", fontSize: 14 }}>
-            No providers saved yet. Add one above to get started.
+            {text("No providers saved yet. Add one above to get started.", "保存済みプロバイダーはまだありません。上から追加して開始してください。")}
           </div>
         ) : (
           stored.map((p, i) => {
@@ -74,8 +76,7 @@ export function SavedProviderList() {
                   <div>
                     <div style={{ fontSize: 14, fontWeight: 500 }}>{p.name}</div>
                     <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 2 }}>
-                      {p.mode} · {getPathCount(p)} {getPathCount(p) === 1 ? "path" : "paths"} · added{" "}
-                      {daysAgo(p.createdAt)}d ago
+                      {p.mode} · {getPathCount(p)} {text(getPathCount(p) === 1 ? "path" : "paths", "path")} · {text(`added ${daysAgo(p.createdAt)}d ago`, `${daysAgo(p.createdAt)}日前に追加`)}
                     </div>
                   </div>
                 </div>
@@ -88,9 +89,9 @@ export function SavedProviderList() {
                     <span
                       className={classNames("chip")}
                       style={{ color: "var(--text-3)" }}
-                      title="Demo provider — use Reset demo to remove all"
+                      title={text("Demo provider — use Reset demo to remove all", "デモプロバイダー — すべて削除するにはデモをリセットしてください")}
                     >
-                      demo
+                      {text("demo", "デモ")}
                     </span>
                   )}
                 </div>
@@ -100,12 +101,12 @@ export function SavedProviderList() {
                     style={{ padding: "5px 10px", fontSize: 13 }}
                     href={`/providers/${p.providerId}/customers`}
                   >
-                    Open
+                    {text("Open", "開く")}
                   </Link>
                   {isDemo ? (
                     <span
                       style={{ width: 28, height: 28 }}
-                      title="Demo provider — use Reset demo to remove all"
+                      title={text("Demo provider — use Reset demo to remove all", "デモプロバイダー — すべて削除するにはデモをリセットしてください")}
                       aria-hidden
                     />
                   ) : (
@@ -113,10 +114,10 @@ export function SavedProviderList() {
                       type="button"
                       className="btn ghost"
                       style={{ padding: "5px 8px", color: "var(--text-3)" }}
-                      title="Remove"
-                      aria-label={`Remove ${p.name}`}
+                      title={text("Remove", "削除")}
+                      aria-label={text(`Remove ${p.name}`, `${p.name}を削除`)}
                       onClick={() => {
-                        if (window.confirm(`Remove ${p.name} from this browser?`)) {
+                        if (window.confirm(text(`Remove ${p.name} from this browser?`, `${p.name} をこのブラウザから削除しますか？`))) {
                           removeProvider(p.providerId);
                         }
                       }}

@@ -1,3 +1,5 @@
+"use client";
+
 import type { CSSProperties, ReactNode } from "react";
 import { EndpointSankey, type EndpointSankeyFlow } from "@/components/macro-metrics/EndpointSankey";
 import { MacroRouteSankeySection } from "@/components/macro-metrics/MacroRouteSankeySection";
@@ -11,23 +13,25 @@ import type {
   ApiGrowthRepeatCohort,
   SourceMediumQualityRow,
 } from "@/lib/api-growth/metrics";
+import { useFrontendLocale } from "@/lib/frontend-locale";
 
 type Props = {
   intelligence: ApiGrowthIntelligence;
 };
 
 export function ApiGrowthIntelligenceScreen({ intelligence }: Props) {
+  const { text } = useFrontendLocale();
   return (
     <div style={{ background: "var(--bg-shell)", minHeight: "100%" }}>
       <div style={{ padding: "32px 40px 80px", maxWidth: 1680, margin: "0 auto" }}>
         <header style={{ marginBottom: 22 }}>
           <div className="eyebrow" style={{ marginBottom: 8 }}>
-            Growth intelligence · API adoption
+            {text("Growth intelligence · API adoption", "Growth intelligence · API adoption（API採用）")}
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <DemoBadge />
             <h1 className="display" style={{ fontSize: 28, fontWeight: 700, margin: 0, letterSpacing: "-0.01em" }}>
-              API Growth Intelligence
+              {text("API Growth Intelligence", "API Growth Intelligence（API成長分析）")}
             </h1>
           </div>
         </header>
@@ -35,19 +39,19 @@ export function ApiGrowthIntelligenceScreen({ intelligence }: Props) {
         <InsightGrid cards={intelligence.insightCards} />
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 600px), 1fr))", gap: 14, alignItems: "start" }}>
-          <SectionCard eyebrow="Source / Medium Adoption">
+          <SectionCard eyebrow={text("Source / Medium Adoption", "Source / Medium Adoption（流入元/媒体）")}>
             <BubbleMatrix rows={intelligence.sourceMediumQuality.rows} />
           </SectionCard>
 
-          <SectionCard eyebrow="Endpoint & Frequency">
+          <SectionCard eyebrow={text("Endpoint & Frequency", "Endpoint & Frequency（頻度）")}>
             <EndpointFlow flows={intelligence.endpointFrequency.flows} />
           </SectionCard>
 
-          <SectionCard eyebrow="Repeat Intelligence">
+          <SectionCard eyebrow={text("Repeat Intelligence", "Repeat Intelligence（リピート分析）")}>
             <SourceRepeatCohort cohorts={intelligence.repeatCohorts} />
           </SectionCard>
 
-          <SectionCard eyebrow="Other Service Candidates">
+          <SectionCard eyebrow={text("Other Service Candidates", "Other Service Candidates（他サービス候補）")}>
             <OtherServiceCandidates candidates={intelligence.otherServiceCandidates} />
           </SectionCard>
         </div>
@@ -55,16 +59,16 @@ export function ApiGrowthIntelligenceScreen({ intelligence }: Props) {
         <section style={{ marginTop: 18 }}>
           <MacroRouteSankeySection
             chart={intelligence.routeSankey}
-            periodLabel="Last 30 days demo"
+            periodLabel={text("Last 30 days demo", "直近30日デモ")}
           />
         </section>
 
         <section style={{ marginTop: 18 }}>
           <div className="eyebrow" style={{ marginBottom: 8 }}>
-            Growth Action Bridge
+            {text("Growth Action Bridge", "Growth Action Bridge（成長アクション接続）")}
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 600px), 1fr))", gap: 14, alignItems: "start" }}>
-            <SectionCard eyebrow="Inbound API cohorts">
+            <SectionCard eyebrow={text("Inbound API cohorts", "流入APIコホート")}>
               <InboundApiCohort cohorts={intelligence.inboundApiCohorts} />
             </SectionCard>
           </div>
@@ -86,6 +90,7 @@ const eyebrowStyle: CSSProperties = {
 };
 
 function DemoBadge() {
+  const { text } = useFrontendLocale();
   return (
     <span
       style={{
@@ -100,7 +105,7 @@ function DemoBadge() {
         flexShrink: 0,
       }}
     >
-      demo
+      {text("demo", "デモ")}
     </span>
   );
 }
@@ -138,6 +143,7 @@ function SectionCard({ eyebrow, title, children }: { eyebrow?: string; title?: R
 }
 
 function BubbleMatrix({ rows }: { rows: SourceMediumQualityRow[] }) {
+  const { text } = useFrontendLocale();
   const maxVolumeShare = Math.max(...rows.map((row) => row.volumeShare), 0.01);
   const chartWidth = 480;
   const plot = { left: 28, top: 14, right: 466, bottom: 204, splitX: 247, splitY: 109 };
@@ -174,10 +180,10 @@ function BubbleMatrix({ rows }: { rows: SourceMediumQualityRow[] }) {
         <line x1={plot.left} y1={plot.top} x2={plot.left} y2={plot.bottom} stroke="var(--line-strong)" />
         <line x1={plot.splitX} y1={plot.top} x2={plot.splitX} y2={plot.bottom} stroke="var(--line-strong)" strokeDasharray="4 4" />
         <line x1={plot.left} y1={plot.splitY} x2={plot.right} y2={plot.splitY} stroke="var(--line-strong)" strokeDasharray="4 4" />
-        <text x={plot.left + 10} y={plot.top + 16} fill="var(--text-3)" fontSize="12" fontWeight="700">Niche adoption</text>
-        <text x={plot.splitX + 56} y={plot.top + 16} fill="var(--mesh-blue)" fontSize="12" fontWeight="700">Scale / double down</text>
-        <text x={plot.left + 10} y={plot.bottom - 10} fill="var(--text-mute)" fontSize="12">Low priority</text>
-        <text x={plot.splitX + 40} y={plot.bottom - 10} fill="var(--text-3)" fontSize="12" fontWeight="700">Improve retention</text>
+        <text x={plot.left + 10} y={plot.top + 16} fill="var(--text-3)" fontSize="12" fontWeight="700">{text("Niche adoption", "ニッチ採用")}</text>
+        <text x={plot.splitX + 56} y={plot.top + 16} fill="var(--mesh-blue)" fontSize="12" fontWeight="700">{text("Scale / double down", "拡大 / 集中投資")}</text>
+        <text x={plot.left + 10} y={plot.bottom - 10} fill="var(--text-mute)" fontSize="12">{text("Low priority", "低優先")}</text>
+        <text x={plot.splitX + 40} y={plot.bottom - 10} fill="var(--text-3)" fontSize="12" fontWeight="700">{text("Improve retention", "継続率改善")}</text>
         {bubbles.map(({ row, index, r, x, y }) => {
           const label = labels[index];
           const labelWidth = bubbleLabelWidth(row.source);
@@ -200,12 +206,12 @@ function BubbleMatrix({ rows }: { rows: SourceMediumQualityRow[] }) {
             </g>
           );
         })}
-        <text x={(plot.left + plot.right) / 2} y="228" textAnchor="middle" fill="var(--text-3)" fontSize="12">Acquisition volume, normalized to largest source</text>
-        <text x="10" y={(plot.top + plot.bottom) / 2} transform={`rotate(-90 10 ${(plot.top + plot.bottom) / 2})`} textAnchor="middle" fill="var(--text-3)" fontSize="12">Repeat adoption</text>
+        <text x={(plot.left + plot.right) / 2} y="228" textAnchor="middle" fill="var(--text-3)" fontSize="12">{text("Acquisition volume, normalized to largest source", "獲得ボリューム（最大流入元で正規化）")}</text>
+        <text x="10" y={(plot.top + plot.bottom) / 2} transform={`rotate(-90 10 ${(plot.top + plot.bottom) / 2})`} textAnchor="middle" fill="var(--text-3)" fontSize="12">{text("Repeat adoption", "リピート採用")}</text>
       </svg>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-        <span style={chipStyle}>bubble = paid endpoint frequency</span>
-        <span style={chipStyle}>color = use case mix</span>
+        <span style={chipStyle}>{text("bubble = paid endpoint frequency", "バブル = 有料エンドポイント頻度")}</span>
+        <span style={chipStyle}>{text("color = use case mix", "色 = ユースケース構成")}</span>
       </div>
     </div>
   );

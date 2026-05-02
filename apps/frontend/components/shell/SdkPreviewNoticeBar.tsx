@@ -3,6 +3,7 @@
 // provider layout の skeleton 表示中でもバーが見える.
 
 import { getServerDashboardMode } from "@/lib/data-mode";
+import { UiText } from "@/lib/frontend-locale";
 
 export async function SdkPreviewNoticeBar() {
   const mode = await getServerDashboardMode();
@@ -12,7 +13,10 @@ export async function SdkPreviewNoticeBar() {
       <span className="sdk-notice-dot" aria-hidden="true">
         ●
       </span>
-      Preview: this is what your dashboard looks like with the Flovia SDK installed (mock data).
+      <UiText
+        en="Preview: this is what your dashboard looks like with the Flovia SDK installed (mock data)."
+        ja="プレビュー: Flovia SDK を導入した場合のダッシュボード表示です（モックデータ）。"
+      />
     </div>
   );
 }

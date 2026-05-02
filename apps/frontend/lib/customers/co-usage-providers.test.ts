@@ -418,20 +418,35 @@ describe("aggregateCoUsageProviders", () => {
 
     const flows = buildCoUsageProviderSankeyFlows(rows, {
       customersByWallet: new Map([
-        ["0xa", makeCustomer("0xa", { providerCount: 4, observationCount: 9, upsellOpportunity: "high" })],
-        ["0xb", makeCustomer("0xb", { providerCount: 2, observationCount: 5, upsellOpportunity: "medium" })],
-        ["0xc", makeCustomer("0xc", { providerCount: 1, observationCount: 1, upsellOpportunity: "low" })],
+        [
+          "0xa",
+          makeCustomer("0xa", { providerCount: 4, observationCount: 9, upsellOpportunity: "high" }),
+        ],
+        [
+          "0xb",
+          makeCustomer("0xb", {
+            providerCount: 2,
+            observationCount: 5,
+            upsellOpportunity: "medium",
+          }),
+        ],
+        [
+          "0xc",
+          makeCustomer("0xc", { providerCount: 1, observationCount: 1, upsellOpportunity: "low" }),
+        ],
       ]),
       maxProviders: 2,
       maxTargetCategories: 2,
     });
 
     expect(
-      flows.filter((flow) => flow.to === `provider:${EXT_A}`).map((flow) => ({
-        from: flow.from,
-        fromLabel: flow.fromLabel,
-        occurrences: flow.occurrences,
-      })),
+      flows
+        .filter((flow) => flow.to === `provider:${EXT_A}`)
+        .map((flow) => ({
+          from: flow.from,
+          fromLabel: flow.fromLabel,
+          occurrences: flow.occurrences,
+        })),
     ).toEqual([
       {
         from: "segment:high-intent-power-users",

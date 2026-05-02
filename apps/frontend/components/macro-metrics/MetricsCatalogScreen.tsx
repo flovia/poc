@@ -1,5 +1,8 @@
+"use client";
+
 import type { ReactNode } from "react";
 import { EndpointSankey } from "./EndpointSankey";
+import { useFrontendLocale } from "@/lib/frontend-locale";
 import type {
   CatalogMetric,
   CatalogPreview,
@@ -15,19 +18,22 @@ type Props = {
 const PRIORITIES: CatalogPriority[] = ["P0", "P1", "P2", "P3"];
 
 export function MetricsCatalogScreen({ catalog }: Props) {
+  const { text } = useFrontendLocale();
   return (
     <div style={{ background: "var(--bg-shell)", minHeight: "100%" }}>
       <div style={{ padding: "32px 40px 80px", maxWidth: 1560, margin: "0 auto" }}>
         <header style={{ marginBottom: 22 }}>
           <div className="eyebrow" style={{ marginBottom: 8 }}>
-            Full metrics catalog · demo/proxy review surface
+            {text("Full metrics catalog · demo/proxy review surface", "全指標カタログ · デモ/代理レビュー画面")}
           </div>
           <h1 className="display" style={{ fontSize: 32, fontWeight: 700, margin: 0, letterSpacing: "-0.02em" }}>
-            Full Metrics Catalog
+            {text("Full Metrics Catalog", "全指標カタログ")}
           </h1>
           <p style={{ maxWidth: 820, color: "var(--text-2)", fontSize: 15, lineHeight: 1.6, margin: "8px 0 0" }}>
-            Every requested P0/P1/P2/P3 metric is represented with what it means, why it matters,
-            recommended visualization, current support status, and a realistic demo preview.
+            {text(
+              "Every requested P0/P1/P2/P3 metric is represented with what it means, why it matters, recommended visualization, current support status, and a realistic demo preview.",
+              "要求されたP0/P1/P2/P3指標について、意味、重要性、推奨可視化、現在の対応状況、現実的なデモプレビューを確認できます。",
+            )}
           </p>
         </header>
 
@@ -39,7 +45,7 @@ export function MetricsCatalogScreen({ catalog }: Props) {
           return (
             <section key={priority} style={{ marginTop: 30 }}>
               <div className="eyebrow" style={{ marginBottom: 6 }}>
-                {priority} · {items.length} metrics
+                {priority} · {text(`${items.length} metrics`, `${items.length}指標`)}
               </div>
               <h2 className="display" style={{ fontSize: 23, fontWeight: 650, margin: "0 0 14px" }}>
                 {priorityTitle(priority)}
@@ -58,13 +64,14 @@ export function MetricsCatalogScreen({ catalog }: Props) {
 }
 
 function SummaryStrip({ catalog }: Props) {
+  const { text } = useFrontendLocale();
   const summary = catalog.summary;
   const cards = [
-    { label: "Total metrics", value: summary.total, hint: "P0–P3 requested catalog" },
-    { label: "Supported", value: summary.supported, hint: "derived from current demo model" },
-    { label: "Demo proxy", value: summary.demoProxy, hint: "illustrative but visible" },
-    { label: "Needs live data", value: summary.needsLiveData, hint: "latency / error telemetry" },
-    { label: "Future analytics", value: summary.futureAnalytics, hint: "statistical / clustering" },
+    { label: text("Total metrics", "全指標"), value: summary.total, hint: text("P0–P3 requested catalog", "P0–P3要求カタログ") },
+    { label: text("Supported", "対応済み"), value: summary.supported, hint: text("derived from current demo model", "現在のデモモデルから算出") },
+    { label: text("Demo proxy", "デモ代理"), value: summary.demoProxy, hint: text("illustrative but visible", "説明用だが表示可能") },
+    { label: text("Needs live data", "ライブデータ必要"), value: summary.needsLiveData, hint: text("latency / error telemetry", "レイテンシ / エラーテレメトリ") },
+    { label: text("Future analytics", "将来分析"), value: summary.futureAnalytics, hint: text("statistical / clustering", "統計 / クラスタリング") },
   ];
 
   return (
@@ -85,6 +92,7 @@ function SummaryStrip({ catalog }: Props) {
 }
 
 function MetricCard({ item }: { item: CatalogMetric }) {
+  const { text } = useFrontendLocale();
   return (
     <article className="card" style={{ padding: 18, background: "var(--surface-card)", minWidth: 0 }}>
       <div style={{ display: "flex", alignItems: "start", justifyContent: "space-between", gap: 12, marginBottom: 10 }}>
@@ -100,9 +108,9 @@ function MetricCard({ item }: { item: CatalogMetric }) {
         </span>
       </div>
 
-      <Definition label="Represents">{item.represents}</Definition>
-      <Definition label="Why it matters">{item.whyItMatters}</Definition>
-      {item.caveat && <Definition label="Caveat">{item.caveat}</Definition>}
+      <Definition label={text("Represents", "表すもの")}>{item.represents}</Definition>
+      <Definition label={text("Why it matters", "重要な理由")}>{item.whyItMatters}</Definition>
+      {item.caveat && <Definition label={text("Caveat", "注意点")}>{item.caveat}</Definition>}
       <Preview preview={item.preview} />
     </article>
   );

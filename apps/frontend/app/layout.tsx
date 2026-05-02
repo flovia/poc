@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Space_Grotesk } from "next/font/google";
 import { ProvidersContextProvider } from "./providers";
+import { FrontendLocaleProvider } from "@/lib/frontend-locale";
 import "./globals.css";
 
 const geist = Geist({
@@ -41,7 +42,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${geist.variable} ${geistMono.variable} ${spaceGrotesk.variable}`}>
       <body>
-        <ProvidersContextProvider>{children}</ProvidersContextProvider>
+        <FrontendLocaleProvider>
+          <ProvidersContextProvider>{children}</ProvidersContextProvider>
+        </FrontendLocaleProvider>
       </body>
     </html>
   );

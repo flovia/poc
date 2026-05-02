@@ -1,6 +1,7 @@
 "use client";
 
 import type { X402AnalysisViewModel, X402IntermediarySummaryRow } from "@/lib/x402-analysis/transform";
+import { useFrontendLocale } from "@/lib/frontend-locale";
 import { X402SankeySection } from "./X402SankeySection";
 
 type X402AnalysisDashboardProps = {
@@ -53,6 +54,7 @@ function KeyValue({
 }
 
 export function X402AnalysisDashboard({ viewModel }: X402AnalysisDashboardProps) {
+  const { text } = useFrontendLocale();
   const recentDailyRows = viewModel.sankey_flows_daily.slice(-14).reverse();
   const requestEvents = viewModel.request_events_sample;
   const topSummaryRows = summaryRows(viewModel).slice(0, 5);
@@ -71,14 +73,16 @@ export function X402AnalysisDashboard({ viewModel }: X402AnalysisDashboardProps)
               marginBottom: 6,
             }}
           >
-            x402 analysis
+            {text("x402 analysis", "x402分析")}
           </div>
           <h1 className="display" style={{ fontSize: 30, fontWeight: 700, margin: 0, letterSpacing: "-0.015em" }}>
-            API utilization and payment flow
+            {text("API usage and payment flow", "API usage and payment flow（API利用と支払いフロー）")}
           </h1>
           <p style={{ color: "var(--text-2)", fontSize: 15, margin: "6px 0 0", maxWidth: 820 }}>
-            Two sankey views show both the intent-level routing through middlemen and the endpoint
-            sequence immediately before and after the target API call.
+            {text(
+              "Two sankey views show both the intent-level routing through middlemen and the endpoint sequence immediately before and after the target API call.",
+              "2つのSankeyビューで、仲介者を経由する意図レベルのルーティングと、対象API呼び出し前後のエンドポイント順序を表示します。",
+            )}
           </p>
         </div>
 
@@ -90,10 +94,10 @@ export function X402AnalysisDashboard({ viewModel }: X402AnalysisDashboardProps)
             marginBottom: 18,
           }}
         >
-          <KeyValue label="Flow count" value={viewModel.totals.flow_count.toLocaleString()} accent />
-          <KeyValue label="Settled USDC" value={`$${formatUsd(viewModel.totals.settled_usdc)}`} />
-          <KeyValue label="Success rate" value={formatPct(viewModel.totals.success_rate)} />
-          <KeyValue label="P95 latency" value={formatLatency(viewModel.totals.p95_latency_ms)} />
+          <KeyValue label={text("Flows", "Flows（フロー数）")} value={viewModel.totals.flow_count.toLocaleString()} accent />
+          <KeyValue label={text("Settled volume (USDC)", "Settled volume (USDC)（決済額）")} value={`$${formatUsd(viewModel.totals.settled_usdc)}`} />
+          <KeyValue label={text("Success rate", "成功率")} value={formatPct(viewModel.totals.success_rate)} />
+          <KeyValue label={text("P95 latency", "P95レイテンシ")} value={formatLatency(viewModel.totals.p95_latency_ms)} />
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
@@ -110,7 +114,7 @@ export function X402AnalysisDashboard({ viewModel }: X402AnalysisDashboardProps)
                 marginBottom: 12,
               }}
             >
-              Intermediary leaderboard
+              {text("Intermediary leaderboard", "仲介者ランキング")}
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {topSummaryRows.map((row) => (
@@ -130,7 +134,7 @@ export function X402AnalysisDashboard({ viewModel }: X402AnalysisDashboardProps)
                     </div>
                   </div>
                   <div style={{ marginTop: 6, fontSize: 12, color: "var(--text-2)", lineHeight: 1.5 }}>
-                    {row.flow_count.toLocaleString()} flows · {formatPct(row.success_rate)} success ·{" "}
+                    {text(`${row.flow_count.toLocaleString()} flows`, `${row.flow_count.toLocaleString()}フロー`)} · {formatPct(row.success_rate)} {text("success", "成功")} ·{" "}
                     {formatLatency(row.p95_latency_ms)}
                   </div>
                 </div>
@@ -186,17 +190,17 @@ export function X402AnalysisDashboard({ viewModel }: X402AnalysisDashboardProps)
                 marginBottom: 10,
               }}
             >
-              Endpoint master
+              {text("Endpoint catalog", "Endpoint catalog（エンドポイント一覧）")}
             </div>
             <div style={{ overflowX: "auto" }}>
               <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
                 <thead>
                   <tr style={{ textAlign: "left", color: "var(--text-mute)" }}>
-                    <th style={{ padding: "8px 6px" }}>endpoint</th>
-                    <th style={{ padding: "8px 6px" }}>category</th>
-                    <th style={{ padding: "8px 6px" }}>subcategory</th>
-                    <th style={{ padding: "8px 6px" }}>provider</th>
-                    <th style={{ padding: "8px 6px" }}>pricing</th>
+                    <th style={{ padding: "8px 6px" }}>{text("endpoint", "エンドポイント")}</th>
+                    <th style={{ padding: "8px 6px" }}>{text("category", "カテゴリ")}</th>
+                    <th style={{ padding: "8px 6px" }}>{text("subcategory", "サブカテゴリ")}</th>
+                    <th style={{ padding: "8px 6px" }}>{text("provider", "プロバイダー")}</th>
+                    <th style={{ padding: "8px 6px" }}>{text("pricing", "価格")}</th>
                   </tr>
                 </thead>
                 <tbody>

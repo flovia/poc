@@ -3,8 +3,10 @@
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/ui/Icon";
 import { useProviders } from "@/app/providers";
+import { useFrontendLocale } from "@/lib/frontend-locale";
 
 export function EmptyStateCTA() {
+  const { text } = useFrontendLocale();
   const router = useRouter();
   const { hydrated, stored, optInDemo } = useProviders();
 
@@ -36,21 +38,21 @@ export function EmptyStateCTA() {
             marginBottom: 8,
           }}
         >
-          Get started
+          {text("Get started", "はじめる")}
         </div>
         <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 6 }}>
-          You haven&apos;t connected a pay_to yet
+          {text("No pay_to connected yet", "No pay_to connected yet（pay_to未接続）")}
         </div>
         <p style={{ color: "var(--text-2)", fontSize: 14, margin: 0, maxWidth: 520 }}>
-          Try our demo data to see a live example, or connect your own pay_to address below.
+          {text("Try demo data to see an example, or connect your own pay_to address below.", "Try demo data で例を見るか、下から自分の pay_to address を接続してください。")}
         </p>
       </div>
       <div style={{ display: "flex", gap: 8, marginTop: 18 }}>
         <button type="button" className="btn primary" onClick={handleTryDemo}>
-          Try demo data <Icon.arrow width="14" height="14" />
+          {text("Try demo data", "デモデータを試す")} <Icon.arrow width="14" height="14" />
         </button>
         <button type="button" className="btn ghost" onClick={handleAddPayTo}>
-          Connect your pay_to
+          {text("Connect your pay_to", "pay_to を接続")}
         </button>
       </div>
     </div>

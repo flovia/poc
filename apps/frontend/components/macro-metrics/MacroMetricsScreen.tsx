@@ -1,9 +1,12 @@
+"use client";
+
 import type { CSSProperties, ReactNode } from "react";
 import Link from "next/link";
 import { EndpointSankey } from "./EndpointSankey";
 import { MacroRouteSankeySection } from "./MacroRouteSankeySection";
 import { formatAtomic, formatRatioPct, shortAddr } from "@/lib/format";
 import type { MacroMetricsViewModel, TrendPoint } from "@/lib/macro-metrics/metrics";
+import { useFrontendLocale } from "@/lib/frontend-locale";
 
 type Props = {
   metrics: MacroMetricsViewModel;
@@ -11,20 +14,23 @@ type Props = {
 };
 
 export function MacroMetricsScreen({ metrics, providerId }: Props) {
+  const { text } = useFrontendLocale();
   return (
     <div style={{ background: "var(--bg-shell)", minHeight: "100%" }}>
       <div style={{ padding: "32px 40px 80px", maxWidth: 1560, margin: "0 auto" }}>
         <header style={{ marginBottom: 24 }}>
           <div className="eyebrow" style={{ marginBottom: 8 }}>
-            Demo macro analytics · CEO view
+            {text("Demo macro analytics · CEO view", "Demo macro analytics · CEO view（デモ用マクロ分析）")}
           </div>
           <h1 className="display" style={{ fontSize: 32, fontWeight: 700, margin: 0, letterSpacing: "-0.02em" }}>
-            Macro Metrics Dashboard
+            {text("Macro Metrics Dashboard", "Macro Metrics Dashboard（マクロ指標）")}
           </h1>
           <div style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "end", flexWrap: "wrap" }}>
             <p style={{ maxWidth: 820, color: "var(--text-2)", fontSize: 15, lineHeight: 1.6, margin: "8px 0 0" }}>
-              A realistic offline demo comparing monetization, repeat usage, ecosystem adjacency,
-              endpoint behavior, and growth actions for the Northwind Price API workflow.
+              {text(
+                "A realistic offline demo comparing monetization, repeat usage, ecosystem adjacency, endpoint behavior, and growth actions for the Northwind Price API workflow.",
+                "Northwind Price API workflow について、monetization、repeat usage、ecosystem adjacency、endpoint behavior、growth actions を比較する realistic offline demo です。",
+              )}
             </p>
             <Link
               href={`/providers/${providerId}/metrics-catalog`}
@@ -41,30 +47,30 @@ export function MacroMetricsScreen({ metrics, providerId }: Props) {
                 boxShadow: "var(--shadow-1)",
               }}
             >
-              View full metrics catalog →
+              {text("View full metrics catalog →", "指標カタログをすべて見る →")}
             </Link>
           </div>
         </header>
 
         <ExecutiveTakeaways items={metrics.executiveTakeaways} note={metrics.proxyNote} />
 
-        <Section title="Overview" eyebrow="P0 macro KPIs">
+        <Section title={text("Overview", "Overview（概要）")} eyebrow="P0 macro KPIs">
           <KpiGrid>
-            <KpiCard label="Paid active wallets" value={metrics.overview.paidActiveWallets} hint="wallets with paid demo usage" />
-            <KpiCard label="Total spend" value={formatAtomic(metrics.overview.totalSpendAtomic, 6, 2)} hint="USDC-denominated atomic demo spend" />
-            <KpiCard label="Paid usage / tx" value={metrics.overview.paidUsageTxCount} hint="paid endpoint transactions" />
-            <KpiCard label="7d / 30d trend" value={`${formatAtomic(metrics.overview.trend7dSpendAtomic, 6, 1)} / ${formatAtomic(metrics.overview.trend30dSpendAtomic, 6, 1)}`} hint="spend in last 7 / 30 days" />
+            <KpiCard label={text("Paid active wallets", "Paid active wallets（有料アクティブウォレット）")} value={metrics.overview.paidActiveWallets} hint={text("wallets with paid demo usage", "paid demo usage のある wallets")} />
+            <KpiCard label={text("Total spend", "総支出")} value={formatAtomic(metrics.overview.totalSpendAtomic, 6, 2)} hint={text("USDC-denominated atomic demo spend", "USDC建てatomicデモ支出")} />
+            <KpiCard label={text("Paid transactions", "Paid transactions（有料tx）")} value={metrics.overview.paidUsageTxCount} hint={text("paid endpoint transactions", "paid endpoint transactions")} />
+            <KpiCard label={text("7d / 30d trend", "7日 / 30日トレンド")} value={`${formatAtomic(metrics.overview.trend7dSpendAtomic, 6, 1)} / ${formatAtomic(metrics.overview.trend30dSpendAtomic, 6, 1)}`} hint={text("spend in last 7 / 30 days", "直近7日 / 30日の支出")} />
           </KpiGrid>
           <TrendCard trend7d={metrics.overview.trend7d} trend30d={metrics.overview.trend30d} />
         </Section>
 
-        <Section title="Customer / Wallet Intelligence" eyebrow="Spend concentration and repeat">
+        <Section title={text("Customer / Wallet Intelligence", "Customer / Wallet Intelligence（顧客/ウォレット分析）")} eyebrow={text("Spend concentration and repeat", "Spend concentration and repeat（支出集中とリピート）")}>
           <TwoColumn>
-            <Card title="Pareto chart for spend concentration" eyebrow="P0">
+            <Card title={text("Pareto chart for spend concentration", "支出集中のパレートチャート")} eyebrow="P0">
               <div className="mono" style={{ fontSize: 30, fontWeight: 700, color: "var(--mesh-blue)" }}>
                 {formatRatioPct(metrics.spendConcentration.topThreeWalletShare)}
               </div>
-              <p style={bodyText}>Top 3 wallets account for total spend share. {metrics.spendConcentration.walletCountForHalfSpend} wallet(s) reach 50% of spend.</p>
+              <p style={bodyText}>{text("Top 3 wallets account for total spend share.", "上位3ウォレットが総支出シェアを占めます。")} {text(`${metrics.spendConcentration.walletCountForHalfSpend} wallet(s) reach 50% of spend.`, `${metrics.spendConcentration.walletCountForHalfSpend}ウォレットで支出の50%に到達します。`)}</p>
               <BarList
                 rows={metrics.spendConcentration.rankedWallets.slice(0, 5).map((wallet) => ({
                   label: wallet.label,
@@ -73,11 +79,11 @@ export function MacroMetricsScreen({ metrics, providerId }: Props) {
                 }))}
               />
             </Card>
-            <Card title="Repeat wallet summary" eyebrow="P0">
+            <Card title={text("Repeat wallet summary", "リピートウォレット概要")} eyebrow="P0">
               <div className="mono" style={{ fontSize: 30, fontWeight: 700, color: "var(--teal)" }}>
                 {formatRatioPct(metrics.repeatSummary.repeatWalletRate)}
               </div>
-              <p style={bodyText}>{metrics.repeatSummary.repeatedWallets} of {metrics.repeatSummary.totalWallets} wallets repeat, averaging {metrics.repeatSummary.averageSessionsPerRepeatedWallet.toFixed(1)} sessions per repeated wallet.</p>
+              <p style={bodyText}>{text(`${metrics.repeatSummary.repeatedWallets} of ${metrics.repeatSummary.totalWallets} wallets repeat, averaging ${metrics.repeatSummary.averageSessionsPerRepeatedWallet.toFixed(1)} sessions per repeated wallet.`, `${metrics.repeatSummary.totalWallets}ウォレット中${metrics.repeatSummary.repeatedWallets}がリピートし、リピートウォレットあたり平均${metrics.repeatSummary.averageSessionsPerRepeatedWallet.toFixed(1)}セッションです。`)}</p>
               <BarList
                 rows={metrics.repeatSummary.bySegment.map((row) => ({
                   label: row.segment.replace(/_/g, " "),
@@ -89,11 +95,11 @@ export function MacroMetricsScreen({ metrics, providerId }: Props) {
           </TwoColumn>
         </Section>
 
-        <Section title="Co-usage / Ecosystem" eyebrow="Other services and shared value">
+        <Section title={text("Co-usage / Ecosystem", "併用 / エコシステム")} eyebrow={text("Other services and shared value", "他サービスと共有価値")}>
           <TwoColumn>
-            <Card title="Co-Usage Providers" eyebrow="P0 · owner-ready">
+            <Card title={text("Co-Usage Providers", "Co-Usage Providers（併用プロバイダー）")} eyebrow={text("P0 · owner review ready", "P0 · owner review ready（担当者レビュー向け）")}>
               <DataTable
-                columns={["Service", "Wallets", "Spend", "Confidence", "Owner"]}
+                columns={[text("Service", "サービス"), text("Wallets", "ウォレット"), text("Spend", "支出"), text("Confidence", "信頼度"), text("Owner", "担当")]} 
                 rows={metrics.coUsageProviders.slice(0, 5).map((candidate) => [
                   candidate.serviceName,
                   candidate.sharedWallets,
@@ -103,9 +109,9 @@ export function MacroMetricsScreen({ metrics, providerId }: Props) {
                 ])}
               />
             </Card>
-            <Card title="Shared spend / shared tx ranked table" eyebrow="P0">
+            <Card title={text("Shared spend / shared tx ranking", "Shared spend / shared tx ranking（共有支出/共有tx）")} eyebrow="P0">
               <DataTable
-                columns={["Service", "Shared spend", "Shared tx", "Reason"]}
+                columns={[text("Service", "サービス"), text("Shared spend", "共有支出"), text("Shared tx", "共有tx"), text("Reason", "理由")]}
                 rows={metrics.coUsageProviders.slice(0, 5).map((candidate) => [
                   candidate.serviceName,
                   formatAtomic(candidate.sharedSpendAtomic, 6, 1),
@@ -117,9 +123,9 @@ export function MacroMetricsScreen({ metrics, providerId }: Props) {
           </TwoColumn>
         </Section>
 
-        <Section title="Endpoint Behavior" eyebrow="Category usage and flow">
+        <Section title={text("Endpoint Behavior", "エンドポイント挙動")} eyebrow={text("Category usage and flow", "カテゴリ利用とフロー")}>
           <TwoColumn>
-            <Card title="Endpoint category usage" eyebrow="P0">
+            <Card title={text("Endpoint category usage", "エンドポイントカテゴリ利用")} eyebrow="P0">
               <BarList
                 rows={metrics.endpointUsage.map((row) => ({
                   label: row.category.replace(/_/g, " "),
@@ -128,17 +134,17 @@ export function MacroMetricsScreen({ metrics, providerId }: Props) {
                 }))}
               />
             </Card>
-            <Card title="Endpoint category flow" eyebrow="P1 proxy flow">
+            <Card title={text("Endpoint category flow", "エンドポイントカテゴリフロー")} eyebrow={text("P1 proxy flow", "P1 代理フロー")}>
               <EndpointSankey flows={metrics.endpointFlows} />
             </Card>
           </TwoColumn>
         </Section>
 
-        <Section title="Growth Action" eyebrow="Recommended plays">
+        <Section title={text("Growth Action", "Growth Action（成長アクション）")} eyebrow={text("Recommended plays", "Recommended plays（推奨施策）")}>
           <TwoColumn>
-            <Card title="Source / intermediary ranking" eyebrow="P0">
+            <Card title={text("Source / intermediary ranking", "流入元 / 仲介者ランキング")} eyebrow="P0">
               <DataTable
-                columns={["Source", "Wallets", "Repeat", "Spend"]}
+                columns={[text("Source", "流入元"), text("Wallets", "ウォレット"), text("Repeat", "リピート"), text("Spend", "支出")]}
                 rows={metrics.sourceRankings.map((row) => [
                   row.source,
                   row.wallets,
@@ -147,7 +153,7 @@ export function MacroMetricsScreen({ metrics, providerId }: Props) {
                 ])}
               />
             </Card>
-            <Card title="Upsell, co-marketing, reprice and retention actions" eyebrow="P0/P1/P2">
+            <Card title={text("Upsell, co-marketing, reprice and retention actions", "アップセル、共同マーケ、価格改定、継続施策")} eyebrow="P0/P1/P2">
               <div style={{ display: "grid", gap: 10 }}>
                 {metrics.recommendations.map((recommendation) => (
                   <div key={recommendation.id} style={{ padding: "12px 14px", border: "1px solid var(--line)", borderRadius: 8, background: "#fff" }}>
@@ -156,8 +162,8 @@ export function MacroMetricsScreen({ metrics, providerId }: Props) {
                       <span className="mono" style={{ color: priorityColor(recommendation.priority), fontWeight: 700 }}>{recommendation.priority}</span>
                     </div>
                     <div style={{ color: "var(--text-3)", fontSize: 13, lineHeight: 1.5 }}>
-                      {recommendation.target} · {recommendation.impact} · confidence {formatRatioPct(recommendation.confidence)}
-                      {recommendation.proxy ? " · demo proxy" : ""}
+                      {recommendation.target} · {recommendation.impact} · {text("confidence", "信頼度")} {formatRatioPct(recommendation.confidence)}
+                      {recommendation.proxy ? text(" · demo proxy", " · デモ代理") : ""}
                     </div>
                   </div>
                 ))}
@@ -169,7 +175,7 @@ export function MacroMetricsScreen({ metrics, providerId }: Props) {
         <div style={{ marginTop: 28 }}>
           <MacroRouteSankeySection
             chart={metrics.routeSankey}
-            periodLabel="Last 30 days demo"
+            periodLabel={text("Last 30 days demo", "直近30日デモ")}
           />
         </div>
       </div>
