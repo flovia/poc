@@ -134,7 +134,8 @@ export function CustomersTable({
           <Link
             key={c.address}
             href={`/providers/${providerId}/wallet/${encodeURIComponent(c.address)}`}
-            className={classNames(rowClass)}
+            className={classNames(rowClass, "cust-row-link")}
+            aria-label={`Open details for wallet ${c.address}`}
             style={{
               animation: `fade-up 240ms ${Math.min(i * 25, 200)}ms both ease-out`,
               textDecoration: "none",
@@ -144,18 +145,13 @@ export function CustomersTable({
             <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
               <span className="row-indicator" />
               <span
-                className="mono"
+                className="mono wallet-address-link"
                 style={{
                   fontSize: 14,
-                  fontWeight: 500,
+                  fontWeight: 600,
                   whiteSpace: "nowrap",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
-                  color: "var(--mesh-blue)",
-                  textDecoration: "underline",
-                  textDecorationStyle: "dotted",
-                  textDecorationColor: "var(--text-mute)",
-                  textUnderlineOffset: 2,
                 }}
                 title={c.address}
               >

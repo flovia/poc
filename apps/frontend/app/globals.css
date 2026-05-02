@@ -685,7 +685,7 @@ a { color: inherit; text-decoration: none; }
   border-bottom: 1px solid var(--line);
   background: transparent;
   color: var(--text-1);
-  transition: background 140ms ease, transform 140ms ease;
+  transition: background 140ms ease, box-shadow 140ms ease, transform 140ms ease;
   position: relative;
 }
 /* SDK connected モード時は Agent / Used endpoint / 7d sparkline の独立 3 列を追加. */
@@ -709,11 +709,44 @@ a { color: inherit; text-decoration: none; }
   background: var(--surface-subtle);
 }
 .cust-row.cust-head:hover { background: var(--surface-subtle); }
-.cust-row:hover { background: var(--surface-muted); }
-.cust-row:hover .row-arrow { color: var(--text-1); transform: translateX(4px); }
-.cust-row:hover .row-indicator { background: var(--text-mute); }
+.cust-row-link { cursor: pointer; }
+.cust-row-link:hover,
+.cust-row-link:focus-visible {
+  background: var(--surface-muted);
+}
+.cust-row-link:active {
+  background: var(--surface-subtle);
+}
+.cust-row-link:focus-visible {
+  outline: 2px solid var(--mesh-blue);
+  outline-offset: -2px;
+  box-shadow: inset 0 0 0 1px rgba(47, 111, 237, 0.18);
+}
+.cust-row-link:hover .row-arrow,
+.cust-row-link:focus-visible .row-arrow {
+  color: var(--text-1);
+  opacity: 1;
+  transform: translateX(4px);
+}
+.cust-row-link:hover .row-indicator,
+.cust-row-link:focus-visible .row-indicator {
+  background: var(--text-mute);
+}
+.wallet-address-link {
+  color: var(--mesh-blue);
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 3px;
+  transition: color 140ms ease, text-decoration-color 140ms ease;
+}
+.cust-row-link:hover .wallet-address-link,
+.cust-row-link:focus-visible .wallet-address-link {
+  color: var(--mesh-blue);
+  text-decoration-color: currentColor;
+}
 .cust-row.hero { background: var(--mesh-blue-dim); }
-.cust-row.hero:hover { background: var(--signal-priority-soft); }
+.cust-row.hero:hover,
+.cust-row.hero:focus-visible { background: var(--signal-priority-soft); }
 .cust-row.hero .row-indicator {
   background: var(--mesh-blue);
 }
@@ -724,7 +757,15 @@ a { color: inherit; text-decoration: none; }
 }
 .row-arrow {
   color: var(--text-mute);
-  transition: color 140ms ease, transform 140ms ease;
+  opacity: 0.72;
+  transition: color 140ms ease, opacity 140ms ease, transform 140ms ease;
+}
+
+@media (hover: none) {
+  .row-arrow {
+    color: var(--text-3);
+    opacity: 1;
+  }
 }
 
 /* ---- Scrollbar ---- */
