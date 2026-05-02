@@ -597,6 +597,26 @@ a { color: inherit; text-decoration: none; }
 }
 .onboarding-modal-metric-label { font-weight: 650; color: var(--text-1); }
 .onboarding-modal-metric-description { margin-top: 2px; color: var(--text-3); font-size: 13px; line-height: 1.45; }
+.onboarding-modal-note {
+  display: block;
+  width: 100%;
+  margin: -6px 0 22px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: var(--surface-subtle);
+  border: 1px solid rgba(226, 232, 240, 0.72);
+  color: var(--text-3);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.onboarding-modal-note > span {
+  grid-column: 1 / -1;
+  display: block;
+  min-width: 0;
+  white-space: normal;
+  word-break: normal;
+  overflow-wrap: normal;
+}
 .onboarding-modal-cta {
   width: 100%;
   justify-content: center;

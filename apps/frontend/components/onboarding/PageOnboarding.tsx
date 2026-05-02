@@ -14,6 +14,7 @@ export type PageOnboardingContent = {
   title: string;
   description: string;
   metrics: PageOnboardingMetric[];
+  note?: string;
 };
 
 type PageOnboardingProps = {
@@ -106,6 +107,11 @@ export function PageOnboarding({ content }: PageOnboardingProps) {
                 </div>
               ))}
             </div>
+            {content.note ? (
+              <div className="onboarding-modal-note">
+                <span>{content.note}</span>
+              </div>
+            ) : null}
             <button type="button" className="btn primary onboarding-modal-cta" onClick={closeAndRemember}>
               View dashboard
             </button>
