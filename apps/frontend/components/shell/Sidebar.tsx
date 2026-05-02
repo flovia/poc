@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useId, useMemo, useState } from "react";
 import { useProviders } from "@/app/providers";
 import { Icon } from "@/components/ui/Icon";
-import { formatPayToShort, getDisplayPayTo, isDemoProvider } from "@/lib/providers";
+import { isDemoProvider } from "@/lib/providers";
 import type { DashboardMode } from "@/lib/data-mode";
 // Phase 9: barrel ではなく leaf module から直 import (sdk-fixtures の他データを引き込まないため).
 import { SDK_DEMO_PROVIDER_ID, SDK_DEMO_PROVIDER_NAME } from "@/lib/sdk-fixtures/shared";
@@ -319,7 +319,6 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
                           real
                         </span>
                       )}
-                      <span className="pay">{formatPayToShort(getDisplayPayTo(p))}</span>
                     </Link>
                     {!isGenerated && (
                       <button
