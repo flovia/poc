@@ -3,9 +3,7 @@ import { CustomersBrowser } from "@/components/customers/CustomersBrowser";
 import { CustomersHeader } from "@/components/customers/CustomersHeader";
 import { CustomersOverview } from "@/components/customers/overview/CustomersOverview";
 import { SnapshotIndicator } from "@/components/customers/SnapshotIndicator";
-import { SummaryChip } from "@/components/customers/SummaryChip";
 import { getCustomers, getProviders, getSdkExtrasMap, getSummary } from "@/lib/data-source";
-import { formatAtomic } from "@/lib/format";
 import { getTopBarPageContext } from "@/lib/server/page-context";
 
 export default async function CustomersPage({
@@ -26,8 +24,6 @@ export default async function CustomersPage({
   const totalSpendAtomic = customers
     .reduce((acc, c) => acc + BigInt(c.spendAtomic), 0n)
     .toString();
-  const total = customers.length;
-  const highIntent = customers.filter((c) => c.upsellOpportunity === "high").length;
 
   return (
     <>
@@ -47,24 +43,10 @@ export default async function CustomersPage({
             }}
           >
             <CustomersHeader providerId={providerId} />
-            <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-              <SnapshotIndicator generatedAt={summary.generatedAt} />
-              <SummaryChip label="Wallets" value={total} hint="payer wallets observed" />
-              <SummaryChip
-                label="Spend"
-                value={formatAtomic(totalSpendAtomic)}
-                hint="atomic units (USDC*)"
-              />
-              <SummaryChip
-                label="High upsell"
-                value={highIntent}
-                accent="blue"
-                hint="upsellOpportunity = high"
-              />
-            </div>
+            <SnapshotIndicator generatedAt={summary.generatedAt} />
           </div>
 
-          <CustomersOverview customers={customers} />
+          <CustomersOverview customers={customers} totalSpendAtomic={totalSpendAtomic} />
 
           <CustomersBrowser
             customers={customers}

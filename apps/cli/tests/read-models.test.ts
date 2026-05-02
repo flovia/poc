@@ -321,6 +321,161 @@ describe("service analytics read model generation", () => {
       expect(payload.walletUsageGraph.graph.providerWallets[0].payerWallets).toHaveLength(1);
     }));
 
+  test("computes activityGrowth from on-chain transfer fact timestamps", async () =>
+    withTempDir("activity-growth", (directory) => {
+      const dbPath = path.join(directory, "analytics.sqlite");
+      const outputPath = path.join(directory, "analytics.json");
+      const store = createAnalyticsStore({ path: dbPath });
+      const payTo = "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784";
+      const customerAddress = "0xac5a07c44a4f971667b3df4b6551fb6991b2142d";
+
+      store.persistCdpResources([
+        resource(
+          "coingecko-direct",
+          "https://api.coingecko.com/api/v3/x402/simple/price",
+          "coingecko",
+          "CoinGecko x402",
+          payTo,
+        ),
+      ]);
+      store.persistPayToAggregates([aggregate(payTo, 6, 1)]);
+      store.detectAndPersistMappingPatterns();
+      // Two transfers in the earlier half (Jan 1, Jan 5) and four in the recent half
+      // (Jan 25-28) of a Jan 1 → Jan 28 span. recent-vs-earlier = 4 vs 2 → +1.0 growth.
+      const transferTimestamps: Array<{ tx: string; at: string }> = [
+        {
+          tx: "0x1111111111111111111111111111111111111111111111111111111111111111",
+          at: "2026-01-01T00:00:00.000Z",
+        },
+        {
+          tx: "0x2222222222222222222222222222222222222222222222222222222222222222",
+          at: "2026-01-05T00:00:00.000Z",
+        },
+        {
+          tx: "0x3333333333333333333333333333333333333333333333333333333333333333",
+          at: "2026-01-25T00:00:00.000Z",
+        },
+        {
+          tx: "0x4444444444444444444444444444444444444444444444444444444444444444",
+          at: "2026-01-26T00:00:00.000Z",
+        },
+        {
+          tx: "0x5555555555555555555555555555555555555555555555555555555555555555",
+          at: "2026-01-27T00:00:00.000Z",
+        },
+        {
+          tx: "0x6666666666666666666666666666666666666666666666666666666666666666",
+          at: "2026-01-28T00:00:00.000Z",
+        },
+      ];
+      store.persistTransferFacts(
+        transferTimestamps.map(({ tx, at }) => ({
+          network: "base",
+          asset: "USDC",
+          payTo,
+          txHash: tx,
+          transferIndex: 0,
+          payerWallet: customerAddress,
+          amountAtomic: "10000",
+          blockTimestamp: at,
+        })),
+      );
+      store.persistCustomerIntelligenceSnapshots([
+        customerFixture(customerAddress, payTo, "CoinGecko x402", 1, "10000"),
+      ]);
+      store.close();
+
+      generateServiceAnalyticsReadModels({
+        analyticsDbPath: dbPath,
+        outputPath,
+        generatedAt: "2026-02-01T00:00:00.000Z",
+      });
+      const payload = JSON.parse(fs.readFileSync(outputPath, "utf8"));
+
+      const customerEntry = payload.customers.customers.find(
+        (entry: { address: string }) => entry.address === customerAddress,
+      );
+      const profile = payload.profilesByAddress[customerAddress];
+      expect(customerEntry.activityGrowth).toBeCloseTo(1, 5);
+      expect(customerEntry.provenanceByField.activityGrowth).toBe("derived_insight");
+      expect(profile.profile.metrics.activityGrowth).toBeCloseTo(1, 5);
+      expect(profile.profile.metrics.provenanceByField.activityGrowth).toBe("derived_insight");
+    }));
+
+  test("scopes activityGrowth to the customer snapshot's (network, asset) — ignores other-asset transfers", async () =>
+    withTempDir("activity-growth-scope", (directory) => {
+      const dbPath = path.join(directory, "analytics.sqlite");
+      const outputPath = path.join(directory, "analytics.json");
+      const store = createAnalyticsStore({ path: dbPath });
+      const payTo = "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784";
+      const customerAddress = "0xac5a07c44a4f971667b3df4b6551fb6991b2142d";
+
+      store.persistCdpResources([
+        resource(
+          "coingecko-direct",
+          "https://api.coingecko.com/api/v3/x402/simple/price",
+          "coingecko",
+          "CoinGecko x402",
+          payTo,
+        ),
+      ]);
+      store.persistPayToAggregates([aggregate(payTo, 1, 1)]);
+      store.detectAndPersistMappingPatterns();
+      // In-scope: a single same-asset transfer → cannot split → growth must be 0.
+      store.persistTransferFacts([
+        {
+          network: "base",
+          asset: "USDC",
+          payTo,
+          txHash: "0x6248880ec36541e6783ab756afdb427939f6209551b751cec5a2c97f71176d94",
+          transferIndex: 0,
+          payerWallet: customerAddress,
+          amountAtomic: "10000",
+          blockTimestamp: "2026-01-15T00:00:00.000Z",
+        },
+        // Out-of-scope: same payer + same payTo but a different asset. If the
+        // growth scoping were broken, these timestamps would leak in and produce
+        // a non-zero recent-vs-earlier signal.
+        {
+          network: "base",
+          asset: "USDT",
+          payTo,
+          txHash: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          transferIndex: 0,
+          payerWallet: customerAddress,
+          amountAtomic: "10000",
+          blockTimestamp: "2026-01-01T00:00:00.000Z",
+        },
+        {
+          network: "base",
+          asset: "USDT",
+          payTo,
+          txHash: "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          transferIndex: 0,
+          payerWallet: customerAddress,
+          amountAtomic: "10000",
+          blockTimestamp: "2026-01-30T00:00:00.000Z",
+        },
+      ]);
+      // Snapshot scope is base/USDC — out-of-scope USDT transfers must be ignored.
+      store.persistCustomerIntelligenceSnapshots([
+        customerFixture(customerAddress, payTo, "CoinGecko x402", 1, "10000"),
+      ]);
+      store.close();
+
+      generateServiceAnalyticsReadModels({
+        analyticsDbPath: dbPath,
+        outputPath,
+        generatedAt: "2026-02-01T00:00:00.000Z",
+      });
+      const payload = JSON.parse(fs.readFileSync(outputPath, "utf8"));
+      const customerEntry = payload.customers.customers.find(
+        (entry: { address: string }) => entry.address === customerAddress,
+      );
+      expect(customerEntry.activityGrowth).toBe(0);
+      expect(payload.profilesByAddress[customerAddress].profile.metrics.activityGrowth).toBe(0);
+    }));
+
   test("generates provider catalog rows for bundled, unresolved, and no-customer-fact payTos", async () =>
     withTempDir("provider-catalog", (directory) => {
       const dbPath = path.join(directory, "analytics.sqlite");

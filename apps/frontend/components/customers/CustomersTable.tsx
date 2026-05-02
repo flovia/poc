@@ -4,7 +4,6 @@ import Link from "next/link";
 import { Icon } from "@/components/ui/Icon";
 import { ChainBadge } from "./ChainBadge";
 import { HeaderTooltip } from "./HeaderTooltip";
-import { UpsellPill } from "./UpsellPill";
 import { Sparkline7d } from "@/components/wallet/Sparkline7d";
 import { classNames, formatAtomic, formatTimestamp } from "@/lib/format";
 import type { CustomerListItemDto } from "@/lib/api/types";
@@ -27,6 +26,8 @@ function AgentBadge({ agentType }: { agentType: string }) {
     <span
       data-testid="customers-agent-badge"
       style={{
+        display: "inline-block",
+        verticalAlign: "middle",
         fontSize: 11,
         fontWeight: 600,
         padding: "2px 8px",
@@ -118,14 +119,6 @@ export function CustomersTable({
             align="right"
           />
         </div>
-        <div>
-          <HeaderTooltip
-            label="Upsell"
-            description="Suggested upsell opportunity inferred from this wallet's behavior, with provenance and reasons."
-            align="right"
-          />
-        </div>
-        <div aria-hidden />
       </div>
       {customers.length === 0 && (
         <div style={{ padding: 24, color: "var(--text-3)", fontSize: 14 }}>
@@ -158,6 +151,11 @@ export function CustomersTable({
                   whiteSpace: "nowrap",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
+                  color: "var(--mesh-blue)",
+                  textDecoration: "underline",
+                  textDecorationStyle: "dotted",
+                  textDecorationColor: "var(--text-mute)",
+                  textUnderlineOffset: 2,
                 }}
                 title={c.address}
               >
@@ -217,14 +215,20 @@ export function CustomersTable({
               </div>
             )}
 
-            <div className="mono" style={{ fontSize: 12, color: "var(--text-3)" }}>
-              {formatTimestamp(c.lastSeenAt)}
-            </div>
-            <div>
-              <UpsellPill opportunity={c.upsellOpportunity} />
-            </div>
-            <div className="row-arrow" style={{ display: "flex", justifyContent: "flex-end" }}>
-              <Icon.arrow width="14" height="14" />
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "flex-end",
+                gap: 10,
+              }}
+            >
+              <span className="mono" style={{ fontSize: 12, color: "var(--text-3)" }}>
+                {formatTimestamp(c.lastSeenAt)}
+              </span>
+              <span className="row-arrow" style={{ display: "inline-flex", alignItems: "center" }}>
+                <Icon.arrow width="14" height="14" />
+              </span>
             </div>
           </Link>
         );

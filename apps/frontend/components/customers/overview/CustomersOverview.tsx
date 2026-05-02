@@ -1,19 +1,18 @@
 import type { CustomerListItemDto } from "@/lib/api/types";
 import {
-  computeParetoCurve,
   computeProviderSpread,
   computeRecencyMatrix,
 } from "@/lib/customers/overview";
-import { ParetoChart } from "./ParetoChart";
 import { ProviderSpreadChart } from "./ProviderSpreadChart";
 import { RecencyMatrixChart } from "./RecencyMatrixChart";
+import { WalletsSpendCard } from "./WalletsSpendCard";
 
 type CustomersOverviewProps = {
   customers: CustomerListItemDto[];
+  totalSpendAtomic: string;
 };
 
-export function CustomersOverview({ customers }: CustomersOverviewProps) {
-  const pareto = computeParetoCurve(customers);
+export function CustomersOverview({ customers, totalSpendAtomic }: CustomersOverviewProps) {
   const matrix = computeRecencyMatrix(customers);
   const spread = computeProviderSpread(customers);
 
@@ -21,14 +20,22 @@ export function CustomersOverview({ customers }: CustomersOverviewProps) {
     <div
       style={{
         display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+        gridTemplateColumns: "repeat(2, minmax(280px, 1fr))",
+        gridTemplateRows: "auto auto",
+        gridTemplateAreas: '"totals recency" "spread recency"',
         gap: 14,
         marginBottom: 20,
       }}
     >
-      <ParetoChart curve={pareto} />
-      <RecencyMatrixChart matrix={matrix} />
-      <ProviderSpreadChart spread={spread} />
+      <div style={{ gridArea: "totals", display: "flex", minWidth: 0 }}>
+        <WalletsSpendCard walletCount={customers.length} totalSpendAtomic={totalSpendAtomic} />
+      </div>
+      <div style={{ gridArea: "spread", display: "flex", minWidth: 0 }}>
+        <ProviderSpreadChart spread={spread} />
+      </div>
+      <div style={{ gridArea: "recency", display: "flex", minWidth: 0 }}>
+        <RecencyMatrixChart matrix={matrix} />
+      </div>
     </div>
   );
 }

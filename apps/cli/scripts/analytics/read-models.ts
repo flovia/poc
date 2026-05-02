@@ -41,6 +41,38 @@ const firstTimestamp = (items: Array<string | undefined>) =>
 const serviceName = (service: CustomerIntelligenceResponse["x402Services"][number]) =>
   service.serviceName ?? service.providerName ?? service.resource ?? service.payTo;
 
+// Caps reported growth so a single new wallet with one earlier tx and a burst
+// of recent activity does not pin the UI rendering at extreme values.
+const ACTIVITY_GROWTH_MAX = 5;
+
+// Approximates per-wallet activity growth from on-chain transfer timestamps.
+// Splits the wallet's own observation span into two equal halves at its
+// midpoint and compares recent-half vs earlier-half transaction counts.
+// By construction the earliest timestamp lands in the earlier half and the
+// latest lands in the recent half, so both counts are >= 1 whenever the span
+// can be split. Returns 0 when the span cannot be split (fewer than two
+// observations, all timestamps identical, or all timestamps invalid).
+export const computeActivityGrowth = (timestamps: string[]): number => {
+  const epochs = timestamps
+    .map((value) => Date.parse(value))
+    .filter((value): value is number => Number.isFinite(value))
+    .sort((left, right) => left - right);
+  if (epochs.length < 2) return 0;
+  const first = epochs[0];
+  const last = epochs[epochs.length - 1];
+  if (last === first) return 0;
+  const midpoint = first + (last - first) / 2;
+  let earlier = 0;
+  let recent = 0;
+  for (const epoch of epochs) {
+    if (epoch < midpoint) earlier += 1;
+    else recent += 1;
+  }
+  const ratio = (recent - earlier) / earlier;
+  const capped = Math.min(ACTIVITY_GROWTH_MAX, ratio);
+  return Number(capped.toFixed(2));
+};
+
 type ServiceAnalyticsRow = {
   service_key: string;
   service_name: string;
@@ -141,10 +173,66 @@ const loadCustomerIntelligenceSnapshots = (
   return [...latestByAddress.values()];
 };
 
+// Constrain transfer-fact lookups to the same (network, asset, timeWindow) the
+// customer snapshot was generated under. Without this scoping, transfers from
+// older runs or unrelated assets would leak into the wallet's growth signal.
+const buildActivityGrowthByAddress = (
+  store: ReturnType<typeof createAnalyticsStore>,
+  customers: CustomerIntelligenceResponse[],
+): Map<string, number> => {
+  const growth = new Map<string, number>();
+  if (customers.length === 0) return growth;
+
+  type ScopeBucket = {
+    network: string;
+    asset: string;
+    from: string;
+    to: string;
+    addresses: string[];
+  };
+  const buckets = new Map<string, ScopeBucket>();
+  for (const customer of customers) {
+    const { network, asset, timeWindow } = customer.scope;
+    const key = [network, asset, timeWindow.from, timeWindow.to].join("|");
+    const bucket = buckets.get(key) ?? {
+      network,
+      asset,
+      from: timeWindow.from,
+      to: timeWindow.to,
+      addresses: [],
+    };
+    bucket.addresses.push(customer.customerAddress);
+    buckets.set(key, bucket);
+  }
+
+  const timestampsByAddress = new Map<string, string[]>();
+  for (const bucket of buckets.values()) {
+    const facts = store.listCustomerOutgoingTransferFacts({
+      network: bucket.network,
+      asset: bucket.asset,
+      payerWallets: bucket.addresses,
+      timeWindow: { from: bucket.from, to: bucket.to },
+    });
+    for (const fact of facts) {
+      const key = fact.customerAddress.toLowerCase();
+      const list = timestampsByAddress.get(key) ?? [];
+      list.push(fact.timestamp);
+      timestampsByAddress.set(key, list);
+    }
+  }
+
+  for (const customer of customers) {
+    const key = customer.customerAddress.toLowerCase();
+    growth.set(key, computeActivityGrowth(timestampsByAddress.get(key) ?? []));
+  }
+  return growth;
+};
+
 const buildCustomerReadModels = (
   customers: CustomerIntelligenceResponse[],
   generatedAt: string,
   generatedFrom: string,
+  growthByAddress: Map<string, number> = new Map(),
 ) => {
   const customerList = validatePhaseBCustomerListResponse({
     generatedAt,
@@ -158,6 +246,7 @@ const buildCustomerReadModels = (
         customer.payToActivities.map((activity) => activity.totalAmountAtomic),
       );
       const providerCount = new Set(customer.x402Services.map((service) => service.payTo)).size;
+      const activityGrowth = growthByAddress.get(customer.customerAddress.toLowerCase()) ?? 0;
       return {
         address: customer.customerAddress,
         label: null,
@@ -167,7 +256,7 @@ const buildCustomerReadModels = (
         lastSeenAt: latestTimestamp(
           customer.payToActivities.map((activity) => activity.latestTimestamp),
         ),
-        activityGrowth: 0,
+        activityGrowth,
         upsellOpportunity:
           providerCount > 1 || observationCount > 5
             ? "high"
@@ -180,6 +269,7 @@ const buildCustomerReadModels = (
           observationCount: "onchain_fact",
           spendAtomic: "onchain_fact",
           providerCount: "derived_insight",
+          activityGrowth: "derived_insight",
           upsellOpportunity: "derived_insight",
         },
         reasons: [reason],
@@ -256,7 +346,7 @@ const buildCustomerReadModels = (
           },
           metrics: {
             spendAtomic,
-            activityGrowth: 0,
+            activityGrowth: growthByAddress.get(customer.customerAddress.toLowerCase()) ?? 0,
             freeTierProgress: Math.min(1, txCount / 10),
             entryPointRatio: Math.min(1, providers.length / 5),
             upsellOpportunity:
@@ -273,6 +363,7 @@ const buildCustomerReadModels = (
               spendAtomic: "onchain_fact",
               txCount: "onchain_fact",
               uniqueProviderCount: "derived_insight",
+              activityGrowth: "derived_insight",
             },
             reasons: [reason],
           },
@@ -608,10 +699,13 @@ export const generateServiceAnalyticsReadModels = (
     reasons: [reason],
   });
 
+  const customerSnapshots = loadCustomerIntelligenceSnapshots(store, options.customerRunIds);
+  const growthByAddress = buildActivityGrowthByAddress(store, customerSnapshots);
   const customerReadModels = buildCustomerReadModels(
-    loadCustomerIntelligenceSnapshots(store, options.customerRunIds),
+    customerSnapshots,
     generatedAt,
     generatedFrom,
+    growthByAddress,
   );
   log(
     `[analytics:read-models] built ${customerReadModels.customerList.customerCount} customer row(s)`,
