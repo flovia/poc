@@ -78,6 +78,9 @@ describe("buildMacroMetrics", () => {
     expect(new Set(metrics.routeSankey.flows.map((flow) => flow.middle_label)).size).toBeGreaterThan(
       1,
     );
+    expect(metrics.routeSankey.flows.map((flow) => flow.middle_label)).toContain("Sponge");
+    expect(metrics.routeSankey.flows.map((flow) => flow.middle_label)).toContain("Dexter");
+    expect(metrics.routeSankey.flows.map((flow) => flow.middle_label)).toContain("agent.market");
     expect(
       metrics.routeSankey.flows.some(
         (flow) =>

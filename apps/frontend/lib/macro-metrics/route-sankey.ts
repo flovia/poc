@@ -62,6 +62,20 @@ function serviceDetails(service: MacroService | undefined): string {
   return `${service.name} · ${service.category}`;
 }
 
+function middlemanLabel(wallet: MacroWallet | undefined): string {
+  if (!wallet) return "Unknown middleman";
+  if (wallet.intermediary === "Privy") return "Sponge";
+  if (wallet.intermediary === "Coinbase CDP") return "Dexter";
+  if (wallet.intermediary === "Circle Wallets") return "agent.market";
+  if (wallet.intermediary === "Safe") return "Partner App";
+  return "Direct";
+}
+
+function middlemanDetails(wallet: MacroWallet | undefined, service: MacroService | undefined): string {
+  if (!wallet) return serviceDetails(service);
+  return `${wallet.intermediary} · ${wallet.source}`;
+}
+
 function flowOrder(
   flows: X402SankeyFlowRow[],
   pickLabel: (flow: X402SankeyFlowRow) => string,
@@ -210,10 +224,10 @@ export function buildMacroRouteSankeyChart(
       return [
         {
           left_label: CATEGORY_LABELS[start.endpointCategory],
-          middle_label: service?.name ?? middle.serviceId,
+          middle_label: middlemanLabel(wallet),
           right_label: CATEGORY_LABELS[next.endpointCategory],
           left_detail: start.endpointLabel,
-          middle_detail: serviceDetails(service),
+          middle_detail: middlemanDetails(wallet, service),
           right_detail: next.endpointLabel,
           flow_count: middle.txCount,
           paid_count: 1,
