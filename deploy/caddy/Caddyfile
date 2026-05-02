@@ -1,4 +1,4 @@
-api.flovia402.com {
+(api_routes) {
 	handle / {
 		header Content-Type application/json
 		respond "{\"branches\":[\"main\",\"develop\"]}" 200
@@ -19,4 +19,13 @@ api.flovia402.com {
 	}
 
 	respond "not found" 404
+}
+
+api.flovia402.com {
+	import api_routes
+}
+
+# Keep legacy IP-based access available over plain HTTP.
+http:// {
+	import api_routes
 }

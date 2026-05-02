@@ -115,7 +115,6 @@ upsert_env_var "$stack_env_file" CADDY_HTTP_PORT "80"
 upsert_env_var "$stack_env_file" CADDY_HTTPS_PORT "443"
 upsert_env_var "$stack_env_file" "$image_tag_key" "$DEPLOY_GIT_SHA"
 sync_optional_env_var "$stack_env_file" AWS_BEARER_TOKEN_BEDROCK "${AWS_BEARER_TOKEN_BEDROCK:-}"
-sync_optional_env_var "$stack_env_file" CADDY_SITE_ADDRESS "${CADDY_SITE_ADDRESS:-}"
 bedrock_region="${BFF_BEDROCK_REGION:-${AWS_REGION:-${AWS_DEFAULT_REGION:-}}}"
 sync_optional_env_var "$stack_env_file" AWS_REGION "$bedrock_region"
 sync_optional_env_var "$stack_env_file" AWS_DEFAULT_REGION "$bedrock_region"
@@ -126,4 +125,5 @@ printf '%s\n' "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USERNAME" --passwor
 docker compose --env-file "$stack_env_file" -f "$stack_compose_file" config >/dev/null
 docker compose --env-file "$stack_env_file" -f "$stack_compose_file" pull "$service_name" caddy
 docker compose --env-file "$stack_env_file" -f "$stack_compose_file" up -d --remove-orphans "$service_name" caddy
+docker compose --env-file "$stack_env_file" -f "$stack_compose_file" exec -T -w /etc/caddy caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile
 docker logout ghcr.io >/dev/null 2>&1 || true
