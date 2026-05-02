@@ -7,6 +7,7 @@ import {
   getWalletUsageGraph,
 } from "@/lib/data-source";
 import { getTopBarPageContext } from "@/lib/server/page-context";
+import { getX402AnalysisViewModelForMode } from "@/lib/x402-analysis/page-data";
 
 export default async function PatternsPage({
   params,
@@ -14,13 +15,14 @@ export default async function PatternsPage({
   params: Promise<{ providerId: string }>;
 }) {
   const { providerId } = await params;
-  const [graph, observations, sdkWorkflowClusters, sdkRetentionByAgent, pageCtx] =
+  const pageCtx = await getTopBarPageContext();
+  const [graph, observations, sdkWorkflowClusters, sdkRetentionByAgent, x402ViewModel] =
     await Promise.all([
       getWalletUsageGraph(),
       getObservations(),
       getSdkWorkflowClusters(),
       getSdkRetentionByAgent(),
-      getTopBarPageContext(),
+      getX402AnalysisViewModelForMode(pageCtx.dataMode),
     ]);
 
   return (
@@ -38,6 +40,7 @@ export default async function PatternsPage({
           dataMode={pageCtx.dataMode}
           sdkWorkflowClusters={sdkWorkflowClusters}
           sdkRetentionByAgent={sdkRetentionByAgent}
+          x402ViewModel={x402ViewModel}
         />
       </div>
     </>

@@ -1,4 +1,6 @@
 import {
+  type PhaseBCustomerProfileResponse,
+  type WalletUsageGraphResponse,
   validatePhaseBCustomerListResponse,
   validatePhaseBCustomerUpsellExplanationResponse,
   validatePhaseBCustomerProfileResponse,
@@ -57,6 +59,14 @@ async function bffFetch<T>(path: string): Promise<T> {
 }
 
 export async function getCustomerProfile(address: string): Promise<CustomerProfileDto | null> {
+  const raw = await getCustomerProfileRaw(address);
+  if (!raw) return null;
+  return adaptCustomerProfile(raw);
+}
+
+export async function getCustomerProfileRaw(
+  address: string,
+): Promise<PhaseBCustomerProfileResponse | null> {
   const response = await fetch(`${bffBaseUrl()}/customers/${encodeURIComponent(address)}/profile`, {
     cache: "no-store",
     headers: { accept: "application/json" },
@@ -67,7 +77,7 @@ export async function getCustomerProfile(address: string): Promise<CustomerProfi
       `BFF request failed: ${response.status} ${response.statusText} (/customers/${address}/profile)`,
     );
   }
-  return adaptCustomerProfile(validatePhaseBCustomerProfileResponse(await response.json()));
+  return validatePhaseBCustomerProfileResponse(await response.json());
 }
 
 export async function getCustomerUpsellExplanation(
@@ -107,9 +117,11 @@ export async function getCustomers(payTo?: string): Promise<CustomerListItemDto[
 }
 
 export async function getWalletUsageGraph(): Promise<WalletUsageGraphDto> {
-  return adaptWalletUsageGraph(
-    validatePhaseBWalletUsageGraphResponse(await bffFetch<unknown>("/wallet-usage-graph")),
-  );
+  return adaptWalletUsageGraph(await getWalletUsageGraphRaw());
+}
+
+export async function getWalletUsageGraphRaw(): Promise<WalletUsageGraphResponse> {
+  return validatePhaseBWalletUsageGraphResponse(await bffFetch<unknown>("/wallet-usage-graph"));
 }
 
 // Phase B BFF は /observations を提供しないため、/wallet-usage-graph から合成する。

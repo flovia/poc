@@ -1,7 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useActiveProvider } from "@/app/providers";
+import { X402SankeySection } from "@/components/x402/X402SankeySection";
 import type { PaymentObservationDto, WalletUsageGraphDto } from "@/lib/api/types";
 import type { DashboardMode } from "@/lib/data-mode";
 import type {
@@ -9,6 +11,7 @@ import type {
   SdkWorkflowCluster,
 } from "@/lib/sdk-fixtures/types";
 import { shortAddr } from "@/lib/format";
+import type { X402AnalysisViewModel } from "@/lib/x402-analysis/transform";
 import { BubbleChart, type ProviderBubble } from "./BubbleChart";
 import { WorkflowClusters } from "./WorkflowClusters";
 import { RetentionByAgent } from "./RetentionByAgent";
@@ -22,6 +25,7 @@ type PatternsScreenProps = {
   dataMode: DashboardMode;
   sdkWorkflowClusters: SdkWorkflowCluster[];
   sdkRetentionByAgent: SdkRetentionByAgentRow[];
+  x402ViewModel: X402AnalysisViewModel;
 };
 
 // payer x recipient ごとの first / last block_timestamp を集計し、
@@ -100,6 +104,7 @@ export function PatternsScreen({
   dataMode,
   sdkWorkflowClusters,
   sdkRetentionByAgent,
+  x402ViewModel,
 }: PatternsScreenProps) {
   const { active, hydrated } = useActiveProvider(providerId);
   const selfProviderName = !hydrated ? "…" : active?.name ?? providerId;
@@ -134,16 +139,37 @@ export function PatternsScreen({
           >
             Co-usage patterns across payer wallets
           </h1>
-          <p style={{ color: "var(--text-2)", fontSize: 15, margin: "6px 0 0", maxWidth: 720 }}>
-            Each bubble is a recipient (provider) wallet observed by the BFF. X-axis is unique
-            payer wallets, Y-axis is the share of payer wallets whose observed activity for that
-            provider spans 14 days or more (a simplified retention proxy). Identity-bearing fields
-            are excluded:{" "}
+        <p style={{ color: "var(--text-2)", fontSize: 15, margin: "6px 0 0", maxWidth: 720 }}>
+          Each bubble is a recipient (provider) wallet observed by the BFF. X-axis is unique
+          payer wallets, Y-axis is the share of payer wallets whose observed activity for that
+          provider spans 14 days or more (a simplified retention proxy). Identity-bearing fields
+          are excluded:{" "}
             <span className="mono" style={{ fontSize: 13 }}>
               {graph.identityFieldsExcluded.join(", ") || "—"}
             </span>
             .
           </p>
+          <div style={{ marginTop: 12 }}>
+            <Link
+              href={`/providers/${providerId}/patterns/x402`}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                padding: "8px 12px",
+                borderRadius: 999,
+                border: "1px solid rgba(47, 93, 154, 0.18)",
+                background: "rgba(47, 93, 154, 0.05)",
+                color: "var(--mesh-blue)",
+                fontSize: 12,
+                fontWeight: 700,
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+              }}
+            >
+              Open full x402 analysis
+            </Link>
+          </div>
         </div>
 
         <BubbleChart bubbles={bubbles} hover={hover} setHover={setHover} providerId={providerId} />
@@ -153,6 +179,16 @@ export function PatternsScreen({
           provider are at least 14 days apart. This is a PoC heuristic, not a cohort-based D14
           retention metric.
         </p>
+
+        <div style={{ marginTop: 28 }}>
+          <X402SankeySection
+            viewModel={x402ViewModel}
+            eyebrow="x402 flows"
+            title="Payment flow sankey views"
+            description="Inline sankey views complement the co-usage bubble chart by showing representative API flow sequences and intermediary routing."
+            surface="card"
+          />
+        </div>
 
         {isSdkConnected && sdkWorkflowClusters.length > 0 && (
           <WorkflowClusters clusters={sdkWorkflowClusters} />
