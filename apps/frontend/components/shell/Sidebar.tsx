@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useCallback, useEffect, useId, useMemo, useState } from "react";
+import { useId, useMemo } from "react";
 import { useProviders } from "@/app/providers";
 import { Icon } from "@/components/ui/Icon";
 import { isDemoProvider } from "@/lib/providers";
@@ -68,25 +68,7 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
   // Phase 9: SDK connected モードでは disabled にしない.
   const navDisabled = isOnChainOnlyEmpty;
 
-  // My Customers サブナビは default 展開. localStorage で永続化, アクティブ時は強制展開.
   const customersGroupActive = activeRoute === "customers" || activeRoute === "wallet";
-  const [customersSubOpen, setCustomersSubOpen] = useState(true);
-  useEffect(() => {
-    try {
-      const v = localStorage.getItem("flovia.sidebar.customersSubOpen");
-      if (v === "0") setCustomersSubOpen(false);
-    } catch {}
-  }, []);
-  const toggleCustomersSub = useCallback(() => {
-    setCustomersSubOpen((prev) => {
-      const next = !prev;
-      try {
-        localStorage.setItem("flovia.sidebar.customersSubOpen", next ? "1" : "0");
-      } catch {}
-      return next;
-    });
-  }, []);
-  const customersSubVisible = customersGroupActive || customersSubOpen;
   const providerListId = useId();
 
   const navHrefFor = (segment: "customers" | "api-growth" | "macro-metrics" | "metrics-catalog") => {
@@ -173,18 +155,6 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
                 <span style={{ flex: 1 }}>My Customers</span>
                 <RealNavBadge />
               </Link>
-              <button
-                type="button"
-                className="nav-toggle"
-                aria-expanded={customersSubVisible}
-                aria-controls="nav-sub-customers"
-                aria-label={customersSubVisible ? "Collapse My Customers" : "Expand My Customers"}
-                onClick={toggleCustomersSub}
-                disabled={customersGroupActive}
-                title={customersGroupActive ? "Sub-pages of the active section" : undefined}
-              >
-                <span className="caret" aria-hidden="true">{customersSubVisible ? "▾" : "▸"}</span>
-              </button>
             </div>
             {(() => {
               const id =
@@ -197,7 +167,6 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
                 <div
                   id="nav-sub-customers"
                   className="nav-sub"
-                  hidden={!customersSubVisible}
                 >
                   <Link
                     href={coUsageHref}
