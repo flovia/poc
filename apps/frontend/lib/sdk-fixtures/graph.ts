@@ -76,7 +76,10 @@ const buildCandidatesForPayer = (payerAddress: string, txBudget: number): Candid
   for (let i = 0; i < count; i++) {
     const providerId = EXTERNAL_PROVIDER_IDS[(start + i) % EXTERNAL_PROVIDER_IDS.length];
     const endpoints = EXTERNAL_PROVIDER_ENDPOINTS[providerId] ?? [];
-    const endpointCount = Math.min(endpoints.length || 1, txBudget >= 8 ? 2 : 1);
+    const endpointCount = Math.min(
+      endpoints.length || 1,
+      txBudget >= 8 ? 2 : 1,
+    );
     const endpointStart = (seed + i * 3) % Math.max(1, endpoints.length);
     const providerBudget = Math.max(2, Math.floor((txBudget * (count - i + 1)) / (count * 1.8)));
 

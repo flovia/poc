@@ -5,14 +5,12 @@ import { useRouter } from "next/navigation";
 import { Icon } from "@/components/ui/Icon";
 import { Field, FieldHeader, fieldInputStyle } from "./Field";
 import { useProviders } from "@/app/providers";
-import { useFrontendLocale } from "@/lib/frontend-locale";
 import { ensureUniqueId, slugifyProviderName } from "@/lib/providers";
 import type { StoredProvider, StoredProviderMode } from "@/lib/types";
 
 type PathRow = { apiPath: string; payTo: string };
 
 export function SetupForm() {
-  const { text } = useFrontendLocale();
   const router = useRouter();
   const { stored, userProviders, addProvider, hydrated, demoOpted, optInDemo } = useProviders();
 
@@ -29,17 +27,13 @@ export function SetupForm() {
 
   const validation = useMemo<string | null>(() => {
     if (mode === "simple") {
-      if (!addr.trim()) return text("pay_to address is required.", "pay_toアドレスは必須です。");
+      if (!addr.trim()) return "pay_to address is required.";
       return null;
     }
     const filled = paths.filter((p) => p.apiPath.trim() && p.payTo.trim());
-    if (filled.length === 0)
-      return text(
-        "Add at least one API path with a pay_to.",
-        "API path と pay_to を少なくとも1行追加してください。",
-      );
+    if (filled.length === 0) return "Add at least one API path with a pay_to.";
     return null;
-  }, [mode, addr, paths, text]);
+  }, [mode, addr, paths]);
 
   const canSave = validation === null;
   const canSkip = stored.length > 0;
@@ -88,12 +82,9 @@ export function SetupForm() {
         {/* Mode toggle */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 22 }}>
           <div>
-            <div style={{ fontSize: 14, fontWeight: 600 }}>{text("Configuration", "設定")}</div>
+            <div style={{ fontSize: 14, fontWeight: 600 }}>Configuration</div>
             <div style={{ fontSize: 13, color: "var(--text-3)", marginTop: 2 }}>
-              {text(
-                "Choose how your pay_to addresses are organized",
-                "pay_toアドレスの管理方法を選択します",
-              )}
+              Choose how your pay_to addresses are organized
             </div>
           </div>
           <div
@@ -127,19 +118,16 @@ export function SetupForm() {
                   letterSpacing: "0.02em",
                 }}
               >
-                {m === "simple" ? text("simple", "simple（単一）") : text("advanced", "advanced（複数path）")}
+                {m}
               </button>
             ))}
           </div>
         </div>
 
-        <Field
-          label={text("Provider name", "プロバイダー名")}
-          hint={text("optional · displayed in your sidebar", "任意 · サイドバーに表示されます")}
-        >
+        <Field label="Provider name" hint="optional · displayed in your sidebar">
           <input
             id={nameId}
-            aria-label={text("Provider name", "プロバイダー名")}
+            aria-label="Provider name"
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Northwind Price API"
@@ -148,17 +136,11 @@ export function SetupForm() {
         </Field>
 
         {mode === "simple" ? (
-          <Field
-            label={text("pay_to address", "pay_toアドレス")}
-            hint={text(
-              "single 0x… address that receives all x402 payments",
-              "すべてのx402支払いを受け取る単一の0x…アドレス",
-            )}
-          >
+          <Field label="pay_to address" hint="single 0x… address that receives all x402 payments">
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <input
                 id={addrId}
-                aria-label={text("pay_to address", "pay_toアドレス")}
+                aria-label="pay_to address"
                 value={addr}
                 onChange={(e) => setAddr(e.target.value)}
                 placeholder="0x4E2c91A9...8Df1"
@@ -169,8 +151,8 @@ export function SetupForm() {
                 type="button"
                 className="btn ghost"
                 style={{ padding: "8px 10px" }}
-                title={text("Validate (placeholder — no validation in PoC)", "検証（PoCでは未実装）")}
-                aria-label={text("Validate", "検証")}
+                title="Validate (placeholder — no validation in PoC)"
+                aria-label="Validate"
                 disabled
               >
                 <Icon.check width="14" height="14" />
@@ -179,13 +161,7 @@ export function SetupForm() {
           </Field>
         ) : (
           <div>
-            <FieldHeader
-              label={text("API path → pay_to mapping", "API path → pay_to 対応表")}
-              hint={text(
-                "one row per path with its receiving address",
-                "pathごとに受取アドレスを1行で設定します",
-              )}
-            />
+            <FieldHeader label="API path → pay_to mapping" hint="one row per path with its receiving address" />
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {paths.map((row, i) => (
                 <div
@@ -211,7 +187,7 @@ export function SetupForm() {
                   />
                   <input
                     className="mono"
-                    aria-label={text(`pay_to for path ${i + 1}`, `path ${i + 1} の pay_to`)}
+                    aria-label={`pay_to for path ${i + 1}`}
                     value={row.payTo}
                     onChange={(e) => {
                       const np = [...paths];
@@ -226,7 +202,7 @@ export function SetupForm() {
                     className="btn ghost"
                     style={{ width: 28, height: 32, padding: 0 }}
                     onClick={() => setPaths(paths.filter((_, j) => j !== i))}
-                    aria-label={text(`Remove path ${i + 1}`, `path ${i + 1} を削除`)}
+                    aria-label={`Remove path ${i + 1}`}
                   >
                     <Icon.x width="12" height="12" />
                   </button>
@@ -237,7 +213,7 @@ export function SetupForm() {
                 className="add-pay"
                 onClick={() => setPaths([...paths, { apiPath: "", payTo: "" }])}
               >
-                {text("+ Add another path", "+ pathを追加")}
+                + Add another path
               </button>
             </div>
           </div>
@@ -259,20 +235,13 @@ export function SetupForm() {
                 type="button"
                 className="btn ghost"
                 onClick={handleTryDemo}
-                title={text(
-                  "Load demo data (no save to this browser)",
-                  "デモデータを読み込む（このブラウザには保存しません）",
-                )}
+                title="Load demo data (no save to this browser)"
               >
-                {text("Try demo data", "デモデータを試す")}
+                Try demo data
               </button>
             )}
             <div style={{ fontSize: 13, color: "var(--text-3)" }}>
-              {validation
-                ?? text(
-                  "Stored locally in this browser. No server account required.",
-                  "このブラウザにローカル保存されます。サーバーアカウントは不要です。",
-                )}
+              {validation ?? "Stored locally in this browser. No server account required."}
             </div>
           </div>
           <div style={{ display: "flex", gap: 8 }}>
@@ -281,22 +250,18 @@ export function SetupForm() {
               className="btn ghost"
               onClick={handleSkip}
               disabled={!canSkip}
-              title={
-                canSkip
-                  ? text("Skip to first saved provider", "保存済みプロバイダーへ移動")
-                  : text("No saved providers yet", "保存済みプロバイダーはまだありません")
-              }
+              title={canSkip ? "Skip to first saved provider" : "No saved providers yet"}
             >
-              {text("Skip", "スキップ")}
+              Skip
             </button>
             <button
               type="button"
               className="btn primary"
               onClick={handleSave}
               disabled={!canSave}
-              title={validation ?? text("Save and continue", "保存して続行")}
+              title={validation ?? "Save and continue"}
             >
-              {text("Save & continue", "保存して続行")} <Icon.arrow width="14" height="14" />
+              Save & continue <Icon.arrow width="14" height="14" />
             </button>
           </div>
         </div>

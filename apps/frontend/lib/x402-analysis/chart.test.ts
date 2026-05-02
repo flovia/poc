@@ -143,9 +143,7 @@ describe("getSankeyLabelPillWidth", () => {
   });
 
   test("caps the width so a single outlier does not break consistency", () => {
-    expect(
-      getSankeyLabelPillWidth(["/this-is-an-extremely-long-label-that-should-not-keep-growing"]),
-    ).toBe(140);
+    expect(getSankeyLabelPillWidth(["/this-is-an-extremely-long-label-that-should-not-keep-growing"])).toBe(140);
   });
 });
 

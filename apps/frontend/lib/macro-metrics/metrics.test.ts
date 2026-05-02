@@ -75,9 +75,9 @@ describe("buildMacroMetrics", () => {
       mid: "Intermediary",
       right: "Downstream API",
     });
-    expect(
-      new Set(metrics.routeSankey.flows.map((flow) => flow.middle_label)).size,
-    ).toBeGreaterThan(1);
+    expect(new Set(metrics.routeSankey.flows.map((flow) => flow.middle_label)).size).toBeGreaterThan(
+      1,
+    );
     expect(metrics.routeSankey.flows.map((flow) => flow.middle_label)).toContain("Sponge");
     expect(metrics.routeSankey.flows.map((flow) => flow.middle_label)).toContain("Dexter");
     expect(metrics.routeSankey.flows.map((flow) => flow.middle_label)).toContain("agent.market");

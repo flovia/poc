@@ -8,7 +8,6 @@ import { useProviders } from "@/app/providers";
 import { Icon } from "@/components/ui/Icon";
 import { isDemoProvider } from "@/lib/providers";
 import type { DashboardMode } from "@/lib/data-mode";
-import { useFrontendLocale } from "@/lib/frontend-locale";
 // Phase 9: barrel ではなく leaf module から直 import (sdk-fixtures の他データを引き込まないため).
 import { SDK_DEMO_PROVIDER_ID, SDK_DEMO_PROVIDER_NAME } from "@/lib/sdk-fixtures/shared";
 
@@ -35,7 +34,6 @@ function sectionFor(activeRoute: ActiveRoute): "customers" | "api-growth" | "mac
 }
 
 export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProps) {
-  const { text } = useFrontendLocale();
   const router = useRouter();
   const pathname = usePathname();
   const { stored, userProviders, hydrated, removeProvider, demoOpted, optOutDemo } = useProviders();
@@ -62,8 +60,8 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
     ?? (isViewingSdkDemo || isSdkEmpty
       ? SDK_DEMO_PROVIDER_NAME
       : hydrated
-        ? text("Select a provider", "プロバイダーを選択")
-        : text("Loading…", "読み込み中…"));
+        ? "Select a provider"
+        : "Loading…");
   const section = sectionFor(activeRoute);
   // hydration 後に provider が一つも無いとき My Customers を disabled 表示。
   // SSR (hydrated=false) では通常 Link を出すことで mismatch を避ける。
@@ -90,7 +88,7 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
 
   const handleDelete = (providerId: string, name: string, isDemo: boolean) => {
     if (isDemo) {
-      if (!window.confirm(text("Reset demo data? Your own providers will be kept.", "デモデータをリセットしますか？自分で追加したプロバイダーは保持されます。"))) return;
+      if (!window.confirm("Reset demo data? Your own providers will be kept.")) return;
       optOutDemo();
       // demo を全 off にすると user provider が無ければ active が消えるため fallback へ。
       // user provider があれば最初の user provider のページへ遷移する。
@@ -103,7 +101,7 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
       }
       return;
     }
-    if (!window.confirm(text(`Remove ${name} from this browser?`, `${name} をこのブラウザから削除しますか？`))) return;
+    if (!window.confirm(`Remove ${name} from this browser?`)) return;
     const remaining = stored.filter((p) => p.providerId !== providerId);
     removeProvider(providerId);
     if (providerId === activeProviderId) {
@@ -132,17 +130,17 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
       </div>
 
       <nav className="nav">
-        <div className="nav-label">{text("Workspace", "ワークスペース")}</div>
+        <div className="nav-label">Workspace</div>
 
         {navDisabled ? (
           <span
             role="link"
             className="nav-item disabled"
             aria-disabled="true"
-            aria-label={text("My Customers, setup required", "顧客、セットアップが必要")}
+            aria-label="My Customers, setup required"
           >
             <Icon.customers />
-            <span style={{ flex: 1 }}>{text("My Customers", "My Customers（自社顧客）")}</span>
+            <span style={{ flex: 1 }}>My Customers</span>
             <RealNavBadge />
           </span>
         ) : (
@@ -154,7 +152,7 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
                 aria-current={customersGroupActive}
               >
                 <Icon.customers />
-                <span style={{ flex: 1 }}>{text("My Customers", "My Customers（自社顧客）")}</span>
+                <span style={{ flex: 1 }}>My Customers</span>
                 <RealNavBadge />
               </Link>
             </div>
@@ -175,7 +173,7 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
                     className="nav-item nav-item--sub"
                     aria-current={pathname === coUsageHref}
                   >
-                    {text("Co-Usage Providers", "Co-Usage Providers（併用）")}
+                    Co-Usage Providers
                   </Link>
                 </div>
               );
@@ -188,10 +186,10 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
             role="link"
             className="nav-item disabled"
             aria-disabled="true"
-            aria-label={text("API Growth (demo), setup required", "API成長（デモ）、セットアップが必要")}
+            aria-label="API Growth (demo), setup required"
           >
             <Icon.spark width={16} height={16} />
-            <span style={{ flex: 1 }}>{text("API Growth", "API Growth（API成長）")}</span>
+            <span style={{ flex: 1 }}>API Growth</span>
             <DemoNavBadge />
           </span>
         ) : (
@@ -201,13 +199,13 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
             aria-current={activeRoute === "api-growth"}
           >
             <Icon.spark width={16} height={16} />
-            <span style={{ flex: 1 }}>{text("API Growth", "API Growth（API成長）")}</span>
+            <span style={{ flex: 1 }}>API Growth</span>
             <DemoNavBadge />
           </Link>
         )}
 
         <div className="provider-block">
-          <div className="label">{text("API Providers", "API Providers（APIプロバイダー）")}</div>
+          <div className="label">API Providers</div>
 
           {!hydrated ? (
             <div className="provider-list">
@@ -271,7 +269,7 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
                             flexShrink: 0,
                           }}
                         >
-                          {text("demo", "demo")}
+                          demo
                         </span>
                       )}
                     </Link>
@@ -280,8 +278,8 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
                         type="button"
                         className="x"
                         onClick={() => handleDelete(p.providerId, p.name, isDemo)}
-                        title={isDemo ? text("Reset demo data", "デモデータをリセット") : text(`Remove ${p.name}`, `${p.name}を削除`)}
-                        aria-label={isDemo ? text("Reset demo data", "デモデータをリセット") : text(`Remove ${p.name}`, `${p.name}を削除`)}
+                        title={isDemo ? "Reset demo data" : `Remove ${p.name}`}
+                        aria-label={isDemo ? "Reset demo data" : `Remove ${p.name}`}
                       >
                         <Icon.x width="10" height="10" />
                       </button>
@@ -296,14 +294,13 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
 
       <div className="foot">
         <span className="badge">PoC</span>
-        <span>{text("Mock data · v0.4", "モックデータ · v0.4")}</span>
+        <span>Mock data · v0.4</span>
       </div>
     </aside>
   );
 }
 
 function DemoNavBadge() {
-  const { text } = useFrontendLocale();
   return (
     <span
       style={{
@@ -318,13 +315,12 @@ function DemoNavBadge() {
         flexShrink: 0,
       }}
     >
-      {text("demo", "demo")}
+      demo
     </span>
   );
 }
 
 function RealNavBadge() {
-  const { text } = useFrontendLocale();
   return (
     <span
       style={{
@@ -339,7 +335,7 @@ function RealNavBadge() {
         flexShrink: 0,
       }}
     >
-      {text("real", "real")}
+      real
     </span>
   );
 }

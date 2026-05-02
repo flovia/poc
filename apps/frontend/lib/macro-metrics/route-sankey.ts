@@ -71,10 +71,7 @@ function middlemanLabel(wallet: MacroWallet | undefined): string {
   return "Direct";
 }
 
-function middlemanDetails(
-  wallet: MacroWallet | undefined,
-  service: MacroService | undefined,
-): string {
+function middlemanDetails(wallet: MacroWallet | undefined, service: MacroService | undefined): string {
   if (!wallet) return serviceDetails(service);
   return `${wallet.intermediary} · ${wallet.source}`;
 }
@@ -197,7 +194,9 @@ function routeQuality(
   };
 }
 
-export function buildMacroRouteSankeyChart(data: MacroMetricsDemoData): X402SankeyChartModel {
+export function buildMacroRouteSankeyChart(
+  data: MacroMetricsDemoData,
+): X402SankeyChartModel {
   const sessions = new Map<string, MacroWorkflowEvent[]>();
   const serviceById = new Map(data.services.map((service) => [service.id, service]));
   const walletByAddress = new Map(data.wallets.map((wallet) => [wallet.address, wallet]));
@@ -211,8 +210,7 @@ export function buildMacroRouteSankeyChart(data: MacroMetricsDemoData): X402Sank
   const flows = aggregateFlows(
     [...sessions.values()].flatMap((events) => {
       const ordered = [...events].sort(
-        (left, right) =>
-          left.timestamp - right.timestamp || left.eventId.localeCompare(right.eventId),
+        (left, right) => left.timestamp - right.timestamp || left.eventId.localeCompare(right.eventId),
       );
       const start = ordered[0];
       const middle = ordered[1];

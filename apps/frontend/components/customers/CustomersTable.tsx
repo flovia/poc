@@ -6,7 +6,6 @@ import { ChainBadge } from "./ChainBadge";
 import { HeaderTooltip } from "./HeaderTooltip";
 import { Sparkline7d } from "@/components/wallet/Sparkline7d";
 import { classNames, formatAtomic, formatTimestamp } from "@/lib/format";
-import { useFrontendLocale } from "@/lib/frontend-locale";
 import type { CustomerListItemDto } from "@/lib/api/types";
 import { getCustomerChainAttribution } from "@/lib/customers/chain";
 import type { DashboardMode } from "@/lib/data-mode";
@@ -54,7 +53,6 @@ export function CustomersTable({
   extrasMap,
   totalBeforeFilter,
 }: CustomersTableProps) {
-  const { text } = useFrontendLocale();
   const isSdkConnected = dataMode === "sdkConnected";
   const rowClass = isSdkConnected ? "cust-row cust-row-sdk" : "cust-row";
   return (
@@ -62,62 +60,62 @@ export function CustomersTable({
       <div className={`${rowClass} cust-head`}>
         <div>
           <HeaderTooltip
-            label={text("Wallet", "ウォレット")}
-            description={text("Payer wallet address. The on-chain account that has paid this provider.", "支払いウォレットアドレス。このプロバイダーに支払ったオンチェーンアカウントです。")}
+            label="Wallet"
+            description="Payer wallet address. The on-chain account that has paid this provider."
           />
         </div>
         {isSdkConnected && (
           <div>
             <HeaderTooltip
-              label={text("Agent", "エージェント")}
-              description={text("Agent type self-reported by the SDK on this wallet's recent calls (e.g. coding-assistant, research-bot).", "このウォレットの直近呼び出しでSDKが自己申告したエージェント種別です。")}
+              label="Agent"
+              description="Agent type self-reported by the SDK on this wallet's recent calls (e.g. coding-assistant, research-bot)."
             />
           </div>
         )}
         <div>
           <HeaderTooltip
-            label={text("Chain", "チェーン")}
-            description={text("Chain and asset this payer wallet mainly transacts in. Currently fixed to Base / USDC across all rows.", "この支払いウォレットが主に利用するチェーンとアセットです。現在は全行 Base / USDC 固定です。")}
+            label="Chain"
+            description="Chain and asset this payer wallet mainly transacts in. Currently fixed to Base / USDC across all rows."
           />
         </div>
         <div>
           <HeaderTooltip
-            label={text("Spend (atomic)", "支出（atomic）")}
-            description={text("Total amount this wallet has spent with the current provider, shown in atomic (smallest) token units.", "このウォレットが現在のプロバイダーに支払った合計額をatomic（最小単位）で表示します。")}
+            label="Spend (atomic)"
+            description="Total amount this wallet has spent with the current provider, shown in atomic (smallest) token units."
           />
         </div>
         <div>
           <HeaderTooltip
-            label={text("Observations", "観測数")}
-            description={text("Number of payment observations recorded for this wallet by the current provider.", "現在のプロバイダーで記録されたこのウォレットの支払い観測数です。")}
+            label="Observations"
+            description="Number of payment observations recorded for this wallet by the current provider."
           />
         </div>
         <div>
           <HeaderTooltip
-            label={text("Providers", "プロバイダー")}
-            description={text("How many distinct providers this wallet has paid across the network.", "このウォレットがネットワーク全体で支払った異なるプロバイダー数です。")}
+            label="Providers"
+            description="How many distinct providers this wallet has paid across the network."
           />
         </div>
         {isSdkConnected && (
           <div>
             <HeaderTooltip
-              label={text("Used endpoint", "使用エンドポイント")}
-              description={text("The API endpoint this wallet hits most often, reported by the SDK.", "SDKから報告された、このウォレットが最もよく呼ぶAPIエンドポイントです。")}
+              label="Used endpoint"
+              description="The API endpoint this wallet hits most often, reported by the SDK."
             />
           </div>
         )}
         {isSdkConnected && (
           <div>
             <HeaderTooltip
-              label={text("7d", "7日")}
-              description={text("Spend trend over the last 7 days, one bar per day.", "直近7日間の支出トレンドです。1日1本のバーで表示します。")}
+              label="7d"
+              description="Spend trend over the last 7 days, one bar per day."
             />
           </div>
         )}
         <div>
           <HeaderTooltip
-            label={text("Last seen", "最終確認")}
-            description={text("Timestamp of the most recent payment observation from this wallet.", "このウォレットの最新支払い観測のタイムスタンプです。")}
+            label="Last seen"
+            description="Timestamp of the most recent payment observation from this wallet."
             align="right"
           />
         </div>
@@ -125,8 +123,8 @@ export function CustomersTable({
       {customers.length === 0 && (
         <div style={{ padding: 24, color: "var(--text-3)", fontSize: 14 }}>
           {totalBeforeFilter === 0
-            ? text("No payer wallets found yet.", "支払いウォレットはまだ見つかっていません。")
-            : text("No payer wallets match the current filters.", "現在のフィルターに一致する支払いウォレットはありません。")}
+            ? "No payer wallets found yet."
+            : "No payer wallets match the current filters."}
         </div>
       )}
       {customers.map((c, i) => {
@@ -137,7 +135,7 @@ export function CustomersTable({
             key={c.address}
             href={`/providers/${providerId}/wallet/${encodeURIComponent(c.address)}`}
             className={classNames(rowClass, "cust-row-link")}
-            aria-label={text(`Open details for wallet ${c.address}`, `ウォレット ${c.address} の詳細を開く`)}
+            aria-label={`Open details for wallet ${c.address}`}
             style={{
               animation: `fade-up 240ms ${Math.min(i * 25, 200)}ms both ease-out`,
               textDecoration: "none",

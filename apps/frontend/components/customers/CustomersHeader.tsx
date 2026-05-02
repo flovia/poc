@@ -1,14 +1,12 @@
 "use client";
 
 import { useActiveProvider } from "@/app/providers";
-import { useFrontendLocale } from "@/lib/frontend-locale";
 
 type CustomersHeaderProps = {
   providerId: string;
 };
 
 export function CustomersHeader({ providerId }: CustomersHeaderProps) {
-  const { text } = useFrontendLocale();
   const { active, hydrated } = useActiveProvider(providerId);
   const name = !hydrated ? "…" : active?.name ?? providerId;
 
@@ -24,10 +22,10 @@ export function CustomersHeader({ providerId }: CustomersHeaderProps) {
           marginBottom: 6,
         }}
       >
-        {text("Provider", "プロバイダー")} · {name}
+        Provider · {name}
       </div>
       <h1 style={{ fontSize: 28, fontWeight: 700, margin: 0, letterSpacing: "-0.01em" }}>
-        {text("Customers calling your API", "あなたのAPIを呼び出している顧客")}
+        Customers calling your API
       </h1>
     </div>
   );
