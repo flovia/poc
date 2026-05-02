@@ -25,7 +25,3 @@ api.flovia402.com {
 	import api_routes
 }
 
-# Keep legacy IP-based access available over plain HTTP.
-http:// {
-	import api_routes
-}
