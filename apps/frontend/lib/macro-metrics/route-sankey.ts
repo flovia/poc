@@ -244,13 +244,13 @@ export function buildMacroRouteSankeyChart(
   return {
     id: "macro_route_quality",
     eyebrow: "API workflow paths",
-    title: "Initial Query → Intermediary → Next API Category",
+    title: "Initial Query → Intermediary → Downstream API",
     description:
       "See how an initial API query moves through intermediary services and what category is called next.",
     layer_labels: {
       left: "Initial query",
       mid: "Intermediary",
-      right: "Next API category",
+      right: "Downstream API",
     },
     layer_order: {
       left: flowOrder(flows, (flow) => flow.left_label),

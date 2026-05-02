@@ -73,7 +73,7 @@ describe("buildMacroMetrics", () => {
     expect(metrics.routeSankey.layer_labels).toEqual({
       left: "Initial query",
       mid: "Intermediary",
-      right: "Next API category",
+      right: "Downstream API",
     });
     expect(new Set(metrics.routeSankey.flows.map((flow) => flow.middle_label)).size).toBeGreaterThan(
       1,
