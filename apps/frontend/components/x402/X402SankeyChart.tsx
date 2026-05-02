@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { X402MetricMode } from "@/lib/x402-analysis/types";
 import {
@@ -21,6 +22,9 @@ import {
 type X402SankeyChartProps = {
   chart: X402SankeyChartModel;
   metric: X402MetricMode;
+  paidCountLabel?: string;
+  showHeader?: boolean;
+  headerActions?: ReactNode;
 };
 
 const WIDTH = 1220;
@@ -66,7 +70,13 @@ function formatLatency(value: number): string {
   return `${Math.round(value).toLocaleString()} ms`;
 }
 
-export function X402SankeyChart({ chart, metric }: X402SankeyChartProps) {
+export function X402SankeyChart({
+  chart,
+  metric,
+  paidCountLabel = "Paid count",
+  showHeader = true,
+  headerActions,
+}: X402SankeyChartProps) {
   const layout = useMemo(
     () => buildX402SankeyLayout(chart.flows, metric, WIDTH, HEIGHT, chart.layer_order),
     [chart.flows, chart.layer_order, metric],
@@ -189,7 +199,7 @@ export function X402SankeyChart({ chart, metric }: X402SankeyChartProps) {
         { label: "Selected", value: formatSankeyMetricValue(metric, hoveredLink.value), emphasize: true },
         { label: "Success rate", value: formatPercent(hoveredLink.success_rate) },
         { label: "P95 latency", value: formatLatency(hoveredLink.p95_latency_ms) },
-        { label: "Paid count", value: hoveredLink.paid_count.toLocaleString(), emphasize: true },
+        { label: paidCountLabel, value: hoveredLink.paid_count.toLocaleString(), emphasize: true },
         { label: "Settled", value: formatSankeyMetricValue("settled_usdc", hoveredLink.settled_usdc) },
         { label: "Error rate", value: formatPercent(hoveredLink.error_rate) },
       ]
@@ -205,37 +215,56 @@ export function X402SankeyChart({ chart, metric }: X402SankeyChartProps) {
           "linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(245,248,252,0.96) 100%)",
       }}
     >
-      <div
-        style={{
-          padding: "16px 18px 12px",
-          borderBottom: "1px solid var(--line)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 12,
-        }}
-      >
-        <div>
+      {showHeader ? (
+        <div
+          style={{
+            padding: "16px 18px 12px",
+            borderBottom: "1px solid var(--line)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 12,
+          }}
+        >
+          <div>
+            <div
+              style={{
+                fontSize: 12,
+                color: "var(--text-mute)",
+                fontWeight: 600,
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+                marginBottom: 4,
+              }}
+            >
+              {chart.eyebrow}
+            </div>
+            <div className="display" style={{ fontSize: 18, fontWeight: 600 }}>
+              {chart.title}
+            </div>
+          </div>
           <div
             style={{
-              fontSize: 12,
-              color: "var(--text-mute)",
-              fontWeight: 600,
-              letterSpacing: "0.08em",
-              textTransform: "uppercase",
-              marginBottom: 4,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-end",
+              gap: 8,
             }}
           >
-            {chart.eyebrow}
-          </div>
-          <div className="display" style={{ fontSize: 18, fontWeight: 600 }}>
-            {chart.title}
+            <div
+              style={{
+                fontSize: 12,
+                color: "var(--text-3)",
+                maxWidth: 320,
+                textAlign: "right",
+              }}
+            >
+              {chart.description}
+            </div>
+            {headerActions}
           </div>
         </div>
-        <div style={{ fontSize: 12, color: "var(--text-3)", maxWidth: 320, textAlign: "right" }}>
-          {chart.description}
-        </div>
-      </div>
+      ) : null}
 
       <div ref={chartBodyRef} style={{ padding: "14px 18px 18px", position: "relative" }}>
         <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} width="100%" style={{ display: "block" }}>

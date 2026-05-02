@@ -1,6 +1,10 @@
 import { describe, expect, test } from "bun:test";
 import type { WalletUsageGraphDto } from "@/lib/api/types";
-import { aggregateCoUsageProviders } from "./co-usage-providers";
+import {
+  aggregateCoUsageProviders,
+  buildCoUsageProviderSankeyFlows,
+  type CoUsageProviderSankeyCustomer,
+} from "./co-usage-providers";
 
 const OWN_PAY_TO = "0x0000000000000000000000000000000000000010";
 const EXT_A = "0x00000000000000000000000000000000000000aa";
@@ -44,6 +48,17 @@ const makeCandidate = (
   providerName: "Default Name",
   serviceName: "Default Service",
   coUsageCount: 1,
+  ...overrides,
+});
+
+const makeCustomer = (
+  address: string,
+  overrides: Partial<CoUsageProviderSankeyCustomer> = {},
+): CoUsageProviderSankeyCustomer => ({
+  address: address.toLowerCase(),
+  providerCount: 1,
+  observationCount: 1,
+  upsellOpportunity: "low",
   ...overrides,
 });
 
@@ -260,5 +275,177 @@ describe("aggregateCoUsageProviders", () => {
       resolveProviderName: () => "Reverse Search",
     });
     expect(rows[0]?.providerName).toBe("Reverse Search");
+  });
+
+  test("builds sankey flows from user segments to co-usage providers to target categories", () => {
+    const rows = aggregateCoUsageProviders(
+      makeGraph([
+        makePayer("0x1", [
+          makeCandidate({
+            providerId: "ext:a:image",
+            providerName: "AgentGram",
+            serviceName: "https://agentgram.site/api/generate/image",
+            payToWallet: EXT_A,
+            coUsageCount: 4,
+          }),
+          makeCandidate({
+            providerId: "ext:a:video",
+            providerName: "AgentGram",
+            serviceName: "https://agentgram.site/api/generate/video",
+            payToWallet: EXT_A,
+            coUsageCount: 6,
+          }),
+          makeCandidate({
+            providerId: "ext:b",
+            providerName: "MarketMesh",
+            serviceName: "https://marketmesh.dev/v1/screeners/tokens",
+            payToWallet: EXT_B,
+            coUsageCount: 3,
+          }),
+        ]),
+      ]),
+      { ownPayTo: OWN_PAY_TO },
+    );
+
+    const flows = buildCoUsageProviderSankeyFlows(rows, {
+      customersByWallet: new Map([
+        ["0x1", makeCustomer("0x1", { providerCount: 4, upsellOpportunity: "high" })],
+      ]),
+      targetCategoryUsageByWallet: new Map([
+        [
+          "0x1",
+          [
+            { category: "Token detail", count: 6 },
+            { category: "Simple price", count: 4 },
+          ],
+        ],
+      ]),
+      maxProviders: 2,
+      maxTargetCategories: 1,
+    });
+
+    expect(flows).toEqual([
+      {
+        from: "segment:high-intent-power-users",
+        fromLabel: "High-intent power users",
+        fromStep: 0,
+        occurrences: 10,
+        to: `provider:${EXT_A}`,
+        toLabel: "AgentGram",
+        toStep: 1,
+      },
+      {
+        from: `provider:${EXT_A}`,
+        fromLabel: "AgentGram",
+        fromStep: 1,
+        occurrences: 6,
+        to: "target-category:token-detail",
+        toLabel: "Token detail",
+        toStep: 2,
+      },
+      {
+        from: `provider:${EXT_A}`,
+        fromLabel: "AgentGram",
+        fromStep: 1,
+        occurrences: 4,
+        to: `target-category:${EXT_A}:other`,
+        toLabel: "Other target categories (1)",
+        toStep: 2,
+      },
+      {
+        from: "segment:high-intent-power-users",
+        fromLabel: "High-intent power users",
+        fromStep: 0,
+        occurrences: 3,
+        to: `provider:${EXT_B}`,
+        toLabel: "MarketMesh",
+        toStep: 1,
+      },
+      {
+        from: `provider:${EXT_B}`,
+        fromLabel: "MarketMesh",
+        fromStep: 1,
+        occurrences: 1.8,
+        to: "target-category:token-detail",
+        toLabel: "Token detail",
+        toStep: 2,
+      },
+      {
+        from: `provider:${EXT_B}`,
+        fromLabel: "MarketMesh",
+        fromStep: 1,
+        occurrences: 1.2,
+        to: `target-category:${EXT_B}:other`,
+        toLabel: "Other target categories (1)",
+        toStep: 2,
+      },
+    ]);
+  });
+
+  test("groups payer wallets into multiple user segments on the left side", () => {
+    const rows = aggregateCoUsageProviders(
+      makeGraph([
+        makePayer("0xA", [
+          makeCandidate({
+            providerId: "ext:a:image",
+            providerName: "AgentGram",
+            serviceName: "https://agentgram.site/api/generate/image",
+            payToWallet: EXT_A,
+            coUsageCount: 4,
+          }),
+        ]),
+        makePayer("0xB", [
+          makeCandidate({
+            providerId: "ext:a:video",
+            providerName: "AgentGram",
+            serviceName: "https://agentgram.site/api/generate/video",
+            payToWallet: EXT_A,
+            coUsageCount: 3,
+          }),
+        ]),
+        makePayer("0xC", [
+          makeCandidate({
+            providerId: "ext:b",
+            providerName: "MarketMesh",
+            serviceName: "https://marketmesh.dev/v1/screeners/tokens",
+            payToWallet: EXT_B,
+            coUsageCount: 2,
+          }),
+        ]),
+      ]),
+      { ownPayTo: OWN_PAY_TO },
+    );
+
+    const flows = buildCoUsageProviderSankeyFlows(rows, {
+      customersByWallet: new Map([
+        ["0xa", makeCustomer("0xa", { providerCount: 4, observationCount: 9, upsellOpportunity: "high" })],
+        ["0xb", makeCustomer("0xb", { providerCount: 2, observationCount: 5, upsellOpportunity: "medium" })],
+        ["0xc", makeCustomer("0xc", { providerCount: 1, observationCount: 1, upsellOpportunity: "low" })],
+      ]),
+      maxProviders: 2,
+      maxTargetCategories: 2,
+    });
+
+    expect(
+      flows.filter((flow) => flow.to === `provider:${EXT_A}`).map((flow) => ({
+        from: flow.from,
+        fromLabel: flow.fromLabel,
+        occurrences: flow.occurrences,
+      })),
+    ).toEqual([
+      {
+        from: "segment:high-intent-power-users",
+        fromLabel: "High-intent power users",
+        occurrences: 4,
+      },
+      {
+        from: "segment:multi-provider-builders",
+        fromLabel: "Multi-provider builders",
+        occurrences: 3,
+      },
+    ]);
+    expect(
+      flows.filter((flow) => flow.to === `provider:${EXT_B}`).map((flow) => flow.fromLabel),
+    ).toEqual(["Single-purpose explorers"]);
   });
 });

@@ -8,17 +8,28 @@ export type EndpointSankeyFlow = {
   fromStep?: 0 | 1;
   toStep?: 1 | 2;
   occurrences: number;
+  fromLabel?: string;
+  toLabel?: string;
 };
 
 type EndpointSankeyProps = {
   flows: EndpointSankeyFlow[];
   compact?: boolean;
+  ariaLabel?: string;
+  emptyMessage?: string;
+  height?: number;
+  minWidth?: number;
+  margin?: {
+    top: number;
+    right: number;
+    bottom: number;
+    left: number;
+  };
 };
 
-type SankeyNode = { id: string };
+type SankeyNode = { id: string; displayLabel: string; step: 0 | 1 | 2 };
 type SankeyLink = { source: string; target: string; value: number };
 
-const STEP_COUNT = 3;
 const ENDPOINT_COLORS: Record<string, string> = {
   pool_search: "#2F5D9A",
   trending_pools: "#2C7A7B",
@@ -27,21 +38,42 @@ const ENDPOINT_COLORS: Record<string, string> = {
   token_detail: "#DC2626",
 };
 
-export function EndpointSankey({ flows, compact = false }: EndpointSankeyProps) {
+const FALLBACK_STEP_COLORS: Record<SankeyNode["step"], string> = {
+  0: "#2F5D9A",
+  1: "#2C7A7B",
+  2: "#B45309",
+};
+
+export function EndpointSankey({
+  flows,
+  compact = false,
+  ariaLabel = "Endpoint workflow Sankey diagram",
+  emptyMessage = "No endpoint flow detected.",
+  height,
+  minWidth,
+  margin,
+}: EndpointSankeyProps) {
   if (flows.length === 0) {
-    return <div style={{ color: "var(--text-mute)", fontSize: 13 }}>No endpoint flow detected.</div>;
+    return <div style={{ color: "var(--text-mute)", fontSize: 13 }}>{emptyMessage}</div>;
   }
 
   const data = buildSankeyData(flows);
+  const resolvedHeight = height ?? (compact ? 220 : 320);
+  const resolvedMinWidth = minWidth ?? (compact ? 420 : 560);
+  const resolvedMargin =
+    margin ??
+    (compact
+      ? { top: 6, right: 96, bottom: 6, left: 12 }
+      : { top: 10, right: 132, bottom: 10, left: 16 });
 
   return (
-    <div style={{ height: compact ? 220 : 320, minWidth: compact ? 420 : 560 }}>
+    <div style={{ height: resolvedHeight, minWidth: resolvedMinWidth, width: "100%" }}>
       <ResponsiveSankey<SankeyNode, SankeyLink>
         data={data}
-        margin={compact ? { top: 6, right: 96, bottom: 6, left: 12 } : { top: 10, right: 132, bottom: 10, left: 16 }}
+        margin={resolvedMargin}
         align="justify"
         sort="input"
-        colors={(node) => ENDPOINT_COLORS[endpointFromNodeId(node.id)] ?? "#94A3B8"}
+        colors={(node) => nodeFill(node)}
         nodeThickness={compact ? 10 : 14}
         nodeSpacing={compact ? 8 : 12}
         nodeBorderWidth={1}
@@ -53,13 +85,13 @@ export function EndpointSankey({ flows, compact = false }: EndpointSankeyProps) 
         linkContract={compact ? 1 : 2}
         enableLinkGradient
         enableLabels
-        label={(node) => formatEndpoint(endpointFromNodeId(node.id))}
+        label={(node) => node.displayLabel}
         labelPosition="outside"
         labelPadding={compact ? 6 : 10}
         labelTextColor="var(--text-2)"
         valueFormat={(value) => `${value}×`}
         role="img"
-        ariaLabel="Endpoint workflow Sankey diagram"
+        ariaLabel={ariaLabel}
         animate={false}
         theme={{
           text: { fill: "var(--text-2)", fontSize: compact ? 10 : 12 },
@@ -80,32 +112,51 @@ export function EndpointSankey({ flows, compact = false }: EndpointSankeyProps) 
 }
 
 function buildSankeyData(flows: EndpointSankeyFlow[]): { nodes: SankeyNode[]; links: SankeyLink[] } {
-  const endpoints = [...new Set(flows.flatMap((flow) => [flow.from, flow.to]))];
-  const nodes = endpoints.flatMap((endpoint) =>
-    Array.from({ length: STEP_COUNT }, (_, step) => ({ id: nodeId(step, endpoint) })),
-  );
-
+  const nodesById = new Map<string, SankeyNode>();
   const linksByKey = new Map<string, SankeyLink>();
   flows.forEach((flow, index) => {
     const fromStep = flow.fromStep ?? (index % 2 === 0 ? 0 : 1);
     const toStep = flow.toStep ?? ((fromStep + 1) as 1 | 2);
     const source = nodeId(fromStep, flow.from);
     const target = nodeId(toStep, flow.to);
+
+    if (!nodesById.has(source)) {
+      nodesById.set(source, {
+        id: source,
+        displayLabel: flow.fromLabel ?? formatEndpoint(flow.from),
+        step: fromStep,
+      });
+    }
+    if (!nodesById.has(target)) {
+      nodesById.set(target, {
+        id: target,
+        displayLabel: flow.toLabel ?? formatEndpoint(flow.to),
+        step: toStep,
+      });
+    }
+
     const key = `${source}->${target}`;
     const link = linksByKey.get(key) ?? { source, target, value: 0 };
     link.value += flow.occurrences;
     linksByKey.set(key, link);
   });
 
-  return { nodes, links: [...linksByKey.values()].filter((link) => link.value > 0) };
+  return {
+    nodes: [...nodesById.values()],
+    links: [...linksByKey.values()].filter((link) => link.value > 0),
+  };
 }
 
 function nodeId(step: number, endpoint: string): string {
   return `${step}:${endpoint}`;
 }
 
-function endpointFromNodeId(id: string): string {
+function rawNodeId(id: string): string {
   return id.split(":").slice(1).join(":") || id;
+}
+
+function nodeFill(node: SankeyNode): string {
+  return ENDPOINT_COLORS[rawNodeId(node.id)] ?? FALLBACK_STEP_COLORS[node.step];
 }
 
 function formatEndpoint(value: string): string {

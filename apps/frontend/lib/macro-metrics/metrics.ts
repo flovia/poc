@@ -5,6 +5,8 @@ import type {
   MacroServiceId,
   MacroWorkflowEvent,
 } from "./demo";
+import { buildMacroRouteSankeyChart } from "./route-sankey";
+import type { X402SankeyChartModel } from "@/lib/x402-analysis/transform";
 
 export type MacroOverview = {
   paidActiveWallets: number;
@@ -92,6 +94,7 @@ export type MacroMetricsViewModel = {
   coUsageProviders: CoUsageProvider[];
   endpointUsage: EndpointUsage[];
   endpointFlows: EndpointFlow[];
+  routeSankey: X402SankeyChartModel;
   sourceRankings: SourceRanking[];
   recommendations: MacroRecommendation[];
   executiveTakeaways: string[];
@@ -256,6 +259,7 @@ export function buildMacroMetrics(data: MacroMetricsDemoData): MacroMetricsViewM
 
   const endpointUsage = buildEndpointUsage(data);
   const endpointFlows = buildEndpointFlows(data);
+  const routeSankey = buildMacroRouteSankeyChart(data);
   const sourceRankings = buildSourceRankings(data, repeatedWalletSet);
   const repeatedWallets = repeatedWalletSet.size;
   const averageSessionsPerRepeatedWallet =
@@ -293,6 +297,7 @@ export function buildMacroMetrics(data: MacroMetricsDemoData): MacroMetricsViewM
     coUsageProviders: candidates,
     endpointUsage,
     endpointFlows,
+    routeSankey,
     sourceRankings,
     recommendations: data.recommendations,
     executiveTakeaways: buildExecutiveTakeaways(

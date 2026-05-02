@@ -17,7 +17,8 @@ export default async function CoUsageProvidersPage({
     getTopBarPageContext(),
     getWalletUsageGraph(),
   ]);
-  const ownPayTo = providers.find((p) => p.providerId === providerId)?.payTo;
+  const ownProvider = providers.find((p) => p.providerId === providerId);
+  const ownPayTo = ownProvider?.payTo;
 
   const rows = graph
     ? aggregateCoUsageProviders(graph, {

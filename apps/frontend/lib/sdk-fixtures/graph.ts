@@ -25,12 +25,34 @@ const EXTERNAL_PROVIDER_ENDPOINTS: Record<string, string[]> = {
   vectormind: [
     "https://api.vectormind.ai/v1/embeddings",
     "https://api.vectormind.ai/v1/similarity",
+    "https://api.vectormind.ai/v1/rerank",
+    "https://api.vectormind.ai/v1/classify",
   ],
-  routezero: ["https://routezero.xyz/api/quote", "https://routezero.xyz/api/swap"],
-  signalport: ["https://signalport.io/api/v1/signals"],
-  vaultlayer: ["https://vaultlayer.com/api/v1/positions", "https://vaultlayer.com/api/v1/yield"],
-  streamdelta: ["https://streamdelta.network/api/stream"],
-  ledgerlake: ["https://ledgerlake.app/api/v1/ledger", "https://ledgerlake.app/api/v1/reports"],
+  routezero: [
+    "https://routezero.xyz/api/quote",
+    "https://routezero.xyz/api/swap",
+    "https://routezero.xyz/api/route",
+  ],
+  signalport: [
+    "https://signalport.io/api/v1/signals",
+    "https://signalport.io/api/v1/alerts",
+    "https://signalport.io/api/v1/feeds",
+  ],
+  vaultlayer: [
+    "https://vaultlayer.com/api/v1/positions",
+    "https://vaultlayer.com/api/v1/yield",
+    "https://vaultlayer.com/api/v1/rebalance",
+  ],
+  streamdelta: [
+    "https://streamdelta.network/api/stream",
+    "https://streamdelta.network/api/events",
+    "https://streamdelta.network/api/metrics",
+  ],
+  ledgerlake: [
+    "https://ledgerlake.app/api/v1/ledger",
+    "https://ledgerlake.app/api/v1/reports",
+    "https://ledgerlake.app/api/v1/balances",
+  ],
 };
 
 const hashToInt = (input: string): number => {
@@ -45,31 +67,42 @@ type Candidate =
   WalletUsageGraphDto["providerWallets"][number]["payerWallets"][number]["otherServiceCandidates"][number];
 
 const buildCandidatesForPayer = (payerAddress: string, txBudget: number): Candidate[] => {
-  // Pick 2-3 external providers per payer, deterministically.
+  // Pick 4-5 external providers per payer and rotate across endpoints so the
+  // co-usage Sankey preview shows enough structure in sdkConnected mode.
   const seed = hashToInt(payerAddress);
-  const count = 2 + (seed % 2);
+  const count = Math.min(EXTERNAL_PROVIDER_IDS.length, 4 + (seed % 2));
   const start = seed % EXTERNAL_PROVIDER_IDS.length;
   const candidates: Candidate[] = [];
   for (let i = 0; i < count; i++) {
     const providerId = EXTERNAL_PROVIDER_IDS[(start + i) % EXTERNAL_PROVIDER_IDS.length];
     const endpoints = EXTERNAL_PROVIDER_ENDPOINTS[providerId] ?? [];
-    const endpointIndex = (seed + i) % Math.max(1, endpoints.length);
-    const endpointName = endpoints[endpointIndex] ?? `https://${providerId}.example.com/api`;
-    const txCount = Math.max(1, Math.floor((txBudget * (count - i)) / (count * 2)));
-    const confidence = 0.6 + ((seed + i * 7) % 30) / 100; // 0.60-0.89
-    candidates.push({
-      caseId: providerId,
-      candidateType: endpointName,
-      entityId: PROVIDER_PAY_TO[providerId] ?? null,
-      confidence,
-      reasons: ["SDK preview synthetic candidate"],
-      evidenceRefs: [],
-      providerId: `sdk:${providerId}:${endpointIndex}`,
-      providerName: PROVIDER_NAME[providerId] ?? providerId,
-      serviceName: endpointName,
-      coUsageCount: txCount,
-      payToWallet: PROVIDER_PAY_TO[providerId] ?? null,
-    });
+    const endpointCount = Math.min(
+      endpoints.length || 1,
+      txBudget >= 8 ? 2 : 1,
+    );
+    const endpointStart = (seed + i * 3) % Math.max(1, endpoints.length);
+    const providerBudget = Math.max(2, Math.floor((txBudget * (count - i + 1)) / (count * 1.8)));
+
+    for (let j = 0; j < endpointCount; j++) {
+      const endpointIndex = (endpointStart + j) % Math.max(1, endpoints.length);
+      const endpointName = endpoints[endpointIndex] ?? `https://${providerId}.example.com/api`;
+      const baseTxCount = Math.max(1, Math.floor(providerBudget / endpointCount));
+      const txCount = baseTxCount + ((seed + i + j) % 2);
+      const confidence = 0.6 + ((seed + i * 7 + j * 5) % 30) / 100; // 0.60-0.89
+      candidates.push({
+        caseId: providerId,
+        candidateType: endpointName,
+        entityId: PROVIDER_PAY_TO[providerId] ?? null,
+        confidence,
+        reasons: ["SDK preview synthetic candidate"],
+        evidenceRefs: [],
+        providerId: `sdk:${providerId}:${endpointIndex}`,
+        providerName: PROVIDER_NAME[providerId] ?? providerId,
+        serviceName: endpointName,
+        coUsageCount: txCount,
+        payToWallet: PROVIDER_PAY_TO[providerId] ?? null,
+      });
+    }
   }
   return candidates;
 };

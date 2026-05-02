@@ -9,7 +9,10 @@ import { selectRepresentativeEndpointSequenceRows } from "./endpoint-sequence";
 
 type SankeyNodeLayer = "left" | "mid" | "right";
 
-export type X402SankeyPatternId = "intent_intermediary_target_category" | "endpoint_sequence";
+export type X402SankeyPatternId =
+  | "intent_intermediary_target_category"
+  | "endpoint_sequence"
+  | "macro_route_quality";
 
 export type X402SankeyFlowRow = {
   left_label: string;

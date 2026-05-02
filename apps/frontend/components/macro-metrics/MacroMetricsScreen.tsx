@@ -1,6 +1,7 @@
 import type { CSSProperties, ReactNode } from "react";
 import Link from "next/link";
 import { EndpointSankey } from "./EndpointSankey";
+import { MacroRouteSankeySection } from "./MacroRouteSankeySection";
 import { formatAtomic, formatRatioPct, shortAddr } from "@/lib/format";
 import type { MacroMetricsViewModel, TrendPoint } from "@/lib/macro-metrics/metrics";
 
@@ -164,6 +165,13 @@ export function MacroMetricsScreen({ metrics, providerId }: Props) {
             </Card>
           </TwoColumn>
         </Section>
+
+        <div style={{ marginTop: 28 }}>
+          <MacroRouteSankeySection
+            chart={metrics.routeSankey}
+            periodLabel="Last 30 days demo"
+          />
+        </div>
       </div>
     </div>
   );

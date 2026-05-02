@@ -49,7 +49,13 @@ export function CoUsageProvidersView({
 
   return (
     <>
-      <div style={{ marginBottom: 20 }}>
+      <div
+        style={{
+          display: "grid",
+          gap: 20,
+          marginBottom: 20,
+        }}
+      >
         <CoUsageProvidersChart rows={rows} onRowSelect={select} />
       </div>
 
