@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { useProviders } from "@/app/providers";
 import { Icon } from "@/components/ui/Icon";
@@ -14,7 +14,7 @@ import { SDK_DEMO_PROVIDER_ID, SDK_DEMO_PROVIDER_NAME } from "@/lib/sdk-fixtures
 // "wallet" is intentionally treated as a child of "customers" for nav
 // highlighting — there's no top-level Wallet entry, the wallet detail page
 // is reached by drilling in from the customers list.
-type ActiveRoute = "customers" | "patterns" | "setup" | "wallet" | undefined;
+type ActiveRoute = "customers" | "macro-metrics" | "metrics-catalog" | "setup" | "wallet" | undefined;
 
 type SidebarProps = {
   activeProviderId: string | undefined;
@@ -26,12 +26,15 @@ type SidebarProps = {
 // user on whichever section they were already viewing. Wallet detail can't
 // carry over (the wallet address belongs to one provider's view), so it
 // falls back to that provider's customers list.
-function sectionFor(activeRoute: ActiveRoute): "customers" | "patterns" {
-  return activeRoute === "patterns" ? "patterns" : "customers";
+function sectionFor(activeRoute: ActiveRoute): "customers" | "macro-metrics" | "metrics-catalog" {
+  if (activeRoute === "metrics-catalog") return "metrics-catalog";
+  if (activeRoute === "macro-metrics") return "macro-metrics";
+  return "customers";
 }
 
 export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const { stored, userProviders, hydrated, removeProvider, demoOpted, optOutDemo } = useProviders();
   const userIds = useMemo(
     () => new Set(userProviders.map((p) => p.providerId)),
@@ -59,13 +62,33 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
         ? "Select a provider"
         : "Loading…");
   const section = sectionFor(activeRoute);
-  // hydration 後に provider が一つも無いとき My Customers / Co-usage Patterns を disabled 表示。
+  // hydration 後に provider が一つも無いとき My Customers を disabled 表示。
   // SSR (hydrated=false) では通常 Link を出すことで mismatch を避ける。
   // Phase 9: SDK connected モードでは disabled にしない.
   const navDisabled = isOnChainOnlyEmpty;
 
   // Phase 6: Currently viewing dropdown (disclosure) の開閉 state。
   const [open, setOpen] = useState(false);
+
+  // My Customers サブナビは default 展開. localStorage で永続化, アクティブ時は強制展開.
+  const customersGroupActive = activeRoute === "customers" || activeRoute === "wallet";
+  const [customersSubOpen, setCustomersSubOpen] = useState(true);
+  useEffect(() => {
+    try {
+      const v = localStorage.getItem("flovia.sidebar.customersSubOpen");
+      if (v === "0") setCustomersSubOpen(false);
+    } catch {}
+  }, []);
+  const toggleCustomersSub = useCallback(() => {
+    setCustomersSubOpen((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem("flovia.sidebar.customersSubOpen", next ? "1" : "0");
+      } catch {}
+      return next;
+    });
+  }, []);
+  const customersSubVisible = customersGroupActive || customersSubOpen;
   const providerBlockRef = useRef<HTMLDivElement>(null);
   const pillId = useId();
   const providerListId = useId();
@@ -97,7 +120,7 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
     };
   }, [open, close]);
 
-  const navHrefFor = (segment: "customers" | "patterns") => {
+  const navHrefFor = (segment: "customers" | "macro-metrics" | "metrics-catalog") => {
     const id =
       activeProviderId
       ?? stored[0]?.providerId
@@ -169,14 +192,53 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
             My Customers
           </span>
         ) : (
-          <Link
-            href={navHrefFor("customers")}
-            className="nav-item"
-            aria-current={activeRoute === "customers" || activeRoute === "wallet"}
-          >
-            <Icon.customers />
-            My Customers
-          </Link>
+          <>
+            <div className="nav-row">
+              <Link
+                href={navHrefFor("customers")}
+                className="nav-item nav-item--with-toggle"
+                aria-current={customersGroupActive}
+              >
+                <Icon.customers />
+                My Customers
+              </Link>
+              <button
+                type="button"
+                className="nav-toggle"
+                aria-expanded={customersSubVisible}
+                aria-controls="nav-sub-customers"
+                aria-label={customersSubVisible ? "Collapse My Customers" : "Expand My Customers"}
+                onClick={toggleCustomersSub}
+                disabled={customersGroupActive}
+                title={customersGroupActive ? "Sub-pages of the active section" : undefined}
+              >
+                <span className="caret" aria-hidden="true">{customersSubVisible ? "▾" : "▸"}</span>
+              </button>
+            </div>
+            {(() => {
+              const id =
+                activeProviderId
+                ?? stored[0]?.providerId
+                ?? (dataMode === "sdkConnected" ? SDK_DEMO_PROVIDER_ID : undefined);
+              if (!id) return null;
+              const coUsageHref = `/providers/${id}/customers/co-usage-providers`;
+              return (
+                <div
+                  id="nav-sub-customers"
+                  className="nav-sub"
+                  hidden={!customersSubVisible}
+                >
+                  <Link
+                    href={coUsageHref}
+                    className="nav-item nav-item--sub"
+                    aria-current={pathname === coUsageHref}
+                  >
+                    Co-Usage Providers
+                  </Link>
+                </div>
+              );
+            })()}
+          </>
         )}
 
         {navDisabled ? (
@@ -184,15 +246,19 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
             role="link"
             className="nav-item disabled"
             aria-disabled="true"
-            aria-label="Co-usage Patterns, setup required"
+            aria-label="Macro Metrics, setup required"
           >
-            <Icon.patterns />
-            Co-usage Patterns
+            <Icon.bolt width={16} height={16} />
+            Macro Metrics
           </span>
         ) : (
-          <Link href={navHrefFor("patterns")} className="nav-item" aria-current={activeRoute === "patterns"}>
-            <Icon.patterns />
-            Co-usage Patterns
+          <Link
+            href={navHrefFor("macro-metrics")}
+            className="nav-item"
+            aria-current={activeRoute === "macro-metrics" || activeRoute === "metrics-catalog"}
+          >
+            <Icon.bolt width={16} height={16} />
+            Macro Metrics
           </Link>
         )}
 

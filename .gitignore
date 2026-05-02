@@ -44,5 +44,5 @@ packages/*/node_modules/
 /.opencode/
 /.claude/
 /.cursor/
-/.codex/
+/.codex
 docker-data/

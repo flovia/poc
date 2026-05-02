@@ -119,6 +119,7 @@ export function WorkflowSummaryStrip({
   const cycleLabel = (i: number) =>
     dataMode === "sdkConnected" && sdkExtras?.upsell ? `Hourly trading loop #${i}` : `Cycle ${i}`;
 
+  if (dataMode !== "sdkConnected") return null;
   if (cycles.length === 0) return null;
 
   return (

@@ -9,7 +9,7 @@ import type {
 import type { DashboardMode } from "@/lib/data-mode";
 import type { SdkExtras, SdkForceNetwork } from "@/lib/sdk-fixtures/types";
 import { ActivityTimeline } from "./ActivityTimeline";
-import { NetworkStarChart } from "./NetworkStarChart";
+import { CoUsageRanking } from "./CoUsageRanking";
 import { SdkForceNetworkChart } from "./SdkForceNetworkChart";
 import { WorkflowSummaryStrip } from "./WorkflowSummaryStrip";
 
@@ -65,7 +65,7 @@ export function WalletInteractive({
         dataMode={dataMode}
         sdkExtras={sdkExtras}
       />
-      <NetworkStarChart address={address} providers={providers} />
+      <CoUsageRanking address={address} providers={providers} />
       {isSdkProtagonist && sdkForceNetwork && (
         <SdkForceNetworkChart network={sdkForceNetwork} />
       )}

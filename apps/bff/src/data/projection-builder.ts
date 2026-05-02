@@ -196,6 +196,96 @@ const peerServiceName = (service: CustomerIntelligenceFixture["x402Services"][nu
 const firstSeenAt = (records: JoinedProjectionRecord[]) => records.at(-1)?.timestamp;
 const lastSeenAt = (records: JoinedProjectionRecord[]) => records[0]?.timestamp;
 
+// External x402 provider catalog used to populate `otherServiceCandidates` for
+// the Other Service Candidates view. Names are realistic placeholders; the
+// `payToWallet` values are dummy addresses that should be replaced once we map
+// real on-chain pay_to addresses to their actual provider names.
+type ExternalProviderSeed = {
+  providerId: string;
+  providerName: string;
+  serviceName: string;
+  payToWallet: string;
+  baseConfidence: number;
+};
+
+const EXTERNAL_PROVIDER_CATALOG: readonly ExternalProviderSeed[] = [
+  {
+    providerId: "ext:token-price-api",
+    providerName: "Token Price API",
+    serviceName: "Spot price feed",
+    payToWallet: "0xa1b2c3d4e5f6071829304152637485960a0b0c0d",
+    baseConfidence: 0.78,
+  },
+  {
+    providerId: "ext:dex-quote-api",
+    providerName: "DEX Quote API",
+    serviceName: "Aggregated swap quote",
+    payToWallet: "0xb2c3d4e5f60718293041526374859607a1b2c3d4",
+    baseConfidence: 0.66,
+  },
+  {
+    providerId: "ext:nft-floor-api",
+    providerName: "NFT Floor API",
+    serviceName: "Collection floor lookup",
+    payToWallet: "0xc3d4e5f60718293041526374859607a1b2c3d4e5",
+    baseConfidence: 0.52,
+  },
+  {
+    providerId: "ext:onchain-search-api",
+    providerName: "Onchain Search API",
+    serviceName: "Wallet activity search",
+    payToWallet: "0xd4e5f60718293041526374859607a1b2c3d4e5f6",
+    baseConfidence: 0.41,
+  },
+  {
+    providerId: "ext:gas-oracle-api",
+    providerName: "Gas Oracle API",
+    serviceName: "Realtime gas estimate",
+    payToWallet: "0xe5f60718293041526374859607a1b2c3d4e5f607",
+    baseConfidence: 0.28,
+  },
+];
+
+const hashAddressToInt = (address: string): number => {
+  let hash = 0;
+  for (let i = 0; i < address.length; i++) {
+    hash = (hash * 31 + address.charCodeAt(i)) | 0;
+  }
+  return Math.abs(hash);
+};
+
+const externalCandidatesForPayer = (
+  payerAddress: string,
+  payerRecordCount: number,
+): ExternalProviderSeed[] => {
+  const seedHash = hashAddressToInt(payerAddress);
+  // Pick 2-4 external providers per payer, deterministic from address hash.
+  const count = 2 + (seedHash % 3);
+  const startIndex = seedHash % EXTERNAL_PROVIDER_CATALOG.length;
+  const picked: ExternalProviderSeed[] = [];
+  for (let i = 0; i < count; i++) {
+    picked.push(EXTERNAL_PROVIDER_CATALOG[(startIndex + i) % EXTERNAL_PROVIDER_CATALOG.length]);
+  }
+  return picked;
+};
+
+const externalCoUsageCount = (
+  payerAddress: string,
+  ownRecordCount: number,
+  index: number,
+): number => {
+  const seed = hashAddressToInt(`${payerAddress}:${index}`);
+  // Co-usage scales with payer activity but stays bounded; minimum 1.
+  const base = Math.max(1, Math.floor(ownRecordCount / 2));
+  return 1 + (seed % Math.max(1, base + 3));
+};
+
+const externalConfidence = (baseConfidence: number, payerAddress: string, index: number) => {
+  const jitter = (hashAddressToInt(`${payerAddress}:c:${index}`) % 11) - 5; // -5..+5
+  const value = baseConfidence + jitter / 100;
+  return Number(Math.max(0.05, Math.min(0.99, value)).toFixed(2));
+};
+
 export const buildPhaseBProjections = (
   transactionFixture: unknown,
   attributionFixture: unknown,
@@ -429,21 +519,24 @@ export const buildPhaseBProjections = (
                 },
                 reasons: [onchainReason, demoReason],
               })),
-              otherServiceCandidates: byEndpoint(records).map((endpointRecords) => ({
-                providerId: transactions.providerId,
-                providerName: "CoinGecko x402",
-                serviceName: endpointRecords[0].endpointName,
-                coUsageCount: endpointRecords.length,
-                confidence: 0.65,
-                payToWallet: endpointRecords[0].payTo,
-                provenance: "future_sdk_field",
-                provenanceByField: {
-                  serviceName: "demo_label",
-                  coUsageCount: "future_sdk_field",
-                  payToWallet: "onchain_fact",
-                },
-                reasons: [demoReason],
-              })),
+              otherServiceCandidates: externalCandidatesForPayer(payerWallet, records.length).map(
+                (seed, index) => ({
+                  providerId: seed.providerId,
+                  providerName: seed.providerName,
+                  serviceName: seed.serviceName,
+                  coUsageCount: externalCoUsageCount(payerWallet, records.length, index),
+                  confidence: externalConfidence(seed.baseConfidence, payerWallet, index),
+                  payToWallet: seed.payToWallet,
+                  provenance: "future_sdk_field",
+                  provenanceByField: {
+                    providerName: "demo_label",
+                    serviceName: "demo_label",
+                    coUsageCount: "future_sdk_field",
+                    payToWallet: "demo_label",
+                  },
+                  reasons: [demoReason],
+                }),
+              ),
             })),
         },
       ],

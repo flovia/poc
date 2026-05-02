@@ -170,11 +170,14 @@ Removed pieces:
    only one half of the window populated (treat as `null`? clamp?).
 3. **Declare provenance.** Add
    `provenanceByField.activityGrowth: "future_sdk_field"` (or
-   `"derived_insight"` once the value is real) so the badge stops falling
-   back to the object-level provenance.
+   `"derived_insight"` once the value is real) so any future provenance
+   badge resolves correctly instead of falling back to the object-level
+   value.
 4. **Re-add the column.** Restore the table cell, the sort option, the
    `CustomerSortKey` entry, and the grid column. Pair it with the
-   `ProvenanceBadge` so the data origin is visible.
+   provenance badge once that is reintroduced (see
+   "Surface column-level provenance badges across all customer fields"
+   below) so the data origin is visible.
 5. **Tests.** Restore the `sorts by activity growth desc` case in
    `filter.test.ts` and snapshot the new BFF projection output.
 
@@ -206,11 +209,14 @@ every row (e.g. "Number of payment observations recorded for this wallet by
 the current provider."). It does not surface per-row, value-specific
 rationale.
 
-The `UpsellPill` exposes `reasons` to its `ProvenanceBadge` tooltip and
-`aria-label`, and `ProvenanceBadge` already has the
-[`selectReasonsForField`](../components/customers/ProvenanceBadge.tsx)
-helper that filters `reasons` by `EvidenceLabel.sourceFields`. The plumbing
-exists — it's the upstream data that does not yet vary per row or per field.
+An earlier iteration shipped a `ProvenanceBadge` next to the upsell pill that
+read `reasons` filtered by `EvidenceLabel.sourceFields`. It was removed
+together with the badge component because every row resolved to the same
+"hypothesis" label and the badge added no signal. The CustomerListItemDto
+still carries `provenance`, `provenanceByField`, and `reasons`, so the data
+plumbing remains in place — the missing piece is field-specific rationale on
+the producer side. See **Surface column-level provenance badges across all
+customer fields** below for the visual half of this work.
 
 ### Why deferred
 
@@ -255,9 +261,9 @@ exists — it's the upstream data that does not yet vary per row or per field.
      reality).
 2. **Frontend (Customers page)**
    - Wrap each cell whose column has matching `reasons` in a tooltip that
-     calls `selectReasonsForField(c.reasons, "<column>")` and renders the
-     `description` fields. Reuse or extend `HeaderTooltip` rather than
-     introducing a third tooltip pattern.
+     filters `c.reasons` by `EvidenceLabel.sourceFields` matching the
+     column key, and renders the `description` fields. Reuse or extend
+     `HeaderTooltip` rather than introducing a third tooltip pattern.
    - Keep the static `HeaderTooltip` description as a fallback when there
      are no field-scoped reasons for the row, so the UI degrades gracefully
      against older BFF payloads.
@@ -269,9 +275,11 @@ exists — it's the upstream data that does not yet vary per row or per field.
    - Otherwise document the convention that `description` is intended to be
      human-readable per-row prose.
 4. **Tests**
-   - `selectReasonsForField` is already covered. Add an adapter / contract
-     test that asserts the generator emits at least one field-specific
-     reason per `derived_insight` field.
+   - Add an adapter / contract test that asserts the generator emits at
+     least one field-specific reason per `derived_insight` field.
+   - When the field-filter helper is reintroduced (likely alongside the
+     column-level provenance badges below), restore the unit tests that
+     covered `sourceFields` matching and `aria-label` composition.
    - Add a UI test (when a testing-library setup lands) that hovering a
      cell surfaces the right `description`.
 
@@ -286,6 +294,198 @@ exists — it's the upstream data that does not yet vary per row or per field.
 - For columns whose value is purely `onchain_fact`, is per-row prose
   (`"Aggregated from 12 transfers"`) worth it, or is the static
   `HeaderTooltip` enough? This decides how much generator work is needed.
+
+---
+
+## Surface column-level provenance badges across all customer fields
+
+Render a small provenance badge (onchain / demo / sdk / hypothesis) next to
+**every** value in the Customers table whose origin meaningfully differs
+from the others, so the reader can tell at a glance which numbers are
+on-chain facts and which are derived insights.
+
+### Status
+
+Removed. An initial implementation placed a single `ProvenanceBadge` next
+to the `UpsellPill`. Because the active BFF payload sets
+`provenanceByField.upsellOpportunity = "derived_insight"` for every row,
+the badge always read "hypothesis" and added visual noise without
+information gain. The badge component, its tests, and the wiring inside
+`CustomersTable` were deleted; `CustomerListItemDto.provenance` /
+`provenanceByField` / `reasons` and the static column-level
+`HeaderTooltip` remain.
+
+### Why deferred
+
+1. **A single-color badge is just noise.** The Phase B provenance design
+   only carries weight when *different* rows or *different* columns light
+   up in different colors. With one column at one provenance value, the
+   badge teaches nothing and crowds the table.
+2. **Other columns are not yet provenance-rich.** `spendAtomic`,
+   `observationCount`, and `address` are uniformly `onchain_fact`;
+   `providerCount` and `upsellOpportunity` are uniformly `derived_insight`.
+   Until at least one column shows row-level variation (e.g.
+   `derived_insight` here, `onchain_fact` there), green/purple contrast on
+   the page can only come from spreading badges *across* columns rather
+   than across rows.
+3. **Generator work is required first.** Per-column rendering implies
+   that the read-model generator declares
+   `provenanceByField.<each-field>` deliberately for every customer. Today
+   `apps/cli/scripts/analytics/read-models.ts` declares only a subset, and
+   the deployed BFF reads a pre-built `analytics.json` that is regenerated
+   out-of-band.
+
+### What needs to change to ship it
+
+1. **Reintroduce a small badge component** modelled on the deleted
+   `ProvenanceBadge` (or extend `HeaderTooltip` if we keep a single
+   tooltip primitive).
+2. **Wire it into multiple columns** in
+   `apps/frontend/components/customers/CustomersTable.tsx`. At a minimum:
+   `Spend (atomic)` → onchain, `Observations` → onchain, `Providers` →
+   derived_insight, `Upsell` → derived_insight. The badges should fall
+   back to the object-level `provenance` when `provenanceByField[<field>]`
+   is missing.
+3. **Tighten the read-model generator** so every value-bearing field has
+   an explicit `provenanceByField` entry. This is shared with the
+   "Per-row reason hover" item above.
+4. **Pair the badges with the per-row reasons hover** (above) so the
+   badge surfaces "what kind of value this is" and the cell hover
+   surfaces "why this specific row got this value".
+5. **Tests.** When the badge component returns, restore unit coverage for
+   the field-filter helper (`sourceFields` matching) and `aria-label`
+   composition.
+
+### Open questions
+
+- One badge per cell, or one badge per column header? Per-cell is more
+  truthful when generators eventually emit per-row variation; per-header
+  is calmer for the overwhelmingly common case where the column is
+  uniform.
+- Do we collapse `onchain_fact` rows to no badge (treating it as the
+  silent default) and only badge non-onchain values? That removes most
+  visual noise but trains readers to ignore the silent column.
+- How does this interact with the SDK-connected dashboard mode, which
+  paints the entire table purple already?
+
+---
+
+## Surface per-wallet chain & asset on the Customers list
+
+Render the chain (e.g. Base, Solana) and asset (e.g. USDC, USDT) each
+payer wallet **mainly** transacts in, both as a column on the Customers
+table and as a Toolbar filter alongside the existing `Sort` / `Upsell`
+selects.
+
+### Status
+
+**Partially implemented with frontend-fixed values.** The Customers page
+ships:
+
+- a per-row `Chain` column rendering a
+  [`ChainBadge`](../components/customers/ChainBadge.tsx) (`Base · USDC`
+  for every wallet today),
+- a `Chain` select in
+  [`Toolbar`](../components/customers/Toolbar.tsx) with `All` / `Base` /
+  `Solana` options, wired through `CustomerFilterState.chain` in
+  [`filter.ts`](../lib/customers/filter.ts).
+
+An earlier iteration also surfaced a top-of-page `ScopeChip`
+(`Network: base · Asset: USDC`) above the Customers table. It was
+removed once the per-row `Chain` column landed because the chip
+duplicated the same single-value answer in two places. If a future
+multi-chain or multi-asset rollout reintroduces a need for a global
+scope summary, prefer reviving it from the BFF envelope `scope` rather
+than from a frontend constant.
+
+Both sources read from a single helper,
+[`getCustomerChainAttribution`](../lib/customers/chain.ts), which
+currently returns `{ chain: "base", asset: "USDC" }` for every customer.
+Selecting `Solana` correctly resolves to **0 rows** under the present
+dataset; this is intentional rather than a bug, and is covered by a unit
+test (`chain=solana drops every wallet…`) so a future regression would be
+caught.
+
+What is **not** implemented:
+
+- the BFF `/customers` envelope still returns `scope: null` and
+  `CustomerListItem` has neither `chain` nor `asset` fields, so the
+  values shown are not BFF-attested,
+- `getCustomerChainAttribution` ignores its argument; until the wire
+  format carries per-wallet chain, every row resolves to Base / USDC,
+- the deployed analytics fixture only contains Base / USDC observations,
+  so even a fully-wired path would not exercise the Solana branch yet.
+
+The current shape is the "B1" option from the design discussion: build
+the column and filter so the UI is in place, accept that values are
+uniform until upstream data improves, and document the next step. The
+"B2" option (synthesise a Base/Solana distribution from the wallet
+address) was rejected because it would invent data the BFF cannot back.
+
+### Why still deferred (true per-wallet detection)
+
+1. **No per-wallet chain / asset signal on the wire.** `CustomerListItem`
+   has neither a `chain` nor an `asset` field. The information appears
+   only in `CustomerProfile.identity.network` / `identity.asset`, which
+   would require N additional `/customers/:address/profile` fetches to
+   surface on the list.
+2. **The fixture is single-chain.** The active analytics generator
+   (`apps/cli/scripts/analytics/read-models.ts`) is fed a Base / USDC
+   capture; there are no Solana observations. Even with the wire format
+   in place the column would stay uniform until the dataset itself
+   diversifies.
+3. **Filter visibility depends on the same data.** The `Chain` select
+   already exists, but only becomes useful once the data carries more
+   than one distinct chain.
+
+### What needs to change to ship the real version
+
+1. **BFF / contract**
+   - Add `chain` and `asset` to `PhaseBCustomerListItemSchema` in
+     `packages/contracts/src/index.ts` (likely `string` to keep room for
+     non-EVM ids), with `provenance` and matching `provenanceByField`
+     entries.
+   - Update the analytics generator to emit those fields per row from the
+     transfer facts that drove the projection, and to ingest at least one
+     Solana / non-USDC sample so the column has variation.
+2. **Frontend DTO + adapter**
+   - Mirror the new fields on `CustomerListItemDto`
+     (`apps/frontend/lib/api/types.ts`) and copy them through in
+     `adaptCustomerList`.
+3. **Replace the helper with DTO reads**
+   - Once the DTO carries the value, drop
+     `getCustomerChainAttribution` and read `customer.chain` /
+     `customer.asset` directly from `CustomersTable` and the filter. The
+     `ChainBadge`, `Chain` column, and Toolbar select can stay as-is.
+4. **Toolbar filter polish**
+   - Build the option list dynamically from the customers array so the
+     select degrades gracefully when only one chain is present (today the
+     options are hard-coded to `All` / `Base` / `Solana`).
+5. **Top-of-page scope summary (optional revival)**
+   - The earlier `ScopeChip` was removed because it duplicated the
+     per-row `Chain` column. If a multi-chain dataset later wants a
+     dataset-level summary again (e.g. "this snapshot covers 3 chains,
+     2 assets"), revive the chip and source it from the BFF envelope
+     `scope` rather than a frontend constant.
+6. **Tests**
+   - The chain dimension is already covered in
+     [`filter.test.ts`](../lib/customers/filter.test.ts). When per-wallet
+     attribution lands, extend the cases so that a fixture with mixed
+     chains exercises both branches.
+   - Add an adapter test asserting the new fields propagate through.
+   - Optionally extend `CustomersOverview` with a chain-spread chart and
+     test the aggregation.
+
+### Open questions
+
+- Is the value the wallet's *most-used* chain (`max-by-spend`) or a list
+  of every chain it has ever appeared on? The former is simpler; the
+  latter is closer to truth for cross-chain payers.
+- Should the SDK-connected mode keep the chain column, or hide it
+  because the SDK fixture has its own chain story?
+- Should we hide the `Chain` column entirely while every row still
+  resolves to the same value, or keep it visible as a UI affordance for
+  the eventual multi-chain reality?
 
 ---
 

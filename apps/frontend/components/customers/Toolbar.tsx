@@ -3,6 +3,7 @@
 import type { ChangeEvent } from "react";
 import { Icon } from "@/components/ui/Icon";
 import { Select, type SelectOption } from "./Select";
+import type { CustomerChainFilter } from "@/lib/customers/chain";
 import type {
   CustomerFilterState,
   CustomerSortKey,
@@ -29,6 +30,12 @@ const UPSELL_OPTIONS: ReadonlyArray<SelectOption<CustomerUpsellFilter>> = [
   { value: "low", label: "Low" },
 ];
 
+const CHAIN_OPTIONS: ReadonlyArray<SelectOption<CustomerChainFilter>> = [
+  { value: "all", label: "All" },
+  { value: "base", label: "Base" },
+  { value: "solana", label: "Solana" },
+];
+
 export function Toolbar({ total, filteredCount, state, onChange }: ToolbarProps) {
   const handleQuery = (event: ChangeEvent<HTMLInputElement>) => {
     onChange({ ...state, query: event.target.value });
@@ -40,6 +47,10 @@ export function Toolbar({ total, filteredCount, state, onChange }: ToolbarProps)
 
   const handleUpsell = (upsell: CustomerUpsellFilter) => {
     onChange({ ...state, upsell });
+  };
+
+  const handleChain = (chain: CustomerChainFilter) => {
+    onChange({ ...state, chain });
   };
 
   return (
@@ -79,6 +90,12 @@ export function Toolbar({ total, filteredCount, state, onChange }: ToolbarProps)
         options={UPSELL_OPTIONS}
         value={state.upsell}
         onChange={handleUpsell}
+      />
+      <Select
+        label="Chain"
+        options={CHAIN_OPTIONS}
+        value={state.chain}
+        onChange={handleChain}
       />
       <div style={{ flex: 1 }} />
       <span style={{ fontSize: 12, color: "var(--text-3)" }}>
