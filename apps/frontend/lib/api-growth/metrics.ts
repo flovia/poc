@@ -396,7 +396,7 @@ function buildRepeatWalletRate(
       rate: round(ratio(retained, firstPaid)),
       repeatedWallets: retained,
       totalWallets: firstPaid,
-      note: `${retained}/${firstPaid} first-paid wallets repeat by W2`,
+      note: `${retained} / ${firstPaid} paid wallets used the API again within 2 weeks`,
     };
   }
 
@@ -408,7 +408,7 @@ function buildRepeatWalletRate(
     rate: round(ratio(repeatedWallets, totalWallets)),
     repeatedWallets,
     totalWallets,
-    note: `${repeatedWallets}/${totalWallets} wallets with 2+ paid sessions`,
+    note: `${repeatedWallets} / ${totalWallets} paid wallets used the API in multiple sessions`,
   };
 }
 

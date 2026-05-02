@@ -75,7 +75,7 @@ describe("buildApiGrowthIntelligence", () => {
       rate: 0,
       repeatedWallets: 0,
       totalWallets: 0,
-      note: "0/0 wallets with 2+ paid sessions",
+      note: "0 / 0 paid wallets used the API in multiple sessions",
     });
     expect(intelligence.otherServiceCandidates).toEqual([]);
     expect(intelligence.insightCards.every((card) => card.value === "—")).toBe(true);
