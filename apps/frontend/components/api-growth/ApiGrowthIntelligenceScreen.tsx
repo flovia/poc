@@ -11,8 +11,6 @@ import type {
   ApiGrowthEndpointEntryCohort,
   ApiGrowthRepeatCohort,
   ApiGrowthTimeToSecondPaidSession,
-  ApiGrowthRepeatWalletSegment,
-  EndpointFrequencyRow,
   SourceMediumQualityRow,
 } from "@/lib/api-growth/metrics";
 
@@ -42,19 +40,16 @@ export function ApiGrowthIntelligenceScreen({ intelligence }: Props) {
         <InsightGrid cards={intelligence.insightCards} />
 
         <div style={{ display: "grid", gridTemplateColumns: "minmax(320px, 1fr) minmax(320px, 1fr) minmax(340px, 1fr)", gap: 14, alignItems: "start" }}>
-          <SectionCard eyebrow="Source / Medium Adoption" title="Where users come from">
+          <SectionCard eyebrow="Source / Medium Adoption">
             <BubbleMatrix rows={intelligence.sourceMediumQuality.rows} />
             <IntentRouteFlows flows={intelligence.sourceMediumQuality.intentRouteFlows} />
-            <SourceTable rows={intelligence.sourceMediumQuality.rows} />
           </SectionCard>
 
-          <SectionCard eyebrow="Endpoint & Frequency" title="What they use repeatedly">
-            <EndpointBars rows={intelligence.endpointFrequency.rows} />
+          <SectionCard eyebrow="Endpoint & Frequency">
             <EndpointFlow flows={intelligence.endpointFrequency.flows} />
-            <RepeatWalletSegments segments={intelligence.repeatWalletSegments} />
           </SectionCard>
 
-          <SectionCard eyebrow="Repeat Intelligence" title="Why wallets come back">
+          <SectionCard eyebrow="Repeat Intelligence">
             <SourceRepeatCohort cohorts={intelligence.repeatCohorts} />
             <EndpointEntryCohort cohorts={intelligence.endpointEntryCohorts} />
             <TimeToSecondPaidSession rows={intelligence.timeToSecondPaidSession} />
@@ -65,55 +60,12 @@ export function ApiGrowthIntelligenceScreen({ intelligence }: Props) {
           <div className="eyebrow" style={{ marginBottom: 8 }}>
             Growth Action Bridge
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "minmax(340px, 0.86fr) minmax(420px, 1.14fr)", gap: 14, alignItems: "start" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "minmax(340px, 1fr)", gap: 14, alignItems: "start" }}>
             <SectionCard eyebrow="Other Service Candidates" title="Adjacent API opportunities">
               <OtherServiceCandidates
                 candidates={intelligence.otherServiceCandidates}
                 inboundCohorts={intelligence.inboundApiCohorts}
               />
-            </SectionCard>
-
-            <SectionCard
-              eyebrow="Growth Actions"
-              title={(
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-                  Recommended growth actions
-                  <AiGeneratedTooltip />
-                </span>
-              )}
-            >
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 12 }}>
-                {intelligence.recommendations.map((recommendation) => (
-                  <div
-                    key={recommendation.title}
-                    style={{
-                      display: "grid",
-                      gridTemplateRows: "auto 1fr auto",
-                      minHeight: 172,
-                      padding: 14,
-                      border: "1px solid var(--line)",
-                      borderRadius: 8,
-                      background: "var(--surface-card)",
-                    }}
-                  >
-                    <div style={{ display: "flex", justifyContent: "space-between", gap: 10, marginBottom: 8 }}>
-                      <strong style={{ fontSize: 14, lineHeight: 1.35 }}>{recommendation.title}</strong>
-                      <PriorityBadge priority={recommendation.priority} />
-                    </div>
-                    <p style={{ ...bodyText, margin: "0 0 12px" }}>{recommendation.reason}</p>
-                    <div style={{ display: "grid", gap: 8, paddingTop: 10, borderTop: "1px solid var(--line)", color: "var(--text-3)", fontSize: 12 }}>
-                      <div style={actionMetaRowStyle}>
-                        <span style={actionMetaLabelStyle}>Next step</span>
-                        <span style={actionMetaValueStyle}>{recommendation.target}</span>
-                      </div>
-                      <div style={actionMetaRowStyle}>
-                        <span style={actionMetaLabelStyle}>Evidence</span>
-                        <span className="mono" style={actionMetaValueStyle}>{recommendation.metric}</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
             </SectionCard>
           </div>
           <p style={{ color: "var(--text-mute)", fontSize: 12, margin: "12px 0 0" }}>{intelligence.proxyNote}</p>
@@ -124,27 +76,6 @@ export function ApiGrowthIntelligenceScreen({ intelligence }: Props) {
 }
 
 const bodyText: CSSProperties = { color: "var(--text-3)", fontSize: 13, lineHeight: 1.55, margin: "6px 0 12px" };
-
-const actionMetaRowStyle: CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "72px minmax(0, 1fr)",
-  gap: 10,
-  alignItems: "baseline",
-};
-
-const actionMetaLabelStyle: CSSProperties = {
-  color: "var(--text-mute)",
-  fontSize: 11,
-  fontWeight: 700,
-  letterSpacing: "0.04em",
-  textTransform: "uppercase",
-};
-
-const actionMetaValueStyle: CSSProperties = {
-  minWidth: 0,
-  color: "var(--text-2)",
-  lineHeight: 1.35,
-};
 
 const eyebrowStyle: CSSProperties = {
   fontSize: 11,
@@ -170,78 +101,46 @@ function InsightGrid({ cards }: { cards: ApiGrowthInsightCard[] }) {
   );
 }
 
-function SectionCard({ eyebrow, title, children }: { eyebrow: string; title: ReactNode; children: ReactNode }) {
+function SectionCard({ eyebrow, title, children }: { eyebrow?: string; title?: ReactNode; children: ReactNode }) {
+  const hasHeader = eyebrow || title;
+
   return (
     <section className="card" style={{ padding: 0, overflow: "hidden", background: "var(--surface-card)", borderColor: "var(--line)", minWidth: 0 }}>
-      <div style={{ padding: "12px 16px 10px", borderBottom: "1px solid var(--line)" }}>
-        <div style={{ ...eyebrowStyle, marginBottom: 2 }}>{eyebrow}</div>
-        <h2 className="display" style={{ fontSize: 15, margin: 0, fontWeight: 600, color: "var(--text-1)" }}>{title}</h2>
-      </div>
+      {hasHeader && (
+        <div style={{ padding: "12px 16px 10px", borderBottom: "1px solid var(--line)" }}>
+          {eyebrow && <div style={{ ...eyebrowStyle, marginBottom: 2 }}>{eyebrow}</div>}
+          {title && <h2 className="display" style={{ fontSize: 15, margin: 0, fontWeight: 600, color: "var(--text-1)" }}>{title}</h2>}
+        </div>
+      )}
       <div style={{ padding: 16 }}>{children}</div>
     </section>
-  );
-}
-
-function AiGeneratedTooltip() {
-  return (
-    <span style={{ position: "relative", display: "inline-flex", alignItems: "center" }}>
-      <span
-        aria-label="AI-generated actions"
-        className="api-growth-ai-trigger"
-        style={{
-          display: "inline-flex",
-          alignItems: "center",
-          justifyContent: "center",
-          width: 20,
-          height: 20,
-          borderRadius: 6,
-          border: "1px solid var(--line)",
-          background: "var(--surface-muted)",
-          color: "var(--text-3)",
-          cursor: "help",
-        }}
-      >
-        <svg width="13" height="13" viewBox="0 0 16 16" aria-hidden="true" fill="none">
-          <rect x="3" y="5" width="10" height="8" rx="2" stroke="currentColor" strokeWidth="1.4" />
-          <path d="M8 5V2.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-          <circle cx="8" cy="2.2" r="1" fill="currentColor" />
-          <circle cx="6.2" cy="8.7" r="0.8" fill="currentColor" />
-          <circle cx="9.8" cy="8.7" r="0.8" fill="currentColor" />
-          <path d="M6.2 11h3.6" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-        </svg>
-      </span>
-      <span
-        style={{
-          position: "absolute",
-          zIndex: 10,
-          left: "50%",
-          top: "calc(100% + 8px)",
-          width: 260,
-          transform: "translateX(-50%)",
-          padding: "9px 10px",
-          borderRadius: 8,
-          border: "1px solid var(--line)",
-          background: "var(--surface-card)",
-          boxShadow: "var(--shadow-2)",
-          color: "var(--text-2)",
-          fontSize: 12,
-          fontWeight: 500,
-          lineHeight: 1.45,
-          opacity: 0,
-          pointerEvents: "none",
-        }}
-        className="api-growth-ai-tooltip"
-      >
-        Generated by AI from source, repeat wallet, endpoint frequency, and adjacent API signals.
-      </span>
-      <style>{`.api-growth-ai-trigger:hover + .api-growth-ai-tooltip, .api-growth-ai-trigger:focus + .api-growth-ai-tooltip { opacity: 1 !important; }`}</style>
-    </span>
   );
 }
 
 function BubbleMatrix({ rows }: { rows: SourceMediumQualityRow[] }) {
   const maxVolumeShare = Math.max(...rows.map((row) => row.volumeShare), 0.01);
   const plot = { left: 28, top: 14, right: 346, bottom: 204, splitX: 187, splitY: 109 };
+  const bubbles = rows.map((row, index) => {
+    const normalizedVolume = row.volumeShare / maxVolumeShare;
+    const r = 8 + Math.min(row.endpointFrequency / 3, 18);
+    return {
+      row,
+      index,
+      r,
+      x: plot.left + r + normalizedVolume * (plot.right - plot.left - r * 2),
+      y: plot.bottom - r - row.repeatQuality * (plot.bottom - plot.top - r * 2),
+    };
+  });
+  const labels = spreadBubbleLabels(
+    bubbles.map((bubble) => ({
+      source: bubble.row.source,
+      x: bubble.x,
+      y: bubble.y + bubble.r + 13,
+    })),
+    plot.top + 14,
+    plot.bottom - 12,
+  );
+
   return (
     <div style={{ border: "1px solid var(--line)", borderRadius: 6, padding: 12, background: "var(--surface-card)", marginBottom: 14 }}>
       <svg viewBox="0 0 360 240" role="img" aria-label="Source medium quality bubble matrix" style={{ width: "100%", height: 240, display: "block" }}>
@@ -254,15 +153,13 @@ function BubbleMatrix({ rows }: { rows: SourceMediumQualityRow[] }) {
         <text x={plot.splitX + 56} y={plot.top + 16} fill="var(--mesh-blue)" fontSize="10" fontWeight="700">Scale / double down</text>
         <text x={plot.left + 10} y={plot.bottom - 10} fill="var(--text-mute)" fontSize="10">Low priority</text>
         <text x={plot.splitX + 40} y={plot.bottom - 10} fill="var(--text-3)" fontSize="10" fontWeight="700">Improve retention</text>
-        {rows.map((row, index) => {
-          const normalizedVolume = row.volumeShare / maxVolumeShare;
-          const r = 8 + Math.min(row.endpointFrequency / 3, 18);
-          const x = plot.left + r + normalizedVolume * (plot.right - plot.left - r * 2);
-          const y = plot.bottom - r - row.repeatQuality * (plot.bottom - plot.top - r * 2);
+        {bubbles.map(({ row, index, r, x, y }) => {
+          const label = labels[index];
           return (
             <g key={row.source}>
               <circle cx={x} cy={y} r={r} fill={index % 2 === 0 ? "var(--mesh-blue)" : "var(--teal)"} opacity="0.82" stroke="var(--surface-card)" strokeWidth="2" />
-              <text x={x} y={y + r + 13} textAnchor="middle" fill="var(--text-2)" fontSize="10" fontWeight="700">{row.source}</text>
+              <line x1={x} y1={y + r + 2} x2={label.x} y2={label.y - 9} stroke="var(--line-strong)" strokeWidth="1" opacity="0.65" />
+              <text x={label.x} y={label.y} textAnchor="middle" fill="var(--text-2)" fontSize="10" fontWeight="700">{row.source}</text>
             </g>
           );
         })}
@@ -275,6 +172,34 @@ function BubbleMatrix({ rows }: { rows: SourceMediumQualityRow[] }) {
       </div>
     </div>
   );
+}
+
+function spreadBubbleLabels(
+  labels: Array<{ source: string; x: number; y: number }>,
+  minY: number,
+  maxY: number,
+): Array<{ source: string; x: number; y: number }> {
+  const minGap = 14;
+  const sorted = labels
+    .map((label, index) => ({ ...label, index, x: clamp(label.x, 52, 326), y: clamp(label.y, minY, maxY) }))
+    .sort((left, right) => left.y - right.y);
+
+  for (let index = 1; index < sorted.length; index += 1) {
+    sorted[index].y = Math.max(sorted[index].y, sorted[index - 1].y + minGap);
+  }
+
+  for (let index = sorted.length - 1; index >= 0; index -= 1) {
+    const maxAllowed = index === sorted.length - 1 ? maxY : sorted[index + 1].y - minGap;
+    sorted[index].y = Math.min(sorted[index].y, maxAllowed);
+  }
+
+  return sorted
+    .sort((left, right) => left.index - right.index)
+    .map(({ source, x, y }) => ({ source, x, y }));
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
 }
 
 function SourceTable({ rows }: { rows: SourceMediumQualityRow[] }) {
@@ -363,26 +288,6 @@ function IntentRouteFlows({ flows }: { flows: ApiGrowthIntentRouteFlow[] }) {
           Wider links indicate more wallets moving from intent through middleman to target API category.
         </div>
       </div>
-    </div>
-  );
-}
-
-function EndpointBars({ rows }: { rows: EndpointFrequencyRow[] }) {
-  const max = Math.max(...rows.map((row) => row.paidFrequency), 1);
-  return (
-    <div style={{ display: "grid", gap: 10, marginBottom: 16 }}>
-      {rows.map((row) => (
-        <div key={row.endpoint}>
-          <div style={{ display: "flex", justifyContent: "space-between", gap: 10, fontSize: 12, marginBottom: 5 }}>
-            <strong>{row.endpoint}</strong>
-            <span className="mono" style={{ color: "var(--text-3)" }}>{row.paidFrequency.toLocaleString()} calls</span>
-          </div>
-          <div style={{ height: 9, borderRadius: 999, background: "var(--surface-muted)", overflow: "hidden" }}>
-            <div style={{ width: `${Math.max(6, (row.paidFrequency / max) * 100)}%`, height: "100%", background: "var(--mesh-blue)" }} />
-          </div>
-          <div style={{ color: "var(--text-mute)", fontSize: 11, marginTop: 3 }}>{row.wallets} wallets · {row.callsPerWallet} calls / wallet · {row.repeatSessions} repeat sessions</div>
-        </div>
-      ))}
     </div>
   );
 }
@@ -534,25 +439,6 @@ function repeatCohortCellColor(value: number): string {
   return "var(--surface-muted)";
 }
 
-function RepeatWalletSegments({ segments }: { segments: ApiGrowthRepeatWalletSegment[] }) {
-  if (segments.length === 0) return null;
-  return (
-    <div style={{ borderTop: "1px solid var(--line)", marginTop: 14, paddingTop: 12 }}>
-      <div style={{ ...eyebrowStyle, marginBottom: 8 }}>Repeat wallet segments</div>
-      <div style={{ display: "grid", gap: 8 }}>
-        {segments.map((segment) => (
-          <RepeatRateRow
-            key={segment.segment}
-            label={segment.segment}
-            value={segment.repeatRate}
-            note={`${segment.wallets} wallets · ${segment.endpointFlow}`}
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
-
 function TimeToSecondPaidSession({ rows }: { rows: ApiGrowthTimeToSecondPaidSession[] }) {
   if (rows.length === 0) return null;
   const maxHours = Math.max(...rows.map((row) => row.medianHours), 1);
@@ -582,21 +468,6 @@ function TimeToSecondPaidSession({ rows }: { rows: ApiGrowthTimeToSecondPaidSess
           </div>
         ))}
       </div>
-    </div>
-  );
-}
-
-function RepeatRateRow({ label, value, note }: { label: string; value: number; note: string }) {
-  return (
-    <div>
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "baseline", marginBottom: 5 }}>
-        <strong style={{ fontSize: 12 }}>{label}</strong>
-        <span className="mono" style={{ color: value >= 0.7 ? "var(--teal)" : "var(--text-2)", fontWeight: 800 }}>{formatRatioPct(value)}</span>
-      </div>
-      <div style={{ height: 7, borderRadius: 999, background: "var(--surface-muted)", overflow: "hidden" }}>
-        <div style={{ width: `${Math.max(4, value * 100)}%`, height: "100%", background: value >= 0.7 ? "var(--teal)" : "var(--mesh-blue)" }} />
-      </div>
-      <div style={{ color: "var(--text-mute)", fontSize: 11, marginTop: 3 }}>{note}</div>
     </div>
   );
 }
@@ -696,11 +567,6 @@ function InboundApiCohort({ cohorts }: { cohorts: ApiGrowthInboundApiCohort[] })
       </div>
     </div>
   );
-}
-
-function PriorityBadge({ priority }: { priority: "P0" | "P1" | "P2" }) {
-  const color = priority === "P0" ? "var(--mesh-blue)" : priority === "P1" ? "var(--teal)" : "var(--warn)";
-  return <span className="mono" style={{ color, fontWeight: 800, fontSize: 12 }}>{priority}</span>;
 }
 
 const chipStyle: CSSProperties = {
