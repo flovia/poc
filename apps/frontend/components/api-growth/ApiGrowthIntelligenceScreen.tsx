@@ -6,6 +6,7 @@ import type {
   ApiGrowthInsightCard,
   ApiGrowthIntelligence,
   ApiGrowthEndpointFlow,
+  ApiGrowthRepeatCohort,
   EndpointFrequencyRow,
   SourceMediumQualityRow,
   UseCaseFitCard,
@@ -40,6 +41,7 @@ export function ApiGrowthIntelligenceScreen({ intelligence }: Props) {
           <SectionCard eyebrow="Source / Medium Adoption" title="Where users come from">
             <BubbleMatrix rows={intelligence.sourceMediumQuality.rows} />
             <SourceTable rows={intelligence.sourceMediumQuality.rows} />
+            <RepeatCohortHeatmap cohorts={intelligence.repeatCohorts} />
           </SectionCard>
 
           <SectionCard eyebrow="Endpoint & Frequency" title="What they use repeatedly">
@@ -312,6 +314,69 @@ function SourceTable({ rows }: { rows: SourceMediumQualityRow[] }) {
       ))}
     </div>
   );
+}
+
+function RepeatCohortHeatmap({ cohorts }: { cohorts: ApiGrowthRepeatCohort[] }) {
+  if (cohorts.length === 0) return null;
+
+  const columns: Array<{ key: keyof ApiGrowthRepeatCohort; label: string }> = [
+    { key: "week0", label: "Start" },
+    { key: "week1", label: "W1" },
+    { key: "week2", label: "W2" },
+    { key: "week3", label: "W3" },
+  ];
+
+  return (
+    <div style={{ borderTop: "1px solid var(--line)", marginTop: 12, paddingTop: 12 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "baseline", marginBottom: 8 }}>
+        <div style={eyebrowStyle}>Repeat cohort</div>
+        <span style={{ color: "var(--text-mute)", fontSize: 11 }}>share of paid wallets active again</span>
+      </div>
+      <div style={{ display: "grid", gap: 6 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1.15fr repeat(4, 0.55fr)", gap: 6, color: "var(--text-mute)", fontSize: 10, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" }}>
+          <span>Source cohort</span>
+          {columns.map((column) => <span key={column.label} style={{ textAlign: "center" }}>{column.label}</span>)}
+        </div>
+        {cohorts.slice(0, 6).map((cohort) => (
+          <div key={cohort.cohort} style={{ display: "grid", gridTemplateColumns: "1.15fr repeat(4, 0.55fr)", gap: 6, alignItems: "center" }}>
+            <div style={{ minWidth: 0 }}>
+              <strong style={{ display: "block", fontSize: 12, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{cohort.cohort}</strong>
+              <span style={{ color: "var(--text-mute)", fontSize: 10 }}>{cohort.paidWallets} paid wallets</span>
+            </div>
+            {columns.map((column) => {
+              const value = Number(cohort[column.key]);
+              return (
+                <span
+                  key={column.label}
+                  className="mono"
+                  style={{
+                    display: "inline-flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    minHeight: 28,
+                    borderRadius: 6,
+                    background: cohortCellColor(value),
+                    color: value >= 0.72 ? "#ffffff" : "var(--text-2)",
+                    fontSize: 11,
+                    fontWeight: 750,
+                  }}
+                >
+                  {formatRatioPct(value)}
+                </span>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function cohortCellColor(value: number): string {
+  if (value >= 0.85) return "var(--mesh-blue)";
+  if (value >= 0.72) return "var(--teal)";
+  if (value >= 0.55) return "rgba(20, 184, 166, 0.16)";
+  return "var(--surface-muted)";
 }
 
 function EndpointBars({ rows }: { rows: EndpointFrequencyRow[] }) {

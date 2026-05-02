@@ -78,6 +78,15 @@ export type ApiGrowthServiceCandidate = {
   reason: string;
 };
 
+export type ApiGrowthRepeatCohort = {
+  cohort: string;
+  paidWallets: number;
+  week0: number;
+  week1: number;
+  week2: number;
+  week3: number;
+};
+
 export type ApiGrowthIntelligence = {
   insightCards: ApiGrowthInsightCard[];
   sourceMediumQuality: {
@@ -92,6 +101,7 @@ export type ApiGrowthIntelligence = {
     cards: UseCaseFitCard[];
   };
   repeatWalletRate: ApiGrowthRepeatWalletRate;
+  repeatCohorts: ApiGrowthRepeatCohort[];
   otherServiceCandidates: ApiGrowthServiceCandidate[];
   recommendations: ApiGrowthRecommendation[];
   proxyNote: string;
@@ -297,6 +307,7 @@ export function buildApiGrowthIntelligence(data: MacroMetricsDemoData): ApiGrowt
   const endpointRows = buildEndpointRows(data, eventsByEndpoint, totalEvents);
   const useCaseCards = buildUseCaseCards(data, sessionsByWallet, walletByAddress);
   const repeatWalletRate = buildRepeatWalletRate(data, sessionsByWallet);
+  const repeatCohorts = buildRepeatCohorts(data, sessionsByWallet);
   const otherServiceCandidates = buildOtherServiceCandidates(data);
   const highestFrequencyChannel = topBy(sourceRows, (row) => row.endpointFrequency);
   const bestChannel = topBy(
@@ -352,11 +363,45 @@ export function buildApiGrowthIntelligence(data: MacroMetricsDemoData): ApiGrowt
     endpointFrequency: { rows: endpointRows, flow: AGENT_FLOW, flows: API_GROWTH_ENDPOINT_FLOWS },
     useCaseFit: { cards: useCaseCards },
     repeatWalletRate,
+    repeatCohorts,
     otherServiceCandidates,
     recommendations: buildRecommendations(sourceRows, endpointRows, useCaseCards),
     proxyNote:
       "Offline demo model. Source / medium labels and x402 / Agent fit are directional product-growth proxies derived from wallet, session, endpoint, and repeat behavior.",
   };
+}
+
+function buildRepeatCohorts(
+  data: MacroMetricsDemoData,
+  sessionsByWallet: Map<string, Set<string>>,
+): ApiGrowthRepeatCohort[] {
+  if (data.wallets.length > 0) {
+    return API_GROWTH_CHANNEL_PROFILES.map((profile) => {
+      const week1 = Math.min(
+        profile.firstPaid,
+        profile.retainedW2 + Math.round((profile.firstPaid - profile.retainedW2) * 0.55),
+      );
+      const week3 = Math.max(0, Math.round(profile.retainedW2 * 0.82));
+      return {
+        cohort: profile.source,
+        paidWallets: profile.firstPaid,
+        week0: 1,
+        week1: round(ratio(week1, profile.firstPaid)),
+        week2: round(ratio(profile.retainedW2, profile.firstPaid)),
+        week3: round(ratio(week3, profile.firstPaid)),
+      };
+    }).sort((left, right) => right.week2 - left.week2 || right.paidWallets - left.paidWallets);
+  }
+
+  const sourceRows = buildSourceMediumRows(data, sessionsByWallet);
+  return sourceRows.map((row) => ({
+    cohort: row.source,
+    paidWallets: row.firstPaid,
+    week0: row.firstPaid === 0 ? 0 : 1,
+    week1: row.repeatQuality,
+    week2: row.repeatQuality,
+    week3: round(row.repeatQuality * 0.82),
+  }));
 }
 
 function addAtomic(left: string, right: string): string {

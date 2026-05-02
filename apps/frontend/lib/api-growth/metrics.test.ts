@@ -45,6 +45,9 @@ describe("buildApiGrowthIntelligence", () => {
     expect(intelligence.endpointFrequency.flows[0].occurrences).toBeGreaterThan(100);
     expect(intelligence.repeatWalletRate.rate).toBeGreaterThan(0);
     expect(intelligence.repeatWalletRate.repeatedWallets).toBeGreaterThan(0);
+    expect(intelligence.repeatCohorts.length).toBeGreaterThan(0);
+    expect(intelligence.repeatCohorts[0].week0).toBe(1);
+    expect(intelligence.repeatCohorts[0].week2).toBeGreaterThan(0);
     expect(intelligence.otherServiceCandidates.length).toBeGreaterThan(0);
     expect(intelligence.otherServiceCandidates[0].owner).toBeTruthy();
     expect(intelligence.otherServiceCandidates[0].sharedWallets).toBeGreaterThan(0);
@@ -77,6 +80,7 @@ describe("buildApiGrowthIntelligence", () => {
       totalWallets: 0,
       note: "0 / 0 paid wallets used the API in multiple sessions",
     });
+    expect(intelligence.repeatCohorts).toEqual([]);
     expect(intelligence.otherServiceCandidates).toEqual([]);
     expect(intelligence.insightCards.every((card) => card.value === "—")).toBe(true);
     expect(intelligence.recommendations).toHaveLength(4);
