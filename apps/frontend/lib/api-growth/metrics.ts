@@ -113,6 +113,14 @@ export type ApiGrowthRepeatWalletSegment = {
   endpointFlow: string;
 };
 
+export type ApiGrowthTimeToSecondPaidSession = {
+  source: string;
+  repeatedWallets: number;
+  medianHours: number;
+  within24hRate: number;
+  within7dRate: number;
+};
+
 export type ApiGrowthIntelligence = {
   insightCards: ApiGrowthInsightCard[];
   sourceMediumQuality: {
@@ -129,6 +137,7 @@ export type ApiGrowthIntelligence = {
   repeatWalletRate: ApiGrowthRepeatWalletRate;
   repeatCohorts: ApiGrowthRepeatCohort[];
   endpointEntryCohorts: ApiGrowthEndpointEntryCohort[];
+  timeToSecondPaidSession: ApiGrowthTimeToSecondPaidSession[];
   repeatWalletSegments: ApiGrowthRepeatWalletSegment[];
   otherServiceCandidates: ApiGrowthServiceCandidate[];
   inboundApiCohorts: ApiGrowthInboundApiCohort[];
@@ -338,6 +347,7 @@ export function buildApiGrowthIntelligence(data: MacroMetricsDemoData): ApiGrowt
   const repeatWalletRate = buildRepeatWalletRate(data, sessionsByWallet);
   const repeatCohorts = buildRepeatCohorts(data, sessionsByWallet);
   const endpointEntryCohorts = buildEndpointEntryCohorts(data, endpointRows);
+  const timeToSecondPaidSession = buildTimeToSecondPaidSession(data);
   const repeatWalletSegments = buildRepeatWalletSegments(data, useCaseCards);
   const otherServiceCandidates = buildOtherServiceCandidates(data);
   const inboundApiCohorts = buildInboundApiCohorts(data);
@@ -397,6 +407,7 @@ export function buildApiGrowthIntelligence(data: MacroMetricsDemoData): ApiGrowt
     repeatWalletRate,
     repeatCohorts,
     endpointEntryCohorts,
+    timeToSecondPaidSession,
     repeatWalletSegments,
     otherServiceCandidates,
     inboundApiCohorts,
@@ -404,6 +415,48 @@ export function buildApiGrowthIntelligence(data: MacroMetricsDemoData): ApiGrowt
     proxyNote:
       "Offline demo model. Source / medium labels and x402 / Agent fit are directional product-growth proxies derived from wallet, session, endpoint, and repeat behavior.",
   };
+}
+
+function buildTimeToSecondPaidSession(data: MacroMetricsDemoData): ApiGrowthTimeToSecondPaidSession[] {
+  if (data.wallets.length === 0) return [];
+
+  return [
+    {
+      source: "AgentKit MCP",
+      repeatedWallets: 32,
+      medianHours: 7,
+      within24hRate: 0.72,
+      within7dRate: 0.91,
+    },
+    {
+      source: "Dexter",
+      repeatedWallets: 35,
+      medianHours: 13,
+      within24hRate: 0.63,
+      within7dRate: 0.84,
+    },
+    {
+      source: "Partner App",
+      repeatedWallets: 26,
+      medianHours: 20,
+      within24hRate: 0.51,
+      within7dRate: 0.76,
+    },
+    {
+      source: "Sponge",
+      repeatedWallets: 27,
+      medianHours: 31,
+      within24hRate: 0.42,
+      within7dRate: 0.68,
+    },
+    {
+      source: "Direct",
+      repeatedWallets: 18,
+      medianHours: 46,
+      within24hRate: 0.34,
+      within7dRate: 0.59,
+    },
+  ];
 }
 
 function buildInboundApiCohorts(data: MacroMetricsDemoData): ApiGrowthInboundApiCohort[] {

@@ -9,6 +9,7 @@ import type {
   ApiGrowthEndpointFlow,
   ApiGrowthEndpointEntryCohort,
   ApiGrowthRepeatCohort,
+  ApiGrowthTimeToSecondPaidSession,
   ApiGrowthRepeatWalletSegment,
   EndpointFrequencyRow,
   SourceMediumQualityRow,
@@ -54,6 +55,7 @@ export function ApiGrowthIntelligenceScreen({ intelligence }: Props) {
           <SectionCard eyebrow="Repeat Intelligence" title="Why wallets come back">
             <SourceRepeatCohort cohorts={intelligence.repeatCohorts} />
             <EndpointEntryCohort cohorts={intelligence.endpointEntryCohorts} />
+            <TimeToSecondPaidSession rows={intelligence.timeToSecondPaidSession} />
           </SectionCard>
         </div>
 
@@ -501,6 +503,39 @@ function RepeatWalletSegments({ segments }: { segments: ApiGrowthRepeatWalletSeg
             value={segment.repeatRate}
             note={`${segment.wallets} wallets · ${segment.endpointFlow}`}
           />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function TimeToSecondPaidSession({ rows }: { rows: ApiGrowthTimeToSecondPaidSession[] }) {
+  if (rows.length === 0) return null;
+  const maxHours = Math.max(...rows.map((row) => row.medianHours), 1);
+
+  return (
+    <div style={{ borderTop: "1px solid var(--line)", marginTop: 14, paddingTop: 12 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "baseline", marginBottom: 8 }}>
+        <div style={eyebrowStyle}>Time to second paid session</div>
+        <span style={{ color: "var(--text-mute)", fontSize: 11 }}>speed of repeat activation</span>
+      </div>
+      <div style={{ display: "grid", gap: 8 }}>
+        {rows.map((row) => (
+          <div key={row.source}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 10, alignItems: "baseline", marginBottom: 5 }}>
+              <strong style={{ fontSize: 12 }}>{row.source}</strong>
+              <span className="mono" style={{ color: row.medianHours <= 24 ? "var(--teal)" : "var(--text-2)", fontWeight: 800 }}>
+                {row.medianHours}h median
+              </span>
+            </div>
+            <div style={{ height: 7, borderRadius: 999, background: "var(--surface-muted)", overflow: "hidden" }}>
+              <div style={{ width: `${Math.max(6, (1 - row.medianHours / maxHours) * 94 + 6)}%`, height: "100%", background: row.medianHours <= 24 ? "var(--teal)" : "var(--mesh-blue)" }} />
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 8, color: "var(--text-mute)", fontSize: 11, marginTop: 3 }}>
+              <span>{row.repeatedWallets} repeated wallets</span>
+              <span>{formatRatioPct(row.within24hRate)} within 24h · {formatRatioPct(row.within7dRate)} within 7d</span>
+            </div>
+          </div>
         ))}
       </div>
     </div>

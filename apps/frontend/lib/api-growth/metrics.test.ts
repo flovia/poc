@@ -53,6 +53,8 @@ describe("buildApiGrowthIntelligence", () => {
     expect(intelligence.repeatCohorts[0].week2).toBeGreaterThan(0);
     expect(intelligence.endpointEntryCohorts[0].week1).toBeGreaterThan(0.7);
     expect(intelligence.endpointEntryCohorts[0].week3).toBeGreaterThan(0);
+    expect(intelligence.timeToSecondPaidSession[0].medianHours).toBeLessThan(24);
+    expect(intelligence.timeToSecondPaidSession[0].within7dRate).toBeGreaterThan(0.8);
     expect(intelligence.repeatWalletSegments[0].segment).toBe("Agent-like workflow");
     expect(intelligence.otherServiceCandidates.length).toBeGreaterThan(0);
     expect(intelligence.otherServiceCandidates[0].owner).toBeTruthy();
@@ -91,6 +93,7 @@ describe("buildApiGrowthIntelligence", () => {
     });
     expect(intelligence.repeatCohorts).toEqual([]);
     expect(intelligence.endpointEntryCohorts).toEqual([]);
+    expect(intelligence.timeToSecondPaidSession).toEqual([]);
     expect(intelligence.repeatWalletSegments).toEqual([]);
     expect(intelligence.otherServiceCandidates).toEqual([]);
     expect(intelligence.inboundApiCohorts).toEqual([]);
