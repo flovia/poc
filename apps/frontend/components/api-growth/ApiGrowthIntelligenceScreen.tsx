@@ -1,5 +1,6 @@
 import type { CSSProperties, ReactNode } from "react";
 import { EndpointSankey, type EndpointSankeyFlow } from "@/components/macro-metrics/EndpointSankey";
+import { MacroRouteSankeySection } from "@/components/macro-metrics/MacroRouteSankeySection";
 import { formatAtomic, formatRatioPct } from "@/lib/format";
 import type {
   ApiGrowthServiceCandidate,
@@ -49,6 +50,13 @@ export function ApiGrowthIntelligenceScreen({ intelligence }: Props) {
             <SourceRepeatCohort cohorts={intelligence.repeatCohorts} />
           </SectionCard>
         </div>
+
+        <section style={{ marginTop: 18 }}>
+          <MacroRouteSankeySection
+            chart={intelligence.routeSankey}
+            periodLabel="Last 30 days demo"
+          />
+        </section>
 
         <section style={{ marginTop: 18 }}>
           <div className="eyebrow" style={{ marginBottom: 8 }}>

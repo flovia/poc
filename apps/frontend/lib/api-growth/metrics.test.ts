@@ -70,6 +70,8 @@ describe("buildApiGrowthIntelligence", () => {
     expect(intelligence.useCaseFit.cards[0].frequency).toBeGreaterThan(10);
     expect(intelligence.useCaseFit.cards[0].agentFit).toBeGreaterThan(0);
     expect(intelligence.recommendations).toHaveLength(4);
+    expect(intelligence.routeSankey.title).toBe("Start → Intermediary → Next Category");
+    expect(intelligence.routeSankey.flows.length).toBeGreaterThan(0);
   });
 
   test("keeps all output sections stable for empty offline data", () => {
@@ -102,5 +104,6 @@ describe("buildApiGrowthIntelligence", () => {
     expect(intelligence.inboundApiCohorts).toEqual([]);
     expect(intelligence.insightCards.every((card) => card.value === "—")).toBe(true);
     expect(intelligence.recommendations).toHaveLength(4);
+    expect(intelligence.routeSankey.flows).toEqual([]);
   });
 });

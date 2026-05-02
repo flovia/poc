@@ -4,6 +4,8 @@ import type {
   MacroServiceId,
   MacroWallet,
 } from "@/lib/macro-metrics/demo";
+import { buildMacroRouteSankeyChart } from "@/lib/macro-metrics/route-sankey";
+import type { X402SankeyChartModel } from "@/lib/x402-analysis/transform";
 
 export type ApiGrowthInsightCard = {
   label: string;
@@ -151,6 +153,7 @@ export type ApiGrowthIntelligence = {
   otherServiceCandidates: ApiGrowthServiceCandidate[];
   inboundApiCohorts: ApiGrowthInboundApiCohort[];
   recommendations: ApiGrowthRecommendation[];
+  routeSankey: X402SankeyChartModel;
   proxyNote: string;
 };
 
@@ -422,6 +425,7 @@ export function buildApiGrowthIntelligence(data: MacroMetricsDemoData): ApiGrowt
     otherServiceCandidates,
     inboundApiCohorts,
     recommendations: buildRecommendations(sourceRows, endpointRows, useCaseCards),
+    routeSankey: buildMacroRouteSankeyChart(data),
     proxyNote:
       "Offline demo model. Source / medium labels and x402 / Agent fit are directional product-growth proxies derived from wallet, session, endpoint, and repeat behavior.",
   };
