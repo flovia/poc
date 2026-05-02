@@ -158,7 +158,8 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
             aria-label="My Customers, setup required"
           >
             <Icon.customers />
-            My Customers
+            <span style={{ flex: 1 }}>My Customers</span>
+            <RealNavBadge />
           </span>
         ) : (
           <>
@@ -169,7 +170,8 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
                 aria-current={customersGroupActive}
               >
                 <Icon.customers />
-                My Customers
+                <span style={{ flex: 1 }}>My Customers</span>
+                <RealNavBadge />
               </Link>
               <button
                 type="button"
@@ -234,7 +236,7 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
         )}
 
         <div className="provider-block">
-          <div className="label">Select API Provider</div>
+          <div className="label">API Providers</div>
 
           {!hydrated ? (
             <div className="provider-list">
@@ -258,7 +260,6 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
               {stored.map((p) => {
                 const isActive = p.providerId === activeProviderId;
                 const isDemo = isDemoProvider(p, demoOpted, userIds);
-                const isGenerated = p.source === "generated";
                 return (
                   <div key={p.providerId} className="provider-row" aria-current={isActive}>
                     <Link
@@ -302,25 +303,8 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
                           demo
                         </span>
                       )}
-                      {isGenerated && (
-                        <span
-                          style={{
-                            fontSize: 11,
-                            fontWeight: 600,
-                            padding: "1px 5px",
-                            borderRadius: 3,
-                            background: "rgba(45,127,249,0.14)",
-                            color: "var(--mesh-blue)",
-                            letterSpacing: "0.04em",
-                            textTransform: "uppercase",
-                            flexShrink: 0,
-                          }}
-                        >
-                          real
-                        </span>
-                      )}
                     </Link>
-                    {!isGenerated && (
+                    {p.source !== "generated" && (
                       <button
                         type="button"
                         className="x"
@@ -363,6 +347,26 @@ function DemoNavBadge() {
       }}
     >
       demo
+    </span>
+  );
+}
+
+function RealNavBadge() {
+  return (
+    <span
+      style={{
+        fontSize: 11,
+        fontWeight: 600,
+        padding: "1px 5px",
+        borderRadius: 3,
+        background: "rgba(45,127,249,0.14)",
+        color: "var(--mesh-blue)",
+        letterSpacing: "0.04em",
+        textTransform: "uppercase",
+        flexShrink: 0,
+      }}
+    >
+      real
     </span>
   );
 }

@@ -1,12 +1,12 @@
 import type { CoUsageProviderRow } from "@/lib/customers/co-usage-providers";
 import { OverviewCard } from "./overview/OverviewCard";
 
-const TOP_N = 6;
-const ROW_HEIGHT = 22;
+const TOP_N = 8;
+const ROW_HEIGHT = 24;
 const ROW_GAP = 3;
-const LABEL_WIDTH = 200;
-const VALUE_WIDTH = 144;
-const PAD = { l: 12, r: 12, t: 8, b: 8 };
+const LABEL_WIDTH = 196;
+const VALUE_WIDTH = 140;
+const PAD = { l: 10, r: 10, t: 6, b: 6 };
 const KPI_TOP_K = 3;
 
 // Heatmap opacity range for the bar fill, driven by sharedTxCount.
@@ -45,7 +45,7 @@ export function CoUsageProvidersChart({
   const maxWallets = Math.max(1, ...topRows.map((r) => r.sharedWallets));
   const maxTx = Math.max(1, ...topRows.map((r) => r.sharedTxCount));
 
-  const chartWidth = 720;
+  const chartWidth = 700;
   const barAreaWidth = chartWidth - PAD.l - PAD.r - LABEL_WIDTH - VALUE_WIDTH;
   const chartHeight = PAD.t + topRows.length * (ROW_HEIGHT + ROW_GAP) - ROW_GAP + PAD.b;
 
@@ -58,14 +58,15 @@ export function CoUsageProvidersChart({
       eyebrow="Synergy candidates"
       title="Other providers your customers also pay"
     >
-      <svg
-        role="img"
-        aria-label={`Top ${topRows.length} synergy candidates by shared wallet reach and shared tx volume`}
-        width="100%"
-        viewBox={`0 0 ${chartWidth} ${chartHeight}`}
-        preserveAspectRatio="xMidYMid meet"
-        style={{ display: "block" }}
-      >
+      <div style={{ display: "flex", justifyContent: "center" }}>
+        <svg
+          role="img"
+          aria-label={`Top ${topRows.length} synergy candidates by shared wallet reach and shared tx volume`}
+          width="100%"
+          viewBox={`0 0 ${chartWidth} ${chartHeight}`}
+          preserveAspectRatio="xMidYMid meet"
+          style={{ display: "block", maxWidth: 720 }}
+        >
         {topRows.map((row, index) => {
           const y = PAD.t + index * (ROW_HEIGHT + ROW_GAP);
           const barX = PAD.l + LABEL_WIDTH;
@@ -107,7 +108,7 @@ export function CoUsageProvidersChart({
                 y={y + ROW_HEIGHT / 2}
                 dy="0.32em"
                 textAnchor="end"
-                fontSize={11}
+                fontSize={11.5}
                 fill="var(--text-1)"
                 style={{ textDecoration: clickable ? "underline" : undefined, textDecorationStyle: "dotted", textDecorationColor: "var(--text-mute)" }}
               >
@@ -140,7 +141,7 @@ export function CoUsageProvidersChart({
                 x={valueX}
                 y={y + ROW_HEIGHT / 2}
                 dy="0.32em"
-                fontSize={10.5}
+                fontSize={11}
                 fill="var(--text-2)"
                 className="mono"
               >
@@ -149,7 +150,8 @@ export function CoUsageProvidersChart({
             </g>
           );
         })}
-      </svg>
+        </svg>
+      </div>
 
       <div style={{ marginTop: 10, fontSize: 13, lineHeight: 1.45, color: "var(--text-2)" }}>
         {synergyHint}
