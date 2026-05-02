@@ -67,13 +67,13 @@ describe("buildMacroMetrics", () => {
     }
   });
 
-  test("builds a start to intermediary to next-category sankey with route quality metrics", () => {
+  test("builds an initial-query to intermediary to next-category sankey with route quality metrics", () => {
     const metrics = buildMacroMetrics(MACRO_METRICS_DEMO_DATA);
 
     expect(metrics.routeSankey.layer_labels).toEqual({
-      left: "Start",
+      left: "Initial query",
       mid: "Intermediary",
-      right: "Next category",
+      right: "Next API category",
     });
     expect(new Set(metrics.routeSankey.flows.map((flow) => flow.middle_label)).size).toBeGreaterThan(
       1,

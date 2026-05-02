@@ -12,8 +12,8 @@ describe("MacroRouteSankeySection", () => {
       <MacroRouteSankeySection chart={metrics.routeSankey} periodLabel="Last 30 days demo" />,
     );
 
-    expect(html).toContain("Start → Intermediary → Next Category");
-    expect(html).toContain("Hover a route to inspect");
+    expect(html).toContain("Initial Query → Intermediary → Next API Category");
+    expect(html).toContain("API workflow paths");
     expect(html).toContain("Request count");
     expect(html).toContain("Settled USDC");
   });

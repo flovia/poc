@@ -13,9 +13,9 @@ describe("MacroMetricsScreen", () => {
     );
 
     expect(html).toContain("Endpoint category flow");
-    expect(html).toContain("Start → Intermediary → Next Category");
+    expect(html).toContain("Initial Query → Intermediary → Next API Category");
     expect(html.indexOf("Recommended plays")).toBeLessThan(
-      html.indexOf("Start → Intermediary → Next Category"),
+      html.indexOf("Initial Query → Intermediary → Next API Category"),
     );
   });
 });
