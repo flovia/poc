@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Fragment } from "react";
 import { useActiveProvider } from "@/app/providers";
+import { PageOnboarding, type PageOnboardingContent } from "@/components/onboarding/PageOnboarding";
 import type { DashboardMode } from "@/lib/data-mode";
 
 export type Crumb = {
@@ -16,12 +17,14 @@ type TopBarProps = {
   crumbs: Crumb[];
   // dataMode: Server で cookie を読んだ結果。Phase 7 で追加。
   dataMode: DashboardMode;
+  onboarding?: PageOnboardingContent;
 };
 
 export function TopBar({
   providerId,
   fallbackProviderName = "Flovia",
   crumbs,
+  onboarding,
 }: TopBarProps) {
   const { active, hydrated } = useActiveProvider(providerId);
 
@@ -51,6 +54,7 @@ export function TopBar({
         ))}
       </div>
       <div className="spacer" />
+      {onboarding ? <PageOnboarding content={onboarding} /> : null}
       {/*
         グローバル UI 要素 (期間セレクタ / freshness インジケータ) は撤去済み。
         いずれもページ単独で意味を持つので、ページ内 Toolbar / Header に再配置する

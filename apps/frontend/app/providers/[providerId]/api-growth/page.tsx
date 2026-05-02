@@ -19,6 +19,18 @@ export default async function ApiGrowthPage({
         providerId={providerId}
         crumbs={[{ label: "API Growth" }]}
         dataMode={pageCtx.dataMode}
+        onboarding={{
+          id: "api-growth",
+          title: "Track API growth intelligence",
+          description:
+            "Understand where adoption comes from, what users repeat, and where packaging can unlock more growth.",
+          metrics: [
+            { label: "Source quality", description: "Which channels bring meaningful API activity." },
+            { label: "Endpoint frequency", description: "What users call often enough to become habits." },
+            { label: "Repeat usage", description: "Why wallets return after the first interaction." },
+            { label: "Growth opportunities", description: "Where to improve activation, packaging, or positioning." },
+          ],
+        }}
       />
       <div className="scroll">
         <ApiGrowthIntelligenceScreen intelligence={intelligence} />

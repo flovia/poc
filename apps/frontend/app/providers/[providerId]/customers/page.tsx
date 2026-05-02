@@ -32,6 +32,18 @@ export default async function CustomersPage({
         providerId={providerId}
         crumbs={[{ label: "Customers" }]}
         dataMode={pageCtx.dataMode}
+        onboarding={{
+          id: "my-customers",
+          title: "Understand your customers",
+          description:
+            "See who is adopting your API, where usage is growing, and which accounts are worth your attention.",
+          metrics: [
+            { label: "Customer count", description: "The scale of your active customer base." },
+            { label: "Request volume", description: "Which customers drive the most API usage." },
+            { label: "Growth trend", description: "Where adoption is gaining or losing momentum." },
+            { label: "Retention", description: "How consistently customers keep coming back." },
+          ],
+        }}
       />
       <div className="scroll">
         <div style={{ padding: "32px 40px 80px" }}>

@@ -58,6 +58,13 @@ export const Icon = {
       />
     </svg>
   ),
+  info: (p: IconProps) => (
+    <svg viewBox="0 0 16 16" fill="none" {...A11Y_DEFAULTS} {...p}>
+      <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.3" />
+      <path d="M8 7.2v4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+      <circle cx="8" cy="4.8" r="0.8" fill="currentColor" />
+    </svg>
+  ),
   filter: (p: IconProps) => (
     <svg viewBox="0 0 16 16" fill="none" {...A11Y_DEFAULTS} {...p}>
       <path d="M2 3h12 M4 7h8 M6 11h4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />

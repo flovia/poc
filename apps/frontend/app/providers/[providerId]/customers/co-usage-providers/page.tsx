@@ -40,6 +40,18 @@ export default async function CoUsageProvidersPage({
           { label: "Co-Usage Providers" },
         ]}
         dataMode={pageCtx.dataMode}
+        onboarding={{
+          id: "co-usage-providers",
+          title: "Find your ecosystem signals",
+          description:
+            "See which x402 providers your customers use alongside your API, and spot partnership or bundling opportunities.",
+          metrics: [
+            { label: "Co-used providers", description: "External services that appear with your API usage." },
+            { label: "Shared wallets", description: "Customers who overlap across providers." },
+            { label: "Co-usage frequency", description: "Which relationships show the strongest usage signal." },
+            { label: "Opportunity level", description: "Where the next partnership conversation may start." },
+          ],
+        }}
       />
       <div className="scroll">
         <div style={{ padding: "32px 40px 80px" }}>
