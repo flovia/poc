@@ -61,7 +61,7 @@ export function CustomersTable({
         <div>
           <HeaderTooltip
             label="Wallet"
-            description="Payer wallet address. The on-chain account that has paid this provider."
+            description="Payer wallet address. Click a wallet to open its profile: spend history, AI agent context, endpoint usage, and cross-provider activity."
           />
         </div>
         {isSdkConnected && (
@@ -135,7 +135,7 @@ export function CustomersTable({
             key={c.address}
             href={`/providers/${providerId}/wallet/${encodeURIComponent(c.address)}`}
             className={classNames(rowClass, "cust-row-link")}
-            aria-label={`Open details for wallet ${c.address}`}
+            aria-label={`Open wallet profile for ${c.address}`}
             style={{
               animation: `fade-up 240ms ${Math.min(i * 25, 200)}ms both ease-out`,
               textDecoration: "none",
@@ -144,18 +144,24 @@ export function CustomersTable({
           >
             <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
               <span className="row-indicator" />
-              <span
-                className="mono wallet-address-link"
-                style={{
-                  fontSize: 14,
-                  fontWeight: 600,
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                }}
-                title={c.address}
-              >
-                {c.address}
+              <span style={{ minWidth: 0 }}>
+                <span
+                  className="mono wallet-address-link"
+                  style={{
+                    display: "block",
+                    fontSize: 14,
+                    fontWeight: 600,
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}
+                  title={c.address}
+                >
+                  {c.address}
+                </span>
+                <span className="wallet-profile-hint" aria-hidden="true">
+                  Wallet profile →
+                </span>
               </span>
               {c.label && (
                 <span className="chip" style={{ fontSize: 11, padding: "1px 6px" }}>

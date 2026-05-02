@@ -739,10 +739,27 @@ a { color: inherit; text-decoration: none; }
   text-underline-offset: 3px;
   transition: color 140ms ease, text-decoration-color 140ms ease;
 }
+.wallet-profile-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+  color: var(--mesh-blue);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  opacity: 0.62;
+  transition: opacity 140ms ease, transform 140ms ease;
+}
 .cust-row-link:hover .wallet-address-link,
 .cust-row-link:focus-visible .wallet-address-link {
   color: var(--mesh-blue);
   text-decoration-color: currentColor;
+}
+.cust-row-link:hover .wallet-profile-hint,
+.cust-row-link:focus-visible .wallet-profile-hint {
+  opacity: 1;
+  transform: translateX(2px);
 }
 .cust-row.hero { background: var(--mesh-blue-dim); }
 .cust-row.hero:hover,
