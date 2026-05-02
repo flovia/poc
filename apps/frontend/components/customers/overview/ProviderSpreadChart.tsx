@@ -25,7 +25,6 @@ export function ProviderSpreadChart({ spread, providerName }: ProviderSpreadChar
     <OverviewCard
       eyebrow="Provider spread"
       title="How many providers each payer uses"
-      hint={hint}
     >
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         {spread.buckets.map((bucket, idx) => {
@@ -67,6 +66,9 @@ export function ProviderSpreadChart({ spread, providerName }: ProviderSpreadChar
             </div>
           );
         })}
+      </div>
+      <div style={{ marginTop: 12, fontSize: 13, lineHeight: 1.45, color: "var(--text-2)" }}>
+        {hint}
       </div>
     </OverviewCard>
   );
