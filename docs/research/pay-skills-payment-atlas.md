@@ -1,8 +1,8 @@
 # pay-skills Provider Payment Atlas
 
-Captured by direct HTTP probe of each provider's first paid endpoint listed in `https://storage.googleapis.com/pay-skills/v1/skills.json`. Every row below was decoded from a real 402 challenge returned by the provider's HTTPS service — no registry-side data is presented as a fact unless it appears in a saved raw response.
+Catalogues every provider in `https://storage.googleapis.com/pay-skills/v1/skills.json` together with the on-the-wire payment recipients they advertise via HTTP 402 challenges. Every recipient row is decoded from a real response captured by an unauthenticated probe; descriptive text (title, description, use_case, category) comes from the registry index itself.
 
-- Generated: 2026-05-04T21:57:28Z
+- Generated: 2026-05-04T22:06:15Z
 - Source index: `https://storage.googleapis.com/pay-skills/v1/skills.json` (66 providers)
 - Probe method: unauthenticated `curl` against `<service_url>/<first paid endpoint>`. **All** `payment-required` (x402) and **all** `WWW-Authenticate: Payment` (MPP) headers in the response are decoded — providers commonly emit one `WWW-Authenticate` per accepted token (USDC/USDT/CASH).
 - Sample size per provider: **1 endpoint**. Within a provider, `payTo` and accepted networks/assets are constant across endpoints (verified on `agentmail/email`); only `amount` varies. Different endpoints can occasionally drop networks (e.g., one endpoint of `agentmail/email` exposes only Solana+Base+Avalanche while another adds X Layer).
@@ -61,9 +61,84 @@ Captured by direct HTTP probe of each provider's first paid endpoint listed in `
 
 ---
 
-## Per-provider table
+## Provider descriptions
 
-Each row is one challenge offer (network × asset × payTo). A provider that accepts USDC, USDT, and CASH on Solana via MPP appears in three rows; a provider with multi-network x402 also expands across rows.
+`title`, `description`, `use_case`, `category`, and `service_url` are taken verbatim from the pay-skills registry index. Click `service_url` to reach the provider's gateway. Pricing range is the registry-declared min/max across all the provider's endpoints (not just the probed one).
+
+| Provider (fqn) | Title | Category | Service URL | Description | Use case | Endpoints | Price range (USD) |
+|----------------|-------|----------|-------------|-------------|----------|----------:|-------------------|
+| `agentmail/email` | AgentMail | messaging | <https://x402.api.agentmail.to> | Create and operate dedicated email inboxes for AI agents. Supports programmatic inbox creation, outbound sending, inbound message retrieval, unique agent addresses, workflow automation, and no manual account setup for email-based agent tasks. | Use for giving agents their own email address, sending outbound email, receiving replies, monitoring inboxes, automating email-based workflows, collecting verification messages, routing support mail, and managing correspondence without manual setup. | 83 | 0 – 10 |
+| `crushrewards/pricing` | Crush Rewards | data | <https://api.crushrewards.dev> | Track competitive retail pricing across Amazon, Walmart, Costco, Home Depot, Nordstrom, IKEA, and other US/Canadian retailers. Returns live prices, availability, deal alerts, brand positioning, inflation trends, and price-drop signals. | Use for comparing prices across major US and Canadian retailers, monitoring deal alerts, tracking price drops, checking product availability, analyzing brand positioning, competitive pricing research, ecommerce intelligence, and shopping recommendations. | 13 | 0 |
+| `dtelecom/voice` | dTelecom | ai_ml | <https://x402.dtelecom.org> | Use wallet-authenticated WebRTC voice, speech-to-text, and text-to-speech APIs for AI agents. Supports realtime bidirectional voice sessions, transcription, speech synthesis, low-latency communication, and pay-per-use voice workflows. | Use for realtime AI voice conversations, WebRTC calling, speech-to-text transcription, text-to-speech playback, voice agents, audio interfaces, agent-to-user communication, low-latency conversations, and programmable voice workflows. | 16 | 0 |
+| `merit-systems/stablecrypto/market-data` | StableCrypto | finance | <https://stablecrypto.dev> | Access crypto market and on-chain data through CoinGecko, DefiLlama, Alchemy, and Etherscan. Covers prices, DEX pools, DeFi TVL, yields, bridges, treasuries, token balances, transactions, contracts, logs, gas, and Ethereum stats. | Use for crypto prices, market charts, DeFi analytics, TVL and yield research, DEX pool data, wallet token balances, Ethereum transfers, contract metadata, gas estimates, bridge volume, stablecoin supply, treasury holdings, and blockchain monitoring. | 105 | 0.01 |
+| `merit-systems/stabledomains/domains` | StableDomains | productivity | <https://stabledomains.dev> | Register, renew, and manage DNS for domains via stablecoin micropayments. Supports common TLDs including .com, .org, .net, .io, .ai, .dev, .app, and .xyz, plus DNS record creation and updates without traditional registrar billing. | Use for domain registration, renewing existing names, managing DNS records, buying agent-owned domains, setting A/AAAA/CNAME/MX/TXT records, launching websites, configuring branded email, and handling registrar workflows through micropayments. | 10 | 0.1 – 1500 |
+| `merit-systems/stableemail/email` | StableEmail | messaging | <https://stableemail.dev> | Send email, buy dedicated inboxes, manage custom subdomains, and retrieve inbound messages through per-request email APIs. Supports shared relay sending, subdomain sender identities, forwarding inboxes, message storage, and attachment access. | Use for sending outbound emails, creating receiving inboxes, reading inbound messages, managing custom email subdomains, agent email workflows, forwarding inboxes, reply handling, verification messages, customer outreach, and per-message email delivery. | 24 | 0.001 – 8 |
+| `merit-systems/stableenrich/enrichment` | StableEnrich | data | <https://stableenrich.dev> | Unified enrichment gateway for Apollo, Exa, Firecrawl, Google Maps, Hunter, Minerva, Reddit, Serper, Whitepages, Cloudflare, and more. Covers people and company enrichment, web search, scraping, maps, email verification, and property data. | Use for contact enrichment, company lookup, prospect search, web search, page scraping, local business discovery, place details, email verification, social profile enrichment, Reddit research, news and shopping search, people search, and property records. | 32 | 0.002 – 0.44 |
+| `merit-systems/stablemerch/merchandise` | StableMerch | productivity | <https://stablemerch.dev> | Order custom printed merchandise from images or generated artwork via micropayments. Supports standard shirts, heavyweight shirts, mugs, multiple sizes and colors, uploaded image assets, worldwide shipping, and no traditional ecommerce checkout. | Use for creating and shipping custom shirts or mugs, turning AI-generated art into physical merchandise, ordering branded swag, fulfillment for user-provided images, gifts, prototypes, creator products, and agent-initiated print-on-demand workflows. | 3 | 0 |
+| `merit-systems/stablephone/calls` | StablePhone | messaging | <https://stablephone.dev> | Make AI-powered outbound phone calls, buy dedicated phone numbers, extend number leases, and look up iMessage or FaceTime capability. Supports call IDs, caller ID continuity, global phone workflows, and pay-per-call voice automation. | Use for AI phone calls, outbound voice tasks, call automation, dedicated caller ID numbers, renewing phone number leases, checking iMessage or FaceTime availability, appointment calls, reminders, surveys, support outreach, and phone-based agent workflows. | 7 | 0.05 – 20 |
+| `merit-systems/stablesocial/social-data` | StableSocial | media | <https://stablesocial.dev> | Retrieve social media data from TikTok, Instagram, Facebook, and Reddit. Covers profiles, posts, comments, followers, following lists, search results, subreddit content, engagement metrics, captions, authors, timestamps, and nested threads. | Use for social profile lookup, post retrieval, comment analysis, follower and following lists, TikTok/Instagram/Facebook/Reddit research, engagement metrics, subreddit monitoring, social listening, creator intelligence, and content discovery. | 37 | 0.06 |
+| `merit-systems/stablestudio/media-generation` | StableStudio | media | <https://stablestudio.dev> | Generate and edit AI images and videos with Sora, Veo, Wan, Grok, Seedance, GPT Image, Nano Banana Pro, and Flux. Supports text-to-video, image-to-video, image generation, image editing, reference uploads, async jobs, and dynamic pricing. | Use for AI video generation, image generation, image editing, reference uploads, text-to-video prompts, image-to-video animation, creative assets, ads, social content, product mockups, visual ideation, and choosing Sora, Veo, Flux, Grok, or Seedance. | 30 | 0.01 – 10 |
+| `merit-systems/stableupload/hosting` | StableUpload | storage | <https://stableupload.dev> | Upload files for permanent CDN URLs or deploy static websites from zip archives via micropayments. Supports durable artifact hosting, generated download links, static site subdomains, renewals, and simple file or site publishing for agents. | Use for hosting files, sharing generated artifacts, publishing static websites, uploading zip deployments, creating permanent CDN download URLs, serving images or documents, agent-generated deliverables, simple web hosting, and renewing site deployments. | 11 | 0.02 |
+| `paysponge/perplexity` | Perplexity AI API | ai_ml | <https://pplx.x402.paysponge.com> | Search the web and generate grounded Perplexity Sonar responses with citations, search results, related questions, structured JSON, async jobs, and multimodal inputs including text, images, files, PDFs, and video URLs. | Use for cited web answers, live research, grounded chat, web search snippets, model discovery, structured JSON generation, async deep-research workflows, multimodal question answering, and agent responses that rely on current sources. | 6 | 0.01 |
+| `paysponge/rentcast` | RentCast API | data | <https://rentcast.x402.paysponge.com> | Search US property records, sale listings, rental listings, market stats, rent estimates, and value estimates with geographic filters, structured housing attributes, listing detail lookups, and comparable-property data for real-estate workflows. | Use for US real-estate search, rental comps, home value estimates, rent estimates, ZIP-level market analysis, sale and rental listing lookup, property detail enrichment, investor research, and housing data workflows that need structured filters. | 10 | 0.01 |
+| `purch/marketplace` | Purch | productivity | <https://api.purch.xyz> | Search and buy products from Amazon and Shopify with USDC on Solana. Includes an AI shopping assistant, dynamic-priced product purchase flow, and Purch Vault for digital goods (skills, knowledge, personas) with downloadable artifacts. | Use for product search, Amazon and Shopify shopping, AI shopping assistance, price and review comparison, agent-initiated purchases with shipping address, and buying or downloading Purch Vault digital items like skills, knowledge bases, and personas. | 6 | 0.01 |
+| `quicknode/rpc` | QuickNode | compute | <https://x402.quicknode.com> | Pay-per-request JSON-RPC endpoints for 140+ blockchain networks. Each chain is its own path (e.g. solana-mainnet, ethereum-mainnet). Supports SIWX session auth, x402 micropayments, dynamic per-method pricing, and direct node access without infrastructure. | Use for blockchain JSON-RPC, querying account or contract state, submitting transactions, Solana RPC, EVM RPC, multi-chain dapps, block and transaction lookups, devnet/testnet access, and scalable chain reads with pay-per-request billing. | 137 | 0.001 |
+| `socialintel/influencer-search` | Social Intel | data | <https://api.socialintel.dev> | Find Instagram influencers across 33M+ profiles by niche, country, city, follower count, and gender. Returns username, bio, follower count, engagement metrics, business contact email (~50% coverage), and creator categories for marketing discovery. | Use for Instagram influencer discovery, creator search, niche keyword matching, audience demographics, engagement rate filtering, follower count ranges, geographic targeting, campaign planning, brand partnerships, and marketing lead lists. | 9 | 0.01 – 0.5 |
+| `solana-foundation/alibaba/agentexplorer` | Alibaba Cloud Agent Skills Explorer | search | <https://agentexplorer.alibaba.gateway-402.com> | Search and retrieve data with Alibaba Cloud Agent Skills Explorer, including retrieve the content of the Agent Skill file, obtain information about all Agent Skills categories, and search Alibaba Cloud Agent Skills, for search and discovery workflows. | Use for retrieve the content of the Agent Skill file, obtain information about all Agent Skills categories, search Alibaba Cloud Agent Skills, and related catalog discovery, skill lookup, and search routing. | 3 | 0.001 |
+| `solana-foundation/alibaba/aigen` | Alibaba Cloud AI Generation | ai_ml | <https://aigen.alibaba.gateway-402.com> | Run image and video analysis or generation with Alibaba Cloud AI Generation, including cosplay - Anime Character Generation, interactive Full-image Segmentation, and interactive Scribble-based Segmentation. | Use for cosplay - Anime Character Generation, interactive Full-image Segmentation, interactive Scribble-based Segmentation, and related image or video generation, enhancement, detection, segmentation, and visual analysis. | 3 | 0.001 |
+| `solana-foundation/alibaba/anytrans` | Alibaba Cloud AnyTrans | ai_ml | <https://anytrans.alibaba.gateway-402.com> | Translate and localize content with Alibaba Cloud AnyTrans, including text Translation, batch Text Translation, and batch Web Page Translation, for multilingual workflows. | Use for text Translation, batch Text Translation, batch Web Page Translation, and related translation, localization, and multilingual communication. | 3 | 0.001 |
+| `solana-foundation/alibaba/captcha` | Alibaba Cloud CAPTCHA | ai_ml | <https://captcha.alibaba.gateway-402.com> | Run moderation, verification, and risk checks with Alibaba Cloud CAPTCHA, including intelligent Verification Code Authentication. | Use for intelligent Verification Code Authentication, and related moderation, compliance, identity verification, fraud screening, and risk analysis. | 1 | 0.001 |
+| `solana-foundation/alibaba/cloudauth` | Alibaba Cloud Cloudauth | ai_ml | <https://cloudauth.alibaba.gateway-402.com> | Run moderation, verification, and risk checks with Alibaba Cloud Cloudauth, including aIGC Image Generation Detection, verification of Two, and three plus additional screening and verification operations. | Use for aIGC Image Generation Detection, verification of Two, three, and Four Elements of Bank Card, and related moderation, compliance, identity verification, fraud screening, and risk analysis. | 31 | 0.001 |
+| `solana-foundation/alibaba/cloudauth-intl` | Alibaba Cloud Cloudauth International | ai_ml | <https://cloudauth-intl.alibaba.gateway-402.com> | Run moderation, verification, and risk checks with Alibaba Cloud Cloudauth International, including address Similarity Comparison, address Verification, and address Verification V2. | Use for address Similarity Comparison, address Verification, address Verification V2, and related moderation, compliance, identity verification, fraud screening, and risk analysis. | 23 | 0.001 |
+| `solana-foundation/alibaba/contactcenterai` | Alibaba Cloud Contact Center AI | ai_ml | <https://contactcenterai.alibaba.gateway-402.com> | Analyze conversations, images, and assistant tasks with Alibaba Cloud Contact Center AI, including real-time Analysis of Audio Files, the Tongyi Xiaomi CCAI - Conversation Analysis AIO application by task type, and image Content Analysis. | Use for real-time Analysis of Audio Files, the Tongyi Xiaomi CCAI - Conversation Analysis AIO application by task type, image Content Analysis, and related conversation analysis, completion workflows, and multimodal assistant automation. | 6 | 0.001 |
+| `solana-foundation/alibaba/documentparseservice` | Alibaba Cloud Document Parse Service | ai_ml | <https://documentparseservice.alibaba.gateway-402.com> | Extract text and structured document data with Alibaba Cloud Document Parse Service, including document Mind Parsing, for OCR workflows. | Use for document Mind Parsing, and related document OCR, structured extraction, and image-to-text parsing. | 1 | 0.001 |
+| `solana-foundation/alibaba/edututor` | Alibaba Cloud EduTutor | ai_ml | <https://edututor.alibaba.gateway-402.com> | Extract text and structured document data with Alibaba Cloud EduTutor, including exam Paper Question Segmentation, for OCR workflows. | Use for exam Paper Question Segmentation, and related document OCR, structured extraction, and image-to-text parsing. | 1 | 0.001 |
+| `solana-foundation/alibaba/embeddings` | Alibaba Cloud Model Studio Embeddings | ai_ml | <https://embeddings.alibaba.gateway-402.com> | Create text embeddings with Alibaba Cloud Model Studio's OpenAI-compatible embeddings API for retrieval and semantic search. | Use for semantic search, retrieval, reranking pipelines, clustering, classification, and vector indexing. | 1 | 0.0007 |
+| `solana-foundation/alibaba/facebody` | Alibaba Cloud Facebody | ai_ml | <https://facebody.alibaba.gateway-402.com> | Run image and video analysis or generation with Alibaba Cloud Facebody, including face Information Desensitization, human Pose Keypoints, and face Comparison. | Use for face Information Desensitization, human Pose Keypoints, face Comparison, and related image or video generation, enhancement, detection, segmentation, and visual analysis. | 26 | 0.001 |
+| `solana-foundation/alibaba/farui` | Alibaba Cloud FaRui | ai_ml | <https://farui.alibaba.gateway-402.com> | Extract contract fields, generate review results, and answer legal questions with Alibaba Cloud FaRui. | Use for contract Extraction, generate contract review result, legal Consultation, and related contract review, legal extraction, compliance checks, and legal advisory workflows. | 5 | 0.001 |
+| `solana-foundation/alibaba/goodstech` | Alibaba Cloud Goods Tech | ai_ml | <https://goodstech.alibaba.gateway-402.com> | Run image and video analysis or generation with Alibaba Cloud Goods Tech, including product Categorization. | Use for product Categorization, and related image or video generation, enhancement, detection, segmentation, and visual analysis. | 1 | 0.001 |
+| `solana-foundation/alibaba/green` | Alibaba Cloud Green | ai_ml | <https://green.alibaba.gateway-402.com> | Run moderation, verification, and risk checks with Alibaba Cloud Green, including imageBatchModeration, imageModeration, and multiModalAgent. | Use for imageBatchModeration, imageModeration, multiModalAgent, and related moderation, compliance, identity verification, fraud screening, and risk analysis. | 6 | 0.001 |
+| `solana-foundation/alibaba/imageaudit` | Alibaba Cloud Image Audit | ai_ml | <https://imageaudit.alibaba.gateway-402.com> | Run moderation, verification, and risk checks with Alibaba Cloud Image Audit, including image Content Moderation and text Content Moderation. | Use for image Content Moderation, text Content Moderation, and related moderation, compliance, identity verification, fraud screening, and risk analysis. | 2 | 0.001 |
+| `solana-foundation/alibaba/imagerecog` | Alibaba Cloud Image Recognition | ai_ml | <https://imagerecog.alibaba.gateway-402.com> | Run image and video analysis or generation with Alibaba Cloud Image Recognition, including garbage Classification Detection, element Detection, and certificate Photo Quality Review. | Use for garbage Classification Detection, element Detection, certificate Photo Quality Review, and related image or video generation, enhancement, detection, segmentation, and visual analysis. | 9 | 0.001 |
+| `solana-foundation/alibaba/imageseg` | Alibaba Cloud Image Segmentation | ai_ml | <https://imageseg.alibaba.gateway-402.com> | Run image and video analysis or generation with Alibaba Cloud Image Segmentation, including sky Replacement, facial Feature Segmentation, and fine-Grained Mask Segmentation. | Use for sky Replacement, facial Feature Segmentation, fine-Grained Mask Segmentation, and related image or video generation, enhancement, detection, segmentation, and visual analysis. | 15 | 0.001 |
+| `solana-foundation/alibaba/intelligentspeechinteraction` | Alibaba Cloud Intelligent Speech Interaction | ai_ml | <https://intelligentspeechinteraction.alibaba.gateway-402.com> | Process speech and audio with Alibaba Cloud Intelligent Speech Interaction, including short-form voice command recognition, conversational speech input, and voice search, for transcription and voice workflows. | Use for short-form voice command recognition, conversational speech input, voice search, accessibility audio, and low-latency text-to-speech responses. | 2 | 0.0014 |
+| `solana-foundation/alibaba/iqs` | Alibaba Cloud Information Query Service | search | <https://iqs.alibaba.gateway-402.com> | Search and retrieve data with Alibaba Cloud Information Query Service, including enhanced Search, general Search, and globalSearch - International Version (To Be Published), for search and discovery workflows. | Use for enhanced Search, general Search, globalSearch - International Version (To Be Published), and related catalog discovery, skill lookup, and search routing. | 9 | 0.001 |
+| `solana-foundation/alibaba/ivpd` | Alibaba Cloud IVPD | ai_ml | <https://ivpd.alibaba.gateway-402.com> | Run image and video analysis or generation with Alibaba Cloud IVPD, including resize Image, element detection, and style Transfer. | Use for resize Image, element detection, style Transfer, and related image or video generation, enhancement, detection, segmentation, and visual analysis. | 9 | 0.001 |
+| `solana-foundation/alibaba/machinetranslation` | Alibaba Cloud Machine Translation | ai_ml | <https://machinetranslation.alibaba.gateway-402.com> | Translate text with Alibaba Cloud Machine Translation's REST APIs for general-purpose and e-commerce scenarios. | Use for synchronous text translation, localization, buyer-seller communication, and e-commerce content workflows that need Alibaba Cloud's classic translation engines. | 2 | 0.001 |
+| `solana-foundation/alibaba/objectdet` | Alibaba Cloud Object Detection | ai_ml | <https://objectdet.alibaba.gateway-402.com> | Run image and video analysis or generation with Alibaba Cloud Object Detection, including iPC Image Object Detection, cat and Mouse Recognition, and entity Detection. | Use for iPC Image Object Detection, cat and Mouse Recognition, entity Detection, and related image or video generation, enhancement, detection, segmentation, and visual analysis. | 8 | 0.001 |
+| `solana-foundation/alibaba/ocr` | Alibaba Cloud Model Studio OCR | ai_ml | <https://ocr.alibaba.gateway-402.com> | Extract text and structured content from images with Qwen OCR through Alibaba Cloud Model Studio's OpenAI-compatible chat completions API. | Use for receipt extraction, invoice parsing, document OCR, table extraction, and multilingual image text recognition. | 1 | 0.001 |
+| `solana-foundation/alibaba/ocr-api` | Alibaba Cloud OCR API | ai_ml | <https://ocr-api.alibaba.gateway-402.com> | Extract text and structured document data with Alibaba Cloud OCR API, including high-Precision Full-Text Recognition, air Travel Itinerary Recognition, and unified OCR Recognition, for OCR workflows. | Use for high-Precision Full-Text Recognition, air Travel Itinerary Recognition, unified OCR Recognition, and related document OCR, structured extraction, and image-to-text parsing. | 75 | 0.001 |
+| `solana-foundation/alibaba/paimodelgallery` | Alibaba Cloud PAI Model Gallery | ai_ml | <https://paimodelgallery.alibaba.gateway-402.com> | Search and retrieve data with Alibaba Cloud PAI Model Gallery, including retrieve the ModelGallery model list, for search and discovery workflows. | Use for retrieve the ModelGallery model list, and related catalog discovery, skill lookup, and search routing. | 1 | 0.001 |
+| `solana-foundation/alibaba/rai` | Alibaba Cloud Responsible AI | ai_ml | <https://rai.alibaba.gateway-402.com> | Run moderation, verification, and risk checks with Alibaba Cloud Responsible AI, including batch content synchronization detection, synchronize detection for a single piece of content, and synchronous Detection of Model Input Content. | Use for batch content synchronization detection, synchronize detection for a single piece of content, synchronous Detection of Model Input Content, and related moderation, compliance, identity verification, fraud screening, and risk analysis. | 4 | 0.001 |
+| `solana-foundation/alibaba/saf` | Alibaba Cloud SAF | ai_ml | <https://saf.alibaba.gateway-402.com> | Run moderation, verification, and risk checks with Alibaba Cloud SAF, including multi-Scenario Risk Identification and Detection, decision Engine for Malaysian Cluster, and decision Engine Singapore Cluster. | Use for multi-Scenario Risk Identification and Detection, decision Engine for Malaysian Cluster, decision Engine Singapore Cluster, and related moderation, compliance, identity verification, fraud screening, and risk analysis. | 4 | 0.001 |
+| `solana-foundation/alibaba/speech` | Alibaba Cloud Model Studio Speech Recognition | ai_ml | <https://speech.alibaba.gateway-402.com> | Transcribe audio files with Qwen ASR through Alibaba Cloud Model Studio's asynchronous speech recognition API. | Use for audio transcription, meeting notes, subtitle generation, interview transcription, voice note processing, and multilingual speech-to-text. | 2 | 3.5e-05 |
+| `solana-foundation/alibaba/texttospeech` | Alibaba Cloud Model Studio Text-to-Speech | ai_ml | <https://texttospeech.alibaba.gateway-402.com> | Synthesize speech with Qwen TTS through Alibaba Cloud Model Studio's multimodal generation API. | Use for voiceovers, accessibility audio, narration, dubbing, spoken product copy, and synthetic voice generation. | 1 | 0 |
+| `solana-foundation/alibaba/translate` | Alibaba Cloud Model Studio Translation | ai_ml | <https://translate.alibaba.gateway-402.com> | Translate text with Qwen-MT through Alibaba Cloud Model Studio's OpenAI-compatible chat completions API. | Use for single-turn machine translation, localization, multilingual content generation, and cross-language messaging. | 1 | 0.001 |
+| `solana-foundation/alibaba/viapi-ocr` | Alibaba Cloud OCR (VIAPI) | ai_ml | <https://viapi-ocr.alibaba.gateway-402.com> | Extract text and structured document data with Alibaba Cloud OCR (VIAPI), including bank Card Recognition, business License Recognition, and general Recognition, for OCR workflows. | Use for bank Card Recognition, business License Recognition, general Recognition, and related document OCR, structured extraction, and image-to-text parsing. | 15 | 0.001 |
+| `solana-foundation/alibaba/videoenhan` | Alibaba Cloud Video Enhancement | ai_ml | <https://videoenhan.alibaba.gateway-402.com> | Run image and video analysis or generation with Alibaba Cloud Video Enhancement, including video Rendering Intent, video Aspect Ratio Transformation, and video Portrait Enhancement. | Use for video Rendering Intent, video Aspect Ratio Transformation, video Portrait Enhancement, and related image or video generation, enhancement, detection, segmentation, and visual analysis. | 10 | 0.001 |
+| `solana-foundation/alibaba/videorecog` | Alibaba Cloud Video Recognition | ai_ml | <https://videorecog.alibaba.gateway-402.com> | Run image and video analysis or generation with Alibaba Cloud Video Recognition, including shot parsing, video Quality Assessment, and video Thumbnail. | Use for shot parsing, video Quality Assessment, video Thumbnail, and related image or video generation, enhancement, detection, segmentation, and visual analysis. | 6 | 0.001 |
+| `solana-foundation/alibaba/videoseg` | Alibaba Cloud Video Segmentation | ai_ml | <https://videoseg.alibaba.gateway-402.com> | Run image and video analysis or generation with Alibaba Cloud Video Segmentation, including video Portrait Segmentation. | Use for video Portrait Segmentation, and related image or video generation, enhancement, detection, segmentation, and visual analysis. | 1 | 0.001 |
+| `solana-foundation/google/addressvalidation` | Address Validation API | maps | <https://addressvalidation.google.gateway-402.com> | Validate, normalize, and geocode postal addresses worldwide. Returns deliverability verdicts, address component fixes, geocoded coordinates, USPS metadata, plus residential, commercial, and PO Box handling across 200+ countries. | Use for checkout and shipping validation, CRM address cleanup, fraud checks, geocoding, postal code validation, deliverability scoring, standardizing user-entered addresses, and confirming residential, business, or PO Box destinations. | 1 | 0.001 |
+| `solana-foundation/google/airquality` | Air Quality API | maps | <https://airquality.google.gateway-402.com> | Look up current, historical, and forecast air quality for global coordinates. Returns AQI, pollutant concentrations (PM2.5, PM10, O3, NO2, SO2, CO), health recommendations, local indexes, and heatmap tiles for maps. | Use for pollution checks, health risk guidance, outdoor activity planning, environmental monitoring, travel decisions, climate dashboards, school or workplace safety alerts, and map overlays showing AQI or pollutant heatmaps. | 4 | 0.001 |
+| `solana-foundation/google/bigquery` | BigQuery API | data | <https://bigquery.google.gateway-402.com> | Run SQL over BigQuery and 255 public datasets: crypto, weather, healthcare, genomics, patents, GitHub, PyPI, Stack Overflow, census, Wikipedia, real estate, transportation, satellite imagery, NLP corpora, SEC filings, and IoT. | Use for data analytics, market research, fact-finding from public datasets, blockchain and crypto analysis, weather and climate queries, SQL exploration, benchmark datasets, investigative research, and large-scale structured data retrieval. | 2 | 0 |
+| `solana-foundation/google/civicinfo` | Google Civic Information API | search | <https://civicinfo.google.gateway-402.com> | Look up US civic data by address: elected representatives, offices, political divisions, elections, polling locations, ballot contests, and voter guidance, with official contact info, social links, photos, and district metadata. | Use for finding elected officials, election lookup, polling place search, ballot and contest research, political district mapping, civic engagement tools, voter guidance, officeholder contact data, and address-to-district resolution. | 3 | 0 |
+| `solana-foundation/google/documentai` | Cloud Document AI API | ai_ml | <https://documentai.google.gateway-402.com> | Extract structured data from PDFs, scans, and document images using OCR and ML. Handles invoices, receipts, forms, contracts, tax documents, IDs, and custom schemas, returning text, tables, entities, fields, and confidence signals. | Use for invoice and receipt parsing, OCR on scanned files, form digitization, contract analysis, tax document processing, ID extraction, table extraction, document classification, custom schema extraction, and human-review workflows. | 0 | 0 |
+| `solana-foundation/google/factchecktools` | Fact Check Tools API | search | <https://factchecktools.google.gateway-402.com> | Search Google ClaimReview fact-check data across 100+ publishers. Returns checked claims, ratings, claimants, publishers, review URLs, claim dates, and pages for politics, health, science, viral images, and misinformation. | Use for claim verification, misinformation checks, media literacy tools, newsroom research, health or science claim review, political fact-check lookup, viral rumor triage, source citation, and finding prior fact-check coverage. | 1 | 0 |
+| `solana-foundation/google/generativelanguage` | Generative Language API (Gemini) | ai_ml | <https://generativelanguage.google.gateway-402.com> | Use Google Gemini models for text generation, multimodal image/audio/video understanding, chat, embeddings, code generation, JSON output, function calling, cached context, file search, grounding with Google Search, and fine-tuned models. | Use for AI chat, text generation, summarization, code help, image and video understanding, embeddings, semantic retrieval, tool calling, structured JSON output, grounded answers, batch generation, cached prompts, and tuned model workflows. | 1 | 0 |
+| `solana-foundation/google/kgsearch` | Knowledge Graph Search API | search | <https://kgsearch.google.gateway-402.com> | Search Google Knowledge Graph for entities including people, places, organizations, events, and things. Returns canonical names, descriptions, types, URLs, images, detailed scores, and structured identifiers from 500B+ facts. | Use for entity lookup, name disambiguation, canonical descriptions, enriching search results, finding official URLs or images, resolving people, places, brands, and organizations, and attaching structured knowledge to records. | 1 | 0 |
+| `solana-foundation/google/language` | Cloud Natural Language API | ai_ml | <https://language.google.gateway-402.com> | Analyze text with Google NLP: sentiment, emotion, named entities, entity salience, content categories, moderation categories, syntax, and all-in-one annotation. Supports multilingual text analytics for documents, reviews, tickets, and articles. | Use for sentiment analysis, opinion mining, entity extraction, content classification, moderation triage, support ticket routing, review analytics, article tagging, syntax analysis, document annotation, and multilingual text intelligence. | 5 | 0.001 – 0.002 |
+| `solana-foundation/google/places` | Places API (New) | maps | <https://places.google.gateway-402.com> | Search and inspect Google Places worldwide. Find businesses and points of interest, run nearby or text search, autocomplete addresses, retrieve place details, ratings, reviews, hours, photos, contact info, websites, and location metadata. | Use for restaurant and business search, hotel and POI lookup, local discovery, address autocomplete, nearby search, ratings and review lookup, opening-hours checks, store locators, lead generation, and place metadata enrichment. | 3 | 0.001 |
+| `solana-foundation/google/speech` | Cloud Speech-to-Text API | ai_ml | <https://speech.google.gateway-402.com> | Convert speech audio to text with Google Speech-to-Text. Supports 125+ languages, short and long audio, streaming-style workflows, speaker diarization, word timestamps, phrase hints, custom classes, profanity filtering, and punctuation. | Use for audio transcription, meeting notes, podcast and video captions, call center analytics, voice command processing, accessibility, diarized conversations, timestamped transcripts, domain vocabulary hints, and long audio jobs. | 1 | 0.016 |
+| `solana-foundation/google/texttospeech` | Cloud Text-to-Speech API | ai_ml | <https://texttospeech.google.gateway-402.com> | Generate natural-sounding speech from text or SSML in 50+ languages and 380+ voices. Supports pitch, speed, effects profiles, MP3/WAV/OGG output, long-form synthesis, and Neural2/Studio voice models for production audio. | Use for voiceovers, IVR and phone prompts, accessibility audio, audiobook generation, language learning, pronunciation previews, product narration, support bots, podcast snippets, SSML-controlled speech, and long-form narration. | 2 | 3e-05 |
+| `solana-foundation/google/translate` | Cloud Translation API | ai_ml | <https://translate.google.gateway-402.com> | Translate text and documents across 130+ languages. Supports language detection, romanization, synchronous and batch translation, glossaries for domain terminology, adaptive MT datasets, custom models, and document formatting. | Use for multilingual content, localization, document translation, language detection, cross-language communication, glossary-controlled terminology, romanization, batch translation jobs, adaptive MT, and custom translation models. | 0 | 0 |
+| `solana-foundation/google/videointelligence` | Cloud Video Intelligence API | ai_ml | <https://videointelligence.google.gateway-402.com> | Analyze video content asynchronously with Google Video Intelligence. Detect labels, shots, explicit content, speech, on-screen text, logos, object tracks, scene changes, and searchable metadata for uploaded or cloud-hosted videos. | Use for video indexing, content moderation, scene and shot detection, object tracking, logo recognition, OCR on video frames, speech transcription, media search, compliance review, archive tagging, and extracting structured video metadata. | 1 | 0.1 |
+| `solana-foundation/google/vision` | Cloud Vision API | ai_ml | <https://vision.google.gateway-402.com> | Analyze images with Google Cloud Vision ML. Detect objects, faces, text/OCR, labels, landmarks, logos, safe-search signals, web entities, crop hints, dominant colors, and product-search reference images across image, PDF, and TIFF inputs. | Use for OCR, image labeling, object and face detection, content moderation, logo and landmark recognition, product search, PDF/TIFF text extraction, web entity lookup, crop hints, color analysis, and visual metadata enrichment. | 4 | 0.0015 |
+
+---
+
+## Per-provider payment table
+
+Each row is one challenge offer (network × asset × payTo). A provider that accepts USDC, USDT, and CASH on Solana via MPP appears in three rows; a provider with multi-network x402 also expands across rows. See the **Provider descriptions** section above for what each provider does.
 
 | Provider (fqn) | Title | Category | Protocol | Chain | Asset | payTo | Probe price (USD) |
 |----------------|-------|----------|----------|-------|-------|-------|------------------:|
@@ -471,6 +546,7 @@ These providers did not return a parseable 402 challenge for the probed endpoint
 - Some Solana MPP responses include `splits[]` describing fee distribution to operator/platform recipients in addition to the primary `recipient`. Only the primary `recipient` is shown above.
 - The probe captures one snapshot in time. Provider operators can rotate `payTo`, change supported networks, or update prices without notice.
 - Recipient addresses are returned as Base58 (Solana) or hex (EVM). EVM addresses are not normalized to checksum case — they are reproduced exactly as the provider returned them.
+- The **Provider descriptions** section is sourced from `skills.json` directly (registry text), not from probe responses. The other sections are sourced from probes.
 
 ---
 
@@ -492,7 +568,7 @@ The pay-skills registry is published as a static GCS bucket. The GitHub source r
 mkdir -p /tmp/pay-skills/providers
 cd /tmp/pay-skills
 
-# 1a. Fetch the index of all providers.
+# 1a. Fetch the index of all providers (description, use_case, service_url, etc.).
 curl -s https://storage.googleapis.com/pay-skills/v1/skills.json -o index.json
 
 # 1b. Extract the list of fully-qualified provider names (fqn).
@@ -510,48 +586,7 @@ After this step you have `index.json` plus 66 per-provider JSON files under `pro
 
 ### Step 2 — Choose one probe target per provider
 
-Each provider exposes many endpoints. We pick one representative endpoint per provider, preferring paid endpoints whose registry-side probe already succeeded.
-
-```sh
-cat > select_endpoints.py <<'PYEOF'
-import json, os
-base = "/tmp/pay-skills/providers"
-with open("/tmp/pay-skills/fqns.txt") as f:
-    fqns = [l.strip() for l in f if l.strip()]
-out = []
-def price(e):
-    try: return e["pricing"]["dimensions"][0]["tiers"][0].get("price_usd", 0) or 0
-    except Exception: return 0
-for fqn in fqns:
-    with open(os.path.join(base, fqn + ".json")) as fh:
-        d = json.load(fh)
-    eps = d.get("endpoints") or []
-    paid_ok = [e for e in eps if price(e) > 0 and e.get("probe_status") == "ok"]
-    paid_any = [e for e in eps if price(e) > 0]
-    fallback = [e for e in eps if e.get("probe_status") == "ok"]
-    chosen = (paid_ok or paid_any or fallback or eps or [None])[0]
-    if chosen is None:
-        out.append({"fqn": fqn, "service_url": d.get("service_url"), "skip": "no_endpoints"})
-        continue
-    out.append({
-        "fqn": fqn,
-        "service_url": d.get("service_url"),
-        "method": chosen.get("method"),
-        "path": chosen.get("path"),
-        "price_usd": price(chosen),
-        "protocol": chosen.get("protocol") or [],
-        "supported_usd": chosen.get("supported_usd") or [],
-        "probe_status": chosen.get("probe_status"),
-        "category": d.get("category"),
-        "title": d.get("title"),
-    })
-with open("/tmp/pay-skills/targets.json", "w") as fh:
-    json.dump(out, fh, indent=2)
-PYEOF
-python3 select_endpoints.py
-```
-
-`targets.json` now has one chosen endpoint per provider.
+Each provider exposes many endpoints. We pick one representative endpoint per provider, preferring paid endpoints whose registry-side probe already succeeded. (Script omitted for brevity — see `/tmp/pay-skills/select_endpoints.py` in the working directory.)
 
 ### Step 3 — Probe each endpoint and capture every 402 challenge
 
@@ -560,88 +595,7 @@ We send an unauthenticated request to each target. POST/PUT/PATCH requests get a
 - **x402**: response carries one `payment-required` header; its base64-JSON body has `accepts[]` enumerating every (network, asset, payTo) tuple.
 - **MPP**: response can carry **multiple** `WWW-Authenticate: Payment id="…", method="…", request="<base64-json>"` headers — typically one per token (USDC/USDT/CASH). Decode every one of them.
 
-```sh
-cat > probe.py <<'PYEOF'
-import json, os, subprocess, base64, time, re
-with open("/tmp/pay-skills/targets.json") as f:
-    targets = json.load(f)
-os.makedirs("/tmp/pay-skills/raw", exist_ok=True)
-results = []
-for i, t in enumerate(targets):
-    fqn = t["fqn"]
-    if t.get("skip"):
-        results.append({"fqn": fqn, "error": t["skip"]})
-        continue
-    base_url = (t["service_url"] or "").rstrip("/")
-    p = (t["path"] or "").lstrip("/")
-    url = f"{base_url}/{p}"
-    method = (t.get("method") or "GET").upper()
-    cmd = ["curl", "-sS", "-i", "--max-time", "20", "-X", method, url]
-    if method in ("POST", "PUT", "PATCH"):
-        cmd += ["-H", "content-type: application/json", "-d", "{}"]
-    try:
-        r = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
-        raw = r.stdout
-    except Exception as e:
-        results.append({"fqn": fqn, "url": url, "method": method, "error": f"curl_failed:{e}"})
-        continue
-    safe = fqn.replace("/", "__")
-    with open(f"/tmp/pay-skills/raw/{safe}.txt", "w") as fh:
-        fh.write(raw)
-    header_block, _, body = raw.partition("\r\n\r\n")
-    if not body:
-        header_block, _, body = raw.partition("\n\n")
-    lines = header_block.splitlines()
-    status = None
-    if lines:
-        m = re.match(r"HTTP/[\d.]+\s+(\d+)", lines[0])
-        if m: status = int(m.group(1))
-    headers_multi = {}  # keep duplicates
-    for line in lines[1:]:
-        if ":" in line:
-            k, v = line.split(":", 1)
-            k = k.strip().lower(); v = v.strip()
-            headers_multi.setdefault(k, []).append(v)
-    entry = {
-        "fqn": fqn, "url": url, "method": method,
-        "category": t.get("category"), "title": t.get("title"),
-        "registry_price_usd": t.get("price_usd"),
-        "http_status": status, "accepts": [], "mpp_requests": [],
-    }
-    for hdr in ("payment-required", "x-payment-required", "x-payment-accepts"):
-        for v in headers_multi.get(hdr, []):
-            try:
-                data = json.loads(base64.b64decode(v + "==").decode("utf-8", errors="replace"))
-                entry["accepts"].extend(data.get("accepts") or [])
-                entry["challenge_resource"] = data.get("resource")
-            except Exception as e:
-                entry.setdefault("decode_errors", []).append(f"{hdr}: {e}")
-    for v in headers_multi.get("www-authenticate", []):
-        if "Payment" not in v: continue
-        m = re.search(r'request="([^"]+)"', v)
-        if not m: continue
-        try:
-            req = json.loads(base64.b64decode(m.group(1) + "==").decode("utf-8", errors="replace"))
-            id_match = re.search(r'id="([^"]+)"', v)
-            method_match = re.search(r'method="([^"]+)"', v)
-            entry["mpp_requests"].append({
-                "id": id_match.group(1) if id_match else None,
-                "method": method_match.group(1) if method_match else None,
-                "request": req,
-            })
-        except Exception as e:
-            entry.setdefault("decode_errors", []).append(f"www-authenticate: {e}")
-    results.append(entry)
-    time.sleep(0.15)  # polite pacing
-with open("/tmp/pay-skills/probe-results.json", "w") as fh:
-    json.dump(results, fh, indent=2)
-PYEOF
-python3 probe.py
-```
-
-Outputs:
-- `probe-results.json` — structured probe output with parsed `accepts[]` (x402) and `mpp_requests[]` (MPP, one entry per token variant).
-- `raw/<fqn>.txt` — the full HTTP response (status line + headers + body) for each provider, useful for re-parsing with different rules later.
+Probe results land in `probe-results.json` plus `raw/<fqn>.txt` (the full HTTP response). The full `probe.py` script lives in the working directory.
 
 ### Step 4 — Normalize and render
 
@@ -651,7 +605,7 @@ Map raw fields to friendly labels:
 - MPP variants: `methodDetails.chainId == 4217` → Tempo; `methodDetails.network == "mainnet"` → Solana mainnet.
 - Amount: `amount` is in the asset's smallest unit; divide by `10**decimals` (6 for USDC/USDT/CASH) to get USD.
 
-Both the row builder and the markdown renderer are short Python scripts; see the working copies in `/tmp/pay-skills/` (`build_report_v2.py`, `render_md_v2.py`).
+The renderer reads `report-rows.json` (probe-derived rows) **and** `index.json` (registry text fields) to produce both the **Provider descriptions** and **Per-provider payment table** sections.
 
 ### How to verify a single row by hand
 
@@ -666,12 +620,12 @@ curl -sS -i -X POST "https://stableenrich.dev/api/apollo/org-enrich" \
 curl -sS -i -X GET "https://agentexplorer.alibaba.gateway-402.com/openapi/categories" \
   | grep -i '^www-authenticate:' \
   | sed -nE 's/.*request="([^"]+)".*/\1/p' \
-  | while read enc; do echo "$enc" | base64 -d | jq -c '.recipient + " " + .currency'; done
+  | while read enc; do echo "$enc" | base64 -d | jq -c '{recipient, currency, amount}'; done
 ```
 
 ### Refresh policy
 
-- The pay-skills index (`skills.json`) is rebuilt by Solana Foundation's CI on each merge to the `pay-skills` repo (full rebuild) or a partial rebuild for changed providers. Re-run Step 1 to pick up new providers.
+- The pay-skills index (`skills.json`) is rebuilt by Solana Foundation's CI on each merge to the `pay-skills` repo (full rebuild) or a partial rebuild for changed providers. Re-run Step 1 to pick up new providers and updated descriptions.
 - Provider operators can rotate `payTo` at any time. Re-running Steps 3–4 against the existing `targets.json` is sufficient to refresh recipient addresses without re-fetching the registry.
 - The 13 providers in the **Providers without a usable challenge** section can usually be recovered by either (a) sending a body that satisfies the OpenAPI schema, or (b) probing a different endpoint. Both are out of scope for this baseline snapshot.
 
@@ -679,7 +633,7 @@ curl -sS -i -X GET "https://agentexplorer.alibaba.gateway-402.com/openapi/catego
 
 | Path | Purpose |
 |------|---------|
-| `index.json` | Snapshot of `skills.json` |
+| `index.json` | Snapshot of `skills.json` (used both for fqn enumeration and the description table) |
 | `fqns.txt` | List of provider fqns from `index.json` |
 | `providers/<fqn>.json` | Per-provider normalized JSON from the registry |
 | `targets.json` | Chosen probe endpoint per provider |
