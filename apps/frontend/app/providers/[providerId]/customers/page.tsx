@@ -5,6 +5,7 @@ import { CustomersHeader } from "@/components/customers/CustomersHeader";
 import { CustomersOverview } from "@/components/customers/overview/CustomersOverview";
 import { SnapshotIndicator } from "@/components/customers/SnapshotIndicator";
 import { getCustomers, getProviders, getSdkExtrasMap, getSummary } from "@/lib/data-source";
+import { buildNoCustomerFactsNotice } from "@/lib/customers/empty-state";
 import { findProviderByRouteId } from "@/lib/providers";
 import { getTopBarPageContext } from "@/lib/server/page-context";
 
@@ -31,6 +32,7 @@ export default async function CustomersPage({
   const totalSpendAtomic = customers
     .reduce((acc, c) => acc + BigInt(c.spendAtomic), 0n)
     .toString();
+  const noCustomerFactsNotice = buildNoCustomerFactsNotice(activeProvider, customers.length);
 
   return (
     <>
@@ -75,11 +77,33 @@ export default async function CustomersPage({
             <SnapshotIndicator generatedAt={summary.generatedAt} />
           </div>
 
-          <CustomersOverview
-            customers={customers}
-            totalSpendAtomic={totalSpendAtomic}
-            providerName={activeProvider?.name ?? providerId}
-          />
+          {noCustomerFactsNotice ? (
+            <article
+              className="card"
+              style={{ padding: 24, marginBottom: 20, borderColor: "rgba(245, 158, 11, 0.35)" }}
+            >
+              <div style={{ fontSize: 16, fontWeight: 700, color: "var(--text-1)", marginBottom: 8 }}>
+                {noCustomerFactsNotice.title}
+              </div>
+              <p style={{ margin: 0, color: "var(--text-2)", lineHeight: 1.6, maxWidth: 820 }}>
+                {noCustomerFactsNotice.body}
+              </p>
+              <div
+                className="mono"
+                style={{ marginTop: 14, display: "grid", gap: 4, color: "var(--text-3)", fontSize: 12 }}
+              >
+                {noCustomerFactsNotice.details.map((detail) => (
+                  <span key={detail}>{detail}</span>
+                ))}
+              </div>
+            </article>
+          ) : (
+            <CustomersOverview
+              customers={customers}
+              totalSpendAtomic={totalSpendAtomic}
+              providerName={activeProvider?.name ?? providerId}
+            />
+          )}
 
           <CustomersBrowser
             customers={customers}
