@@ -55,6 +55,48 @@ export const EvmAddressSchema = z.preprocess(
     .transform((value) => value.toLowerCase()),
 );
 
+const EVM_ADDRESS_PATTERN = /^0[xX][a-fA-F0-9]{40}$/;
+const SOLANA_ADDRESS_PATTERN = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
+const SPL_TOKEN_PATTERN = /^SPL:[1-9A-HJ-NP-Za-km-z]{32,44}$/;
+const ERC20_TOKEN_PATTERN = /^ERC20:0[xX][a-fA-F0-9]{40}$/;
+
+export const PaymentRecipientAddressSchema = z.preprocess(
+  (value) => (typeof value === "string" ? value.trim() : value),
+  z
+    .string()
+    .min(1)
+    .refine(
+      (value) =>
+        EVM_ADDRESS_PATTERN.test(value) ||
+        SOLANA_ADDRESS_PATTERN.test(value) ||
+        SPL_TOKEN_PATTERN.test(value) ||
+        ERC20_TOKEN_PATTERN.test(value),
+      "Invalid payment recipient address (expected EVM hex, Solana base58, SPL:..., or ERC20:0x...)",
+    )
+    .transform((value) => {
+      if (EVM_ADDRESS_PATTERN.test(value)) {
+        return value.toLowerCase();
+      }
+      if (ERC20_TOKEN_PATTERN.test(value)) {
+        const [prefix, hex] = value.split(":");
+        return `${prefix}:${hex.toLowerCase()}`;
+      }
+      return value;
+    }),
+);
+
+export type PaymentRecipientAddress = z.infer<typeof PaymentRecipientAddressSchema>;
+
+export const normalizePaymentRecipientAddress = (value: string): string => {
+  const trimmed = value.trim();
+  if (EVM_ADDRESS_PATTERN.test(trimmed)) return trimmed.toLowerCase();
+  if (ERC20_TOKEN_PATTERN.test(trimmed)) {
+    const [prefix, hex] = trimmed.split(":");
+    return `${prefix}:${hex.toLowerCase()}`;
+  }
+  return trimmed;
+};
+
 export const LabelSchema = z.string().min(1).nullable();
 
 export type EvmAddress = z.infer<typeof EvmAddressSchema>;
@@ -438,6 +480,7 @@ export type MockEndpointAttributionFixture = z.infer<typeof MockEndpointAttribut
 export const PhaseBResponseScopeSchema = z
   .object({
     providerId: z.string().min(1).optional(),
+    serviceId: z.string().min(1).optional(),
     network: z.string().min(1).optional(),
     asset: z.string().min(1).optional(),
     payTo: z.string().min(1).optional(),
@@ -449,7 +492,7 @@ export type PhaseBResponseScope = z.infer<typeof PhaseBResponseScopeSchema>;
 export const PhaseBCustomerListItemSchema = withDerivedInsightReasons(
   z
     .object({
-      address: EvmAddressSchema,
+      address: PaymentRecipientAddressSchema,
       label: LabelSchema,
       observationCount: z.number().int().nonnegative(),
       spendAtomic: AtomicAmountSchema,
@@ -457,6 +500,9 @@ export const PhaseBCustomerListItemSchema = withDerivedInsightReasons(
       lastSeenAt: z.string().datetime().optional(),
       activityGrowth: z.number(),
       upsellOpportunity: z.enum(["low", "medium", "high"]),
+      chains: z.array(z.string().min(1)).optional(),
+      assets: z.array(z.string().min(1)).optional(),
+      spendByAsset: z.record(z.string().min(1), AtomicAmountSchema).optional(),
       provenance: DataProvenanceSchema,
       provenanceByField: ProvenanceByFieldSchema,
       evidence: z.array(EvidenceLabelSchema).optional(),
@@ -492,6 +538,15 @@ export const PhaseBCustomerListResponseSchema = withDerivedInsightReasons(
 
 export type PhaseBCustomerListResponse = z.infer<typeof PhaseBCustomerListResponseSchema>;
 
+export const PaymentProtocolSchema = z.enum(["x402", "MPP"]);
+
+export const PriceRangeUsdSchema = z
+  .object({
+    min: z.number().nonnegative(),
+    max: z.number().nonnegative(),
+  })
+  .strict();
+
 export const ProviderCatalogRowSchema = withDerivedInsightReasons(
   z
     .object({
@@ -517,6 +572,15 @@ export const ProviderCatalogRowSchema = withDerivedInsightReasons(
       attributionConfidence: z.number().min(0).max(1),
       hasCustomerFacts: z.boolean(),
       customerFactCount: z.number().int().nonnegative(),
+      title: z.string().min(1).optional(),
+      description: z.string().min(1).optional(),
+      useCase: z.string().min(1).optional(),
+      category: z.string().min(1).optional(),
+      serviceUrl: z.string().url().optional(),
+      protocol: PaymentProtocolSchema.optional(),
+      chain: z.string().min(1).optional(),
+      assetSymbol: z.string().min(1).optional(),
+      priceRangeUsd: PriceRangeUsdSchema.optional(),
       provenance: DataProvenanceSchema,
       provenanceByField: ProvenanceByFieldSchema,
       reasons: z.array(EvidenceLabelSchema).optional(),
@@ -554,7 +618,7 @@ export type ProviderCatalogResponse = z.infer<typeof ProviderCatalogResponseSche
 export const PhaseBCustomerProfileIdentitySchema = withDerivedInsightReasons(
   z
     .object({
-      address: EvmAddressSchema,
+      address: PaymentRecipientAddressSchema,
       label: LabelSchema,
       network: z.string().min(1),
       asset: z.string().min(1),
@@ -605,13 +669,19 @@ export const PhaseBCustomerProfileProviderSchema = withDerivedInsightReasons(
       providerId: z.string().min(1),
       name: z.string().min(1),
       providerName: z.string().min(1).optional(),
-      payToWallet: EvmAddressSchema,
+      payToWallet: PaymentRecipientAddressSchema,
       spendAtomic: AtomicAmountSchema,
       transactionCount: z.number().int().nonnegative(),
       txCount: z.number().int().nonnegative().optional(),
       firstSeenAt: z.string().datetime().optional(),
       lastSeenAt: z.string().datetime().optional(),
       confidence: z.number().min(0).max(1),
+      description: z.string().min(1).optional(),
+      category: z.string().min(1).optional(),
+      serviceUrl: z.string().url().optional(),
+      protocol: PaymentProtocolSchema.optional(),
+      chain: z.string().min(1).optional(),
+      assetSymbol: z.string().min(1).optional(),
       provenance: DataProvenanceSchema,
       provenanceByField: ProvenanceByFieldSchema,
       reasons: z.array(EvidenceLabelSchema).optional(),
@@ -746,7 +816,7 @@ export const PhaseBCustomerUpsellMetricsResponseSchema = withDerivedInsightReaso
     .object({
       generatedAt: z.string().datetime(),
       generatedFrom: z.string().min(1),
-      address: EvmAddressSchema,
+      address: PaymentRecipientAddressSchema,
       sourceGeneratedAt: z.string().datetime(),
       signals: PhaseBCustomerUpsellSignalsSchema,
       flags: PhaseBCustomerUpsellFlagsSchema,
@@ -809,7 +879,7 @@ export const PhaseBCustomerUpsellExplanationResponseSchema = withDerivedInsightR
     .object({
       generatedAt: z.string().datetime(),
       generatedFrom: z.string().min(1),
-      address: EvmAddressSchema,
+      address: PaymentRecipientAddressSchema,
       sourceGeneratedAt: z.string().datetime(),
       model: PhaseBCustomerUpsellExplanationModelSchema,
       input: PhaseBCustomerUpsellExplanationInputSchema,
@@ -861,7 +931,7 @@ export const PhaseBWalletUsageGraphOtherServiceCandidateSchema = withDerivedInsi
       serviceName: z.string().min(1),
       coUsageCount: z.number().int().nonnegative(),
       confidence: z.number().min(0).max(1),
-      payToWallet: EvmAddressSchema.optional(),
+      payToWallet: PaymentRecipientAddressSchema.optional(),
       provenance: DataProvenanceSchema,
       provenanceByField: ProvenanceByFieldSchema,
       evidence: z.array(EvidenceLabelSchema).optional(),
@@ -877,7 +947,7 @@ export type PhaseBWalletUsageGraphOtherServiceCandidate = z.infer<
 export const PhaseBWalletUsageGraphPayerWalletSchema = withDerivedInsightReasons(
   z
     .object({
-      address: EvmAddressSchema,
+      address: PaymentRecipientAddressSchema,
       label: LabelSchema,
       sharedSpendAtomic: AtomicAmountSchema,
       sharedTransactionCount: z.number().int().nonnegative(),
@@ -905,7 +975,7 @@ export const PhaseBWalletUsageGraphProviderWalletSchema = withDerivedInsightReas
       providerId: z.string().min(1),
       providerName: z.string().min(1),
       name: z.string().min(1),
-      payToWallet: EvmAddressSchema,
+      payToWallet: PaymentRecipientAddressSchema,
       payerWallets: z.array(PhaseBWalletUsageGraphPayerWalletSchema).min(0),
       confidence: z.number().min(0).max(1),
       firstSeenAt: z.string().datetime().optional(),
@@ -973,7 +1043,7 @@ export type CustomerIntelligenceTimeWindow = z.infer<typeof CustomerIntelligence
 
 export const CustomerIntelligenceScopeSchema = z
   .object({
-    address: EvmAddressSchema,
+    address: PaymentRecipientAddressSchema,
     network: z.preprocess(
       (value) => (typeof value === "string" ? normalizeNetwork(value) : value),
       z.string().min(1),
@@ -1041,7 +1111,7 @@ export type CustomerIntelligenceEvidence = z.infer<typeof CustomerIntelligenceEv
 export const PayToActivitySchema = withDerivedInsightReasons(
   z
     .object({
-      payTo: EvmAddressSchema,
+      payTo: PaymentRecipientAddressSchema,
       network: z.string().min(1),
       asset: z.string().min(1),
       transactionCount: z.number().int().nonnegative(),
@@ -1070,7 +1140,7 @@ export const X402ServiceCandidateSchema = withDerivedInsightReasons(
   z
     .object({
       candidateId: z.string().min(1),
-      payTo: EvmAddressSchema,
+      payTo: PaymentRecipientAddressSchema,
       providerName: z.string().min(1).nullable(),
       serviceName: z.string().min(1).nullable(),
       resource: z.string().min(1).nullable(),
@@ -1186,7 +1256,7 @@ export const CustomerIntelligenceResponseSchema = withDerivedInsightReasons(
     .object({
       generatedAt: z.string().datetime(),
       generatedFrom: z.string().min(1),
-      customerAddress: EvmAddressSchema,
+      customerAddress: PaymentRecipientAddressSchema,
       scope: CustomerIntelligenceScopeSchema,
       x402Services: z.array(X402ServiceCandidateSchema).min(0),
       payToActivities: z.array(PayToActivitySchema).min(0),

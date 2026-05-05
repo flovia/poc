@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, test } from "bun:test";
 import fs from "node:fs";
 import path from "node:path";
 import {
+  PaymentRecipientAddressSchema,
   validateBitqueryAggregate,
   validateCdpResource,
   validateCustomerIntelligenceResponse,
@@ -937,5 +938,400 @@ describe("contracts schema validation", () => {
         },
       }),
     ).toThrow();
+  });
+});
+
+describe("PaymentRecipientAddressSchema", () => {
+  test("accepts EVM hex (lowercased)", () => {
+    expect(PaymentRecipientAddressSchema.parse("0xAC5A07C44A4F971667B3DF4B6551FB6991B2142D")).toBe(
+      "0xac5a07c44a4f971667b3df4b6551fb6991b2142d",
+    );
+  });
+
+  test("accepts Solana base58 preserving case", () => {
+    const solana = "Cs2zdfUNonRdRGsiZUQQLdTxzxVvJZmgiX2mpLYKuEqP";
+    expect(PaymentRecipientAddressSchema.parse(solana)).toBe(solana);
+  });
+
+  test("accepts SPL token-prefixed identifier", () => {
+    const spl = "SPL:4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU";
+    expect(PaymentRecipientAddressSchema.parse(spl)).toBe(spl);
+  });
+
+  test("accepts ERC20 token-prefixed identifier (lowercases the hex part)", () => {
+    expect(
+      PaymentRecipientAddressSchema.parse("ERC20:0x036CbD53842c5426634e7929541eC2318f3dCF7e"),
+    ).toBe("ERC20:0x036cbd53842c5426634e7929541ec2318f3dcf7e");
+  });
+
+  test("rejects empty and obviously invalid strings", () => {
+    expect(() => PaymentRecipientAddressSchema.parse("")).toThrow();
+    expect(() => PaymentRecipientAddressSchema.parse("not-an-address!")).toThrow();
+    expect(() => PaymentRecipientAddressSchema.parse("0xshort")).toThrow();
+  });
+
+  test("trims surrounding whitespace", () => {
+    expect(
+      PaymentRecipientAddressSchema.parse("  0xac5a07c44a4f971667b3df4b6551fb6991b2142d  "),
+    ).toBe("0xac5a07c44a4f971667b3df4b6551fb6991b2142d");
+  });
+});
+
+describe("provider catalog and profile metadata extensions", () => {
+  test("ProviderCatalogResponse accepts atlas-style metadata fields", () => {
+    expect(
+      validateProviderCatalogResponse({
+        generatedAt: "2026-05-01T00:00:00Z",
+        generatedFrom: "pay-skills-atlas",
+        providerCount: 1,
+        provenance: "derived_insight",
+        provenanceByField: { providers: "derived_insight" },
+        reasons: [{ provenance: "derived_insight", label: "pay-skills atlas snapshot" }],
+        providers: [
+          {
+            providerId:
+              "agentmail/email::solana::USDC::7r4e5dwNS68MDaxbw7N8jbzHq7RCMBp9z6smHFH4NXWw",
+            name: "AgentMail",
+            serviceId: "agentmail/email",
+            serviceName: "AgentMail",
+            network: "solana",
+            asset: "USDC",
+            payTo: "7r4e5dwNS68MDaxbw7N8jbzHq7RCMBp9z6smHFH4NXWw",
+            transactionCount: 0,
+            uniqueSenderCount: 0,
+            totalVolumeAtomic: "0",
+            endpointCount: 1,
+            resourceCount: 1,
+            mappingPattern: "one_payto_many_endpoints",
+            endpointAttributionStatus: "bundled_payto_unknown_endpoint",
+            attributionConfidence: 0.35,
+            hasCustomerFacts: false,
+            customerFactCount: 0,
+            title: "AgentMail",
+            description: "Create and operate dedicated email inboxes for AI agents.",
+            useCase: "Use for giving agents their own email address.",
+            category: "messaging",
+            serviceUrl: "https://x402.api.agentmail.to",
+            protocol: "x402",
+            chain: "solana",
+            assetSymbol: "USDC",
+            priceRangeUsd: { min: 0, max: 10 },
+            provenance: "derived_insight",
+            provenanceByField: { description: "derived_insight" },
+            reasons: [{ provenance: "derived_insight", label: "pay-skills atlas" }],
+          },
+        ],
+      }),
+    ).toMatchObject({ providers: [{ description: expect.any(String), chain: "solana" }] });
+  });
+
+  test("PhaseBWalletUsageGraph accepts solana payToWallet", () => {
+    const solana = "Cs2zdfUNonRdRGsiZUQQLdTxzxVvJZmgiX2mpLYKuEqP";
+    const payerSolana = "8MPzJeXx1RipFmRADExptc3UK4EV3nhEFN6NRSx7o7jm";
+    expect(
+      validatePhaseBWalletUsageGraphResponse({
+        generatedAt: "2026-05-01T00:00:00Z",
+        provenance: "onchain_fact",
+        graph: {
+          generatedFrom: "pay-skills-atlas",
+          payerWalletLanguage: "payer wallets that also use this provider",
+          identityFieldsExcluded: ["providerId", "address"],
+          confidence: 0.84,
+          reasons: [{ provenance: "onchain_fact", label: "atlas payTo" }],
+          provenance: "onchain_fact",
+          providerWallets: [
+            {
+              providerId: "agentmail/email::solana::USDC::" + solana,
+              providerName: "AgentMail",
+              name: "AgentMail",
+              payToWallet: solana,
+              confidence: 0.9,
+              provenance: "onchain_fact",
+              payerWallets: [
+                {
+                  address: payerSolana,
+                  label: null,
+                  sharedSpendAtomic: "1000",
+                  sharedTransactionCount: 1,
+                  overlapProviderCount: 1,
+                  confidence: 0.7,
+                  firstSeenAt: "2026-04-01T00:00:00Z",
+                  lastSeenAt: "2026-04-02T00:00:00Z",
+                  provenance: "onchain_fact",
+                  observations: [
+                    {
+                      providerId: "agentmail/email::solana::USDC::" + solana,
+                      providerName: "AgentMail",
+                      serviceName: "https://x402.api.agentmail.to",
+                      sharedSpendAtomic: "1000",
+                      sharedTransactionCount: 1,
+                      overlapProviderCount: 1,
+                      confidence: 0.7,
+                      firstSeenAt: "2026-04-01T00:00:00Z",
+                      lastSeenAt: "2026-04-02T00:00:00Z",
+                      provenance: "onchain_fact",
+                    },
+                  ],
+                  otherServiceCandidates: [],
+                },
+              ],
+            },
+          ],
+        },
+      }),
+    ).toMatchObject({
+      graph: { providerWallets: [{ payToWallet: solana }] },
+    });
+  });
+
+  test("PhaseBCustomerProfileProvider accepts metadata fields and solana payToWallet", () => {
+    const solana = "Cs2zdfUNonRdRGsiZUQQLdTxzxVvJZmgiX2mpLYKuEqP";
+    expect(
+      validatePhaseBCustomerProfileResponse({
+        generatedAt: "2026-05-01T00:00:00Z",
+        generatedFrom: "pay-skills-atlas",
+        scope: {
+          providerId: "agentmail/email",
+          network: "solana",
+          asset: "USDC",
+          payTo: solana,
+        },
+        provenance: "onchain_fact",
+        profile: {
+          identity: {
+            address: "0x1111111111111111111111111111111111111111",
+            label: null,
+            network: "base",
+            asset: "USDC",
+            role: "payer",
+            identityBasis: "spend-profile",
+            caveat: null,
+            provenance: "onchain_fact",
+          },
+          metrics: {
+            spendAtomic: "1000",
+            activityGrowth: 0.1,
+            freeTierProgress: 0.5,
+            entryPointRatio: 0.3,
+            upsellOpportunity: "low",
+            totalSpendAtomic: "1000",
+            txCount: 1,
+            uniqueProviderCount: 1,
+            averageSpendAtomic: "1000",
+            firstSeenAt: "2026-04-01T00:00:00Z",
+            lastSeenAt: "2026-04-02T00:00:00Z",
+            provenance: "onchain_fact",
+          },
+          providers: [
+            {
+              providerId: "agentmail/email::solana::USDC::" + solana,
+              name: "AgentMail",
+              providerName: "AgentMail",
+              payToWallet: solana,
+              spendAtomic: "1000",
+              transactionCount: 1,
+              confidence: 0.9,
+              description: "AgentMail provides x402-paid email inboxes.",
+              category: "messaging",
+              serviceUrl: "https://x402.api.agentmail.to",
+              protocol: "x402",
+              chain: "solana",
+              assetSymbol: "USDC",
+              provenance: "onchain_fact",
+            },
+          ],
+          timeline: [],
+          insights: [],
+          provenance: "onchain_fact",
+        },
+      }),
+    ).toMatchObject({
+      profile: {
+        providers: [{ chain: "solana", payToWallet: solana, description: expect.any(String) }],
+      },
+    });
+  });
+});
+
+describe("solana customer address support", () => {
+  const SOLANA_CUSTOMER = "8MPzJeXx1RipFmRADExptc3UK4EV3nhEFN6NRSx7o7jm";
+
+  test("PhaseBCustomerListResponse accepts solana customer address", () => {
+    const parsed = validatePhaseBCustomerListResponse({
+      generatedAt: "2026-05-01T00:00:00Z",
+      generatedFrom: "pay-skills-atlas",
+      provenance: "derived_insight",
+      reasons: [{ provenance: "derived_insight", label: "atlas synthetic customer" }],
+      customers: [
+        {
+          address: SOLANA_CUSTOMER,
+          label: null,
+          observationCount: 1,
+          spendAtomic: "1000",
+          providerCount: 1,
+          activityGrowth: 0,
+          upsellOpportunity: "low",
+          provenance: "derived_insight",
+          provenanceByField: { address: "derived_insight" },
+          reasons: [{ provenance: "derived_insight", label: "atlas synthetic customer" }],
+        },
+      ],
+      customerCount: 1,
+    });
+    expect(parsed.customers[0]?.address).toBe(SOLANA_CUSTOMER);
+  });
+
+  test("PhaseBCustomerProfileResponse accepts solana identity address", () => {
+    const solanaPayTo = "Cs2zdfUNonRdRGsiZUQQLdTxzxVvJZmgiX2mpLYKuEqP";
+    const parsed = validatePhaseBCustomerProfileResponse({
+      generatedAt: "2026-05-01T00:00:00Z",
+      generatedFrom: "pay-skills-atlas",
+      scope: {
+        providerId: "x402",
+        network: "solana",
+        asset: "USDC",
+        payTo: solanaPayTo,
+      },
+      provenance: "onchain_fact",
+      profile: {
+        identity: {
+          address: SOLANA_CUSTOMER,
+          label: null,
+          network: "solana",
+          asset: "USDC",
+          role: "payer",
+          identityBasis: "atlas-synthetic",
+          caveat: null,
+          provenance: "derived_insight",
+          reasons: [{ provenance: "derived_insight", label: "atlas synthetic identity" }],
+        },
+        metrics: {
+          spendAtomic: "1000",
+          activityGrowth: 0,
+          freeTierProgress: 0.5,
+          entryPointRatio: 0.3,
+          upsellOpportunity: "low",
+          totalSpendAtomic: "1000",
+          txCount: 1,
+          uniqueProviderCount: 1,
+          averageSpendAtomic: "1000",
+          firstSeenAt: "2026-04-01T00:00:00Z",
+          lastSeenAt: "2026-04-02T00:00:00Z",
+          provenance: "onchain_fact",
+        },
+        providers: [],
+        timeline: [],
+        insights: [],
+        provenance: "derived_insight",
+        reasons: [{ provenance: "derived_insight", label: "atlas synthetic profile" }],
+      },
+    });
+    expect(parsed.profile.identity.address).toBe(SOLANA_CUSTOMER);
+  });
+
+  test("CustomerIntelligenceResponse accepts solana customerAddress and scope.address", () => {
+    const parsed = validateCustomerIntelligenceResponse({
+      generatedAt: "2026-05-01T00:00:00Z",
+      generatedFrom: "pay-skills-atlas",
+      customerAddress: SOLANA_CUSTOMER,
+      scope: {
+        address: SOLANA_CUSTOMER,
+        network: "solana",
+        asset: "USDC",
+        timeWindow: { from: "2026-01-01T00:00:00Z", to: "2026-04-29T23:59:59Z" },
+      },
+      x402Services: [],
+      payToActivities: [],
+      portfolioSummary: {
+        totalValueUsd: null,
+        tokenCount: 0,
+        sourceCoverage: {
+          source: "portfolio",
+          status: "unavailable",
+          unavailableReason: "atlas synthetic intelligence",
+        },
+        provenance: "derived_insight",
+        provenanceByField: { sourceCoverage: "derived_insight" },
+        reasons: [{ provenance: "derived_insight", label: "synthetic" }],
+      },
+      defiPositions: [],
+      insights: [],
+      sourceCoverage: [
+        {
+          source: "bitquery",
+          status: "unavailable",
+          unavailableReason: "atlas synthetic — no bitquery for non-EVM",
+        },
+        {
+          source: "cdp_discovery",
+          status: "available",
+        },
+        {
+          source: "portfolio",
+          status: "unavailable",
+          unavailableReason: "atlas synthetic intelligence",
+        },
+      ],
+      provenance: "derived_insight",
+      provenanceByField: { customerAddress: "derived_insight" },
+      reasons: [{ provenance: "derived_insight", label: "atlas synthetic" }],
+    });
+    expect(parsed.customerAddress).toBe(SOLANA_CUSTOMER);
+    expect(parsed.scope.address).toBe(SOLANA_CUSTOMER);
+  });
+});
+
+describe("multi-chain customer aggregation fields", () => {
+  test("PhaseBCustomerListItem accepts chains[]/assets[]/spendByAsset", () => {
+    const parsed = validatePhaseBCustomerListResponse({
+      generatedAt: "2026-05-01T00:00:00Z",
+      generatedFrom: "pay-skills-atlas-aggregated",
+      provenance: "derived_insight",
+      reasons: [{ provenance: "derived_insight", label: "service-aggregated customer" }],
+      customers: [
+        {
+          address: "0xffecfcd0e9888a738a64d9854abfc22ef3a6c717",
+          label: null,
+          observationCount: 12,
+          spendAtomic: "1500000",
+          providerCount: 1,
+          activityGrowth: 0,
+          upsellOpportunity: "medium",
+          chains: ["base", "solana"],
+          assets: ["USDC", "USDT"],
+          spendByAsset: { USDC: "1000000", USDT: "500000" },
+          provenance: "derived_insight",
+          reasons: [{ provenance: "derived_insight", label: "service-aggregated" }],
+        },
+      ],
+      customerCount: 1,
+    });
+    expect(parsed.customers[0]?.chains).toEqual(["base", "solana"]);
+    expect(parsed.customers[0]?.assets).toEqual(["USDC", "USDT"]);
+    expect(parsed.customers[0]?.spendByAsset?.USDC).toBe("1000000");
+  });
+
+  test("legacy customers (without chains[]) still validate", () => {
+    const parsed = validatePhaseBCustomerListResponse({
+      generatedAt: "2026-05-01T00:00:00Z",
+      generatedFrom: "phase-b-demo",
+      provenance: "derived_insight",
+      reasons: [{ provenance: "derived_insight", label: "legacy" }],
+      customers: [
+        {
+          address: "0xffecfcd0e9888a738a64d9854abfc22ef3a6c717",
+          label: null,
+          observationCount: 1,
+          spendAtomic: "1000",
+          providerCount: 1,
+          activityGrowth: 0,
+          upsellOpportunity: "low",
+          provenance: "derived_insight",
+          reasons: [{ provenance: "derived_insight", label: "legacy" }],
+        },
+      ],
+      customerCount: 1,
+    });
+    expect(parsed.customers[0]?.chains).toBeUndefined();
   });
 });
