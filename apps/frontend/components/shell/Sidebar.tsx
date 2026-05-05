@@ -70,14 +70,17 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
   // Phase 9: SDK connected モードでは disabled にしない.
   const navDisabled = isOnChainOnlyEmpty;
 
-  const customersGroupActive = activeRoute === "customers" || activeRoute === "wallet";
+  const providerRouteId =
+    activeProviderId
+    ?? stored[0]?.providerId
+    ?? (dataMode === "sdkConnected" ? SDK_DEMO_PROVIDER_ID : undefined);
+  const customerOverviewHref = providerRouteId ? `/providers/${providerRouteId}/customers` : undefined;
+  const coUsageHref = providerRouteId ? `/providers/${providerRouteId}/customers/co-usage-providers` : undefined;
+  const customerOverviewActive = pathname === customerOverviewHref || activeRoute === "wallet";
+  const customersSectionActive = customerOverviewActive || pathname === coUsageHref;
 
-  const navHrefFor = (segment: "customers" | "api-growth" | "geo-spec" | "macro-metrics" | "metrics-catalog") => {
-    const id =
-      activeProviderId
-      ?? stored[0]?.providerId
-      ?? (dataMode === "sdkConnected" ? SDK_DEMO_PROVIDER_ID : undefined);
-    return id ? `/providers/${id}/${segment}` : "/setup";
+  const navHrefFor = (segment: "api-growth" | "geo-spec" | "macro-metrics" | "metrics-catalog") => {
+    return providerRouteId ? `/providers/${providerRouteId}/${segment}` : "/setup";
   };
 
   return (
@@ -141,43 +144,38 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
           >
             <Icon.customers />
             <span style={{ flex: 1 }}>My Customers</span>
-            <RealNavBadge />
           </span>
         ) : (
           <>
             <div className="nav-row">
-              <Link
-                href={navHrefFor("customers")}
-                className="nav-item nav-item--with-toggle"
-                aria-current={customersGroupActive}
+              <span
+                className={`nav-item nav-item--with-toggle nav-item--category${customersSectionActive ? " nav-item--category-active" : ""}`}
               >
                 <Icon.customers />
                 <span style={{ flex: 1 }}>My Customers</span>
-                <RealNavBadge />
-              </Link>
+              </span>
             </div>
-            {(() => {
-              const id =
-                activeProviderId
-                ?? stored[0]?.providerId
-                ?? (dataMode === "sdkConnected" ? SDK_DEMO_PROVIDER_ID : undefined);
-              if (!id) return null;
-              const coUsageHref = `/providers/${id}/customers/co-usage-providers`;
-              return (
-                <div
-                  id="nav-sub-customers"
-                  className="nav-sub"
+            {customerOverviewHref && coUsageHref ? (
+              <div
+                id="nav-sub-customers"
+                className="nav-sub"
+              >
+                <Link
+                  href={customerOverviewHref}
+                  className="nav-item nav-item--sub"
+                  aria-current={customerOverviewActive}
                 >
-                  <Link
-                    href={coUsageHref}
-                    className="nav-item nav-item--sub"
-                    aria-current={pathname === coUsageHref}
-                  >
-                    Co-Usage Providers
-                  </Link>
-                </div>
-              );
-            })()}
+                  Customer Overview
+                </Link>
+                <Link
+                  href={coUsageHref}
+                  className="nav-item nav-item--sub"
+                  aria-current={pathname === coUsageHref}
+                >
+                  Co-Usage Providers
+                </Link>
+              </div>
+            ) : null}
           </>
         )}
 
@@ -262,26 +260,6 @@ function DemoNavBadge() {
       }}
     >
       demo
-    </span>
-  );
-}
-
-function RealNavBadge() {
-  return (
-    <span
-      style={{
-        fontSize: 11,
-        fontWeight: 600,
-        padding: "1px 5px",
-        borderRadius: 3,
-        background: "rgba(45,127,249,0.14)",
-        color: "var(--mesh-blue)",
-        letterSpacing: "0.04em",
-        textTransform: "uppercase",
-        flexShrink: 0,
-      }}
-    >
-      real
     </span>
   );
 }
