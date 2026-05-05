@@ -51,10 +51,22 @@ export function WalletScreen({
           sdkExtras={sdkExtras}
         />
 
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))", gap: 14, marginTop: 18 }}>
+          <UpsellCard
+            address={profile.customer.address}
+            metrics={profile.metrics}
+            dataMode={dataMode}
+            sdkExtras={sdkExtras}
+          />
+          <EntryPointInsight metrics={profile.metrics} dataMode={dataMode} sdkExtras={sdkExtras} />
+          <RecentActivityInsight metrics={profile.metrics} providers={profile.providers} />
+          <InsightsList insights={profile.insights} />
+        </div>
+
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "minmax(0, 1.6fr) minmax(0, 1fr)",
+            gridTemplateColumns: "1fr",
             gap: 18,
             marginTop: 18,
           }}
@@ -68,17 +80,6 @@ export function WalletScreen({
             sdkForceNetwork={sdkForceNetwork}
           />
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            <UpsellCard
-              address={profile.customer.address}
-              metrics={profile.metrics}
-              dataMode={dataMode}
-              sdkExtras={sdkExtras}
-            />
-            <EntryPointInsight metrics={profile.metrics} dataMode={dataMode} sdkExtras={sdkExtras} />
-            <RecentActivityInsight metrics={profile.metrics} providers={profile.providers} />
-            <InsightsList insights={profile.insights} />
-          </div>
         </div>
       </div>
     </div>

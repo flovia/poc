@@ -15,7 +15,9 @@ import {
   setDemoOptedIn as storageSetDemoOptedIn,
   setSeedVersion,
 } from "@/lib/storage";
-import { SEED_IDS, seedProviders } from "@/lib/providers";
+import { findProviderByRouteId, SEED_IDS, seedProviders, slugifyProviderName } from "@/lib/providers";
+import { orderProvidersPinnedFirst } from "@/lib/providers/order";
+import { STATIC_PROVIDER_CAPABILITIES } from "@/lib/providers/static-capabilities";
 
 type Ctx = {
   // effective providers (demo + user, demo first)。Sidebar / SavedProviderList の
@@ -117,21 +119,90 @@ export function ProvidersContextProvider({ children }: { children: React.ReactNo
     getBffProviders()
       .then((providers) => {
         if (cancelled) return;
-        setGeneratedProviders(
-          providers.slice(0, 10).map((provider) => ({
-            providerId: provider.providerId,
-            name: provider.name,
+        // Dedup providers that share the same display name (e.g. QuickNode appearing
+        // once per supported chain) so the sidebar shows one entry per service.
+        // Keep the row that already has customer facts when available, then fall
+        // back to the row with the highest transactionCount. Collect every chain
+        // observed across the merged rows so multi-chain services surface all of
+        // their networks in the picker.
+        type CatalogItem = (typeof providers)[number];
+        type Protocol = "x402" | "MPP";
+        const groups = new Map<
+          string,
+          { winner: CatalogItem; networks: Set<string>; protocols: Set<Protocol> }
+        >();
+        for (const provider of providers) {
+          const key = `${(provider.serviceId ?? provider.name).toLowerCase()}::${(provider.title ?? provider.name).toLowerCase()}`;
+          const existing = groups.get(key);
+          if (!existing) {
+            const networks = new Set<string>();
+            if (provider.network) networks.add(provider.network);
+            const protocols = new Set<Protocol>();
+            if (provider.protocol) protocols.add(provider.protocol);
+            groups.set(key, { winner: provider, networks, protocols });
+            continue;
+          }
+          if (provider.network) existing.networks.add(provider.network);
+          if (provider.protocol) existing.protocols.add(provider.protocol);
+          const existingScore =
+            (existing.winner.hasCustomerFacts ? 1_000_000_000 : 0) + existing.winner.transactionCount;
+          const candidateScore =
+            (provider.hasCustomerFacts ? 1_000_000_000 : 0) + provider.transactionCount;
+          if (candidateScore > existingScore) {
+            existing.winner = provider;
+          }
+        }
+        const deduped = Array.from(groups.values());
+        const generated = deduped.map(({ winner, networks, protocols }) => {
+          const capability = winner.serviceId
+            ? STATIC_PROVIDER_CAPABILITIES.find((entry) => entry.serviceId === winner.serviceId)
+            : undefined;
+          // The Postgres live BFF currently emits `network: "base"` for catalog
+          // rows even when the provider capability is Solana-only. When a static
+          // capability exists, treat it as authoritative for badges.
+          const mergedNetworks = capability?.networks ?? Array.from(networks);
+          const mergedProtocols = capability?.protocols ?? Array.from(protocols);
+          return {
+            providerId: winner.providerId,
+            name: winner.name,
             mode: "simple" as const,
-            payTo: provider.payTo,
+            payTo: winner.payTo,
             createdAt: Date.now(),
             source: "generated" as const,
-            network: provider.network,
-            asset: provider.asset,
-            transactionCount: provider.transactionCount,
-            uniqueSenderCount: provider.uniqueSenderCount,
-            hasCustomerFacts: provider.hasCustomerFacts,
-          })),
-        );
+            network: capability?.network ?? winner.network,
+            networks: mergedNetworks,
+            catalogSource: winner.catalogSource ?? capability?.catalogSource,
+            protocols: mergedProtocols,
+            asset: winner.asset,
+            serviceId: winner.serviceId,
+            serviceName: winner.serviceName,
+            transactionCount: winner.transactionCount,
+            uniqueSenderCount: winner.uniqueSenderCount,
+            hasCustomerFacts: winner.hasCustomerFacts,
+          };
+        });
+        const existingServiceIds = new Set(generated.map((provider) => provider.serviceId));
+        const staticOnly = STATIC_PROVIDER_CAPABILITIES.filter(
+          (provider) => !existingServiceIds.has(provider.serviceId),
+        ).map((provider) => ({
+          providerId: `static-${slugifyProviderName(provider.serviceId)}`,
+          name: provider.name,
+          mode: "simple" as const,
+          payTo: provider.payTo,
+          createdAt: Date.now(),
+          source: "generated" as const,
+          network: provider.network,
+          networks: provider.networks,
+          catalogSource: provider.catalogSource,
+          protocols: provider.protocols,
+          asset: provider.asset,
+          serviceId: provider.serviceId,
+          serviceName: provider.name,
+          transactionCount: provider.transactionCount,
+          uniqueSenderCount: provider.uniqueSenderCount,
+          hasCustomerFacts: provider.transactionCount > 0,
+        }));
+        setGeneratedProviders(orderProvidersPinnedFirst([...generated, ...staticOnly]));
       })
       .catch(() => {
         if (!cancelled) setGeneratedProviders([]);
@@ -226,6 +297,6 @@ export function useProviders(): Ctx {
 
 export function useActiveProvider(idFromUrl: string | undefined) {
   const { stored, hydrated } = useProviders();
-  const active = idFromUrl ? stored.find((p) => p.providerId === idFromUrl) : undefined;
+  const active = idFromUrl ? findProviderByRouteId(stored, idFromUrl) : undefined;
   return { active, hydrated };
 }

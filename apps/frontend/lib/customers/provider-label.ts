@@ -1,6 +1,8 @@
+import { normalizePaymentRecipientAddress } from "contracts";
 import { extractHost } from "./co-usage";
 
 const EVM_ADDRESS = /^0x[0-9a-f]{40}$/i;
+const SOLANA_ADDRESS = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
 
 // timeline event の providerId は、BFF が
 //   1. providers[] と一致する canonical providerId (URL 等) を返すケース
@@ -18,8 +20,8 @@ export function resolveProviderLabel(
   const canonical = nameByProviderId.get(rawId);
   if (canonical) return extractHost(canonical);
 
-  if (EVM_ADDRESS.test(rawId)) {
-    const host = hostByPayToWallet.get(rawId.toLowerCase());
+  if (EVM_ADDRESS.test(rawId) || SOLANA_ADDRESS.test(rawId)) {
+    const host = hostByPayToWallet.get(normalizePaymentRecipientAddress(rawId));
     if (host) return host;
   }
 

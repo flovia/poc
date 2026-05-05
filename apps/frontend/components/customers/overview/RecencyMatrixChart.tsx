@@ -1,3 +1,4 @@
+import { formatAtomic, formatTimestamp } from "@/lib/format";
 import type { RecencyMatrix, RecencyMatrixCells } from "@/lib/customers/overview";
 import { OverviewCard } from "./OverviewCard";
 
@@ -49,11 +50,15 @@ const ACCENT_FG: Record<CellSpec["accent"], string> = {
 
 export function RecencyMatrixChart({ matrix }: RecencyMatrixChartProps) {
   const total = matrix.totalWallets;
+  const thresholdNote = `Recent active: last seen on/after ${formatTimestamp(matrix.lastSeenMedian)} · Median spend: ${formatAtomic(matrix.spendMedianAtomic)} USDC`;
 
   return (
     <OverviewCard
       title="Account Segmentation by Recency × Spend"
     >
+      <div style={{ fontSize: 12, color: "var(--text-3)", marginBottom: 10, lineHeight: 1.4 }}>
+        {thresholdNote}
+      </div>
       <div
         style={{
           display: "grid",

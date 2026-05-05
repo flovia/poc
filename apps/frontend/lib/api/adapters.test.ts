@@ -92,7 +92,7 @@ describe("BFF canonical adapters", () => {
     expect(item.reasons).toEqual([]);
   });
 
-  test("adapts and ranks provider catalog rows", () => {
+  test("places coingecko first and otherwise preserves the BFF (atlas) order", () => {
     const response: ProviderCatalogResponse = {
       generatedAt: "2026-04-29T00:00:00.000Z",
       generatedFrom: "test",
@@ -191,12 +191,73 @@ describe("BFF canonical adapters", () => {
     };
 
     const providers = adaptProviderCatalog(response);
+    // Input order was [unresolved, coingecko, large-service, real]. coingecko is
+    // pinned to the top, the rest keep their original (atlas-derived) order.
     expect(providers.map((provider) => provider.providerId)).toEqual([
       "coingecko",
-      "real",
-      "large-service",
       "unresolved",
+      "large-service",
+      "real",
     ]);
+  });
+
+  test("passes through atlas-style metadata fields when present", () => {
+    const response: ProviderCatalogResponse = {
+      generatedAt: "2026-05-01T00:00:00Z",
+      generatedFrom: "pay-skills-atlas",
+      providerCount: 1,
+      provenance: "derived_insight",
+      provenanceByField: { providers: "derived_insight" },
+      reasons: [evidence],
+      providers: [
+        {
+          providerId: "agentmail/email::solana::USDC::7r4e",
+          name: "AgentMail",
+          serviceId: "agentmail/email",
+          serviceName: "AgentMail",
+          catalogSource: "pay_sh_curated",
+          network: "solana",
+          asset: "USDC",
+          payTo: "7r4e5dwNS68MDaxbw7N8jbzHq7RCMBp9z6smHFH4NXWw",
+          transactionCount: 1,
+          uniqueSenderCount: 1,
+          totalVolumeAtomic: "10000",
+          endpointCount: 83,
+          resourceCount: 83,
+          mappingPattern: "one_payto_many_endpoints",
+          endpointAttributionStatus: "bundled_payto_unknown_endpoint",
+          attributionConfidence: 0.35,
+          hasCustomerFacts: true,
+          customerFactCount: 1,
+          title: "AgentMail",
+          description: "Email inboxes for AI agents.",
+          useCase: "Use to give agents email.",
+          category: "messaging",
+          serviceUrl: "https://x402.api.agentmail.to",
+          protocol: "x402",
+          chain: "Solana mainnet",
+          assetSymbol: "USDC",
+          priceRangeUsd: { min: 0, max: 10 },
+          provenance: "derived_insight",
+          provenanceByField,
+          reasons: [evidence],
+        },
+      ],
+    };
+
+    const [item] = adaptProviderCatalog(response);
+    expect(item).toMatchObject({
+      title: "AgentMail",
+      description: "Email inboxes for AI agents.",
+      useCase: "Use to give agents email.",
+      category: "messaging",
+      catalogSource: "pay_sh_curated",
+      serviceUrl: "https://x402.api.agentmail.to",
+      protocol: "x402",
+      chain: "Solana mainnet",
+      assetSymbol: "USDC",
+      priceRangeUsd: { min: 0, max: 10 },
+    });
   });
 
   test("adapts customer profile envelope to wallet screen view model", () => {

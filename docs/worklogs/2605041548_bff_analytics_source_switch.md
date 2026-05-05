@@ -1,0 +1,35 @@
+# BFF analytics source switch 作業ログ
+
+- `BFF_ANALYTICS_SOURCE` による `fixture` / `json` / `postgres` の切り替えを追加した。
+- JSON ファイル読み込みと Postgres snapshot payload で同じ payload validation/build 経路を共有するようにした。
+- Postgres snapshot は `bff_analytics_snapshots` の `payload` を snapshot id で取得する最小実装にした。
+- Bun の Postgres 接続は `SQL` class を使う形に修正した。
+- Postgres `jsonb` payload が文字列として返る場合に備えて parse するようにした。
+- ローカル Postgres に `latest` snapshot を投入し、BFF `/providers` が Postgres source 経由で応答することを確認した。
+- ローカル Postgres dump を Lightsail PostgreSQL の `poc_data_test` DB に restore し、BFF が Lightsail source 経由で応答することを確認した。
+- Lightsail 接続では `sslmode=require` が必要だった。
+- Postgres live read model を raw table 由来で生成するようにし、`BFF_ANALYTICS_POSTGRES_MODE=snapshot` の時だけ snapshot を読むようにした。
+- providerId を既存 read model と同じ `{slug(serviceId)}--base--usdc--{payTo}` 形式に揃えた。
+- 既存URL互換として `coingecko--{payTo}` / `pro-api.coingecko.com--{payTo}` も frontend 側で同じ provider に解決するようにした。
+- providerId 解決に失敗した時に `payTo` 未指定で全 customers を表示しないよう、customers page は 404 にするようにした。
+- CoinGecko は `goldsky_webhook_transfers_coingecko` を使い、165 wallets / 2040 transfers が provider/customer page に出ることを確認した。
+- `BFF_ANALYTICS_POSTGRES_MODE=live|snapshot` を追加し、`postgres` source の既定を raw table 由来の live read model に変更した。
+- live mode は `x402_provider_activity` と `x402_attributed_transfers` から providers/customers/walletUsageGraph/service analytics を生成し、既存 payload loader で validation するようにした。
+- snapshot mode は `BFF_ANALYTICS_POSTGRES_MODE=snapshot` 指定時の fallback/明示モードとして維持した。
+- 実 DB なしの stub client で live/snapshot 切り替えと raw row count 反映を検証するテストを追加した。
+- live mode の raw source を `goldsky_webhook_transfers_x402_paytos` 中心に変更し、CoinGecko table と generic Goldsky table の payer/payTo 集計を統合するようにした。
+- generic 側は CoinGecko payTo を除外し、`x402_provider_activity` は metadata join のみ利用して stale count を使わないようにした。
+- generic table 由来の provider overlap が customer `providerCount` に反映されるテストを追加した。
+- CoinGecko rows も `goldsky_webhook_transfers_x402_paytos` にコピー済みになったため、live mode は `goldsky_webhook_transfers_coingecko` との union をやめ、generic table だけを正本として読むように簡略化した。
+- CoinGecko metadata が欠ける場合のみ、既知 payTo に `pro-api.coingecko.com` を fallback するようにした。
+- Lightsail deploy は `BFF_ANALYTICS_DATABASE_URL` secret がある場合に `BFF_ANALYTICS_SOURCE=postgres` / `BFF_ANALYTICS_POSTGRES_MODE=live` を stack `.env` へ同期し、main/develop 両方の BFF compose env に渡すようにした。
+- live mode の wallet usage graph で同一 payer が使った他 provider を `otherServiceCandidates` に出すようにし、Co-Usage Providers が空になる regression を修正した。
+- GEO spec は generated fixture の providerId 完全一致だけでなく、route providerId 末尾の payTo でも fallback 解決するようにし、live providerId と fixture providerId のズレを吸収した。
+- generated fixture に存在しない live-only provider でも GEO page が空にならないよう、BFF `/providers` の live catalog 行を hint として `getGeoSpec` に渡し、最小 spec を表示するようにした。
+- BFF live provider catalog が `pay_sh_providers` / `pay_sh_payment_offers` の metadata を payTo で enrichment し、frontend GEO spec が live provider hint の title/description/useCase/category を使えるようにした。
+- StableEnrich などの endpoint 詳細は `pay_sh_*` ではなく既存 `x402_resources` / `x402_payment_options` に入っていたため、BFF `/providers` に `resources` を追加し、GEO spec が live resource list を fallback 表示できるようにした。
+- serviceId filter の customer list は対象 service 内の provider 数だけでなく、walletUsageGraph の `otherServiceCandidates` も含めた cross-provider `providerCount` を返すようにした。
+- Co-Usage Providers frontend 集計が全 provider の candidate を混ぜていたため、選択中 provider の payTo に一致する payer wallets だけを集計するようにした。
+- `x402_resources.raw` の endpoint description / method / schema / quality / lastUpdated / x402Version を BFF provider resources に含め、StableEnrich などのGEO endpoint情報を厚くした。
+- resource metadata の null JSON は任意フィールドとして落とし、`null` が `0` として x402Version / quality に混入しない回帰テストを追加した。
+- skills.json 由来の provider registry metadata (`hasMetering` / `hasFreeTier` / `providerSha` / `registry*`) と probe offer list を BFF provider catalog へ通し、GEO spec が live hint から Pay.sh offers と endpoint description を表示できるようにした。

@@ -1,9 +1,10 @@
-import type {
-  PhaseBCustomerListResponse,
-  PhaseBCustomerUpsellExplanationResponse,
-  PhaseBCustomerProfileResponse,
-  ProviderCatalogResponse,
-  WalletUsageGraphResponse,
+import {
+  type PhaseBCustomerListResponse,
+  type PhaseBCustomerUpsellExplanationResponse,
+  type PhaseBCustomerProfileResponse,
+  type ProviderCatalogResponse,
+  type WalletUsageGraphResponse,
+  normalizePaymentRecipientAddress,
 } from "contracts";
 import type {
   CustomerInsightSeverity,
@@ -68,7 +69,7 @@ function aggregateProviderUsage(
   const byProvider = new Map<string, CustomerProviderUsageDto>();
 
   for (const provider of providers) {
-    const key = `${provider.providerId}:${provider.payToWallet.toLowerCase()}`;
+    const key = `${provider.providerId}:${normalizePaymentRecipientAddress(provider.payToWallet)}`;
     const current = byProvider.get(key);
     const next: CustomerProviderUsageDto = {
       providerId: provider.providerId,
@@ -108,6 +109,10 @@ export function adaptCustomerList(response: PhaseBCustomerListResponse): Custome
     lastSeenAt: toTimestamp(customer.lastSeenAt),
     activityGrowth: customer.activityGrowth,
     upsellOpportunity: customer.upsellOpportunity,
+    chains: customer.chains,
+    assets: customer.assets,
+    spendByAsset: customer.spendByAsset,
+    tags: customer.tags,
     provenance: customer.provenance,
     provenanceByField: customer.provenanceByField ?? {},
     reasons: customer.reasons ?? [],
@@ -115,8 +120,8 @@ export function adaptCustomerList(response: PhaseBCustomerListResponse): Custome
 }
 
 export function adaptProviderCatalog(response: ProviderCatalogResponse): ProviderCatalogItemDto[] {
-  return response.providers
-    .map((provider) => ({
+  const adapted = response.providers.map((provider, originalIndex) => ({
+    item: {
       providerId: provider.providerId,
       name: provider.name,
       serviceId: provider.serviceId,
@@ -124,6 +129,7 @@ export function adaptProviderCatalog(response: ProviderCatalogResponse): Provide
       network: provider.network,
       asset: provider.asset,
       payTo: provider.payTo,
+      catalogSource: provider.catalogSource,
       transactionCount: provider.transactionCount,
       uniqueSenderCount: provider.uniqueSenderCount,
       totalVolumeAtomic: provider.totalVolumeAtomic,
@@ -133,32 +139,52 @@ export function adaptProviderCatalog(response: ProviderCatalogResponse): Provide
       attributionConfidence: provider.attributionConfidence,
       hasCustomerFacts: provider.hasCustomerFacts,
       customerFactCount: provider.customerFactCount,
+      title: provider.title,
+      description: provider.description,
+      useCase: provider.useCase,
+      category: provider.category,
+      serviceUrl: provider.serviceUrl,
+      hasMetering: provider.hasMetering,
+      hasFreeTier: provider.hasFreeTier,
+      providerSha: provider.providerSha,
+      registryVersion: provider.registryVersion,
+      registryGeneratedAt: provider.registryGeneratedAt,
+      registrySourceUrl: provider.registrySourceUrl,
+      offers: provider.offers,
+      protocol: provider.protocol,
+      chain: provider.chain,
+      assetSymbol: provider.assetSymbol,
+      priceRangeUsd: provider.priceRangeUsd,
+      resources: provider.resources,
       provenance: provider.provenance,
       provenanceByField: provider.provenanceByField ?? {},
       reasons: provider.reasons ?? [],
-    }))
-    .sort((left, right) => {
-      const leftScore = providerRank(left);
-      const rightScore = providerRank(right);
-      if (leftScore !== rightScore) return rightScore - leftScore;
-      return right.transactionCount - left.transactionCount;
-    });
+    } satisfies ProviderCatalogItemDto,
+    originalIndex,
+  }));
+
+  // Stable-sort: pinned providers first (in PINNED_PROVIDER_MARKS order), then
+  // everything else in the order the BFF returned (= atlas / skills.json
+  // appearance order).
+  adapted.sort((left, right) => {
+    const leftRank = pinnedRank(left.item);
+    const rightRank = pinnedRank(right.item);
+    if (leftRank !== rightRank) return leftRank - rightRank;
+    return left.originalIndex - right.originalIndex;
+  });
+  return adapted.map((entry) => entry.item);
 }
 
-function providerRank(provider: ProviderCatalogItemDto): number {
+const PINNED_PROVIDER_MARKS = ["coingecko", "nansen"] as const;
+
+function pinnedRank(provider: ProviderCatalogItemDto): number {
   const identity = `${provider.providerId} ${provider.serviceId ?? ""} ${provider.name} ${
     provider.serviceName ?? ""
   }`.toLowerCase();
-  const isCoinGecko = identity.includes("coingecko");
-  return (
-    (isCoinGecko && provider.hasCustomerFacts ? 1_000_000_000_000 : 0) +
-    (provider.hasCustomerFacts ? 10_000_000_000 : 0) +
-    (isCoinGecko ? 1_000_000_000 : 0) +
-    provider.transactionCount +
-    provider.uniqueSenderCount * 100 +
-    (provider.endpointAttributionStatus !== "unresolved_payto" ? 100_000 : 0) +
-    Math.round(provider.attributionConfidence * 10_000)
-  );
+  for (let i = 0; i < PINNED_PROVIDER_MARKS.length; i++) {
+    if (identity.includes(PINNED_PROVIDER_MARKS[i]!)) return i;
+  }
+  return PINNED_PROVIDER_MARKS.length;
 }
 
 export function adaptCustomerProfile(response: PhaseBCustomerProfileResponse): CustomerProfileDto {

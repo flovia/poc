@@ -204,8 +204,8 @@ function BubbleMatrix({ rows }: { rows: SourceMediumQualityRow[] }) {
         <text x="10" y={(plot.top + plot.bottom) / 2} transform={`rotate(-90 10 ${(plot.top + plot.bottom) / 2})`} textAnchor="middle" fill="var(--text-3)" fontSize="12">Repeat adoption</text>
       </svg>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-        <span style={chipStyle}>bubble = paid endpoint frequency</span>
-        <span style={chipStyle}>color = use case mix</span>
+        <span style={chipStyle}>bubble: paid endpoint frequency</span>
+        <span style={chipStyle}>color: use case mix</span>
       </div>
     </div>
   );
@@ -331,9 +331,9 @@ function SourceRepeatCohort({ cohorts }: { cohorts: ApiGrowthRepeatCohort[] }) {
   if (cohorts.length === 0) return <p style={{ ...bodyText, margin: 0 }}>No repeat cohort in this offline snapshot.</p>;
 
   const columns: Array<{ key: keyof ApiGrowthRepeatCohort; label: string }> = [
-    { key: "week1", label: "D1(W1)" },
-    { key: "week2", label: "D7(W2)" },
-    { key: "week3", label: "D14(W3)" },
+    { key: "week1", label: "W1" },
+    { key: "week2", label: "W2" },
+    { key: "week3", label: "W3" },
   ];
 
   return (
@@ -427,9 +427,9 @@ function InboundApiCohort({ cohorts }: { cohorts: ApiGrowthInboundApiCohort[] })
   if (cohorts.length === 0) return null;
 
   const columns: Array<{ key: keyof ApiGrowthInboundApiCohort; label: string }> = [
-    { key: "week1", label: "D1(W1)" },
-    { key: "week2", label: "D7(W2)" },
-    { key: "week3", label: "D14(W3)" },
+    { key: "week1", label: "W1" },
+    { key: "week2", label: "W2" },
+    { key: "week3", label: "W3" },
   ];
 
   return (
@@ -438,8 +438,8 @@ function InboundApiCohort({ cohorts }: { cohorts: ApiGrowthInboundApiCohort[] })
         <span style={{ color: "var(--text-mute)", fontSize: 12 }}>return after trying this API</span>
       </div>
       <p style={{ ...bodyText, margin: "0 0 8px", fontSize: 13 }}>
-        Customers with prior activity on another API, grouped by that observed API, then measured by
-        whether they returned after trying this API.
+        Directional proxy, not exclusive migration: customers had prior observed activity on the
+        origin API, later paid this API, then returned within the W1/W2/W3 windows.
       </p>
       <div style={{ display: "grid", gap: 6 }}>
         <div style={{ display: "grid", gridTemplateColumns: "1.15fr 0.5fr repeat(3, 0.48fr)", gap: 6, color: "var(--text-mute)", fontSize: 12, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" }}>

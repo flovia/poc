@@ -75,25 +75,31 @@ export function CustomersTable({
         <div>
           <HeaderTooltip
             label="Chain"
-            description="Chain and asset this payer wallet mainly transacts in. Currently fixed to Base / USDC across all rows."
+            description="Chains this payer wallet has transacted on with the current service."
           />
         </div>
         <div>
           <HeaderTooltip
-            label="Spend (atomic)"
-            description="Total amount this wallet has spent with the current provider, shown in atomic (smallest) token units."
+            label="Tag"
+            description="Wallet tags such as Pay.sh, derived deterministically from the wallet address."
           />
         </div>
         <div>
           <HeaderTooltip
-            label="Observations"
+            label="Spend (USDC)"
+            description="Total USDC spend by this wallet with the current provider."
+          />
+        </div>
+        <div>
+          <HeaderTooltip
+            label="Calls"
             description="Number of payment observations recorded for this wallet by the current provider."
           />
         </div>
         <div>
           <HeaderTooltip
             label="Providers"
-            description="How many distinct providers this wallet has paid across the network."
+            description="How many distinct providers this wallet has paid across the x402 network, regardless of chain."
           />
         </div>
         {isSdkConnected && (
@@ -112,7 +118,7 @@ export function CustomersTable({
             />
           </div>
         )}
-        <div>
+        <div style={{ display: "flex", justifyContent: "flex-end" }}>
           <HeaderTooltip
             label="Last seen"
             description="Timestamp of the most recent payment observation from this wallet."
@@ -176,12 +182,42 @@ export function CustomersTable({
               </div>
             )}
 
-            <div>
-              <ChainBadge chain={chainAttribution.chain} asset={chainAttribution.asset} />
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+              {chainAttribution.chains.map((chain) => (
+                <ChainBadge key={chain} chain={chain} />
+              ))}
+            </div>
+
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+              {(c.tags ?? []).length === 0 ? (
+                <span style={{ color: "var(--text-mute)", fontSize: 12 }}>—</span>
+              ) : (
+                (c.tags ?? []).map((tag) => (
+                  <span
+                    key={tag}
+                    className="chip blue"
+                    style={{ fontSize: 11, padding: "1px 6px" }}
+                    title={tag}
+                  >
+                    {tag}
+                  </span>
+                ))
+              )}
             </div>
 
             <div className="mono" style={{ fontSize: 14, color: "var(--text-1)" }}>
-              {formatAtomic(c.spendAtomic)}
+              {c.spendByAsset && Object.keys(c.spendByAsset).length > 1 ? (
+                <span style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                  {Object.entries(c.spendByAsset).map(([asset, amt]) => (
+                    <span key={asset} style={{ whiteSpace: "nowrap" }}>
+                      {formatAtomic(amt)}{" "}
+                      <span style={{ fontSize: 11, color: "var(--text-3)" }}>{asset}</span>
+                    </span>
+                  ))}
+                </span>
+              ) : (
+                formatAtomic(c.spendAtomic)
+              )}
             </div>
             <div className="mono" style={{ fontSize: 14, color: "var(--text-2)" }}>
               {c.observationCount}

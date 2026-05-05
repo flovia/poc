@@ -2,9 +2,9 @@
 // `apps/cli/lib/api/dto.ts` の export と一対一で対応する。BFF が拡張された
 // ときはここも合わせて更新する。
 
-import type { DataProvenance, EvidenceLabel } from "contracts";
+import type { DataProvenance, EvidenceLabel, ProviderCatalogSource } from "contracts";
 
-export type { DataProvenance, EvidenceLabel } from "contracts";
+export type { DataProvenance, EvidenceLabel, ProviderCatalogSource } from "contracts";
 
 export type UpsellOpportunity = "low" | "medium" | "high";
 
@@ -17,6 +17,10 @@ export type CustomerListItemDto = {
   lastSeenAt: number;
   activityGrowth: number;
   upsellOpportunity: UpsellOpportunity;
+  chains?: string[];
+  assets?: string[];
+  spendByAsset?: Record<string, string>;
+  tags?: string[];
   provenance: DataProvenance;
   provenanceByField: Record<string, DataProvenance>;
   reasons: EvidenceLabel[];
@@ -30,6 +34,7 @@ export type ProviderCatalogItemDto = {
   network: string;
   asset: string;
   payTo: string;
+  catalogSource?: ProviderCatalogSource;
   transactionCount: number;
   uniqueSenderCount: number;
   totalVolumeAtomic: string;
@@ -39,6 +44,43 @@ export type ProviderCatalogItemDto = {
   attributionConfidence: number;
   hasCustomerFacts: boolean;
   customerFactCount: number;
+  title?: string;
+  description?: string;
+  useCase?: string;
+  category?: string;
+  serviceUrl?: string;
+  hasMetering?: boolean;
+  hasFreeTier?: boolean;
+  providerSha?: string;
+  registryVersion?: string;
+  registryGeneratedAt?: string;
+  registrySourceUrl?: string;
+  offers?: Array<{
+    protocol: "x402" | "MPP";
+    chain: string;
+    asset: string;
+    payToAddress: string;
+    probePriceUsd?: number;
+  }>;
+  protocol?: "x402" | "MPP";
+  chain?: string;
+  assetSymbol?: string;
+  priceRangeUsd?: { min: number; max: number };
+  resources?: Array<{
+    resource: string;
+    network?: string;
+    asset?: string;
+    amountAtomic?: string;
+    description?: string;
+    method?: string;
+    inputSchema?: unknown;
+    lastUpdated?: string;
+    x402Version?: number;
+    l30DaysTotalCalls?: number;
+    l30DaysUniquePayers?: number;
+    transactionCount?: number;
+    totalAmountAtomic?: string;
+  }>;
   provenance: DataProvenance;
   provenanceByField: Record<string, DataProvenance>;
   reasons: EvidenceLabel[];

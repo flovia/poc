@@ -1,9 +1,11 @@
+import { notFound } from "next/navigation";
 import { TopBar } from "@/components/shell/TopBar";
 import { CustomersBrowser } from "@/components/customers/CustomersBrowser";
 import { CustomersHeader } from "@/components/customers/CustomersHeader";
 import { CustomersOverview } from "@/components/customers/overview/CustomersOverview";
 import { SnapshotIndicator } from "@/components/customers/SnapshotIndicator";
 import { getCustomers, getProviders, getSdkExtrasMap, getSummary } from "@/lib/data-source";
+import { findProviderByRouteId } from "@/lib/providers";
 import { getTopBarPageContext } from "@/lib/server/page-context";
 
 export default async function CustomersPage({
@@ -13,13 +15,17 @@ export default async function CustomersPage({
 }) {
   const { providerId } = await params;
   const providers = await getProviders();
-  const activeProvider = providers.find((provider) => provider.providerId === providerId);
-  const payTo = activeProvider?.payTo;
+  const activeProvider = findProviderByRouteId(providers, providerId);
+  if (!activeProvider?.payTo) notFound();
+  const resolvedProviderId = activeProvider.providerId;
+  const filter = activeProvider?.serviceId
+    ? { serviceId: activeProvider.serviceId }
+    : { payTo: activeProvider.payTo };
   const [customers, extrasMap, pageCtx, summary] = await Promise.all([
-    getCustomers(payTo),
+    getCustomers(filter),
     getSdkExtrasMap(),
     getTopBarPageContext(),
-    getSummary(payTo),
+    getSummary(filter),
   ]);
 
   const totalSpendAtomic = customers
@@ -29,26 +35,26 @@ export default async function CustomersPage({
   return (
     <>
       <TopBar
-        providerId={providerId}
+        providerId={resolvedProviderId}
         crumbs={[{ label: "Customers" }]}
         dataMode={pageCtx.dataMode}
         onboarding={{
           id: "my-customers-wallet-profile",
           title: "Understand your customers",
           description:
-            "Click a wallet address to open a Flovia profile for that payer: spend history, AI agent context, endpoint usage, and cross-provider activity in one place.",
+            "View the payer wallets consuming your API, how much they spend, when they were last active, and who warrants follow up. Click on any wallet to access its expanded view.",
           metrics: [
-            { label: "Customer count", description: "The scale of your active customer base.", icon: "customers" },
+            { label: "Payer wallets", description: "See how many unique wallets are calling your API.", icon: "customers" },
+            { label: "Account segments", description: "Prioritize key, emerging, at-risk, and dormant accounts by recency and spend.", icon: "spark" },
+            { label: "Usage and spend", description: "Find the wallets driving the most API activity and revenue.", icon: "activity" },
             {
               label: "Wallet profiles",
-              description:
-                "Click a wallet address to open an internal profile, not a block explorer: spend history, AI agent context, endpoint usage, and cross-provider activity.",
+              description: "Open a wallet to review spend history, endpoint usage, AI context, and cross-provider activity.",
               icon: "spark",
             },
-            { label: "Request volume", description: "Which wallets drive the most API usage.", icon: "activity" },
             {
-              label: "Network signals",
-              description: "How the same payer wallet appears across providers and use cases.",
+              label: "Provider spread",
+              description: "See whether payers are exclusive to your API or active across other providers.",
               icon: "external",
             },
           ],
@@ -65,7 +71,7 @@ export default async function CustomersPage({
               marginBottom: 20,
             }}
           >
-            <CustomersHeader providerId={providerId} />
+            <CustomersHeader providerId={resolvedProviderId} />
             <SnapshotIndicator generatedAt={summary.generatedAt} />
           </div>
 
@@ -77,7 +83,7 @@ export default async function CustomersPage({
 
           <CustomersBrowser
             customers={customers}
-            providerId={providerId}
+            providerId={resolvedProviderId}
             dataMode={pageCtx.dataMode}
             extrasMap={extrasMap}
           />
