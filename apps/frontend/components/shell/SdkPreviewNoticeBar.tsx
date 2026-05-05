@@ -2,7 +2,7 @@
 // design.md §5.3: provider layout の最上段 (sidebar/main の外) に置くことで,
 // provider layout の skeleton 表示中でもバーが見える.
 
-import { getServerDashboardMode } from "@/lib/server/dashboard-mode";
+import { getServerDashboardMode } from "@/lib/data-mode";
 
 export async function SdkPreviewNoticeBar() {
   const mode = await getServerDashboardMode();
