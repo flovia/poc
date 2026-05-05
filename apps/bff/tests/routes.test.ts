@@ -79,6 +79,16 @@ describe("BFF routes", () => {
     }
   });
 
+  test("serves health without waiting for analytics data source", async () => {
+    const unresolvedDataSource = new Promise<never>(() => {});
+    const handler = createBffHandler(unresolvedDataSource);
+
+    const response = await handler(request("/health"));
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({ status: "ok", service: "flovia-bff" });
+  });
+
   test("rejects non-GET requests to read-only endpoints", async () => {
     const handler = createBffHandler();
     const response = await handler(request("/health", { method: "POST" }));
@@ -1046,6 +1056,53 @@ describe("BFF routes", () => {
     expect(customerSql).toContain("WHEN lower(s.asset) = 'usdc' THEN 'USDC'");
     expect(customerSql).toContain("WHEN lower(s.asset) = 'usdt' THEN 'USDT'");
     expect(customerSql).toContain("CROSS JOIN LATERAL unnest(s.provider_fqns)");
+  });
+
+  test("filters Solana live facts to Pay.sh offer-priced transfers", async () => {
+    let providerSql = "";
+    let customerSql = "";
+
+    await loadPostgresLiveAnalyticsDataSource({
+      async query(sql) {
+        if (sql.includes("attributed_grouped")) {
+          customerSql = sql;
+          return [];
+        }
+        providerSql = sql;
+        return [];
+      },
+    });
+
+    for (const sql of [providerSql, customerSql]) {
+      expect(sql).toContain("pay_sh_solana_offer_prices AS");
+      expect(sql).toContain("ROUND((o.probe_price_usd::numeric * 1000000))::numeric");
+      expect(sql).toContain("JOIN pay_sh_solana_offer_prices offer_price");
+      expect(sql).toContain("provider.provider_fqn = offer_price.provider_fqn");
+      expect(sql).toContain("s.amount::numeric = offer_price.amount_atomic");
+    }
+  });
+
+  test("filters Base live facts to known x402 payment option amounts", async () => {
+    let providerSql = "";
+    let customerSql = "";
+
+    await loadPostgresLiveAnalyticsDataSource({
+      async query(sql) {
+        if (sql.includes("attributed_grouped")) {
+          customerSql = sql;
+          return [];
+        }
+        providerSql = sql;
+        return [];
+      },
+    });
+
+    for (const sql of [providerSql, customerSql]) {
+      expect(sql).toContain("base_x402_payment_amounts AS");
+      expect(sql).toContain("FROM x402_payment_options po");
+      expect(sql).toContain("option_amount.pay_to = lower(g.to_owner_address)");
+      expect(sql).toContain("AND g.amount::numeric = option_amount.amount_atomic");
+    }
   });
 
   test("queries pay.sh catalog providers independently from live activity", async () => {

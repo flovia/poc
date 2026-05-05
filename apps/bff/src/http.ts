@@ -85,7 +85,6 @@ export const createBffHandler =
     llmService: BffLlmService | null = resolveBffLlmService(),
   ) =>
   async (request: Request) => {
-    const resolvedDataSource = await dataSource;
     const url = new URL(request.url);
     const path = url.pathname.replace(/\/$/, "") || "/";
 
@@ -108,6 +107,13 @@ export const createBffHandler =
         return json({ service: "flovia-bff", status: "ok" });
       case "/health":
         return json({ status: "ok", service: "flovia-bff" });
+      default:
+        break;
+    }
+
+    const resolvedDataSource = await dataSource;
+
+    switch (path) {
       case "/providers":
         return json(resolvedDataSource.providers);
       case "/customers": {

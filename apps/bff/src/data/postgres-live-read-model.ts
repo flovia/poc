@@ -238,7 +238,10 @@ const candidateForProvider = (provider: CustomerRow) => ({
 const mapProviderRow = (row: Record<string, unknown>): ProviderRow => {
   const network = text(row.network ?? row.chain, "base").toLowerCase();
   const asset = text(row.asset ?? row.asset_symbol, "USDC");
-  const payTo = normalizePaymentAddressForNetwork(row.pay_to ?? row.payTo ?? row.pay_to_wallet, network);
+  const payTo = normalizePaymentAddressForNetwork(
+    row.pay_to ?? row.payTo ?? row.pay_to_wallet,
+    network,
+  );
   const serviceId = text(row.service_id ?? row.provider_id, payTo || "unknown-service");
   const serviceName = text(row.service_name ?? row.provider_name ?? row.name, serviceId);
   const payShProviderFqn = optionalText(row.pay_sh_provider_fqn ?? row.payShProviderFqn);
@@ -701,7 +704,19 @@ export const loadPostgresLiveAnalyticsDataSource = async (
 ): Promise<BffAnalyticsDataSource> => {
   const [providerRows, customerRows] = await Promise.all([
     client.query(`
-      WITH base_provider_grouped AS (
+      WITH base_x402_payment_amounts AS (
+        SELECT DISTINCT
+          lower(po.pay_to_address) AS pay_to,
+          po.amount_atomic::numeric AS amount_atomic
+        FROM x402_payment_options po
+        JOIN x402_resources r ON r.resource_id = po.resource_id
+        WHERE lower(po.chain) = 'base'
+          AND po.pay_to_address IS NOT NULL
+          AND po.amount_atomic IS NOT NULL
+          AND po.active
+          AND r.active
+      ),
+      base_provider_grouped AS (
         SELECT
           'base' AS network,
           'USDC' AS asset,
@@ -726,7 +741,36 @@ export const loadPostgresLiveAnalyticsDataSource = async (
           ON lower(a.pay_to_address) = lower(g.to_owner_address)
         WHERE g.from_owner_address IS NOT NULL
           AND g.to_owner_address IS NOT NULL
+          AND EXISTS (
+            SELECT 1
+            FROM base_x402_payment_amounts option_amount
+            WHERE option_amount.pay_to = lower(g.to_owner_address)
+              AND g.amount::numeric = option_amount.amount_atomic
+          )
         GROUP BY lower(g.to_owner_address), service_id, service_name
+      ),
+      pay_sh_solana_offer_prices AS (
+        SELECT DISTINCT
+          o.provider_fqn,
+          CASE
+            WHEN lower(o.chain) IN ('solana', 'solana mainnet')
+              AND lower(o.protocol) = 'mpp'
+              THEN 'solana mainnet (mpp)'
+            WHEN lower(o.chain) IN ('solana', 'solana mainnet') THEN 'solana mainnet'
+            ELSE lower(o.chain)
+          END AS network,
+          CASE
+            WHEN lower(o.asset) = 'usdc' THEN 'USDC'
+            WHEN lower(o.asset) = 'usdt' THEN 'USDT'
+            ELSE o.asset
+          END AS asset,
+          o.pay_to_address AS pay_to,
+          ROUND((o.probe_price_usd::numeric * 1000000))::numeric AS amount_atomic
+        FROM pay_sh_payment_offers o
+        WHERE o.provider_fqn IS NOT NULL
+          AND o.pay_to_address IS NOT NULL
+          AND o.probe_price_usd IS NOT NULL
+          AND o.probe_price_usd > 0
       ),
       solana_provider_grouped AS (
         SELECT
@@ -752,11 +796,27 @@ export const loadPostgresLiveAnalyticsDataSource = async (
           MAX(s.block_timestamp) AS last_seen_at
         FROM payment_attributed_transfers_solana s
         CROSS JOIN LATERAL unnest(s.provider_fqns) AS provider(provider_fqn)
+        JOIN pay_sh_solana_offer_prices offer_price
+          ON provider.provider_fqn = offer_price.provider_fqn
+         AND offer_price.network = CASE
+            WHEN lower(s.chain) = 'solana'
+              AND EXISTS (SELECT 1 FROM unnest(s.protocols) protocol WHERE lower(protocol) = 'mpp')
+              THEN 'solana mainnet (mpp)'
+            WHEN lower(s.chain) = 'solana' THEN 'solana mainnet'
+            ELSE lower(s.chain)
+          END
+         AND offer_price.asset = CASE
+            WHEN lower(s.asset) = 'usdc' THEN 'USDC'
+            WHEN lower(s.asset) = 'usdt' THEN 'USDT'
+            ELSE s.asset
+          END
+         AND offer_price.pay_to = s.pay_to_address
         WHERE s.provider_fqns IS NOT NULL
           AND array_length(s.provider_fqns, 1) >= 1
           AND s.from_token_account IS NOT NULL
           AND s.pay_to_address IS NOT NULL
-        GROUP BY network, asset, s.pay_to_address, provider.provider_fqn
+          AND s.amount::numeric = offer_price.amount_atomic
+        GROUP BY 1, 2, 3, 4, 5
       ),
       provider_grouped AS (
         SELECT * FROM base_provider_grouped
@@ -979,7 +1039,19 @@ export const loadPostgresLiveAnalyticsDataSource = async (
       ORDER BY transaction_count DESC, pay_to ASC
     `),
     client.query(`
-      WITH base_attributed_grouped AS (
+      WITH base_x402_payment_amounts AS (
+        SELECT DISTINCT
+          lower(po.pay_to_address) AS pay_to,
+          po.amount_atomic::numeric AS amount_atomic
+        FROM x402_payment_options po
+        JOIN x402_resources r ON r.resource_id = po.resource_id
+        WHERE lower(po.chain) = 'base'
+          AND po.pay_to_address IS NOT NULL
+          AND po.amount_atomic IS NOT NULL
+          AND po.active
+          AND r.active
+      ),
+      base_attributed_grouped AS (
         SELECT
           'base' AS network,
           'USDC' AS asset,
@@ -1004,7 +1076,36 @@ export const loadPostgresLiveAnalyticsDataSource = async (
           ON lower(a.pay_to_address) = lower(g.to_owner_address)
         WHERE g.from_owner_address IS NOT NULL
           AND g.to_owner_address IS NOT NULL
+          AND EXISTS (
+            SELECT 1
+            FROM base_x402_payment_amounts option_amount
+            WHERE option_amount.pay_to = lower(g.to_owner_address)
+              AND g.amount::numeric = option_amount.amount_atomic
+          )
         GROUP BY lower(g.from_owner_address), lower(g.to_owner_address), service_id, service_name
+      ),
+      pay_sh_solana_offer_prices AS (
+        SELECT DISTINCT
+          o.provider_fqn,
+          CASE
+            WHEN lower(o.chain) IN ('solana', 'solana mainnet')
+              AND lower(o.protocol) = 'mpp'
+              THEN 'solana mainnet (mpp)'
+            WHEN lower(o.chain) IN ('solana', 'solana mainnet') THEN 'solana mainnet'
+            ELSE lower(o.chain)
+          END AS network,
+          CASE
+            WHEN lower(o.asset) = 'usdc' THEN 'USDC'
+            WHEN lower(o.asset) = 'usdt' THEN 'USDT'
+            ELSE o.asset
+          END AS asset,
+          o.pay_to_address AS pay_to,
+          ROUND((o.probe_price_usd::numeric * 1000000))::numeric AS amount_atomic
+        FROM pay_sh_payment_offers o
+        WHERE o.provider_fqn IS NOT NULL
+          AND o.pay_to_address IS NOT NULL
+          AND o.probe_price_usd IS NOT NULL
+          AND o.probe_price_usd > 0
       ),
       solana_attributed_grouped AS (
         SELECT
@@ -1030,11 +1131,27 @@ export const loadPostgresLiveAnalyticsDataSource = async (
           MAX(s.block_timestamp) AS last_seen_at
         FROM payment_attributed_transfers_solana s
         CROSS JOIN LATERAL unnest(s.provider_fqns) AS provider(provider_fqn)
+        JOIN pay_sh_solana_offer_prices offer_price
+          ON provider.provider_fqn = offer_price.provider_fqn
+         AND offer_price.network = CASE
+            WHEN lower(s.chain) = 'solana'
+              AND EXISTS (SELECT 1 FROM unnest(s.protocols) protocol WHERE lower(protocol) = 'mpp')
+              THEN 'solana mainnet (mpp)'
+            WHEN lower(s.chain) = 'solana' THEN 'solana mainnet'
+            ELSE lower(s.chain)
+          END
+         AND offer_price.asset = CASE
+            WHEN lower(s.asset) = 'usdc' THEN 'USDC'
+            WHEN lower(s.asset) = 'usdt' THEN 'USDT'
+            ELSE s.asset
+          END
+         AND offer_price.pay_to = s.pay_to_address
         WHERE s.provider_fqns IS NOT NULL
           AND array_length(s.provider_fqns, 1) >= 1
           AND s.from_token_account IS NOT NULL
           AND s.pay_to_address IS NOT NULL
-        GROUP BY network, asset, s.from_token_account, s.pay_to_address, provider.provider_fqn
+          AND s.amount::numeric = offer_price.amount_atomic
+        GROUP BY 1, 2, 3, 4, 5, 6
       ),
       attributed_grouped AS (
         SELECT * FROM base_attributed_grouped
