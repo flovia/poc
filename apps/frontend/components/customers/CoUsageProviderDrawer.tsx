@@ -196,7 +196,8 @@ export function CoUsageProviderDrawer({ row, providerId, onClose }: Props) {
                   <span className="chip mute">{row.assetSymbol}</span>
                 )}
                 {row.priceRangeUsd && (
-                  <span className="chip mute">
+                  <span className="chip mute" title="Listed price range">
+                    Listed price range: {""}
                     ${row.priceRangeUsd.min}
                     {row.priceRangeUsd.max !== row.priceRangeUsd.min
                       ? ` – $${row.priceRangeUsd.max}`
@@ -215,8 +216,8 @@ export function CoUsageProviderDrawer({ row, providerId, onClose }: Props) {
           )}
           <Section title="Co-usage with your customers">
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
-              <Stat label="Shared wallets" value={row.sharedWallets.toLocaleString()} />
-              <Stat label="Shared tx" value={row.sharedTxCount.toLocaleString()} />
+              <Stat label="Overlapping wallets" value={row.sharedWallets.toLocaleString()} />
+              <Stat label="Co-usage tx" value={row.sharedTxCount.toLocaleString()} />
               <Stat label="Endpoints used" value={row.endpoints.length.toLocaleString()} />
             </div>
             <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 10 }}>
@@ -225,7 +226,7 @@ export function CoUsageProviderDrawer({ row, providerId, onClose }: Props) {
                 {opportunityLabel(row.opportunity)}
               </span>
               <span style={{ fontSize: 13, color: "var(--text-3)" }}>
-                Correlation {row.confidence.toFixed(2)}
+                Signal {row.confidence.toFixed(2)}
               </span>
             </div>
           </Section>

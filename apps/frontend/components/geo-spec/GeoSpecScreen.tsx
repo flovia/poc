@@ -57,7 +57,7 @@ function EmptyState({ providerId }: { providerId: string }) {
     >
       <p style={{ margin: 0 }}>
         No GEO data available for <code className="mono">{providerId}</code>. This provider may not
-        be sourced from the Pay.sh atlas, or its catalog row could not be matched.
+        be sourced from the Pay.sh catalog, or its catalog row could not be matched.
       </p>
     </article>
   );
@@ -71,7 +71,7 @@ function GeoGroup({ spec }: { spec: GeoSpec }) {
         title="What this provider tells AI agents"
         note={
           spec.atlasMissing
-            ? "No atlas entry was matched, so description/use case below may be empty."
+            ? "No Pay.sh catalog entry was matched, so description/use case below may be empty."
             : undefined
         }
       />
@@ -100,7 +100,7 @@ function GeoGroup({ spec }: { spec: GeoSpec }) {
         />
         <MetaTile label="Category" value={spec.category} />
         <MetaTile
-          label="Endpoints (atlas)"
+          label="Endpoints (Pay.sh catalog)"
           value={spec.endpointCount !== null ? String(spec.endpointCount) : null}
           mono
         />
@@ -132,7 +132,7 @@ function ChainsAssetsSection({ spec }: { spec: GeoSpec }) {
         title="Pay.sh offers"
         note={
           spec.offers.length === 0
-            ? "No payment offers found in the atlas for this provider."
+            ? "No payment offers found in the Pay.sh catalog for this provider."
             : "Each row is one (chain × asset × payTo) combination Pay.sh published. Probe price is the per-call USD amount Pay.sh observed from a probe; individual endpoint prices are not separately published."
         }
       />
@@ -185,7 +185,7 @@ function EndpointsSection({ spec }: { spec: GeoSpec }) {
         note={
           spec.observedEndpoints.length === 0
             ? "No observed endpoint calls in the current fixture for this provider's serviceId."
-            : "Per-endpoint USD price is not separately published in the Pay.sh atlas — only the per-offer probe price above. Totals shown here are the sum of observed amounts in the fixture (atomic, asset-native), not a posted price."
+            : "Per-endpoint USD price is not separately published in the Pay.sh catalog — only the per-offer probe price above. Observed spend is the total paid amount seen in the current fixture, formatted as USDC where applicable, not a posted price."
         }
       />
       {spec.observedEndpoints.length === 0 ? null : (
@@ -208,7 +208,7 @@ function EndpointsSection({ spec }: { spec: GeoSpec }) {
                 <th style={thStyle}>Chains</th>
                 <th style={thStyle}>Assets</th>
                 <th style={{ ...thStyle, textAlign: "right" }}>Tx count</th>
-                <th style={{ ...thStyle, textAlign: "right" }}>Observed total</th>
+                <th style={{ ...thStyle, textAlign: "right" }}>Observed spend (USDC)</th>
               </tr>
             </thead>
             <tbody>

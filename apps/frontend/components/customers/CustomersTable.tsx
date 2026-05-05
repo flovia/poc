@@ -75,7 +75,7 @@ export function CustomersTable({
         <div>
           <HeaderTooltip
             label="Chain"
-            description="Chains this payer wallet has transacted on with the current service. Multiple badges mean cross-chain usage."
+            description="Chains this payer wallet has transacted on with the current service."
           />
         </div>
         <div>
@@ -86,20 +86,20 @@ export function CustomersTable({
         </div>
         <div>
           <HeaderTooltip
-            label="Spend (atomic)"
-            description="Total amount this wallet has spent with the current provider, shown in atomic (smallest) token units."
+            label="Spend (USDC)"
+            description="Total USDC spend by this wallet with the current provider."
           />
         </div>
         <div>
           <HeaderTooltip
-            label="Observations"
+            label="Calls"
             description="Number of payment observations recorded for this wallet by the current provider."
           />
         </div>
         <div>
           <HeaderTooltip
             label="Providers"
-            description="How many distinct providers this wallet has paid across the network."
+            description="How many distinct providers this wallet has paid across the x402 network, regardless of chain."
           />
         </div>
         {isSdkConnected && (
@@ -118,7 +118,7 @@ export function CustomersTable({
             />
           </div>
         )}
-        <div>
+        <div style={{ display: "flex", justifyContent: "flex-end" }}>
           <HeaderTooltip
             label="Last seen"
             description="Timestamp of the most recent payment observation from this wallet."

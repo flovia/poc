@@ -42,19 +42,19 @@ export default async function CustomersPage({
           id: "my-customers-wallet-profile",
           title: "Understand your customers",
           description:
-            "Click a wallet address to open a Flovia profile for that payer: spend history, AI agent context, endpoint usage, and cross-provider activity in one place.",
+            "View the payer wallets consuming your API, how much they spend, when they were last active, and who warrants follow up. Click on any wallet to access its expanded view.",
           metrics: [
-            { label: "Customer count", description: "The scale of your active customer base.", icon: "customers" },
+            { label: "Payer wallets", description: "See how many unique wallets are calling your API.", icon: "customers" },
+            { label: "Account segments", description: "Prioritize key, emerging, at-risk, and dormant accounts by recency and spend.", icon: "spark" },
+            { label: "Usage and spend", description: "Find the wallets driving the most API activity and revenue.", icon: "activity" },
             {
               label: "Wallet profiles",
-              description:
-                "Click a wallet address to open an internal profile, not a block explorer: spend history, AI agent context, endpoint usage, and cross-provider activity.",
+              description: "Open a wallet to review spend history, endpoint usage, AI context, and cross-provider activity.",
               icon: "spark",
             },
-            { label: "Request volume", description: "Which wallets drive the most API usage.", icon: "activity" },
             {
-              label: "Network signals",
-              description: "How the same payer wallet appears across providers and use cases.",
+              label: "Provider spread",
+              description: "See whether payers are exclusive to your API or active across other providers.",
               icon: "external",
             },
           ],
