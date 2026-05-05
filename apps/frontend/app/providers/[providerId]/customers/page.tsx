@@ -1,9 +1,11 @@
+import { notFound } from "next/navigation";
 import { TopBar } from "@/components/shell/TopBar";
 import { CustomersBrowser } from "@/components/customers/CustomersBrowser";
 import { CustomersHeader } from "@/components/customers/CustomersHeader";
 import { CustomersOverview } from "@/components/customers/overview/CustomersOverview";
 import { SnapshotIndicator } from "@/components/customers/SnapshotIndicator";
 import { getCustomers, getProviders, getSdkExtrasMap, getSummary } from "@/lib/data-source";
+import { findProviderByRouteId } from "@/lib/providers";
 import { getTopBarPageContext } from "@/lib/server/page-context";
 
 export default async function CustomersPage({
@@ -13,8 +15,10 @@ export default async function CustomersPage({
 }) {
   const { providerId } = await params;
   const providers = await getProviders();
-  const activeProvider = providers.find((provider) => provider.providerId === providerId);
-  const payTo = activeProvider?.payTo;
+  const activeProvider = findProviderByRouteId(providers, providerId);
+  if (!activeProvider?.payTo) notFound();
+  const payTo = activeProvider.payTo;
+  const resolvedProviderId = activeProvider.providerId;
   const [customers, extrasMap, pageCtx, summary] = await Promise.all([
     getCustomers(payTo),
     getSdkExtrasMap(),
@@ -29,7 +33,7 @@ export default async function CustomersPage({
   return (
     <>
       <TopBar
-        providerId={providerId}
+        providerId={resolvedProviderId}
         crumbs={[{ label: "Customers" }]}
         dataMode={pageCtx.dataMode}
         onboarding={{
@@ -65,7 +69,7 @@ export default async function CustomersPage({
               marginBottom: 20,
             }}
           >
-            <CustomersHeader providerId={providerId} />
+            <CustomersHeader providerId={resolvedProviderId} />
             <SnapshotIndicator generatedAt={summary.generatedAt} />
           </div>
 
@@ -77,7 +81,7 @@ export default async function CustomersPage({
 
           <CustomersBrowser
             customers={customers}
-            providerId={providerId}
+            providerId={resolvedProviderId}
             dataMode={pageCtx.dataMode}
             extrasMap={extrasMap}
           />
