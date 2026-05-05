@@ -1,6 +1,7 @@
 "use client";
 
 import { Fragment, useMemo } from "react";
+import { normalizePaymentRecipientAddress } from "contracts";
 import type {
   CustomerProviderUsageDto,
   CustomerTimelineEventDto,
@@ -54,7 +55,7 @@ export function ActivityTimeline({
   const hostByPayToWallet = useMemo(() => {
     const m = new Map<string, string>();
     for (const p of providers) {
-      m.set(p.payToWallet.toLowerCase(), extractHost(p.name));
+      m.set(normalizePaymentRecipientAddress(p.payToWallet), extractHost(p.name));
     }
     return m;
   }, [providers]);

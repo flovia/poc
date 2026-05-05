@@ -17,6 +17,8 @@ type StoredProviderBase = {
   name: string;
   createdAt: number;
   source?: "user" | "demo" | "generated";
+  serviceId?: string;
+  serviceName?: string;
   network?: string;
   asset?: string;
   transactionCount?: number;

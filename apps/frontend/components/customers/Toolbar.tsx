@@ -34,6 +34,14 @@ const CHAIN_OPTIONS: ReadonlyArray<SelectOption<CustomerChainFilter>> = [
   { value: "all", label: "All" },
   { value: "base", label: "Base" },
   { value: "solana", label: "Solana" },
+  { value: "tempo", label: "Tempo" },
+  { value: "x-layer", label: "X Layer" },
+  { value: "polygon", label: "Polygon" },
+  { value: "polygon-amoy", label: "Polygon Amoy" },
+  { value: "base-sepolia", label: "Base Sepolia" },
+  { value: "avalanche", label: "Avalanche" },
+  { value: "eip155-other", label: "EIP-155 (other)" },
+  { value: "other", label: "Other" },
 ];
 
 export function Toolbar({ total, filteredCount, state, onChange }: ToolbarProps) {

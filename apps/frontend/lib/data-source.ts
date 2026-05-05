@@ -31,8 +31,12 @@ export async function getProviders(): Promise<ProviderCatalogItemDto[]> {
   return live.getProviders();
 }
 
-export async function getCustomers(payTo?: string): Promise<CustomerListItemDto[]> {
-  if (!shouldUseFixture()) return live.getCustomers(payTo);
+export type GetCustomersFilter = { payTo?: string; serviceId?: string };
+
+export async function getCustomers(
+  filter?: string | GetCustomersFilter,
+): Promise<CustomerListItemDto[]> {
+  if (!shouldUseFixture()) return live.getCustomers(filter);
   const v = await sdkModule();
   return v.getCustomers();
 }
@@ -49,8 +53,8 @@ export async function getObservations(): Promise<PaymentObservationDto[]> {
   return v.getObservations();
 }
 
-export async function getSummary(payTo?: string): Promise<ReportSummaryDto> {
-  if (!shouldUseFixture()) return live.getSummary(payTo);
+export async function getSummary(filter?: string | GetCustomersFilter): Promise<ReportSummaryDto> {
+  if (!shouldUseFixture()) return live.getSummary(filter);
   const v = await sdkModule();
   return v.getSummary();
 }

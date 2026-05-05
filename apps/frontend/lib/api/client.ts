@@ -108,8 +108,16 @@ export async function getProviders(): Promise<ProviderCatalogItemDto[]> {
   );
 }
 
-export async function getCustomers(payTo?: string): Promise<CustomerListItemDto[]> {
-  const query = payTo ? `?payTo=${encodeURIComponent(payTo)}` : "";
+export type GetCustomersFilter = { payTo?: string; serviceId?: string };
+
+export async function getCustomers(
+  filter?: string | GetCustomersFilter,
+): Promise<CustomerListItemDto[]> {
+  const opts: GetCustomersFilter = typeof filter === "string" ? { payTo: filter } : (filter ?? {});
+  const params = new URLSearchParams();
+  if (opts.serviceId) params.set("serviceId", opts.serviceId);
+  else if (opts.payTo) params.set("payTo", opts.payTo);
+  const query = params.toString() ? `?${params.toString()}` : "";
   return adaptCustomerList(
     validatePhaseBCustomerListResponse(await bffFetch<unknown>(`/customers${query}`)),
   );
@@ -134,8 +142,12 @@ export async function getObservations(): Promise<PaymentObservationDto[]> {
 // Phase B BFF は /summary を提供しないため、/customers から合成する。
 // freshness indicator (撤去済) 再導入用のヘルパー。詳細は
 // docs/future-work.md "Data freshness indicator" を参照。
-export async function getSummary(payTo?: string): Promise<ReportSummaryDto> {
-  const query = payTo ? `?payTo=${encodeURIComponent(payTo)}` : "";
+export async function getSummary(filter?: string | GetCustomersFilter): Promise<ReportSummaryDto> {
+  const opts: GetCustomersFilter = typeof filter === "string" ? { payTo: filter } : (filter ?? {});
+  const params = new URLSearchParams();
+  if (opts.serviceId) params.set("serviceId", opts.serviceId);
+  else if (opts.payTo) params.set("payTo", opts.payTo);
+  const query = params.toString() ? `?${params.toString()}` : "";
   return adaptSummaryFromCustomers(
     validatePhaseBCustomerListResponse(await bffFetch<unknown>(`/customers${query}`)),
   );

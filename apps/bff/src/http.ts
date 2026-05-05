@@ -1,3 +1,4 @@
+import { normalizePaymentRecipientAddress } from "contracts";
 import { type BffAnalyticsDataSource, resolveAnalyticsDataSource } from "./data/analytics-source";
 import { BffLlmInferenceError, type BffLlmService, resolveBffLlmService } from "./data/llm";
 
@@ -78,10 +79,13 @@ const llmFailed = (error: unknown) =>
 
 export const createBffHandler =
   (
-    dataSource: BffAnalyticsDataSource = resolveAnalyticsDataSource(),
+    dataSource:
+      | BffAnalyticsDataSource
+      | Promise<BffAnalyticsDataSource> = resolveAnalyticsDataSource(),
     llmService: BffLlmService | null = resolveBffLlmService(),
   ) =>
   async (request: Request) => {
+    const resolvedDataSource = await dataSource;
     const url = new URL(request.url);
     const path = url.pathname.replace(/\/$/, "") || "/";
 
@@ -105,25 +109,30 @@ export const createBffHandler =
       case "/health":
         return json({ status: "ok", service: "flovia-bff" });
       case "/providers":
-        return json(dataSource.providers);
-      case "/customers":
-        return json(dataSource.getCustomers(url.searchParams.get("payTo") ?? undefined));
+        return json(resolvedDataSource.providers);
+      case "/customers": {
+        const serviceId = url.searchParams.get("serviceId");
+        if (serviceId) {
+          return json(resolvedDataSource.getCustomersByServiceId(serviceId));
+        }
+        return json(resolvedDataSource.getCustomers(url.searchParams.get("payTo") ?? undefined));
+      }
       case "/wallet-usage-graph":
-        return json(dataSource.walletUsageGraph);
+        return json(resolvedDataSource.walletUsageGraph);
       case "/analytics/services/coingecko/summary":
-        return json(dataSource.serviceSummary);
+        return json(resolvedDataSource.serviceSummary);
       case "/analytics/services/comparison":
-        return json(dataSource.serviceComparison);
+        return json(resolvedDataSource.serviceComparison);
       case "/analytics/services/quadrants":
-        return json(dataSource.serviceQuadrants);
+        return json(resolvedDataSource.serviceQuadrants);
       default:
         break;
     }
 
     const address = toProfileAddress(path);
     if (address !== null) {
-      const normalizedAddress = address.toLowerCase();
-      const profile = dataSource.getCustomerProfile(normalizedAddress);
+      const normalizedAddress = normalizePaymentRecipientAddress(address);
+      const profile = resolvedDataSource.getCustomerProfile(normalizedAddress);
 
       if (!profile) {
         return notFound(path);
@@ -134,8 +143,8 @@ export const createBffHandler =
 
     const intelligenceAddress = toIntelligenceAddress(path);
     if (intelligenceAddress !== null) {
-      const normalizedAddress = intelligenceAddress.toLowerCase();
-      const intelligence = dataSource.getCustomerIntelligence(normalizedAddress);
+      const normalizedAddress = normalizePaymentRecipientAddress(intelligenceAddress);
+      const intelligence = resolvedDataSource.getCustomerIntelligence(normalizedAddress);
 
       if (!intelligence) {
         return notFound(path);
@@ -146,8 +155,8 @@ export const createBffHandler =
 
     const upsellMetricsAddress = toUpsellMetricsAddress(path);
     if (upsellMetricsAddress !== null) {
-      const normalizedAddress = upsellMetricsAddress.toLowerCase();
-      const metrics = dataSource.getCustomerUpsellMetrics(normalizedAddress);
+      const normalizedAddress = normalizePaymentRecipientAddress(upsellMetricsAddress);
+      const metrics = resolvedDataSource.getCustomerUpsellMetrics(normalizedAddress);
 
       if (!metrics) {
         return notFound(path);
@@ -158,8 +167,8 @@ export const createBffHandler =
 
     const upsellExplanationAddress = toUpsellExplanationAddress(path);
     if (upsellExplanationAddress !== null) {
-      const normalizedAddress = upsellExplanationAddress.toLowerCase();
-      const metrics = dataSource.getCustomerUpsellMetrics(normalizedAddress);
+      const normalizedAddress = normalizePaymentRecipientAddress(upsellExplanationAddress);
+      const metrics = resolvedDataSource.getCustomerUpsellMetrics(normalizedAddress);
 
       if (!metrics) {
         return notFound(path);

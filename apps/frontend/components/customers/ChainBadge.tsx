@@ -2,7 +2,8 @@ import { describeChain, type CustomerChain } from "@/lib/customers/chain";
 
 type ChainBadgeProps = {
   chain: CustomerChain;
-  asset: string;
+  /** Optional. When provided, the asset is rendered next to the chain pill. */
+  asset?: string;
 };
 
 export function ChainBadge({ chain, asset }: ChainBadgeProps) {
@@ -11,7 +12,7 @@ export function ChainBadge({ chain, asset }: ChainBadgeProps) {
     <span
       data-testid="chain-badge"
       data-chain={chain}
-      title={`${visual.label} · ${asset}`}
+      title={asset ? `${visual.label} · ${asset}` : visual.label}
       style={{
         display: "inline-flex",
         alignItems: "center",
@@ -34,9 +35,11 @@ export function ChainBadge({ chain, asset }: ChainBadgeProps) {
       >
         {visual.short}
       </span>
-      <span className="mono" style={{ fontSize: 12, color: "var(--text-2)" }}>
-        {asset}
-      </span>
+      {asset && (
+        <span className="mono" style={{ fontSize: 12, color: "var(--text-2)" }}>
+          {asset}
+        </span>
+      )}
     </span>
   );
 }

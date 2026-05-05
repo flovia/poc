@@ -15,7 +15,7 @@ import {
   setDemoOptedIn as storageSetDemoOptedIn,
   setSeedVersion,
 } from "@/lib/storage";
-import { SEED_IDS, seedProviders } from "@/lib/providers";
+import { findProviderByRouteId, SEED_IDS, seedProviders } from "@/lib/providers";
 
 type Ctx = {
   // effective providers (demo + user, demo first)。Sidebar / SavedProviderList の
@@ -117,14 +117,37 @@ export function ProvidersContextProvider({ children }: { children: React.ReactNo
     getBffProviders()
       .then((providers) => {
         if (cancelled) return;
+        // Dedup providers that share the same display name (e.g. QuickNode appearing
+        // once per supported chain) so the sidebar shows one entry per service.
+        // Keep the row that already has customer facts when available, then fall
+        // back to the row with the highest transactionCount.
+        const groups = new Map<string, (typeof providers)[number]>();
+        for (const provider of providers) {
+          const key = `${(provider.serviceId ?? provider.name).toLowerCase()}::${(provider.title ?? provider.name).toLowerCase()}`;
+          const existing = groups.get(key);
+          if (!existing) {
+            groups.set(key, provider);
+            continue;
+          }
+          const existingScore =
+            (existing.hasCustomerFacts ? 1_000_000_000 : 0) + existing.transactionCount;
+          const candidateScore =
+            (provider.hasCustomerFacts ? 1_000_000_000 : 0) + provider.transactionCount;
+          if (candidateScore > existingScore) {
+            groups.set(key, provider);
+          }
+        }
+        const deduped = Array.from(groups.values());
         setGeneratedProviders(
-          providers.slice(0, 10).map((provider) => ({
+          deduped.map((provider) => ({
             providerId: provider.providerId,
             name: provider.name,
             mode: "simple" as const,
             payTo: provider.payTo,
             createdAt: Date.now(),
             source: "generated" as const,
+            serviceId: provider.serviceId,
+            serviceName: provider.serviceName,
             network: provider.network,
             asset: provider.asset,
             transactionCount: provider.transactionCount,
@@ -226,6 +249,6 @@ export function useProviders(): Ctx {
 
 export function useActiveProvider(idFromUrl: string | undefined) {
   const { stored, hydrated } = useProviders();
-  const active = idFromUrl ? stored.find((p) => p.providerId === idFromUrl) : undefined;
+  const active = idFromUrl ? findProviderByRouteId(stored, idFromUrl) : undefined;
   return { active, hydrated };
 }

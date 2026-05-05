@@ -1,3 +1,4 @@
+import { normalizePaymentRecipientAddress } from "contracts";
 import type { StoredProvider } from "@/lib/types";
 
 // payTo (BFF DTO 由来) を、ユーザーが Setup の advanced モードで登録した
@@ -5,13 +6,13 @@ import type { StoredProvider } from "@/lib/types";
 // BFF は API path を提供しないので、フロントの localStorage マッピングだけで
 // 解決している。simple モードの Provider は paths[] を持たないので skip。
 export function resolveApiPaths(payTo: string, providers: StoredProvider[]): string[] {
-  const target = payTo.toLowerCase();
+  const target = normalizePaymentRecipientAddress(payTo);
   const matches: string[] = [];
 
   for (const provider of providers) {
     if (provider.mode !== "advanced") continue;
     for (const path of provider.paths) {
-      if (path.payTo.toLowerCase() === target) {
+      if (normalizePaymentRecipientAddress(path.payTo) === target) {
         matches.push(path.apiPath);
       }
     }

@@ -855,14 +855,15 @@ a { color: inherit; text-decoration: none; }
 .cust-row {
   display: grid;
   grid-template-columns:
-    minmax(220px, 1fr) /* Wallet */
-    140px              /* Chain */
-    140px              /* Spend */
-    120px              /* Observations */
-    100px              /* Providers */
-    160px;             /* Last seen + arrow */
+    minmax(180px, 1fr) /* Wallet */
+    minmax(100px, 0.8fr) /* Chain */
+    minmax(72px, 0.6fr)  /* Tag */
+    minmax(100px, 0.8fr) /* Spend */
+    72px                 /* Observations */
+    72px                 /* Providers */
+    minmax(140px, 1fr);  /* Last seen + arrow */
   align-items: center;
-  gap: 14px;
+  gap: 12px;
   padding: 14px 18px;
   border-bottom: 1px solid var(--line);
   background: transparent;
@@ -873,15 +874,16 @@ a { color: inherit; text-decoration: none; }
 /* SDK connected モード時は Agent / Used endpoint / 7d sparkline の独立 3 列を追加. */
 .cust-row.cust-row-sdk {
   grid-template-columns:
-    minmax(220px, 1fr)  /* Wallet */
-    140px               /* Agent (sdk) */
-    140px               /* Chain */
-    140px               /* Spend */
-    100px               /* Observations */
-    100px               /* Providers */
-    minmax(160px, 1fr)  /* Used endpoint (sdk) */
-    100px               /* Sparkline (sdk) */
-    160px;              /* Last seen + arrow */
+    minmax(180px, 1fr)   /* Wallet */
+    minmax(100px, 0.9fr) /* Agent (sdk) */
+    minmax(100px, 0.8fr) /* Chain */
+    minmax(72px, 0.6fr)  /* Tag */
+    minmax(100px, 0.8fr) /* Spend */
+    72px                 /* Observations */
+    72px                 /* Providers */
+    minmax(140px, 1fr)   /* Used endpoint (sdk) */
+    90px                 /* Sparkline (sdk) */
+    minmax(140px, 1fr);  /* Last seen + arrow */
 }
 .cust-row:last-child { border-bottom: none; }
 .cust-row.cust-head {
