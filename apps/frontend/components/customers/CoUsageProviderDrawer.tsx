@@ -1,25 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import type { CoUsageProviderRow } from "@/lib/customers/co-usage-providers";
+import { opportunityChipClass, opportunityLabel } from "@/lib/customers/co-usage-ui";
+import { useClipboardCopy } from "@/lib/use-clipboard-copy";
 
 type Props = {
   row: CoUsageProviderRow | null;
   providerId: string;
   onClose: () => void;
-};
-
-const opportunityChipClass = (level: "high" | "medium" | "low") => {
-  if (level === "high") return "chip blue";
-  if (level === "medium") return "chip teal";
-  return "chip mute";
-};
-
-const opportunityLabel = (level: "high" | "medium" | "low") => {
-  if (level === "high") return "High";
-  if (level === "medium") return "Medium";
-  return "Low";
 };
 
 const hostnameOf = (urlOrText: string): string | null => {
@@ -32,7 +22,7 @@ const hostnameOf = (urlOrText: string): string | null => {
 
 export function CoUsageProviderDrawer({ row, providerId, onClose }: Props) {
   const open = row !== null;
-  const [copied, setCopied] = useState(false);
+  const { copied, copy, reset } = useClipboardCopy(1500);
 
   useEffect(() => {
     if (!open) return;
@@ -44,8 +34,8 @@ export function CoUsageProviderDrawer({ row, providerId, onClose }: Props) {
   }, [open, onClose]);
 
   useEffect(() => {
-    if (!open) setCopied(false);
-  }, [open]);
+    if (!open) reset();
+  }, [open, reset]);
 
   const externalSiteUrl = useMemo(() => {
     if (!row) return null;
@@ -58,16 +48,7 @@ export function CoUsageProviderDrawer({ row, providerId, onClose }: Props) {
 
   if (!row) return null;
 
-  const handleCopy = async () => {
-    if (!row.payToWallet) return;
-    try {
-      await navigator.clipboard.writeText(row.payToWallet);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    } catch {
-      // clipboard may be blocked; ignore silently in PoC.
-    }
-  };
+  const handleCopy = () => void copy(row.payToWallet);
 
   return (
     <>

@@ -5,6 +5,7 @@ import {
   chainsOfProvider,
   collectAvailableChains,
   filterProviders,
+  visibleProviderChains,
   type ProviderClassifierContext,
 } from "./filter";
 import { orderProvidersPinnedFirst } from "./order";
@@ -170,6 +171,16 @@ describe("chainsOfProvider", () => {
 });
 
 describe("collectAvailableChains", () => {
+  test("hides testnet and fallback chains from provider filter options", () => {
+    const providers: StoredProvider[] = [
+      make({ providerId: "a", name: "A", networks: ["base", "Base Sepolia"] }),
+      make({ providerId: "b", name: "B", networks: ["Polygon Amoy", "eip155:99999"] }),
+      make({ providerId: "c", name: "C", networks: ["solana"] }),
+    ];
+
+    expect(collectAvailableChains(providers)).toEqual(["base", "solana"]);
+  });
+
   test("returns the unique normalized chains across all providers", () => {
     const providers: StoredProvider[] = [
       make({ providerId: "a", name: "A", networks: ["base", "solana"] }),
@@ -186,11 +197,23 @@ describe("collectAvailableChains", () => {
   });
 });
 
+describe("visibleProviderChains", () => {
+  test("removes B-SEP, AMOY, and OTHER badges from provider cards", () => {
+    expect(visibleProviderChains(["base", "base-sepolia", "polygon-amoy", "other"])).toEqual([
+      "base",
+    ]);
+  });
+});
+
 describe("orderProvidersPinnedFirst", () => {
   test("places CoinGecko and Nansen first while preserving the rest", () => {
     const providers: StoredProvider[] = [
       make({ providerId: "quicknode", name: "QuickNode", serviceId: "quicknode/rpc" }),
-      make({ providerId: "static-pro-api-coingecko-com", name: "CoinGecko Pro", serviceId: "pro-api.coingecko.com" }),
+      make({
+        providerId: "static-pro-api-coingecko-com",
+        name: "CoinGecko Pro",
+        serviceId: "pro-api.coingecko.com",
+      }),
       make({ providerId: "stripe", name: "Stripe", serviceId: "api.stripe.com" }),
       make({ providerId: "static-api-nansen-ai", name: "Nansen", serviceId: "api.nansen.ai" }),
     ];

@@ -40,6 +40,16 @@ export function formatGrowth(value: number): string {
   return `${pct >= 0 ? "+" : ""}${pct}%`;
 }
 
+export function formatUsd(value: number, options: { fractionDigits?: number } = {}): string {
+  const fractionDigits = options.fractionDigits ?? 0;
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: fractionDigits,
+    maximumFractionDigits: fractionDigits,
+  }).format(Number.isFinite(value) ? value : 0);
+}
+
 export function formatTimestamp(unixSeconds: number): string {
   if (!Number.isFinite(unixSeconds) || unixSeconds <= 0) return "—";
   return new Date(unixSeconds * 1000).toISOString().replace("T", " ").slice(0, 19);

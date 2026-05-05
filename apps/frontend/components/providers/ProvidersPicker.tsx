@@ -14,6 +14,7 @@ import {
   collectAvailableChains,
   filterProviders,
   protocolsOfProvider,
+  visibleProviderChains,
   type ProviderFilterState,
   type ProviderProtocolFilter,
   type ProviderSourceFilter,
@@ -156,7 +157,7 @@ export function ProvidersPicker() {
           {filtered.map((p) => {
         const isDemo = isDemoProvider(p, demoOpted, userIds);
         const isPaySh = p.catalogSource === "pay_sh_curated";
-        const chains = chainsOfProvider(p);
+        const chains = visibleProviderChains(chainsOfProvider(p));
         const protocols = protocolsOfProvider(p);
         const skill = resolvePaySkill(skills, p.serviceId);
         const displayName = skill?.title || inferBrandDisplayName({ fqn: p.serviceId }) || p.name;
