@@ -108,10 +108,10 @@ export function matchesProviderRouteId(
   return providerRouteAliases(provider).has(routeProviderId.toLowerCase());
 }
 
-export function findProviderByRouteId(
-  providers: readonly ProviderRouteLike[],
+export function findProviderByRouteId<T extends ProviderRouteLike>(
+  providers: readonly T[],
   routeProviderId: string,
-): ProviderRouteLike | undefined {
+): T | undefined {
   return providers.find((provider) => matchesProviderRouteId(provider, routeProviderId));
 }
 

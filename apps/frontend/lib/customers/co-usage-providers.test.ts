@@ -130,6 +130,42 @@ describe("aggregateCoUsageProviders", () => {
     expect(rows[0]?.sharedWallets).toBe(1);
   });
 
+  test("aggregates all selected provider payTos for multi-chain services", () => {
+    const SECOND_OWN_PAY_TO = "0x0000000000000000000000000000000000000020";
+    const graph: WalletUsageGraphDto = {
+      ...makeGraph([]),
+      providerWallets: [
+        {
+          payTo: OWN_PAY_TO,
+          claimIds: ["Own Provider Base"],
+          payerWallets: [
+            makePayer("0x1", [
+              makeCandidate({ providerId: "ext:a", providerName: "A", payToWallet: EXT_A }),
+            ]),
+          ],
+        },
+        {
+          payTo: SECOND_OWN_PAY_TO,
+          claimIds: ["Own Provider Solana"],
+          payerWallets: [
+            makePayer("0x2", [
+              makeCandidate({ providerId: "ext:a", providerName: "A", payToWallet: EXT_A }),
+            ]),
+          ],
+        },
+      ],
+    };
+
+    const rows = aggregateCoUsageProviders(graph, {
+      ownPayTo: OWN_PAY_TO,
+      ownPayTos: [OWN_PAY_TO, SECOND_OWN_PAY_TO],
+    });
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.payToWallet).toBe(EXT_A);
+    expect(rows[0]?.sharedWallets).toBe(2);
+  });
+
   test("merges multiple endpoints under the same payToWallet into one row", () => {
     const graph = makeGraph([
       makePayer("0x1", [

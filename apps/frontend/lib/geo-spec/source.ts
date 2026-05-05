@@ -308,6 +308,13 @@ const hostnameOf = (url: string | null | undefined): string | null => {
   }
 };
 
+const apexLabelOf = (host: string): string | null => {
+  // For api.nansen.ai → "nansen". For pro-api.coingecko.com → "coingecko".
+  const labels = host.split(".").filter(Boolean);
+  if (labels.length < 2) return null;
+  return labels[labels.length - 2]!;
+};
+
 const matchesAtlas = (atlas: AtlasProvider, serviceId: string, serviceUrl: string | null) => {
   const sidLower = serviceId.toLowerCase();
   const atlasHost = hostnameOf(atlas.serviceUrl);
@@ -316,9 +323,20 @@ const matchesAtlas = (atlas: AtlasProvider, serviceId: string, serviceUrl: strin
     const sUrlHost = hostnameOf(serviceUrl);
     if (sUrlHost && atlasHost && sUrlHost === atlasHost) return true;
   }
-  // fallback: serviceId が atlas serviceUrl に含まれる、または逆
+  // fallback 1: full serviceId substring inside atlas serviceUrl.
   if (atlas.serviceUrl.toLowerCase().includes(sidLower)) return true;
-  if (atlas.fqn.toLowerCase().includes(sidLower.split(".")[0] ?? "")) return true;
+  // fallback 2: brand-segment match. Take the apex label of a hostname-style
+  // serviceId (api.nansen.ai → "nansen") and compare it to each `/`-separated
+  // segment of the atlas fqn. We require an exact segment hit so generic
+  // labels like "api" can't accidentally collide with atlas fqns that simply
+  // contain the substring (e.g. solana-foundation/alibaba/ocr-api).
+  if (sidLower.includes(".")) {
+    const apex = apexLabelOf(sidLower);
+    if (apex && apex.length >= 3) {
+      const fqnSegments = atlas.fqn.toLowerCase().split("/").filter(Boolean);
+      if (fqnSegments.includes(apex)) return true;
+    }
+  }
   return false;
 };
 

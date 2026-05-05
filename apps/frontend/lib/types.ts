@@ -20,6 +20,8 @@ type StoredProviderBase = {
   serviceId?: string;
   serviceName?: string;
   network?: string;
+  networks?: string[];
+  protocols?: ("x402" | "MPP")[];
   asset?: string;
   transactionCount?: number;
   uniqueSenderCount?: number;

@@ -5,6 +5,7 @@ import { SummaryChip } from "@/components/customers/SummaryChip";
 import { aggregateCoUsageProviders } from "@/lib/customers/co-usage-providers";
 import { resolveKnownProviderName } from "@/lib/customers/known-providers";
 import { getProviders, getWalletUsageGraph } from "@/lib/data-source";
+import { findProviderByRouteId } from "@/lib/providers";
 import { getTopBarPageContext } from "@/lib/server/page-context";
 
 export default async function CoUsageProvidersPage({
@@ -18,8 +19,17 @@ export default async function CoUsageProvidersPage({
     getTopBarPageContext(),
     getWalletUsageGraph(),
   ]);
-  const ownProvider = providers.find((p) => p.providerId === providerId);
+  const ownProvider = findProviderByRouteId(providers, providerId);
   const ownPayTo = ownProvider?.payTo;
+  const ownPayTos = ownProvider
+    ? providers
+        .filter((p) => {
+          if (ownProvider.serviceId && p.serviceId === ownProvider.serviceId) return true;
+          if (ownProvider.serviceName && p.serviceName === ownProvider.serviceName) return true;
+          return p.providerId === ownProvider.providerId;
+        })
+        .map((p) => p.payTo)
+    : [];
 
   const metadataByPayTo = new Map(
     providers
@@ -54,6 +64,7 @@ export default async function CoUsageProvidersPage({
   const rows = graph
     ? aggregateCoUsageProviders(graph, {
         ownPayTo,
+        ownPayTos,
         resolveProviderName: resolveKnownProviderName,
         resolveMetadata: (payToWallet) =>
           metadataByPayTo.get(normalizePaymentRecipientAddress(payToWallet)) ?? null,

@@ -48,7 +48,7 @@ const CHAIN_DISPLAY: Record<CustomerChain, { label: string; short: string; color
   "polygon-amoy": { label: "Polygon Amoy", short: "AMOY", color: "#a78bfa" },
   "base-sepolia": { label: "Base Sepolia", short: "B-SEP", color: "#60a5fa" },
   avalanche: { label: "Avalanche", short: "AVAX", color: "#ef4444" },
-  "eip155-other": { label: "EIP-155 (other)", short: "EIP155", color: "#f59e0b" },
+  "eip155-other": { label: "Other", short: "OTHER", color: "var(--text-mute)" },
   other: { label: "Other", short: "OTHER", color: "var(--text-mute)" },
 };
 
@@ -67,7 +67,7 @@ export function normalizeChain(raw: string | undefined | null): CustomerChain {
   if (c.includes("tempo")) return "tempo";
   if (c.includes("avalanche")) return "avalanche";
   if (c.includes("x layer") || c === "x-layer") return "x-layer";
-  if (c.startsWith("eip155:")) return "eip155-other";
+  if (c.startsWith("eip155:")) return "other";
   return "other";
 }
 
