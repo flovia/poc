@@ -92,7 +92,12 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
           priority
         />
         <div className="brand-name">
-          Flovia<em>x402 analytics</em>
+          Flovia
+          <em>
+            x402 / MPP
+            <br />
+            Agent Payments
+          </em>
         </div>
       </div>
 
@@ -234,7 +239,7 @@ function GeoNavLabel() {
     <span style={{ flex: 1, display: "flex", flexDirection: "column", lineHeight: 1.2 }}>
       <span>GEO</span>
       <span style={{ fontSize: 11, color: "var(--text-mute)", fontWeight: 400 }}>
-        Generative Engine Optimization
+        SEO for AI agents
       </span>
     </span>
   );
