@@ -431,7 +431,9 @@ export function buildApiGrowthIntelligence(data: MacroMetricsDemoData): ApiGrowt
   };
 }
 
-function buildTimeToSecondPaidSession(data: MacroMetricsDemoData): ApiGrowthTimeToSecondPaidSession[] {
+function buildTimeToSecondPaidSession(
+  data: MacroMetricsDemoData,
+): ApiGrowthTimeToSecondPaidSession[] {
   if (data.wallets.length === 0) return [];
 
   return [
@@ -697,7 +699,11 @@ function serviceName(data: MacroMetricsDemoData, serviceId: MacroServiceId): str
     signalport: "CoinMarketCap API",
     vaultlayer: "Alchemy API",
   };
-  return apiProviderName[serviceId] ?? data.services.find((service) => service.id === serviceId)?.name ?? serviceId;
+  return (
+    apiProviderName[serviceId] ??
+    data.services.find((service) => service.id === serviceId)?.name ??
+    serviceId
+  );
 }
 
 function ownerForService(serviceId: MacroServiceId): string {

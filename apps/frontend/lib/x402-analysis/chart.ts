@@ -120,13 +120,11 @@ export function getSankeyLabelLayout(
           maxY,
         });
 
-  return stabilizedPlacements.map(
-    (placement) => ({
-      id: placement.id,
-      x: placement.x,
-      y: placement.y,
-    }),
-  );
+  return stabilizedPlacements.map((placement) => ({
+    id: placement.id,
+    x: placement.x,
+    y: placement.y,
+  }));
 }
 
 export function getSankeyTooltipPosition(args: {
@@ -166,7 +164,9 @@ export function getSankeyTooltipWidth(args: {
   const longestValueLength = args.values.reduce((longest, value) => {
     return Math.max(longest, value.trim().length);
   }, 0);
-  const estimatedWidth = Math.ceil(longestValueLength * DEFAULT_TOOLTIP_CHAR_WIDTH + DEFAULT_TOOLTIP_CONTENT_PADDING);
+  const estimatedWidth = Math.ceil(
+    longestValueLength * DEFAULT_TOOLTIP_CHAR_WIDTH + DEFAULT_TOOLTIP_CONTENT_PADDING,
+  );
   const upperBound = Math.min(maxWidth, availableWidth);
   const lowerBound = Math.min(minWidth, upperBound);
 
@@ -231,7 +231,9 @@ function resolveLabelSpacing<T extends { id: string; x: number; y: number }>(
     maxY: number;
   },
 ) {
-  const sorted = placements.map((placement) => ({ ...placement })).sort((left, right) => left.y - right.y);
+  const sorted = placements
+    .map((placement) => ({ ...placement }))
+    .sort((left, right) => left.y - right.y);
   const availableRange = Math.max(0, options.maxY - options.minY);
   const effectiveGap =
     sorted.length <= 1
