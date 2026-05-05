@@ -277,6 +277,89 @@ describe("aggregateCoUsageProviders", () => {
     expect(rows[0]?.providerName).toBe("Reverse Search");
   });
 
+  test("preserves the original payToWallet string casing (e.g. Solana base58)", () => {
+    const SOLANA = "Cs2zdfUNonRdRGsiZUQQLdTxzxVvJZmgiX2mpLYKuEqP";
+    const graph = makeGraph([
+      makePayer("0x1", [
+        makeCandidate({
+          providerId: "ext:solana",
+          providerName: "Alibaba",
+          payToWallet: SOLANA,
+          coUsageCount: 2,
+        }),
+      ]),
+    ]);
+    const rows = aggregateCoUsageProviders(graph, { ownPayTo: OWN_PAY_TO });
+    expect(rows[0]?.payToWallet).toBe(SOLANA);
+  });
+
+  test("metadata lookup works even when only useCase/assetSymbol/priceRangeUsd are provided", () => {
+    const graph = makeGraph([
+      makePayer("0x1", [
+        makeCandidate({
+          providerId: "ext:a",
+          payToWallet: EXT_A,
+          coUsageCount: 5,
+        }),
+      ]),
+    ]);
+    const rows = aggregateCoUsageProviders(graph, {
+      ownPayTo: OWN_PAY_TO,
+      resolveMetadata: (payToWallet) =>
+        payToWallet.toLowerCase() === EXT_A.toLowerCase()
+          ? {
+              useCase: "Analytics-only metadata",
+              assetSymbol: "USDC",
+              priceRangeUsd: { min: 0.01, max: 0.05 },
+            }
+          : null,
+    });
+    expect(rows[0]).toMatchObject({
+      useCase: "Analytics-only metadata",
+      assetSymbol: "USDC",
+      priceRangeUsd: { min: 0.01, max: 0.05 },
+    });
+  });
+
+  test("attaches metadata (description/category/serviceUrl/protocol/chain) when resolveMetadata is provided", () => {
+    const graph = makeGraph([
+      makePayer("0x1", [
+        makeCandidate({
+          providerId: "ext:a",
+          payToWallet: EXT_A,
+          coUsageCount: 5,
+        }),
+      ]),
+    ]);
+
+    const rows = aggregateCoUsageProviders(graph, {
+      ownPayTo: OWN_PAY_TO,
+      resolveMetadata: (payToWallet) =>
+        payToWallet === EXT_A
+          ? {
+              title: "AgentMail",
+              description: "Email inboxes for AI agents.",
+              useCase: "Use to give agents email.",
+              category: "messaging",
+              serviceUrl: "https://x402.api.agentmail.to",
+              protocol: "x402",
+              chain: "Solana mainnet",
+              assetSymbol: "USDC",
+              priceRangeUsd: { min: 0, max: 10 },
+            }
+          : null,
+    });
+
+    expect(rows[0]).toMatchObject({
+      description: "Email inboxes for AI agents.",
+      category: "messaging",
+      serviceUrl: "https://x402.api.agentmail.to",
+      protocol: "x402",
+      chain: "Solana mainnet",
+      assetSymbol: "USDC",
+    });
+  });
+
   test("builds sankey flows from user segments to co-usage providers to target categories", () => {
     const rows = aggregateCoUsageProviders(
       makeGraph([
@@ -418,20 +501,35 @@ describe("aggregateCoUsageProviders", () => {
 
     const flows = buildCoUsageProviderSankeyFlows(rows, {
       customersByWallet: new Map([
-        ["0xa", makeCustomer("0xa", { providerCount: 4, observationCount: 9, upsellOpportunity: "high" })],
-        ["0xb", makeCustomer("0xb", { providerCount: 2, observationCount: 5, upsellOpportunity: "medium" })],
-        ["0xc", makeCustomer("0xc", { providerCount: 1, observationCount: 1, upsellOpportunity: "low" })],
+        [
+          "0xa",
+          makeCustomer("0xa", { providerCount: 4, observationCount: 9, upsellOpportunity: "high" }),
+        ],
+        [
+          "0xb",
+          makeCustomer("0xb", {
+            providerCount: 2,
+            observationCount: 5,
+            upsellOpportunity: "medium",
+          }),
+        ],
+        [
+          "0xc",
+          makeCustomer("0xc", { providerCount: 1, observationCount: 1, upsellOpportunity: "low" }),
+        ],
       ]),
       maxProviders: 2,
       maxTargetCategories: 2,
     });
 
     expect(
-      flows.filter((flow) => flow.to === `provider:${EXT_A}`).map((flow) => ({
-        from: flow.from,
-        fromLabel: flow.fromLabel,
-        occurrences: flow.occurrences,
-      })),
+      flows
+        .filter((flow) => flow.to === `provider:${EXT_A}`)
+        .map((flow) => ({
+          from: flow.from,
+          fromLabel: flow.fromLabel,
+          occurrences: flow.occurrences,
+        })),
     ).toEqual([
       {
         from: "segment:high-intent-power-users",

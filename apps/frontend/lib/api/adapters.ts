@@ -1,9 +1,10 @@
-import type {
-  PhaseBCustomerListResponse,
-  PhaseBCustomerUpsellExplanationResponse,
-  PhaseBCustomerProfileResponse,
-  ProviderCatalogResponse,
-  WalletUsageGraphResponse,
+import {
+  type PhaseBCustomerListResponse,
+  type PhaseBCustomerUpsellExplanationResponse,
+  type PhaseBCustomerProfileResponse,
+  type ProviderCatalogResponse,
+  type WalletUsageGraphResponse,
+  normalizePaymentRecipientAddress,
 } from "contracts";
 import type {
   CustomerInsightSeverity,
@@ -68,7 +69,7 @@ function aggregateProviderUsage(
   const byProvider = new Map<string, CustomerProviderUsageDto>();
 
   for (const provider of providers) {
-    const key = `${provider.providerId}:${provider.payToWallet.toLowerCase()}`;
+    const key = `${provider.providerId}:${normalizePaymentRecipientAddress(provider.payToWallet)}`;
     const current = byProvider.get(key);
     const next: CustomerProviderUsageDto = {
       providerId: provider.providerId,
@@ -108,6 +109,10 @@ export function adaptCustomerList(response: PhaseBCustomerListResponse): Custome
     lastSeenAt: toTimestamp(customer.lastSeenAt),
     activityGrowth: customer.activityGrowth,
     upsellOpportunity: customer.upsellOpportunity,
+    chains: customer.chains,
+    assets: customer.assets,
+    spendByAsset: customer.spendByAsset,
+    tags: customer.tags,
     provenance: customer.provenance,
     provenanceByField: customer.provenanceByField ?? {},
     reasons: customer.reasons ?? [],
@@ -115,8 +120,8 @@ export function adaptCustomerList(response: PhaseBCustomerListResponse): Custome
 }
 
 export function adaptProviderCatalog(response: ProviderCatalogResponse): ProviderCatalogItemDto[] {
-  return response.providers
-    .map((provider) => ({
+  const adapted = response.providers.map((provider, originalIndex) => ({
+    item: {
       providerId: provider.providerId,
       name: provider.name,
       serviceId: provider.serviceId,
@@ -133,32 +138,38 @@ export function adaptProviderCatalog(response: ProviderCatalogResponse): Provide
       attributionConfidence: provider.attributionConfidence,
       hasCustomerFacts: provider.hasCustomerFacts,
       customerFactCount: provider.customerFactCount,
+      title: provider.title,
+      description: provider.description,
+      useCase: provider.useCase,
+      category: provider.category,
+      serviceUrl: provider.serviceUrl,
+      protocol: provider.protocol,
+      chain: provider.chain,
+      assetSymbol: provider.assetSymbol,
+      priceRangeUsd: provider.priceRangeUsd,
       provenance: provider.provenance,
       provenanceByField: provider.provenanceByField ?? {},
       reasons: provider.reasons ?? [],
-    }))
-    .sort((left, right) => {
-      const leftScore = providerRank(left);
-      const rightScore = providerRank(right);
-      if (leftScore !== rightScore) return rightScore - leftScore;
-      return right.transactionCount - left.transactionCount;
-    });
+    } satisfies ProviderCatalogItemDto,
+    originalIndex,
+  }));
+
+  // Stable-sort: coingecko を最上段に固定し、それ以外は BFF が返した順 (= atlas
+  // pay-skills atlas / skills.json の出現順) を保持する。
+  adapted.sort((left, right) => {
+    const leftCg = isCoinGeckoRow(left.item);
+    const rightCg = isCoinGeckoRow(right.item);
+    if (leftCg !== rightCg) return leftCg ? -1 : 1;
+    return left.originalIndex - right.originalIndex;
+  });
+  return adapted.map((entry) => entry.item);
 }
 
-function providerRank(provider: ProviderCatalogItemDto): number {
+function isCoinGeckoRow(provider: ProviderCatalogItemDto): boolean {
   const identity = `${provider.providerId} ${provider.serviceId ?? ""} ${provider.name} ${
     provider.serviceName ?? ""
   }`.toLowerCase();
-  const isCoinGecko = identity.includes("coingecko");
-  return (
-    (isCoinGecko && provider.hasCustomerFacts ? 1_000_000_000_000 : 0) +
-    (provider.hasCustomerFacts ? 10_000_000_000 : 0) +
-    (isCoinGecko ? 1_000_000_000 : 0) +
-    provider.transactionCount +
-    provider.uniqueSenderCount * 100 +
-    (provider.endpointAttributionStatus !== "unresolved_payto" ? 100_000 : 0) +
-    Math.round(provider.attributionConfidence * 10_000)
-  );
+  return identity.includes("coingecko");
 }
 
 export function adaptCustomerProfile(response: PhaseBCustomerProfileResponse): CustomerProfileDto {

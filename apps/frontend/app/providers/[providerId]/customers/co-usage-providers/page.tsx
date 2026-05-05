@@ -1,3 +1,4 @@
+import { normalizePaymentRecipientAddress } from "contracts";
 import { TopBar } from "@/components/shell/TopBar";
 import { CoUsageProvidersView } from "@/components/customers/CoUsageProvidersView";
 import { SummaryChip } from "@/components/customers/SummaryChip";
@@ -20,10 +21,42 @@ export default async function CoUsageProvidersPage({
   const ownProvider = providers.find((p) => p.providerId === providerId);
   const ownPayTo = ownProvider?.payTo;
 
+  const metadataByPayTo = new Map(
+    providers
+      .filter(
+        (p) =>
+          p.title ||
+          p.description ||
+          p.useCase ||
+          p.category ||
+          p.serviceUrl ||
+          p.protocol ||
+          p.chain ||
+          p.assetSymbol ||
+          p.priceRangeUsd,
+      )
+      .map((p) => [
+        normalizePaymentRecipientAddress(p.payTo),
+        {
+          title: p.title,
+          description: p.description,
+          useCase: p.useCase,
+          category: p.category,
+          serviceUrl: p.serviceUrl,
+          protocol: p.protocol,
+          chain: p.chain,
+          assetSymbol: p.assetSymbol,
+          priceRangeUsd: p.priceRangeUsd,
+        },
+      ]),
+  );
+
   const rows = graph
     ? aggregateCoUsageProviders(graph, {
         ownPayTo,
         resolveProviderName: resolveKnownProviderName,
+        resolveMetadata: (payToWallet) =>
+          metadataByPayTo.get(normalizePaymentRecipientAddress(payToWallet)) ?? null,
       })
     : [];
 

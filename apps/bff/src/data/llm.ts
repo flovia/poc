@@ -12,6 +12,7 @@ import {
   type PhaseBCustomerUpsellExplanationResponse,
   type PhaseBCustomerUpsellMetricsResponse,
   type PhaseBUpsellReasonCode,
+  normalizePaymentRecipientAddress,
   validatePhaseBCustomerUpsellExplanationResponse,
 } from "contracts";
 
@@ -596,12 +597,15 @@ export const buildUpsellMetricsByAddress = ({
     return left.address.localeCompare(right.address);
   });
   const rankByAddress = new Map(
-    rankedCustomers.map((customer, index) => [customer.address.toLowerCase(), index + 1]),
+    rankedCustomers.map((customer, index) => [
+      normalizePaymentRecipientAddress(customer.address),
+      index + 1,
+    ]),
   );
 
   return Object.fromEntries(
     customers.customers.flatMap((customer) => {
-      const address = customer.address.toLowerCase();
+      const address = normalizePaymentRecipientAddress(customer.address);
       const profile = profilesByAddress[address];
       if (!profile) return [];
 

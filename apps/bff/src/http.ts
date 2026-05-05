@@ -1,3 +1,4 @@
+import { normalizePaymentRecipientAddress } from "contracts";
 import { type BffAnalyticsDataSource, resolveAnalyticsDataSource } from "./data/analytics-source";
 import { BffLlmInferenceError, type BffLlmService, resolveBffLlmService } from "./data/llm";
 
@@ -109,8 +110,13 @@ export const createBffHandler =
         return json({ status: "ok", service: "flovia-bff" });
       case "/providers":
         return json(resolvedDataSource.providers);
-      case "/customers":
+      case "/customers": {
+        const serviceId = url.searchParams.get("serviceId");
+        if (serviceId) {
+          return json(resolvedDataSource.getCustomersByServiceId(serviceId));
+        }
         return json(resolvedDataSource.getCustomers(url.searchParams.get("payTo") ?? undefined));
+      }
       case "/wallet-usage-graph":
         return json(resolvedDataSource.walletUsageGraph);
       case "/analytics/services/coingecko/summary":
@@ -125,7 +131,7 @@ export const createBffHandler =
 
     const address = toProfileAddress(path);
     if (address !== null) {
-      const normalizedAddress = address.toLowerCase();
+      const normalizedAddress = normalizePaymentRecipientAddress(address);
       const profile = resolvedDataSource.getCustomerProfile(normalizedAddress);
 
       if (!profile) {
@@ -137,7 +143,7 @@ export const createBffHandler =
 
     const intelligenceAddress = toIntelligenceAddress(path);
     if (intelligenceAddress !== null) {
-      const normalizedAddress = intelligenceAddress.toLowerCase();
+      const normalizedAddress = normalizePaymentRecipientAddress(intelligenceAddress);
       const intelligence = resolvedDataSource.getCustomerIntelligence(normalizedAddress);
 
       if (!intelligence) {
@@ -149,7 +155,7 @@ export const createBffHandler =
 
     const upsellMetricsAddress = toUpsellMetricsAddress(path);
     if (upsellMetricsAddress !== null) {
-      const normalizedAddress = upsellMetricsAddress.toLowerCase();
+      const normalizedAddress = normalizePaymentRecipientAddress(upsellMetricsAddress);
       const metrics = resolvedDataSource.getCustomerUpsellMetrics(normalizedAddress);
 
       if (!metrics) {
@@ -161,7 +167,7 @@ export const createBffHandler =
 
     const upsellExplanationAddress = toUpsellExplanationAddress(path);
     if (upsellExplanationAddress !== null) {
-      const normalizedAddress = upsellExplanationAddress.toLowerCase();
+      const normalizedAddress = normalizePaymentRecipientAddress(upsellExplanationAddress);
       const metrics = resolvedDataSource.getCustomerUpsellMetrics(normalizedAddress);
 
       if (!metrics) {

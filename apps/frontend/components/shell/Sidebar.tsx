@@ -14,7 +14,7 @@ import { SDK_DEMO_PROVIDER_ID, SDK_DEMO_PROVIDER_NAME } from "@/lib/sdk-fixtures
 // "wallet" is intentionally treated as a child of "customers" for nav
 // highlighting — there's no top-level Wallet entry, the wallet detail page
 // is reached by drilling in from the customers list.
-type ActiveRoute = "customers" | "api-growth" | "macro-metrics" | "metrics-catalog" | "setup" | "wallet" | undefined;
+type ActiveRoute = "customers" | "api-growth" | "geo-spec" | "macro-metrics" | "metrics-catalog" | "setup" | "wallet" | undefined;
 
 type SidebarProps = {
   activeProviderId: string | undefined;
@@ -26,9 +26,10 @@ type SidebarProps = {
 // user on whichever section they were already viewing. Wallet detail can't
 // carry over (the wallet address belongs to one provider's view), so it
 // falls back to that provider's customers list.
-function sectionFor(activeRoute: ActiveRoute): "customers" | "api-growth" | "macro-metrics" | "metrics-catalog" {
+function sectionFor(activeRoute: ActiveRoute): "customers" | "api-growth" | "geo-spec" | "macro-metrics" | "metrics-catalog" {
   if (activeRoute === "metrics-catalog") return "metrics-catalog";
   if (activeRoute === "macro-metrics") return "macro-metrics";
+  if (activeRoute === "geo-spec") return "geo-spec";
   if (activeRoute === "api-growth") return "api-growth";
   return "customers";
 }
@@ -71,7 +72,7 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
   const customersGroupActive = activeRoute === "customers" || activeRoute === "wallet";
   const providerListId = useId();
 
-  const navHrefFor = (segment: "customers" | "api-growth" | "macro-metrics" | "metrics-catalog") => {
+  const navHrefFor = (segment: "customers" | "api-growth" | "geo-spec" | "macro-metrics" | "metrics-catalog") => {
     const id =
       activeProviderId
       ?? stored[0]?.providerId
@@ -204,6 +205,27 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
           </Link>
         )}
 
+        {navDisabled ? (
+          <span
+            role="link"
+            className="nav-item disabled"
+            aria-disabled="true"
+            aria-label="GEO spec, setup required"
+          >
+            <Icon.spark width={16} height={16} />
+            <span style={{ flex: 1 }}>GEO spec</span>
+          </span>
+        ) : (
+          <Link
+            href={navHrefFor("geo-spec")}
+            className="nav-item"
+            aria-current={activeRoute === "geo-spec"}
+          >
+            <Icon.spark width={16} height={16} />
+            <span style={{ flex: 1 }}>GEO spec</span>
+          </Link>
+        )}
+
         <div className="provider-block">
           <div className="label">API Providers</div>
 
@@ -229,6 +251,8 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
               {stored.map((p) => {
                 const isActive = p.providerId === activeProviderId;
                 const isDemo = isDemoProvider(p, demoOpted, userIds);
+                const isPaySh =
+                  p.source === "generated" && p.serviceId !== "pro-api.coingecko.com";
                 return (
                   <div key={p.providerId} className="provider-row" aria-current={isActive}>
                     <Link
@@ -270,6 +294,23 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
                           }}
                         >
                           demo
+                        </span>
+                      )}
+                      {isPaySh && (
+                        <span
+                          style={{
+                            fontSize: 11,
+                            fontWeight: 600,
+                            padding: "1px 5px",
+                            borderRadius: 3,
+                            background: "rgba(148,163,184,0.18)",
+                            color: "var(--text-3)",
+                            letterSpacing: "0.04em",
+                            textTransform: "none",
+                            flexShrink: 0,
+                          }}
+                        >
+                          Pay.sh
                         </span>
                       )}
                     </Link>

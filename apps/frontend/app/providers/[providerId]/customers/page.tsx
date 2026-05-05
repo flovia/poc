@@ -17,13 +17,15 @@ export default async function CustomersPage({
   const providers = await getProviders();
   const activeProvider = findProviderByRouteId(providers, providerId);
   if (!activeProvider?.payTo) notFound();
-  const payTo = activeProvider.payTo;
   const resolvedProviderId = activeProvider.providerId;
+  const filter = activeProvider?.serviceId
+    ? { serviceId: activeProvider.serviceId }
+    : { payTo: activeProvider.payTo };
   const [customers, extrasMap, pageCtx, summary] = await Promise.all([
-    getCustomers(payTo),
+    getCustomers(filter),
     getSdkExtrasMap(),
     getTopBarPageContext(),
-    getSummary(payTo),
+    getSummary(filter),
   ]);
 
   const totalSpendAtomic = customers

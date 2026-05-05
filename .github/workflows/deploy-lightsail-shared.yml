@@ -4,6 +4,7 @@ name: deploy-lightsail-shared
 # - AWS_REGION
 # - AWS_ROLE_TO_ASSUME
 # - LIGHTSAIL_INSTANCE_NAME
+# Optional repository secrets for Caddy HTTPS:
 # Optional repository secrets for BFF Bedrock inference:
 # - AWS_BEARER_TOKEN_BEDROCK
 # - BFF_BEDROCK_REGION

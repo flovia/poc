@@ -43,7 +43,9 @@ export function filterAndSortCustomers(
   const filtered = customers.filter((c) => {
     if (state.upsell !== "all" && c.upsellOpportunity !== state.upsell) return false;
     if (trimmedQuery.length > 0 && !c.address.toLowerCase().includes(trimmedQuery)) return false;
-    if (state.chain !== "all" && getCustomerChainAttribution(c).chain !== state.chain) return false;
+    if (state.chain !== "all" && !getCustomerChainAttribution(c).chains.includes(state.chain)) {
+      return false;
+    }
     return true;
   });
   return [...filtered].sort(sortComparators[state.sort]);
