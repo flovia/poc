@@ -7,8 +7,11 @@ import {
   fixtureAnalyticsDataSource,
   isSolanaCustomer,
   loadGeneratedAnalyticsDataSource,
+  loadPostgresAnalyticsDataSource,
+  resolveAnalyticsDataSource,
   shouldTagPaySh,
 } from "../src/data/analytics-source";
+import { loadPostgresLiveAnalyticsDataSource } from "../src/data/postgres-live-read-model";
 import type { BffLlmService } from "../src/data/llm";
 import {
   joinedPhaseBProjectionRecords,
@@ -500,6 +503,255 @@ describe("BFF routes", () => {
         "bundled_payto_unknown_endpoint",
       ]);
     }));
+
+  test("resolves fixture analytics source when explicitly configured", () => {
+    const dataSource = resolveAnalyticsDataSource(undefined, {
+      env: { BFF_ANALYTICS_SOURCE: "fixture" },
+    });
+
+    expect(dataSource).toBe(fixtureAnalyticsDataSource);
+  });
+
+  test("resolves generated JSON analytics source when explicitly configured", async () =>
+    withTempFile(async (filePath) => {
+      fs.writeFileSync(
+        filePath,
+        JSON.stringify(
+          {
+            serviceSummary: {
+              ...serviceAnalyticsSummaryResponse,
+              generatedFrom: "explicit-json-source-test",
+              transactionCount: 77,
+            },
+          },
+          null,
+          2,
+        ),
+      );
+
+      const dataSource = await Promise.resolve(
+        resolveAnalyticsDataSource(undefined, {
+          env: { BFF_ANALYTICS_SOURCE: "json", BFF_ANALYTICS_READ_MODEL_PATH: filePath },
+        }),
+      );
+
+      expect(dataSource.serviceSummary.generatedFrom).toBe("explicit-json-source-test");
+      expect(dataSource.serviceSummary.transactionCount).toBe(77);
+    }));
+
+  test("throws when explicit JSON analytics source file is missing", () => {
+    expect(() =>
+      resolveAnalyticsDataSource("/tmp/flovia-missing-bff-analytics.json", {
+        env: { BFF_ANALYTICS_SOURCE: "json" },
+      }),
+    ).toThrow("BFF analytics JSON read model not found");
+  });
+
+  test("throws when postgres analytics source has no database URL", () => {
+    expect(() =>
+      resolveAnalyticsDataSource(undefined, {
+        env: { BFF_ANALYTICS_SOURCE: "postgres" },
+      }),
+    ).toThrow("BFF analytics postgres source requires");
+  });
+
+  test("uses postgres live loader by default", async () => {
+    const dataSource = await resolveAnalyticsDataSource(undefined, {
+      env: { BFF_ANALYTICS_SOURCE: "postgres" },
+      postgresClient: {
+        async query(sql) {
+          if (sql.includes("attributed_grouped")) {
+            return [
+              {
+                payer: "0x2222222222222222222222222222222222222222",
+                pay_to: "0x1111111111111111111111111111111111111111",
+                service_id: "live-service",
+                service_name: "Live Service",
+                transaction_count: 3,
+                total_volume_atomic: "300",
+              },
+            ];
+          }
+          if (sql.includes("provider_activity")) {
+            return [
+              {
+                pay_to: "0x1111111111111111111111111111111111111111",
+                service_id: "live-service",
+                service_name: "Live Service",
+                transaction_count: 3,
+                unique_sender_count: 1,
+                total_volume_atomic: "300",
+              },
+            ];
+          }
+          throw new Error(`unexpected query: ${sql}`);
+        },
+      },
+    });
+
+    expect(dataSource.serviceSummary.generatedFrom).toBe("postgres-live-read-model");
+    expect(dataSource.providers.providers[0]?.serviceId).toBe("live-service");
+  });
+
+  test("uses postgres snapshot loader when snapshot mode is configured", async () => {
+    const dataSource = await resolveAnalyticsDataSource(undefined, {
+      env: {
+        BFF_ANALYTICS_SOURCE: "postgres",
+        BFF_ANALYTICS_POSTGRES_MODE: "snapshot",
+        BFF_ANALYTICS_SNAPSHOT_ID: "snapshot-test",
+      },
+      postgresClient: {
+        async query(sql, params) {
+          expect(sql).toBe("SELECT payload FROM bff_analytics_snapshots WHERE id = $1");
+          expect(params).toEqual(["snapshot-test"]);
+          return [
+            {
+              payload: {
+                serviceSummary: {
+                  ...serviceAnalyticsSummaryResponse,
+                  generatedFrom: "postgres-snapshot-mode-test",
+                  transactionCount: 99,
+                },
+              },
+            },
+          ];
+        },
+      },
+    });
+
+    expect(dataSource.serviceSummary.generatedFrom).toBe("postgres-snapshot-mode-test");
+    expect(dataSource.serviceSummary.transactionCount).toBe(99);
+  });
+
+  test("loads postgres snapshot payload through generated payload validation", async () => {
+    const dataSource = await loadPostgresAnalyticsDataSource(
+      {
+        async query(sql, params) {
+          expect(sql).toBe("SELECT payload FROM bff_analytics_snapshots WHERE id = $1");
+          expect(params).toEqual(["snapshot-test"]);
+          return [
+            {
+              payload: {
+                serviceSummary: {
+                  ...serviceAnalyticsSummaryResponse,
+                  generatedFrom: "postgres-snapshot-test",
+                  transactionCount: 88,
+                },
+              },
+            },
+          ];
+        },
+      },
+      "snapshot-test",
+    );
+
+    expect(dataSource.serviceSummary.generatedFrom).toBe("postgres-snapshot-test");
+    expect(dataSource.serviceSummary.transactionCount).toBe(88);
+  });
+
+  test("builds postgres live payload counts from raw rows", async () => {
+    const dataSource = await loadPostgresLiveAnalyticsDataSource({
+      async query(sql) {
+        if (sql.includes("attributed_grouped")) {
+          return [
+            {
+              payer: "0x4444444444444444444444444444444444444444",
+              pay_to: "0x3333333333333333333333333333333333333333",
+              service_id: "alpha",
+              service_name: "Alpha",
+              transaction_count: 4,
+              total_volume_atomic: "400",
+            },
+            {
+              payer: "0x5555555555555555555555555555555555555555",
+              pay_to: "0x3333333333333333333333333333333333333333",
+              service_id: "alpha",
+              service_name: "Alpha",
+              transaction_count: 3,
+              total_volume_atomic: "300",
+            },
+          ];
+        }
+        if (sql.includes("provider_activity")) {
+          return [
+            {
+              pay_to: "0x3333333333333333333333333333333333333333",
+              service_id: "alpha",
+              service_name: "Alpha",
+              transaction_count: 7,
+              unique_sender_count: 2,
+              total_volume_atomic: "700",
+            },
+          ];
+        }
+        return [];
+      },
+    });
+
+    expect(dataSource.providers.providerCount).toBe(1);
+    expect(dataSource.customers.customerCount).toBe(2);
+    expect(dataSource.walletUsageGraph.graph.providerWallets[0]?.payerWallets.length).toBe(2);
+    expect(dataSource.serviceSummary.userCount).toBe(2);
+    expect(dataSource.serviceSummary.transactionCount).toBe(7);
+    expect(
+      dataSource.serviceComparison.services.some((service) => service.serviceId === "coingecko"),
+    ).toBe(true);
+  });
+
+  test("reflects generic x402 overlap in CoinGecko customer providerCount", async () => {
+    const coingeckoPayTo = "0x6666666666666666666666666666666666666666";
+    const genericPayTo = "0x7777777777777777777777777777777777777777";
+    const payer = "0x8888888888888888888888888888888888888888";
+    const dataSource = await loadPostgresLiveAnalyticsDataSource({
+      async query(sql) {
+        if (sql.includes("attributed_grouped")) {
+          return [
+            {
+              payer,
+              pay_to: genericPayTo,
+              service_id: "generic-service",
+              service_name: "Generic Service",
+              transaction_count: 2,
+              total_volume_atomic: "200",
+            },
+            {
+              payer,
+              pay_to: coingeckoPayTo,
+              service_id: "pro-api.coingecko.com",
+              service_name: "pro-api.coingecko.com",
+              transaction_count: 1,
+              total_volume_atomic: "100",
+            },
+          ];
+        }
+        if (sql.includes("provider_activity")) {
+          return [
+            {
+              pay_to: genericPayTo,
+              service_id: "generic-service",
+              service_name: "Generic Service",
+              transaction_count: 2,
+              unique_sender_count: 1,
+              total_volume_atomic: "200",
+            },
+            {
+              pay_to: coingeckoPayTo,
+              service_id: "pro-api.coingecko.com",
+              service_name: "pro-api.coingecko.com",
+              transaction_count: 1,
+              unique_sender_count: 1,
+              total_volume_atomic: "100",
+            },
+          ];
+        }
+        return [];
+      },
+    });
+
+    expect(
+      dataSource.customers.customers.find((customer) => customer.address === payer)?.providerCount,
+    ).toBe(2);
+  });
 
   test("does not mix generated customer lookups with demo fixture profiles", async () =>
     withTempFile(async (filePath) => {

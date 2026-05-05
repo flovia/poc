@@ -15,7 +15,7 @@ import {
   setDemoOptedIn as storageSetDemoOptedIn,
   setSeedVersion,
 } from "@/lib/storage";
-import { SEED_IDS, seedProviders } from "@/lib/providers";
+import { findProviderByRouteId, SEED_IDS, seedProviders } from "@/lib/providers";
 
 type Ctx = {
   // effective providers (demo + user, demo first)。Sidebar / SavedProviderList の
@@ -146,9 +146,10 @@ export function ProvidersContextProvider({ children }: { children: React.ReactNo
             payTo: provider.payTo,
             createdAt: Date.now(),
             source: "generated" as const,
+            serviceId: provider.serviceId,
+            serviceName: provider.serviceName,
             network: provider.network,
             asset: provider.asset,
-            serviceId: provider.serviceId,
             transactionCount: provider.transactionCount,
             uniqueSenderCount: provider.uniqueSenderCount,
             hasCustomerFacts: provider.hasCustomerFacts,
@@ -248,6 +249,6 @@ export function useProviders(): Ctx {
 
 export function useActiveProvider(idFromUrl: string | undefined) {
   const { stored, hydrated } = useProviders();
-  const active = idFromUrl ? stored.find((p) => p.providerId === idFromUrl) : undefined;
+  const active = idFromUrl ? findProviderByRouteId(stored, idFromUrl) : undefined;
   return { active, hydrated };
 }

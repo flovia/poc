@@ -1,5 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
+import { SQL } from "bun";
+import { loadPostgresLiveAnalyticsDataSource } from "./postgres-live-read-model";
 import {
   type PhaseBCustomerUpsellMetricsResponse,
   type PhaseBCustomerListResponse,
@@ -47,7 +49,7 @@ export type BffAnalyticsDataSource = {
   getCustomerUpsellMetrics(address: string): PhaseBCustomerUpsellMetricsResponse | undefined;
 };
 
-type GeneratedReadModelFile = Partial<{
+export type GeneratedReadModelFile = Partial<{
   customers: unknown;
   walletUsageGraph: unknown;
   serviceSummary: unknown;
@@ -58,6 +60,29 @@ type GeneratedReadModelFile = Partial<{
   intelligenceByAddress: Record<string, unknown>;
   upsellMetricsByAddress: Record<string, unknown>;
 }>;
+
+type AnalyticsSourceKind = "json" | "postgres" | "fixture";
+
+type AnalyticsSourceEnv = Partial<
+  Pick<
+    NodeJS.ProcessEnv,
+    | "BFF_ANALYTICS_SOURCE"
+    | "BFF_ANALYTICS_READ_MODEL_PATH"
+    | "BFF_ANALYTICS_DATABASE_URL"
+    | "DATABASE_URL"
+    | "BFF_ANALYTICS_SNAPSHOT_ID"
+    | "BFF_ANALYTICS_POSTGRES_MODE"
+  >
+>;
+
+export type PostgresAnalyticsClient = {
+  query(sql: string, params?: unknown[]): Promise<Record<string, unknown>[]>;
+};
+
+type ResolveAnalyticsDataSourceOptions = {
+  env?: AnalyticsSourceEnv;
+  postgresClient?: PostgresAnalyticsClient;
+};
 
 const DEFAULT_GENERATED_ANALYTICS_PATH = path.join(
   import.meta.dir,
@@ -142,8 +167,9 @@ export const fixtureAnalyticsDataSource: BffAnalyticsDataSource = {
   getCustomerUpsellMetrics: getPhaseBCustomerUpsellMetricsByAddress,
 };
 
-export const loadGeneratedAnalyticsDataSource = (filePath: string): BffAnalyticsDataSource => {
-  const payload = JSON.parse(fs.readFileSync(filePath, "utf8")) as GeneratedReadModelFile;
+export const loadGeneratedAnalyticsDataSourceFromPayload = (
+  payload: GeneratedReadModelFile,
+): BffAnalyticsDataSource => {
   const customers = validatePhaseBCustomerListResponse(
     payload.customers ?? phaseBCustomerListResponse,
   );
@@ -211,6 +237,33 @@ export const loadGeneratedAnalyticsDataSource = (filePath: string): BffAnalytics
     getCustomerUpsellMetrics: (address: string) =>
       generatedUpsellMetricsByAddress[normalizePaymentRecipientAddress(address)],
   };
+};
+
+export const loadGeneratedAnalyticsDataSource = (filePath: string): BffAnalyticsDataSource => {
+  const payload = JSON.parse(fs.readFileSync(filePath, "utf8")) as GeneratedReadModelFile;
+  return loadGeneratedAnalyticsDataSourceFromPayload(payload);
+};
+
+const createBunPostgresClient = (url: string): PostgresAnalyticsClient => {
+  const sql = new SQL(url);
+  return {
+    query: (query, params = []) => sql.unsafe(query, params) as Promise<Record<string, unknown>[]>,
+  };
+};
+
+export const loadPostgresAnalyticsDataSource = async (
+  client: PostgresAnalyticsClient,
+  snapshotId = "latest",
+): Promise<BffAnalyticsDataSource> => {
+  const rows = await client.query("SELECT payload FROM bff_analytics_snapshots WHERE id = $1", [
+    snapshotId,
+  ]);
+  const rawPayload = rows[0]?.payload;
+  const payload = typeof rawPayload === "string" ? JSON.parse(rawPayload) : rawPayload;
+  if (!payload || typeof payload !== "object") {
+    throw new Error(`BFF analytics snapshot not found: ${snapshotId}`);
+  }
+  return loadGeneratedAnalyticsDataSourceFromPayload(payload as GeneratedReadModelFile);
 };
 
 const filterCustomersByPayTo = (
@@ -473,7 +526,40 @@ const filterCustomersByServiceId = (
 
 export const resolveAnalyticsDataSource = (
   filePath = process.env.BFF_ANALYTICS_READ_MODEL_PATH ?? DEFAULT_GENERATED_ANALYTICS_PATH,
-) => {
-  if (filePath && fs.existsSync(filePath)) return loadGeneratedAnalyticsDataSource(filePath);
+  options: ResolveAnalyticsDataSourceOptions = {},
+): BffAnalyticsDataSource | Promise<BffAnalyticsDataSource> => {
+  const env = options.env ?? process.env;
+  const source = env.BFF_ANALYTICS_SOURCE as AnalyticsSourceKind | undefined;
+  const readModelPath = env.BFF_ANALYTICS_READ_MODEL_PATH ?? filePath;
+
+  if (source === "fixture") return fixtureAnalyticsDataSource;
+
+  if (source === "json") {
+    if (!readModelPath || !fs.existsSync(readModelPath)) {
+      throw new Error(`BFF analytics JSON read model not found: ${readModelPath}`);
+    }
+    return loadGeneratedAnalyticsDataSource(readModelPath);
+  }
+
+  if (source === "postgres") {
+    const databaseUrl = env.BFF_ANALYTICS_DATABASE_URL ?? env.DATABASE_URL;
+    if (!databaseUrl && !options.postgresClient) {
+      throw new Error(
+        "BFF analytics postgres source requires BFF_ANALYTICS_DATABASE_URL or DATABASE_URL.",
+      );
+    }
+    const client = options.postgresClient ?? createBunPostgresClient(databaseUrl as string);
+    if ((env.BFF_ANALYTICS_POSTGRES_MODE ?? "live") === "snapshot") {
+      return loadPostgresAnalyticsDataSource(client, env.BFF_ANALYTICS_SNAPSHOT_ID ?? "latest");
+    }
+    return loadPostgresLiveAnalyticsDataSource(client);
+  }
+
+  if (source !== undefined) {
+    throw new Error(`Unsupported BFF_ANALYTICS_SOURCE: ${source}`);
+  }
+
+  if (readModelPath && fs.existsSync(readModelPath))
+    return loadGeneratedAnalyticsDataSource(readModelPath);
   return fixtureAnalyticsDataSource;
 };
