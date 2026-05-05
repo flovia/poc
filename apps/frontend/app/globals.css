@@ -205,8 +205,8 @@ a { color: inherit; text-decoration: none; }
   background: var(--surface-card);
 }
 .brand {
-  display: flex; align-items: center; gap: 10px;
-  padding: 18px 20px 22px;
+  display: flex; align-items: center; gap: 12px;
+  padding: 18px 20px 20px;
   border-bottom: 1px solid var(--line);
 }
 .brand-mark {
@@ -215,10 +215,31 @@ a { color: inherit; text-decoration: none; }
   object-fit: cover;
   display: block;
 }
-.brand-name { font-family: var(--display); font-weight: 600; font-size: 18px; letter-spacing: -0.01em; color: var(--text-1); }
+.brand-name {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  font-family: var(--display); font-weight: 600; font-size: 18px; letter-spacing: -0.01em; color: var(--text-1);
+}
 .brand-name em {
   font-style: normal; color: var(--text-3); font-size: 12px; font-weight: 500;
-  display: block; letter-spacing: 0.06em; text-transform: uppercase; margin-top: 1px;
+  display: block; letter-spacing: 0.04em; text-transform: uppercase; margin-top: 2px;
+}
+.brand-tags {
+  display: flex;
+  gap: 4px;
+  margin-top: 6px;
+}
+.brand-tag {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--text-3);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  padding: 3px 7px;
 }
 
 .nav { padding: 12px 10px; flex: 1; }
