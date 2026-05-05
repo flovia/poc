@@ -512,6 +512,14 @@ describe("BFF routes", () => {
     expect(dataSource).toBe(fixtureAnalyticsDataSource);
   });
 
+  test("treats empty analytics source as unset", () => {
+    const dataSource = resolveAnalyticsDataSource("/tmp/flovia-missing-bff-analytics.json", {
+      env: { BFF_ANALYTICS_SOURCE: "" },
+    });
+
+    expect(dataSource).toBe(fixtureAnalyticsDataSource);
+  });
+
   test("resolves generated JSON analytics source when explicitly configured", async () =>
     withTempFile(async (filePath) => {
       fs.writeFileSync(

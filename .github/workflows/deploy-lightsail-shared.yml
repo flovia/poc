@@ -10,6 +10,10 @@ name: deploy-lightsail-shared
 # - BFF_BEDROCK_REGION
 # - BFF_BEDROCK_MODEL_ID
 # - BFF_BEDROCK_PROMPT_VERSION
+# Optional repository secrets for live analytics:
+# - MAIN_BFF_ANALYTICS_DATABASE_URL
+# - DEVELOP_BFF_ANALYTICS_DATABASE_URL
+# - BFF_ANALYTICS_DATABASE_URL
 # Deploy layout on the instance:
 # - $HOME/apps/main/poc and $HOME/apps/main/data
 # - $HOME/apps/develop/poc and $HOME/apps/develop/data
@@ -133,8 +137,24 @@ jobs:
           } >> "$GITHUB_ENV"
 
       - name: Sync branch checkout and shared stack on Lightsail
+        env:
+          MAIN_BFF_ANALYTICS_DATABASE_URL: ${{ secrets.MAIN_BFF_ANALYTICS_DATABASE_URL }}
+          DEVELOP_BFF_ANALYTICS_DATABASE_URL: ${{ secrets.DEVELOP_BFF_ANALYTICS_DATABASE_URL }}
+          BFF_ANALYTICS_DATABASE_URL: ${{ secrets.BFF_ANALYTICS_DATABASE_URL }}
         run: |
           set -euo pipefail
+
+          encode_env() {
+            local key="$1"
+            if [ -n "${!key:-}" ]; then
+              printf '%s' "${!key}" | base64 | tr -d '\n'
+            fi
+          }
+
+          main_bff_analytics_database_url_b64="$(encode_env MAIN_BFF_ANALYTICS_DATABASE_URL)"
+          develop_bff_analytics_database_url_b64="$(encode_env DEVELOP_BFF_ANALYTICS_DATABASE_URL)"
+          bff_analytics_database_url_b64="$(encode_env BFF_ANALYTICS_DATABASE_URL)"
+
           ssh \
             -i "${LIGHTSAIL_SSH_KEY_PATH}" \
             -o CertificateFile="${LIGHTSAIL_SSH_CERT_PATH}" \
@@ -153,8 +173,30 @@ jobs:
             BFF_BEDROCK_REGION="${{ secrets.BFF_BEDROCK_REGION }}" \
             BFF_BEDROCK_MODEL_ID="${{ secrets.BFF_BEDROCK_MODEL_ID }}" \
             BFF_BEDROCK_PROMPT_VERSION="${{ secrets.BFF_BEDROCK_PROMPT_VERSION }}" \
+            MAIN_BFF_ANALYTICS_DATABASE_URL_B64="${main_bff_analytics_database_url_b64}" \
+            DEVELOP_BFF_ANALYTICS_DATABASE_URL_B64="${develop_bff_analytics_database_url_b64}" \
+            BFF_ANALYTICS_DATABASE_URL_B64="${bff_analytics_database_url_b64}" \
             "bash -s" <<'EOF'
           set -euo pipefail
+
+          decode_env() {
+            local source_key="$1"
+            local target_key="$2"
+            local encoded_value="${!source_key:-}"
+
+            if [ -n "$encoded_value" ]; then
+              printf -v "$target_key" '%s' "$(printf '%s' "$encoded_value" | base64 -d)"
+              export "$target_key"
+              return
+            fi
+
+            unset "$target_key"
+          }
+
+          decode_env MAIN_BFF_ANALYTICS_DATABASE_URL_B64 MAIN_BFF_ANALYTICS_DATABASE_URL
+          decode_env DEVELOP_BFF_ANALYTICS_DATABASE_URL_B64 DEVELOP_BFF_ANALYTICS_DATABASE_URL
+          decode_env BFF_ANALYTICS_DATABASE_URL_B64 BFF_ANALYTICS_DATABASE_URL
+
           apps_root="$HOME/apps"
           branch_root="${apps_root}/${DEPLOY_BRANCH}"
           deploy_path="${branch_root}/poc"

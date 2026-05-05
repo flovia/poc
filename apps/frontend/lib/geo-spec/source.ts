@@ -44,11 +44,7 @@ export type GeoSpec = {
 // cwd と "ひとつ上のディレクトリを 2 段" の両候補を試す。
 const findRepoRoot = (): string => {
   const cwd = process.cwd();
-  const candidates = [
-    cwd,
-    path.resolve(cwd, ".."),
-    path.resolve(cwd, "..", ".."),
-  ];
+  const candidates = [cwd, path.resolve(cwd, ".."), path.resolve(cwd, "..", "..")];
   for (const c of candidates) {
     if (fs.existsSync(path.join(c, "docs", "research", "pay-skills-payment-atlas.md"))) {
       return c;
@@ -266,7 +262,13 @@ export const getGeoSpec = (providerId: string): GeoSpec | null => {
   ).toLowerCase();
   const endpointsMap = new Map<
     string,
-    { resource: string; networks: Set<string>; assets: Set<string>; tx: number; totalAtomic: bigint }
+    {
+      resource: string;
+      networks: Set<string>;
+      assets: Set<string>;
+      tx: number;
+      totalAtomic: bigint;
+    }
   >();
   const intel = analytics.intelligenceByAddress ?? {};
   for (const entry of Object.values(intel)) {
