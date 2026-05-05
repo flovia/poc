@@ -21,6 +21,13 @@ type ProviderRow = {
     network?: string;
     asset?: string;
     amountAtomic?: string;
+    description?: string;
+    method?: string;
+    inputSchema?: unknown;
+    lastUpdated?: string;
+    x402Version?: number;
+    l30DaysTotalCalls?: number;
+    l30DaysUniquePayers?: number;
     transactionCount?: number;
     totalAmountAtomic?: string;
   }>;
@@ -29,10 +36,24 @@ type ProviderRow = {
   useCase?: string;
   category?: string;
   serviceUrl?: string;
+  hasMetering?: boolean;
+  hasFreeTier?: boolean;
+  providerSha?: string;
+  registryVersion?: string;
+  registryGeneratedAt?: string;
+  registrySourceUrl?: string;
+  offers: Array<{
+    protocol: "x402" | "MPP";
+    chain: string;
+    asset: string;
+    payToAddress: string;
+    probePriceUsd?: number;
+  }>;
   protocol?: "x402" | "MPP";
   chain?: string;
   assetSymbol?: string;
   priceRangeUsd?: { min: number; max: number };
+  endpointCount?: number;
   transactionCount: number;
   uniqueSenderCount: number;
   totalVolumeAtomic: string;
@@ -73,6 +94,13 @@ const optionalPriceRange = (
   if (!Number.isFinite(parsedMin) || !Number.isFinite(parsedMax)) return undefined;
   return { min: parsedMin, max: parsedMax };
 };
+const optionalNumber = (value: unknown): number | undefined => {
+  if (value === null || value === undefined || value === "") return undefined;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
+};
+const optionalBoolean = (value: unknown): boolean | undefined =>
+  typeof value === "boolean" ? value : undefined;
 const parseResources = (value: unknown): ProviderRow["resources"] => {
   const raw = typeof value === "string" ? JSON.parse(value) : value;
   if (!Array.isArray(raw)) return [];
@@ -87,11 +115,50 @@ const parseResources = (value: unknown): ProviderRow["resources"] => {
         ...(optionalText(row.network) ? { network: optionalText(row.network) } : {}),
         ...(optionalText(row.asset) ? { asset: optionalText(row.asset) } : {}),
         ...(optionalText(row.amountAtomic) ? { amountAtomic: optionalText(row.amountAtomic) } : {}),
-        ...(Number.isFinite(Number(row.transactionCount))
-          ? { transactionCount: Number(row.transactionCount) }
+        ...(optionalText(row.description) ? { description: optionalText(row.description) } : {}),
+        ...(optionalText(row.method) ? { method: optionalText(row.method) } : {}),
+        ...(row.inputSchema !== null && row.inputSchema !== undefined
+          ? { inputSchema: row.inputSchema }
+          : {}),
+        ...(optionalText(row.lastUpdated) ? { lastUpdated: iso(row.lastUpdated, "") } : {}),
+        ...(optionalNumber(row.x402Version) !== undefined
+          ? { x402Version: optionalNumber(row.x402Version) }
+          : {}),
+        ...(optionalNumber(row.l30DaysTotalCalls) !== undefined
+          ? { l30DaysTotalCalls: optionalNumber(row.l30DaysTotalCalls) }
+          : {}),
+        ...(optionalNumber(row.l30DaysUniquePayers) !== undefined
+          ? { l30DaysUniquePayers: optionalNumber(row.l30DaysUniquePayers) }
+          : {}),
+        ...(optionalNumber(row.transactionCount) !== undefined
+          ? { transactionCount: optionalNumber(row.transactionCount) }
           : {}),
         ...(optionalText(row.totalAmountAtomic)
           ? { totalAmountAtomic: optionalText(row.totalAmountAtomic) }
+          : {}),
+      },
+    ];
+  });
+};
+const parseOffers = (value: unknown): ProviderRow["offers"] => {
+  const raw = typeof value === "string" ? JSON.parse(value) : value;
+  if (!Array.isArray(raw)) return [];
+  return raw.flatMap((item) => {
+    if (!item || typeof item !== "object") return [];
+    const row = item as Record<string, unknown>;
+    const protocol = optionalProtocol(row.protocol);
+    const chain = optionalText(row.chain);
+    const asset = optionalText(row.asset);
+    const payToAddress = optionalText(row.payToAddress);
+    if (!protocol || !chain || !asset || !payToAddress) return [];
+    return [
+      {
+        protocol,
+        chain,
+        asset,
+        payToAddress,
+        ...(optionalNumber(row.probePriceUsd) !== undefined
+          ? { probePriceUsd: optionalNumber(row.probePriceUsd) }
           : {}),
       },
     ];
@@ -151,10 +218,20 @@ const mapProviderRow = (row: Record<string, unknown>): ProviderRow => {
     useCase: optionalText(row.use_case ?? row.useCase),
     category: optionalText(row.category),
     serviceUrl: optionalText(row.service_url ?? row.serviceUrl),
+    hasMetering: optionalBoolean(row.has_metering ?? row.hasMetering),
+    hasFreeTier: optionalBoolean(row.has_free_tier ?? row.hasFreeTier),
+    providerSha: optionalText(row.provider_sha ?? row.providerSha),
+    registryVersion: optionalText(row.registry_version ?? row.registryVersion),
+    registryGeneratedAt: optionalText(row.registry_generated_at ?? row.registryGeneratedAt)
+      ? iso(row.registry_generated_at ?? row.registryGeneratedAt, "")
+      : undefined,
+    registrySourceUrl: optionalText(row.registry_source_url ?? row.registrySourceUrl),
+    offers: parseOffers(row.offers),
     protocol: optionalProtocol(row.protocol),
     chain: optionalText(row.offer_chain ?? row.chain),
     assetSymbol: optionalText(row.asset_symbol ?? row.assetSymbol),
     priceRangeUsd: optionalPriceRange(row.price_range_min_usd, row.price_range_max_usd),
+    endpointCount: optionalNumber(row.endpoint_count),
     transactionCount: count(row.transaction_count ?? row.tx_count),
     uniqueSenderCount: count(row.unique_sender_count ?? row.customer_count ?? row.payer_count),
     totalVolumeAtomic: amount(
@@ -304,8 +381,8 @@ const buildPayload = (
         transactionCount: provider.transactionCount,
         uniqueSenderCount: provider.uniqueSenderCount,
         totalVolumeAtomic: provider.totalVolumeAtomic,
-        endpointCount: 1,
-        resourceCount: 1,
+        endpointCount: provider.endpointCount ?? provider.resources.length,
+        resourceCount: provider.resources.length,
         mappingPattern: "one_payto_many_endpoints",
         endpointAttributionStatus: "bundled_payto_unknown_endpoint",
         attributionConfidence: 0.5,
@@ -316,6 +393,15 @@ const buildPayload = (
         ...(provider.useCase ? { useCase: provider.useCase } : {}),
         ...(provider.category ? { category: provider.category } : {}),
         ...(provider.serviceUrl ? { serviceUrl: provider.serviceUrl } : {}),
+        ...(provider.hasMetering !== undefined ? { hasMetering: provider.hasMetering } : {}),
+        ...(provider.hasFreeTier !== undefined ? { hasFreeTier: provider.hasFreeTier } : {}),
+        ...(provider.providerSha ? { providerSha: provider.providerSha } : {}),
+        ...(provider.registryVersion ? { registryVersion: provider.registryVersion } : {}),
+        ...(provider.registryGeneratedAt
+          ? { registryGeneratedAt: provider.registryGeneratedAt }
+          : {}),
+        ...(provider.registrySourceUrl ? { registrySourceUrl: provider.registrySourceUrl } : {}),
+        ...(provider.offers.length ? { offers: provider.offers } : {}),
         ...(provider.protocol ? { protocol: provider.protocol } : {}),
         ...(provider.chain ? { chain: provider.chain } : {}),
         ...(provider.assetSymbol ? { assetSymbol: provider.assetSymbol } : {}),
@@ -587,6 +673,14 @@ export const loadPostgresLiveAnalyticsDataSource = async (
         pay_sh.use_case,
         pay_sh.category,
         pay_sh.service_url,
+        pay_sh.has_metering,
+        pay_sh.has_free_tier,
+        pay_sh.provider_sha,
+        pay_sh.registry_version,
+        pay_sh.registry_generated_at,
+        pay_sh.registry_source_url,
+        pay_sh.endpoint_count,
+        pay_sh.offers,
         pay_sh.protocol,
         pay_sh.offer_chain,
         pay_sh.asset_symbol,
@@ -606,14 +700,35 @@ export const loadPostgresLiveAnalyticsDataSource = async (
           p.use_case,
           p.category,
           p.service_url,
+          p.has_metering,
+          p.has_free_tier,
+          p.provider_sha,
+          p.registry_version,
+          p.registry_generated_at,
+          p.registry_source_url,
+          p.endpoint_count,
+          jsonb_agg(
+            jsonb_build_object(
+              'protocol', o.protocol,
+              'chain', o.chain,
+              'asset', o.asset,
+              'payToAddress', o.pay_to_address,
+              'probePriceUsd', o.probe_price_usd
+            ) ORDER BY o.chain, o.asset, o.pay_to_address
+          ) AS offers,
           min(o.protocol) AS protocol,
           min(o.chain) AS offer_chain,
           min(o.asset) AS asset_symbol,
           p.price_range_min_usd,
           p.price_range_max_usd
-        FROM pay_sh_payment_offers o
-        JOIN pay_sh_providers p ON p.provider_fqn = o.provider_fqn
-        WHERE lower(o.pay_to_address) = pg.pay_to
+        FROM pay_sh_providers p
+        LEFT JOIN pay_sh_payment_offers o ON o.provider_fqn = p.provider_fqn
+        WHERE EXISTS (
+          SELECT 1
+          FROM pay_sh_payment_offers matched_o
+          WHERE matched_o.provider_fqn = p.provider_fqn
+            AND lower(matched_o.pay_to_address) = pg.pay_to
+        )
         GROUP BY
           p.provider_fqn,
           p.title,
@@ -621,6 +736,13 @@ export const loadPostgresLiveAnalyticsDataSource = async (
           p.use_case,
           p.category,
           p.service_url,
+          p.has_metering,
+          p.has_free_tier,
+          p.provider_sha,
+          p.registry_version,
+          p.registry_generated_at,
+          p.registry_source_url,
+          p.endpoint_count,
           p.price_range_min_usd,
           p.price_range_max_usd
         ORDER BY p.provider_fqn ASC
@@ -635,7 +757,14 @@ export const loadPostgresLiveAnalyticsDataSource = async (
               WHEN lower(po.token_address) = '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913' THEN 'USDC'
               ELSE po.token_address
             END,
-            'amountAtomic', po.amount_atomic::text
+            'amountAtomic', po.amount_atomic::text,
+            'description', r.raw ->> 'description',
+            'method', r.raw #>> '{extensions,bazaar,info,input,method}',
+            'inputSchema', r.raw #> '{extensions,bazaar,schema}',
+            'lastUpdated', r.raw ->> 'lastUpdated',
+            'x402Version', r.raw -> 'x402Version',
+            'l30DaysTotalCalls', r.raw #> '{quality,l30DaysTotalCalls}',
+            'l30DaysUniquePayers', r.raw #> '{quality,l30DaysUniquePayers}'
           ) ORDER BY r.resource_url
         ) AS resources
         FROM x402_payment_options po

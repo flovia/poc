@@ -104,6 +104,10 @@ function GeoGroup({ spec }: { spec: GeoSpec }) {
           value={spec.endpointCount !== null ? String(spec.endpointCount) : null}
           mono
         />
+        <MetaTile label="Metering" value={formatBoolean(spec.hasMetering)} />
+        <MetaTile label="Free tier" value={formatBoolean(spec.hasFreeTier)} />
+        <MetaTile label="Registry version" value={spec.registryVersion} mono />
+        <MetaTile label="Provider sha" value={spec.providerSha} mono />
         <MetaTile
           label="Price range (USD)"
           value={
@@ -189,6 +193,8 @@ function EndpointsSection({ spec }: { spec: GeoSpec }) {
           <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
             <colgroup>
               <col />
+              <col style={{ width: 90 }} />
+              <col />
               <col style={{ width: 140 }} />
               <col style={{ width: 110 }} />
               <col style={{ width: 110 }} />
@@ -197,6 +203,8 @@ function EndpointsSection({ spec }: { spec: GeoSpec }) {
             <thead>
               <tr style={tableHeadRowStyle}>
                 <th style={thStyle}>Resource (path)</th>
+                <th style={thStyle}>Method</th>
+                <th style={thStyle}>Description</th>
                 <th style={thStyle}>Chains</th>
                 <th style={thStyle}>Assets</th>
                 <th style={{ ...thStyle, textAlign: "right" }}>Tx count</th>
@@ -217,6 +225,10 @@ function EndpointsSection({ spec }: { spec: GeoSpec }) {
                   >
                     {pathOf(e.resource)}
                   </td>
+                  <td style={{ ...tdStyle, fontFamily: "var(--mono)", fontSize: 12 }}>
+                    {e.method ?? "—"}
+                  </td>
+                  <td style={tdStyle}>{e.description ?? "—"}</td>
                   <td style={tdStyle}>{e.networks.join(", ") || "—"}</td>
                   <td style={tdStyle}>{e.assets.join(", ") || "—"}</td>
                   <td style={{ ...tdStyle, textAlign: "right", fontFamily: "var(--mono)" }}>
@@ -326,6 +338,11 @@ function formatPrice(value: number): string {
   if (value < 1) return value.toFixed(3);
   if (value < 100) return value.toFixed(2);
   return value.toLocaleString(undefined, { maximumFractionDigits: 2 });
+}
+
+function formatBoolean(value: boolean | null): string | null {
+  if (value === null) return null;
+  return value ? "Yes" : "No";
 }
 
 const tableHeadRowStyle: React.CSSProperties = {

@@ -18,6 +18,11 @@ export type GeoOffer = {
 
 export type GeoEndpoint = {
   resource: string;
+  description?: string;
+  method?: string;
+  lastUpdated?: string;
+  x402Version?: number;
+  l30DaysUniquePayers?: number;
   networks: string[];
   assets: string[];
   transactionCount: number;
@@ -32,6 +37,12 @@ export type GeoSpec = {
   description: string | null;
   useCase: string | null;
   endpointCount: number | null;
+  hasMetering: boolean | null;
+  hasFreeTier: boolean | null;
+  providerSha: string | null;
+  registryVersion: string | null;
+  registryGeneratedAt: string | null;
+  registrySourceUrl: string | null;
   priceRangeUsd: { min: number; max: number } | null;
   offers: GeoOffer[];
   observedEndpoints: GeoEndpoint[];
@@ -72,6 +83,12 @@ type AtlasProviderDesc = {
   useCase: string;
   endpointCount: number;
   priceRangeUsd: { min: number; max: number } | null;
+  hasMetering?: boolean | null;
+  hasFreeTier?: boolean | null;
+  providerSha?: string | null;
+  registryVersion?: string | null;
+  registryGeneratedAt?: string | null;
+  registrySourceUrl?: string | null;
 };
 
 type AtlasProvider = AtlasProviderDesc & {
@@ -88,6 +105,15 @@ type AnalyticsCatalogRow = {
   serviceId?: string | null;
   serviceName?: string | null;
   serviceUrl?: string | null;
+  endpointCount?: number | null;
+  hasMetering?: boolean | null;
+  hasFreeTier?: boolean | null;
+  providerSha?: string | null;
+  registryVersion?: string | null;
+  registryGeneratedAt?: string | null;
+  registrySourceUrl?: string | null;
+  priceRangeUsd?: { min: number; max: number } | null;
+  offers?: GeoOffer[];
   payTo: string;
   network: string;
   asset: string;
@@ -108,11 +134,32 @@ export type GeoSpecProviderHint = {
   network: string;
   asset: string;
   endpointCount?: number | null;
+  hasMetering?: boolean | null;
+  hasFreeTier?: boolean | null;
+  providerSha?: string | null;
+  registryVersion?: string | null;
+  registryGeneratedAt?: string | null;
+  registrySourceUrl?: string | null;
+  priceRangeUsd?: { min: number; max: number } | null;
+  offers?: Array<{
+    protocol: "x402" | "MPP";
+    chain: string;
+    asset: string;
+    payToAddress: string;
+    probePriceUsd?: number;
+  }>;
   resources?: Array<{
     resource: string;
     network?: string;
     asset?: string;
     amountAtomic?: string;
+    description?: string;
+    method?: string;
+    inputSchema?: unknown;
+    lastUpdated?: string;
+    x402Version?: number;
+    l30DaysTotalCalls?: number;
+    l30DaysUniquePayers?: number;
     transactionCount?: number;
     totalAmountAtomic?: string;
   }>;
@@ -305,6 +352,21 @@ const rowFromHint = (hint: GeoSpecProviderHint | null | undefined): AnalyticsCat
     serviceId: hint.serviceId ?? hint.serviceName ?? hint.name ?? hint.providerId,
     serviceName: hint.serviceName ?? hint.name ?? hint.serviceId ?? hint.providerId,
     serviceUrl: hint.serviceUrl ?? null,
+    endpointCount: hint.endpointCount ?? null,
+    hasMetering: hint.hasMetering ?? null,
+    hasFreeTier: hint.hasFreeTier ?? null,
+    providerSha: hint.providerSha ?? null,
+    registryVersion: hint.registryVersion ?? null,
+    registryGeneratedAt: hint.registryGeneratedAt ?? null,
+    registrySourceUrl: hint.registrySourceUrl ?? null,
+    priceRangeUsd: hint.priceRangeUsd ?? null,
+    offers: (hint.offers ?? []).map((offer) => ({
+      protocol: offer.protocol,
+      chain: offer.chain,
+      asset: offer.asset,
+      payTo: offer.payToAddress,
+      probePriceUsd: offer.probePriceUsd ?? 0,
+    })),
     payTo: hint.payTo,
     network: hint.network,
     asset: hint.asset,
@@ -385,13 +447,18 @@ export const getGeoSpec = (
     .sort((a, b) => b.transactionCount - a.transactionCount);
   const liveResourceEndpoints: GeoEndpoint[] = (row.resources ?? []).map((resource) => ({
     resource: resource.resource,
+    description: resource.description,
+    method: resource.method,
+    lastUpdated: resource.lastUpdated,
+    x402Version: resource.x402Version,
+    l30DaysUniquePayers: resource.l30DaysUniquePayers,
     networks: resource.network ? [resource.network] : [],
     assets: resource.asset ? [resource.asset] : [],
-    transactionCount: resource.transactionCount ?? 0,
+    transactionCount: resource.transactionCount ?? resource.l30DaysTotalCalls ?? 0,
     totalAmountAtomic: resource.totalAmountAtomic ?? resource.amountAtomic ?? "0",
   }));
 
-  const offers: GeoOffer[] = matched?.offers ?? [];
+  const offers: GeoOffer[] = matched?.offers ?? row.offers ?? [];
 
   return {
     serviceId,
@@ -401,7 +468,13 @@ export const getGeoSpec = (
     description: matched?.description ?? row.description ?? null,
     useCase: matched?.useCase ?? row.useCase ?? null,
     endpointCount: matched?.endpointCount ?? row.resources?.length ?? null,
-    priceRangeUsd: matched?.priceRangeUsd ?? null,
+    hasMetering: row.hasMetering ?? null,
+    hasFreeTier: row.hasFreeTier ?? null,
+    providerSha: row.providerSha ?? null,
+    registryVersion: row.registryVersion ?? null,
+    registryGeneratedAt: row.registryGeneratedAt ?? null,
+    registrySourceUrl: row.registrySourceUrl ?? null,
+    priceRangeUsd: matched?.priceRangeUsd ?? row.priceRangeUsd ?? null,
     offers,
     observedEndpoints: observedEndpoints.length ? observedEndpoints : liveResourceEndpoints,
     atlasMissing: matched === null,

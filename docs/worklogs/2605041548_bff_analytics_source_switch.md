@@ -29,3 +29,7 @@
 - BFF live provider catalog が `pay_sh_providers` / `pay_sh_payment_offers` の metadata を payTo で enrichment し、frontend GEO spec が live provider hint の title/description/useCase/category を使えるようにした。
 - StableEnrich などの endpoint 詳細は `pay_sh_*` ではなく既存 `x402_resources` / `x402_payment_options` に入っていたため、BFF `/providers` に `resources` を追加し、GEO spec が live resource list を fallback 表示できるようにした。
 - serviceId filter の customer list は対象 service 内の provider 数だけでなく、walletUsageGraph の `otherServiceCandidates` も含めた cross-provider `providerCount` を返すようにした。
+- Co-Usage Providers frontend 集計が全 provider の candidate を混ぜていたため、選択中 provider の payTo に一致する payer wallets だけを集計するようにした。
+- `x402_resources.raw` の endpoint description / method / schema / quality / lastUpdated / x402Version を BFF provider resources に含め、StableEnrich などのGEO endpoint情報を厚くした。
+- resource metadata の null JSON は任意フィールドとして落とし、`null` が `0` として x402Version / quality に混入しない回帰テストを追加した。
+- skills.json 由来の provider registry metadata (`hasMetering` / `hasFreeTier` / `providerSha` / `registry*`) と probe offer list を BFF provider catalog へ通し、GEO spec が live hint から Pay.sh offers と endpoint description を表示できるようにした。

@@ -48,6 +48,19 @@ export type ProviderCatalogItemDto = {
   useCase?: string;
   category?: string;
   serviceUrl?: string;
+  hasMetering?: boolean;
+  hasFreeTier?: boolean;
+  providerSha?: string;
+  registryVersion?: string;
+  registryGeneratedAt?: string;
+  registrySourceUrl?: string;
+  offers?: Array<{
+    protocol: "x402" | "MPP";
+    chain: string;
+    asset: string;
+    payToAddress: string;
+    probePriceUsd?: number;
+  }>;
   protocol?: "x402" | "MPP";
   chain?: string;
   assetSymbol?: string;
@@ -57,6 +70,13 @@ export type ProviderCatalogItemDto = {
     network?: string;
     asset?: string;
     amountAtomic?: string;
+    description?: string;
+    method?: string;
+    inputSchema?: unknown;
+    lastUpdated?: string;
+    x402Version?: number;
+    l30DaysTotalCalls?: number;
+    l30DaysUniquePayers?: number;
     transactionCount?: number;
     totalAmountAtomic?: string;
   }>;

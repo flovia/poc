@@ -326,6 +326,7 @@ export const aggregateCoUsageProviders = (
   const accByPayTo = new Map<string, ProviderAcc>();
 
   for (const provider of graph.providerWallets) {
+    if (own && normalizePaymentRecipientAddress(provider.payTo) !== own) continue;
     for (const payer of provider.payerWallets) {
       const payerLower = payer.wallet.toLowerCase();
       for (const candidate of payer.otherServiceCandidates) {

@@ -43,6 +43,20 @@ type ProviderRouteLike = {
   serviceId?: string;
   serviceName?: string;
   serviceUrl?: string;
+  hasMetering?: boolean;
+  hasFreeTier?: boolean;
+  providerSha?: string;
+  registryVersion?: string;
+  registryGeneratedAt?: string;
+  registrySourceUrl?: string;
+  priceRangeUsd?: { min: number; max: number };
+  offers?: Array<{
+    protocol: "x402" | "MPP";
+    chain: string;
+    asset: string;
+    payToAddress: string;
+    probePriceUsd?: number;
+  }>;
   payTo?: string;
   network?: string;
   asset?: string;

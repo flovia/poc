@@ -554,8 +554,25 @@ const ProviderResourceSchema = z
     network: z.string().min(1).optional(),
     asset: z.string().min(1).optional(),
     amountAtomic: AtomicAmountSchema.optional(),
+    description: z.string().min(1).optional(),
+    method: z.string().min(1).optional(),
+    inputSchema: z.unknown().optional(),
+    lastUpdated: z.string().datetime().optional(),
+    x402Version: z.number().int().nonnegative().optional(),
+    l30DaysTotalCalls: z.number().int().nonnegative().optional(),
+    l30DaysUniquePayers: z.number().int().nonnegative().optional(),
     transactionCount: z.number().int().nonnegative().optional(),
     totalAmountAtomic: AtomicAmountSchema.optional(),
+  })
+  .strict();
+
+const ProviderOfferSchema = z
+  .object({
+    protocol: PaymentProtocolSchema,
+    chain: z.string().min(1),
+    asset: z.string().min(1),
+    payToAddress: z.string().min(1),
+    probePriceUsd: z.number().nonnegative().optional(),
   })
   .strict();
 
@@ -589,6 +606,13 @@ export const ProviderCatalogRowSchema = withDerivedInsightReasons(
       useCase: z.string().min(1).optional(),
       category: z.string().min(1).optional(),
       serviceUrl: z.string().url().optional(),
+      hasMetering: z.boolean().optional(),
+      hasFreeTier: z.boolean().optional(),
+      providerSha: z.string().min(1).optional(),
+      registryVersion: z.string().min(1).optional(),
+      registryGeneratedAt: z.string().datetime().optional(),
+      registrySourceUrl: z.string().url().optional(),
+      offers: z.array(ProviderOfferSchema).optional(),
       protocol: PaymentProtocolSchema.optional(),
       chain: z.string().min(1).optional(),
       assetSymbol: z.string().min(1).optional(),

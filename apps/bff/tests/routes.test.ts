@@ -792,11 +792,44 @@ describe("BFF routes", () => {
               use_case: "Use Alpha for tests",
               category: "data",
               service_url: "https://alpha.example.com",
+              has_metering: true,
+              has_free_tier: false,
+              provider_sha: "alpha-sha",
+              registry_version: "2",
+              registry_generated_at: "2026-05-01T00:00:00.000Z",
+              registry_source_url: "https://storage.googleapis.com/pay-skills/v1/skills.json",
+              endpoint_count: 34,
+              offers: [
+                {
+                  protocol: "x402",
+                  chain: "Base",
+                  asset: "USDC",
+                  payToAddress: "0x3333333333333333333333333333333333333333",
+                  probePriceUsd: 0.05,
+                },
+              ],
               protocol: "x402",
               offer_chain: "Base",
               asset_symbol: "USDC",
               price_range_min_usd: "0.01",
               price_range_max_usd: "0.05",
+              resources: [
+                {
+                  resource: "https://alpha.example.com/resource",
+                  description: "Alpha endpoint",
+                  method: "GET",
+                  inputSchema: { type: "object" },
+                  lastUpdated: "2026-05-01T00:00:00.000Z",
+                  x402Version: 2,
+                  l30DaysTotalCalls: 10,
+                  l30DaysUniquePayers: 3,
+                },
+                {
+                  resource: "https://alpha.example.com/no-metadata",
+                  inputSchema: null,
+                  x402Version: null,
+                },
+              ],
               transaction_count: 7,
               unique_sender_count: 2,
               total_volume_atomic: "700",
@@ -814,11 +847,41 @@ describe("BFF routes", () => {
       useCase: "Use Alpha for tests",
       category: "data",
       serviceUrl: "https://alpha.example.com",
+      hasMetering: true,
+      hasFreeTier: false,
+      providerSha: "alpha-sha",
+      registryVersion: "2",
+      registryGeneratedAt: "2026-05-01T00:00:00.000Z",
+      registrySourceUrl: "https://storage.googleapis.com/pay-skills/v1/skills.json",
+      endpointCount: 34,
+      offers: [
+        {
+          protocol: "x402",
+          chain: "Base",
+          asset: "USDC",
+          payToAddress: "0x3333333333333333333333333333333333333333",
+          probePriceUsd: 0.05,
+        },
+      ],
       protocol: "x402",
       chain: "Base",
       assetSymbol: "USDC",
       priceRangeUsd: { min: 0.01, max: 0.05 },
     });
+    expect(dataSource.providers.providers[0]?.resources).toMatchObject([
+      {
+        resource: "https://alpha.example.com/resource",
+        description: "Alpha endpoint",
+        method: "GET",
+        inputSchema: { type: "object" },
+        lastUpdated: "2026-05-01T00:00:00.000Z",
+        x402Version: 2,
+        l30DaysTotalCalls: 10,
+        l30DaysUniquePayers: 3,
+      },
+      { resource: "https://alpha.example.com/no-metadata" },
+    ]);
+    expect(dataSource.providers.providers[0]?.resources?.[1]?.x402Version).toBeUndefined();
     expect(dataSource.customers.customerCount).toBe(2);
     expect(dataSource.walletUsageGraph.graph.providerWallets[0]?.payerWallets.length).toBe(2);
     expect(dataSource.serviceSummary.userCount).toBe(2);

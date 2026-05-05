@@ -98,6 +98,38 @@ describe("aggregateCoUsageProviders", () => {
     expect(rows[0]?.confidence).toBeCloseTo(0.7, 5);
   });
 
+  test("only aggregates candidates for the selected provider payTo", () => {
+    const graph: WalletUsageGraphDto = {
+      ...makeGraph([
+        makePayer("0x1", [
+          makeCandidate({ providerId: "ext:a", providerName: "A", payToWallet: EXT_A }),
+        ]),
+      ]),
+      providerWallets: [
+        ...makeGraph([
+          makePayer("0x1", [
+            makeCandidate({ providerId: "ext:a", providerName: "A", payToWallet: EXT_A }),
+          ]),
+        ]).providerWallets,
+        {
+          payTo: "0x0000000000000000000000000000000000000099",
+          claimIds: ["Other Provider"],
+          payerWallets: [
+            makePayer("0x2", [
+              makeCandidate({ providerId: "ext:b", providerName: "B", payToWallet: EXT_B }),
+            ]),
+          ],
+        },
+      ],
+    };
+
+    const rows = aggregateCoUsageProviders(graph, { ownPayTo: OWN_PAY_TO });
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.payToWallet).toBe(EXT_A);
+    expect(rows[0]?.sharedWallets).toBe(1);
+  });
+
   test("merges multiple endpoints under the same payToWallet into one row", () => {
     const graph = makeGraph([
       makePayer("0x1", [
