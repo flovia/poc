@@ -156,11 +156,11 @@ export function ProvidersContextProvider({ children }: { children: React.ReactNo
           const capability = winner.serviceId
             ? STATIC_PROVIDER_CAPABILITIES.find((entry) => entry.serviceId === winner.serviceId)
             : undefined;
-          const mergedNetworks = new Set([...networks, ...(capability?.networks ?? [])]);
-          const mergedProtocols = new Set<Protocol>([
-            ...protocols,
-            ...((capability?.protocols ?? []) as Protocol[]),
-          ]);
+          // The Postgres live BFF currently emits `network: "base"` for catalog
+          // rows even when the provider capability is Solana-only. When a static
+          // capability exists, treat it as authoritative for badges.
+          const mergedNetworks = capability?.networks ?? Array.from(networks);
+          const mergedProtocols = capability?.protocols ?? Array.from(protocols);
           return {
             providerId: winner.providerId,
             name: winner.name,
@@ -168,10 +168,10 @@ export function ProvidersContextProvider({ children }: { children: React.ReactNo
             payTo: winner.payTo,
             createdAt: Date.now(),
             source: "generated" as const,
-            network: winner.network || capability?.network,
-            networks: Array.from(mergedNetworks),
+            network: capability?.network ?? winner.network,
+            networks: mergedNetworks,
             catalogSource: winner.catalogSource ?? capability?.catalogSource,
-            protocols: Array.from(mergedProtocols),
+            protocols: mergedProtocols,
             asset: winner.asset,
             serviceId: winner.serviceId,
             serviceName: winner.serviceName,
