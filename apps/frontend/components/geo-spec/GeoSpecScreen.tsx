@@ -188,11 +188,11 @@ function EndpointsSection({ spec }: { spec: GeoSpec }) {
         <article className="card" style={{ padding: 0, overflow: "hidden" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
             <colgroup>
-              <col />
+              <col style={{ width: "30%" }} />
               <col style={{ width: 140 }} />
-              <col style={{ width: 110 }} />
-              <col style={{ width: 110 }} />
-              <col style={{ width: 160 }} />
+              <col />
+              <col style={{ width: 90 }} />
+              <col style={{ width: 140 }} />
             </colgroup>
             <thead>
               <tr style={tableHeadRowStyle}>
@@ -217,8 +217,21 @@ function EndpointsSection({ spec }: { spec: GeoSpec }) {
                   >
                     {pathOf(e.resource)}
                   </td>
-                  <td style={tdStyle}>{e.networks.join(", ") || "—"}</td>
-                  <td style={tdStyle}>{e.assets.join(", ") || "—"}</td>
+                  <td style={{ ...tdStyle, overflowWrap: "anywhere" }}>
+                    {e.networks.join(", ") || "—"}
+                  </td>
+                  <td
+                    style={{
+                      ...tdStyle,
+                      fontFamily: "var(--mono)",
+                      fontSize: 12,
+                      overflowWrap: "anywhere",
+                      wordBreak: "break-all",
+                    }}
+                    title={e.assets.join(", ")}
+                  >
+                    {e.assets.join(", ") || "—"}
+                  </td>
                   <td style={{ ...tdStyle, textAlign: "right", fontFamily: "var(--mono)" }}>
                     {e.transactionCount.toLocaleString()}
                   </td>
