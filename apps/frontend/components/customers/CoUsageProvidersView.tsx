@@ -30,6 +30,11 @@ const shortEndpoint = (serviceName: string): string => {
   }
 };
 
+const endpointPreview = (providerName: string, serviceName: string): string => {
+  const shortened = shortEndpoint(serviceName);
+  return shortened.toLowerCase() === providerName.toLowerCase() ? "—" : shortened;
+};
+
 export function CoUsageProvidersView({
   rows,
   providerId,
@@ -85,29 +90,29 @@ export function CoUsageProvidersView({
               </th>
               <th style={{ textAlign: "right" }}>
                 <HeaderTooltip
-                  label="Shared wallets"
+                  label="Overlapping wallets"
                   description="Number of distinct payer wallets that pay both your provider and this external provider through x402."
                   align="right"
                 />
               </th>
               <th style={{ textAlign: "right" }}>
                 <HeaderTooltip
-                  label="Shared tx"
+                  label="Co-usage tx"
                   description="Total observed x402 transactions from your customers to this external provider, summed across all shared wallets."
                   align="right"
                 />
               </th>
               <th style={{ textAlign: "right" }}>
                 <HeaderTooltip
-                  label="Correlation"
-                  description="Average co-usage confidence (0–1). Higher values mean the overlap is more likely to be a meaningful behavioral signal rather than coincidental."
+                  label="Signal"
+                  description="Co-usage signal (0–1), blending candidate confidence with overlapping wallets and co-usage transaction strength."
                   align="right"
                 />
               </th>
               <th>
                 <HeaderTooltip
                   label="Opportunity"
-                  description="Bundling / partnership opportunity bucketed from the correlation score. High ≥ 0.70, Medium 0.40–0.69, Low < 0.40."
+                  description="Bundling / partnership opportunity bucketed from the co-usage signal. High means repeated overlap across multiple wallets or transactions is strong enough to warrant outreach."
                   align="right"
                 />
               </th>
@@ -180,17 +185,7 @@ export function CoUsageProvidersView({
                               maxWidth: 360,
                             }}
                           >
-                            {shortEndpoint(ep.serviceName)}
-                          </span>
-                          <span
-                            className="mono"
-                            style={{
-                              fontSize: 11,
-                              color: "var(--text-3)",
-                              whiteSpace: "nowrap",
-                            }}
-                          >
-                            {ep.sharedTxCount} tx
+                            {endpointPreview(row.providerName, ep.serviceName)}
                           </span>
                         </div>
                       ))}

@@ -78,7 +78,7 @@ export default async function GeoSpecPage({
               icon: "repeat",
             },
           ],
-          note: "Per-endpoint USD prices are not separately published in the Pay.sh atlas — only per-offer probe prices. Path totals reflect observed amounts in the current fixture.",
+          note: "Per-endpoint USD prices are not separately published in the Pay.sh catalog — only per-offer probe prices. Path totals reflect observed paid amounts in the current fixture.",
         }}
       />
       <div className="scroll">

@@ -386,8 +386,19 @@ export const aggregateCoUsageProviders = (
   }
 
   const rows: CoUsageProviderRow[] = [];
+  const maxWallets = Math.max(...[...accByPayTo.values()].map((acc) => acc.walletSet.size), 1);
+  const maxTx = Math.max(...[...accByPayTo.values()].map((acc) => acc.txTotal), 1);
   for (const acc of accByPayTo.values()) {
     const avgConfidence = acc.confidenceCount > 0 ? acc.confidenceSum / acc.confidenceCount : 0;
+    const walletStrength = acc.walletSet.size / maxWallets;
+    const txStrength = acc.txTotal / maxTx;
+    const overlapStrength = walletStrength * 0.6 + txStrength * 0.4;
+    const signal =
+      accByPayTo.size === 1
+        ? avgConfidence
+        : avgConfidence > 0
+          ? Math.min(1, Math.max(0, avgConfidence + (overlapStrength - 0.5) * 0.3))
+          : overlapStrength;
     const resolvedName = resolveProviderName ? resolveProviderName(acc.payToWallet) : null;
     const endpoints: CoUsageProviderEndpoint[] = [...acc.endpointsByService.values()]
       .map((e) => ({
@@ -415,8 +426,8 @@ export const aggregateCoUsageProviders = (
       payToWallet: acc.payToWallet,
       sharedWallets: acc.walletSet.size,
       sharedTxCount: acc.txTotal,
-      confidence: Number(avgConfidence.toFixed(2)),
-      opportunity: opportunityFor(avgConfidence),
+      confidence: Number(signal.toFixed(2)),
+      opportunity: opportunityFor(signal),
       endpoints,
       payerWallets,
       ...(metadata ?? {}),

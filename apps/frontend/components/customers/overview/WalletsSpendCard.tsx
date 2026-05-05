@@ -23,7 +23,7 @@ export function WalletsSpendCard({ walletCount, totalSpendAtomic }: WalletsSpend
         <Metric
           label="Spend"
           value={formatAtomic(totalSpendAtomic)}
-          hint="atomic units (USDC*)"
+          hint="total USDC spend"
         />
       </div>
     </OverviewCard>

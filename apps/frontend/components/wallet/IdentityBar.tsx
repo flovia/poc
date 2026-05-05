@@ -29,9 +29,9 @@ export function IdentityBar({ customer, metrics, dataMode, sdkExtras }: Identity
   const totalSpendDisplay =
     isSdkConnected && hasSdkUpsell
       ? formatUsd(sdkExtras!.totalSpendUsd)
-      : formatAtomic(metrics.spendAtomic);
+      : `${formatAtomic(metrics.spendAtomic)} USDC`;
   const totalSpendSub =
-    isSdkConnected && hasSdkUpsell ? "USD · SDK preview (mock)" : "atomic units (USDC*)";
+    isSdkConnected && hasSdkUpsell ? "USD · SDK preview (mock)" : "USDC spend";
   const baseScanUrl = `https://basescan.org/address/${customer.address}#tokentxns`;
   const copyAddress = async () => {
     await navigator.clipboard.writeText(customer.address);
@@ -69,16 +69,6 @@ export function IdentityBar({ customer, metrics, dataMode, sdkExtras }: Identity
               minWidth: 0,
             }}
           >
-            <span
-              style={{
-                width: 8,
-                height: 8,
-                borderRadius: "50%",
-                background: "var(--mesh-blue)",
-                boxShadow: "none",
-                flexShrink: 0,
-              }}
-            />
             <span
               className="mono display"
               style={{
@@ -151,21 +141,6 @@ export function IdentityBar({ customer, metrics, dataMode, sdkExtras }: Identity
                 {sdkExtras.agentType}
               </span>
             )}
-            <span style={{ color: "var(--text-mute)" }}>·</span>
-            <span style={{ fontSize: 12, color: "var(--text-3)" }}>
-              role: {customer.role} · basis: {customer.identityBasis}
-            </span>
-          </div>
-          <div
-            style={{
-              marginTop: 8,
-              fontSize: 12,
-              color: "var(--text-mute)",
-              maxWidth: 420,
-              lineHeight: 1.5,
-            }}
-          >
-            {customer.caveat}
           </div>
         </div>
 

@@ -133,7 +133,7 @@ export function CoUsageProvidersChart({
                 rx={2}
               >
                 <title>
-                  {`${row.providerName}\nShared wallets: ${row.sharedWallets}\nShared tx: ${row.sharedTxCount}\nEndpoints used: ${row.endpoints.length}`}
+                  {`${row.providerName}\nOverlapping wallets: ${row.sharedWallets}\nCo-usage tx: ${row.sharedTxCount}\nEndpoints used: ${row.endpoints.length}`}
                 </title>
               </rect>
 

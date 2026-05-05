@@ -196,7 +196,7 @@ export function ActivityTimeline({
                       marginTop: 4,
                     }}
                   >
-                    api: {apiPathDisplay.text}
+                    endpoint: {apiPathDisplay.text}
                   </div>
                 )}
                 {(event.providerId || event.txHash) && (

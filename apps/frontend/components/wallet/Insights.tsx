@@ -185,19 +185,19 @@ function UpsellCardLive({
             </span>
           </li>
           <li style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
-            <span>Activity growth</span>
+            <span title="Recent payment activity compared with this wallet's earlier baseline.">Activity growth</span>
             <span className="mono" style={{ color: "var(--text-1)" }}>
               {formatGrowth(metrics.activityGrowth)}
             </span>
           </li>
           <li style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
-            <span>Entry-point ratio</span>
+            <span title="Share of this wallet's observed activity that starts at the primary entry-point endpoint.">Entry-point ratio</span>
             <span className="mono" style={{ color: "var(--text-1)" }}>
               {formatRatioPct(metrics.entryPointRatio, 0)}
             </span>
           </li>
           <li style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
-            <span>Spend (atomic)</span>
+            <span>Spend (USDC)</span>
             <span className="mono" style={{ color: "var(--text-1)" }}>
               {formatAtomic(metrics.spendAtomic)}
             </span>
@@ -311,19 +311,19 @@ export function RecentActivityInsight({
             >
               {formatGrowth(growth)}
             </span>{" "}
-            versus the earlier baseline; this wallet has paid{" "}
+            versus the earlier baseline; this wallet has made payments to{" "}
             <span className="mono" style={{ color: "var(--text-1)", fontWeight: 600 }}>
               {providerCount}
             </span>{" "}
-            provider {providerCount === 1 ? "wallet" : "wallets"} so far.
+            providers so far.
           </>
         ) : providerCount > 0 ? (
           <>
-            This wallet has paid{" "}
+            This wallet has made payments to{" "}
             <span className="mono" style={{ color: "var(--text-1)", fontWeight: 600 }}>
               {providerCount}
             </span>{" "}
-            provider {providerCount === 1 ? "wallet" : "wallets"} so far.
+            providers so far.
           </>
         ) : (
           <>No co-usage activity observed yet.</>
