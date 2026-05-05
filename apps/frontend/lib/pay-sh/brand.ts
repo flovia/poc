@@ -4,40 +4,52 @@
 // *.x402.paysponge.com) that share favicons across unrelated brands, so we
 // need to map them back to the underlying provider domain by hand.
 
-const BRAND_DOMAIN_BY_KEY: Record<string, string> = {
+type BrandEntry = {
+  domain: string;
+  // Direct icon URL override. Used when a Google favicon API lookup against
+  // `domain` returns a generic globe (e.g. nansen.ai's icons are hosted on
+  // framerusercontent.com and the favicon resolver fails to follow them).
+  iconUrl?: string;
+};
+
+const BRAND_BY_KEY: Record<string, BrandEntry> = {
   // solana-foundation / google / *
-  google: "google.com",
+  google: { domain: "google.com" },
   // solana-foundation / alibaba / *
-  alibaba: "alibaba.com",
+  alibaba: { domain: "alibaba.com" },
   // paysponge / *
-  "2captcha": "2captcha.com",
-  fal: "fal.ai",
-  perplexity: "perplexity.ai",
-  wolframalpha: "wolframalpha.com",
-  rentcast: "rentcast.io",
-  screenshotone: "screenshotone.com",
-  tripadvisor: "tripadvisor.com",
-  coingecko: "coingecko.com",
-  reducto: "reducto.ai",
-  textbelt: "textbelt.com",
+  "2captcha": { domain: "2captcha.com" },
+  fal: { domain: "fal.ai" },
+  perplexity: { domain: "perplexity.ai" },
+  wolframalpha: { domain: "wolframalpha.com" },
+  rentcast: { domain: "rentcast.io" },
+  screenshotone: { domain: "screenshotone.com" },
+  tripadvisor: { domain: "tripadvisor.com" },
+  coingecko: { domain: "coingecko.com" },
+  reducto: { domain: "reducto.ai" },
+  textbelt: { domain: "textbelt.com" },
   // merit-systems / stable* / *
-  stablecrypto: "stablecrypto.dev",
-  stabledomains: "stabledomains.dev",
-  stableemail: "stableemail.dev",
-  stableenrich: "stableenrich.dev",
-  stablemerch: "stablemerch.dev",
-  stablephone: "stablephone.dev",
-  stablesocial: "stablesocial.dev",
-  stablestudio: "stablestudio.dev",
-  stableupload: "stableupload.dev",
+  stablecrypto: { domain: "stablecrypto.dev" },
+  stabledomains: { domain: "stabledomains.dev" },
+  stableemail: { domain: "stableemail.dev" },
+  stableenrich: { domain: "stableenrich.dev" },
+  stablemerch: { domain: "stablemerch.dev" },
+  stablephone: { domain: "stablephone.dev" },
+  stablesocial: { domain: "stablesocial.dev" },
+  stablestudio: { domain: "stablestudio.dev" },
+  stableupload: { domain: "stableupload.dev" },
   // top-level brands (single-segment fqn)
-  agentmail: "agentmail.to",
-  crushrewards: "crushrewards.dev",
-  dtelecom: "dtelecom.org",
-  purch: "purch.xyz",
-  quicknode: "quicknode.com",
-  socialintel: "socialintel.dev",
-  paysponge: "paysponge.com",
+  agentmail: { domain: "agentmail.to" },
+  crushrewards: { domain: "crushrewards.dev" },
+  dtelecom: { domain: "dtelecom.org" },
+  nansen: {
+    domain: "nansen.ai",
+    iconUrl: "https://framerusercontent.com/images/X6PAJXo4BDwSFLJcxI2JZNWsQ.png",
+  },
+  purch: { domain: "purch.xyz" },
+  quicknode: { domain: "quicknode.com" },
+  socialintel: { domain: "socialintel.dev" },
+  paysponge: { domain: "paysponge.com" },
 };
 
 const INFRA_PREFIXES = new Set(["x402", "api", "www", "pro-api"]);
@@ -52,10 +64,22 @@ function brandKeyCandidatesFromFqn(fqn: string | undefined): string[] {
     // merit-systems) is a publisher, not a brand.
     return [segs[1]!];
   }
-  // 2-segment fqn: either <brand>/<service> (agentmail/email) or
-  // <publisher>/<brand> (paysponge/fal). Try both, preferring the inner
-  // segment because publisher namespaces tend to be the more curated key.
-  return [segs[1]!, segs[0]!];
+  if (segs.length >= 2) {
+    // 2-segment fqn: either <brand>/<service> (agentmail/email) or
+    // <publisher>/<brand> (paysponge/fal). Try both, preferring the inner
+    // segment because publisher namespaces tend to be the more curated key.
+    return [segs[1]!, segs[0]!];
+  }
+  // Single segment. The catalog row may be using a hostname here (e.g.
+  // "api.nansen.ai") instead of an atlas-style fqn. Pull the apex label out
+  // so we can still match a curated brand key.
+  const only = segs[0]!;
+  if (only.includes(".")) {
+    const labels = only.split(".").filter(Boolean);
+    // For api.nansen.ai → labels = [api, nansen, ai] → second-to-last = "nansen".
+    if (labels.length >= 2) return [labels[labels.length - 2]!];
+  }
+  return [only];
 }
 
 function safeUrl(url: string): URL | null {
@@ -84,6 +108,8 @@ function stripInfraPrefix(host: string): string {
 
 export type BrandResolution = {
   domain: string | null;
+  /** Direct icon URL when the brand entry overrides Google favicon resolution. */
+  iconUrl?: string;
   reason: "curated" | "direct-host" | "fqn-fallback" | "none";
 };
 
@@ -93,7 +119,8 @@ export type BrandResolution = {
  * Priority:
  *   1. Curated map keyed by the brand segment of `fqn` (handles wrapper hosts
  *      like *.gateway-402.com / *.x402.paysponge.com whose subdomain labels
- *      match a known brand even when the apex domain doesn't).
+ *      match a known brand even when the apex domain doesn't). May also
+ *      provide a direct iconUrl override.
  *   2. Direct brand host (api.purch.xyz → purch.xyz, x402.quicknode.com →
  *      quicknode.com) by stripping infra prefixes.
  *   3. Curated map keyed only by `fqn` segment when the host doesn't help.
@@ -108,8 +135,9 @@ export function inferBrandDomain({
 }): BrandResolution {
   const candidates = brandKeyCandidatesFromFqn(fqn);
   for (const key of candidates) {
-    if (BRAND_DOMAIN_BY_KEY[key]) {
-      return { domain: BRAND_DOMAIN_BY_KEY[key]!, reason: "curated" };
+    const entry = BRAND_BY_KEY[key];
+    if (entry) {
+      return { domain: entry.domain, iconUrl: entry.iconUrl, reason: "curated" };
     }
   }
 

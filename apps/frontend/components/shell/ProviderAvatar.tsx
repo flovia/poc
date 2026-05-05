@@ -7,6 +7,8 @@ type ProviderAvatarProps = {
   serviceId?: string;
   /** Resolved brand favicon domain (preferred over serviceId guessing). */
   brandDomain?: string | null;
+  /** Direct icon URL override; bypasses Google favicon resolution entirely. */
+  brandIconUrl?: string | null;
   size?: number;
 };
 
@@ -48,18 +50,27 @@ export function ProviderAvatar({
   name,
   serviceId,
   brandDomain,
+  brandIconUrl,
   size = 32,
 }: ProviderAvatarProps) {
   const host = brandDomain || hostnameOf(serviceId);
-  const [faviconFailed, setFaviconFailed] = useState(false);
-  // Reset the failure flag when the resolved host actually changes (e.g. when
-  // the skills.json fetch settles and we move from no-favicon to a real one).
+  const iconSrc = brandIconUrl
+    || (host
+      ? `https://www.google.com/s2/favicons?sz=64&domain=${encodeURIComponent(host)}`
+      : null);
+  const [iconFailed, setIconFailed] = useState(false);
+  // Reset the failure flag when the icon source actually changes (e.g. when
+  // the skills.json fetch settles and we move from no-icon to a real one).
   useEffect(() => {
-    setFaviconFailed(false);
-  }, [host]);
-  const showFavicon = host !== null && !faviconFailed;
+    setIconFailed(false);
+  }, [iconSrc]);
+  const showIcon = iconSrc !== null && !iconFailed;
   const color = pickColor(serviceId || name);
   const letter = initialOf(name);
+  // Direct iconUrls (curated brand assets) usually fill the disc — render
+  // them at full size. Favicons from Google's resolver are tiny PNGs, so
+  // keep the inset look that gave them visual padding before.
+  const iconSize = brandIconUrl ? size : Math.round(size * 0.62);
 
   return (
     <span
@@ -71,24 +82,24 @@ export function ProviderAvatar({
         display: "inline-flex",
         alignItems: "center",
         justifyContent: "center",
-        background: showFavicon ? "#fff" : color,
+        background: showIcon ? "#fff" : color,
         color: "#fff",
         fontSize: Math.round(size * 0.42),
         fontWeight: 700,
         letterSpacing: "0.01em",
         flexShrink: 0,
-        border: showFavicon ? "1px solid var(--line)" : "none",
+        border: showIcon ? "1px solid var(--line)" : "none",
         overflow: "hidden",
       }}
     >
-      {showFavicon ? (
+      {showIcon ? (
         <img
-          src={`https://www.google.com/s2/favicons?sz=64&domain=${encodeURIComponent(host!)}`}
+          src={iconSrc!}
           alt=""
-          width={Math.round(size * 0.62)}
-          height={Math.round(size * 0.62)}
-          onError={() => setFaviconFailed(true)}
-          style={{ display: "block" }}
+          width={iconSize}
+          height={iconSize}
+          onError={() => setIconFailed(true)}
+          style={{ display: "block", objectFit: "cover" }}
         />
       ) : (
         letter

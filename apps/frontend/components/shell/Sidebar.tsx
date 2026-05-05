@@ -9,6 +9,7 @@ import { Icon } from "@/components/ui/Icon";
 import { ProviderAvatar } from "@/components/shell/ProviderAvatar";
 import { inferBrandDomain } from "@/lib/pay-sh/brand";
 import { resolvePaySkill, usePaySkills } from "@/lib/pay-sh/skills";
+import { isPreservedBaseProvider } from "@/lib/providers/preserved";
 import { isDemoProvider } from "@/lib/providers";
 import type { DashboardMode } from "@/lib/data-mode";
 // Phase 9: barrel ではなく leaf module から直 import (sdk-fixtures の他データを引き込まないため).
@@ -57,13 +58,13 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
       : hydrated
         ? "Select a provider"
         : "Loading…");
-  const currentBrandDomain = inferBrandDomain({
+  const currentBrand = inferBrandDomain({
     fqn: currentSkill?.fqn ?? currentServiceId,
     serviceUrl: currentSkill?.service_url,
-  }).domain;
+  });
   const currentIsDemo = current ? isDemoProvider(current, demoOpted, userIds) : false;
   const currentIsPaySh =
-    current?.source === "generated" && current.serviceId !== "pro-api.coingecko.com";
+    current?.source === "generated" && !isPreservedBaseProvider(current.serviceId);
 
   // hydration 後に provider が一つも無いとき My Customers を disabled 表示。
   // SSR (hydrated=false) では通常 Link を出すことで mismatch を避ける。
@@ -109,7 +110,8 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
         <ProviderAvatar
           name={currentName}
           serviceId={currentServiceId}
-          brandDomain={currentBrandDomain}
+          brandDomain={currentBrand.domain}
+          brandIconUrl={currentBrand.iconUrl}
           size={28}
         />
         <span className="provider-picker__body">

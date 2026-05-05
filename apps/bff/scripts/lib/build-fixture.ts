@@ -10,7 +10,17 @@ import { generateDummyPayerWallets, generateEvmAddress, type ChainKind } from ".
 import { mulberry32, randomInt, seedFromString } from "./prng";
 import type { AtlasOffer, AtlasProvider, ParsedAtlas } from "./atlas-parser";
 
-const COINGECKO_PROVIDER_NAME_MARK = "coingecko";
+// Provider name fragments that are sourced from the offline analytics SQLite
+// store (real on-chain payment observations) rather than the pay-skills atlas.
+// build-fixture preserves rows whose name / serviceId / providerId contains any
+// of these marks so they survive the atlas regeneration step.
+const PRESERVED_BASE_PROVIDER_MARKS = ["coingecko", "nansen"];
+
+const matchesPreservedMark = (value: unknown): boolean => {
+  if (typeof value !== "string") return false;
+  const v = value.toLowerCase();
+  return PRESERVED_BASE_PROVIDER_MARKS.some((m) => v.includes(m));
+};
 
 type AnalyticsJson = {
   providers: { providers: any[]; providerCount: number; [k: string]: any };
@@ -334,16 +344,15 @@ const buildServiceComparisonAndQuadrants = (
   const baseGeneratedAt = base.serviceComparison.generatedAt;
   const baseGeneratedFrom = "pay-skills-atlas-projection";
 
-  const coingeckoService = base.serviceComparison.services.find(
-    (s: any) => s.serviceId === "coingecko",
+  const preservedServices = base.serviceComparison.services.filter((s: any) =>
+    matchesPreservedMark(s.serviceId),
   );
-  const coingeckoPoint = base.serviceQuadrants.points.find((p: any) => p.serviceId === "coingecko");
+  const preservedPoints = base.serviceQuadrants.points.filter((p: any) =>
+    matchesPreservedMark(p.serviceId),
+  );
 
-  const services: any[] = [];
-  const points: any[] = [];
-
-  if (coingeckoService) services.push(coingeckoService);
-  if (coingeckoPoint) points.push(coingeckoPoint);
+  const services: any[] = [...preservedServices];
+  const points: any[] = [...preservedPoints];
 
   for (const [sid, agg] of byServiceId) {
     const avgTx = agg.userCount > 0 ? agg.transactionCount / agg.userCount : 0;
@@ -746,18 +755,16 @@ export const buildPaySkillsFixture = (args: BuildArgs): AnalyticsJson => {
 
   const coingeckoProviderWallets = base.walletUsageGraph.graph.providerWallets.filter(
     (p: any) =>
-      p.providerName?.toLowerCase().includes(COINGECKO_PROVIDER_NAME_MARK) ||
-      p.name?.toLowerCase().includes(COINGECKO_PROVIDER_NAME_MARK) ||
-      p.providerId?.toLowerCase().includes(COINGECKO_PROVIDER_NAME_MARK),
+      matchesPreservedMark(p.providerName)
+      || matchesPreservedMark(p.name)
+      || matchesPreservedMark(p.providerId),
   );
 
-  const coingeckoCatalogRows = base.providers.providers.filter((p: any) => {
-    const flag =
-      p.providerId?.toLowerCase().includes(COINGECKO_PROVIDER_NAME_MARK) ||
-      p.name?.toLowerCase().includes(COINGECKO_PROVIDER_NAME_MARK) ||
-      p.serviceId?.toLowerCase().includes(COINGECKO_PROVIDER_NAME_MARK);
-    return flag;
-  });
+  const coingeckoCatalogRows = base.providers.providers.filter((p: any) =>
+    matchesPreservedMark(p.providerId)
+    || matchesPreservedMark(p.name)
+    || matchesPreservedMark(p.serviceId),
+  );
 
   const generated = dedupeProviderEntries(buildProviderEntriesForAtlas(atlas, seed));
 

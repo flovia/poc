@@ -80,6 +80,17 @@ describe("inferBrandDomain", () => {
     expect(r.domain).toBeNull();
   });
 
+  test("hostname-style serviceId resolves to the curated brand via apex label", () => {
+    // Catalog rows for preserved providers (coingecko/nansen) carry their
+    // serviceId as a bare hostname rather than an atlas fqn. The apex label
+    // should still hit the curated map.
+    expect(inferBrandDomain({ fqn: "api.nansen.ai" }).domain).toBe("nansen.ai");
+    expect(inferBrandDomain({ fqn: "api.nansen.ai" }).iconUrl).toBeDefined();
+    expect(inferBrandDomain({ fqn: "pro-api.coingecko.com" }).domain).toBe(
+      "coingecko.com",
+    );
+  });
+
   test("returns null reason 'none' when nothing is known at all", () => {
     expect(inferBrandDomain({})).toEqual({ domain: null, reason: "none" });
   });

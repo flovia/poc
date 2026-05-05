@@ -8,6 +8,7 @@ import { isDemoProvider } from "@/lib/providers";
 import { describeChain, type CustomerChain } from "@/lib/customers/chain";
 import { inferBrandDomain } from "@/lib/pay-sh/brand";
 import { resolvePaySkill, usePaySkills } from "@/lib/pay-sh/skills";
+import { isPreservedBaseProvider } from "@/lib/providers/preserved";
 import {
   DEFAULT_PROVIDER_FILTER,
   chainsOfProvider,
@@ -28,6 +29,7 @@ const PROTOCOL_OPTIONS: ReadonlyArray<{ value: ProviderProtocolFilter; label: st
   { value: "x402", label: "x402" },
   { value: "MPP", label: "MPP" },
 ];
+
 
 export function ProvidersPicker() {
   const { stored, userProviders, hydrated, demoOpted } = useProviders();
@@ -153,15 +155,15 @@ export function ProvidersPicker() {
         >
           {filtered.map((p) => {
         const isDemo = isDemoProvider(p, demoOpted, userIds);
-        const isPaySh = p.source === "generated" && p.serviceId !== "pro-api.coingecko.com";
+        const isPaySh = p.source === "generated" && !isPreservedBaseProvider(p.serviceId);
         const chains = chainsOfProvider(p);
         const protocols = p.protocols ?? [];
         const skill = resolvePaySkill(skills, p.serviceId);
         const displayName = skill?.title || p.name;
-        const brandDomain = inferBrandDomain({
+        const brand = inferBrandDomain({
           fqn: skill?.fqn ?? p.serviceId,
           serviceUrl: skill?.service_url,
-        }).domain;
+        });
         return (
           <Link
             key={p.providerId}
@@ -182,7 +184,8 @@ export function ProvidersPicker() {
               <ProviderAvatar
                 name={displayName}
                 serviceId={p.serviceId}
-                brandDomain={brandDomain}
+                brandDomain={brand.domain}
+                brandIconUrl={brand.iconUrl}
                 size={40}
               />
               <div style={{ minWidth: 0, flex: 1 }}>
