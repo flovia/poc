@@ -65,14 +65,22 @@ describe("lightsail shared stack", () => {
     expect(workflow).toContain("# - MAIN_BFF_ANALYTICS_DATABASE_URL");
     expect(workflow).toContain("# - DEVELOP_BFF_ANALYTICS_DATABASE_URL");
     expect(workflow).toContain("# - BFF_ANALYTICS_DATABASE_URL");
+    expect(workflow).toContain("encode_env() {");
+    expect(workflow).toContain("decode_env() {");
     expect(workflow).toContain(
-      'MAIN_BFF_ANALYTICS_DATABASE_URL="${{ secrets.MAIN_BFF_ANALYTICS_DATABASE_URL }}"',
+      "MAIN_BFF_ANALYTICS_DATABASE_URL: ${{ secrets.MAIN_BFF_ANALYTICS_DATABASE_URL }}",
     );
     expect(workflow).toContain(
-      'DEVELOP_BFF_ANALYTICS_DATABASE_URL="${{ secrets.DEVELOP_BFF_ANALYTICS_DATABASE_URL }}"',
+      "DEVELOP_BFF_ANALYTICS_DATABASE_URL: ${{ secrets.DEVELOP_BFF_ANALYTICS_DATABASE_URL }}",
     );
     expect(workflow).toContain(
-      'BFF_ANALYTICS_DATABASE_URL="${{ secrets.BFF_ANALYTICS_DATABASE_URL }}"',
+      "BFF_ANALYTICS_DATABASE_URL: ${{ secrets.BFF_ANALYTICS_DATABASE_URL }}",
+    );
+    expect(workflow).toContain(
+      'MAIN_BFF_ANALYTICS_DATABASE_URL_B64="${main_bff_analytics_database_url_b64}"',
+    );
+    expect(workflow).toContain(
+      "decode_env MAIN_BFF_ANALYTICS_DATABASE_URL_B64 MAIN_BFF_ANALYTICS_DATABASE_URL",
     );
   });
 
