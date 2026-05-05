@@ -7,7 +7,7 @@ import { ProviderAvatar } from "@/components/shell/ProviderAvatar";
 import { isDemoProvider } from "@/lib/providers";
 import { describeChain, type CustomerChain } from "@/lib/customers/chain";
 import { inferBrandDomain } from "@/lib/pay-sh/brand";
-import { usePaySkills } from "@/lib/pay-sh/skills";
+import { resolvePaySkill, usePaySkills } from "@/lib/pay-sh/skills";
 import {
   DEFAULT_PROVIDER_FILTER,
   chainsOfProvider,
@@ -156,9 +156,10 @@ export function ProvidersPicker() {
         const isPaySh = p.source === "generated" && p.serviceId !== "pro-api.coingecko.com";
         const chains = chainsOfProvider(p);
         const protocols = p.protocols ?? [];
-        const skill = p.serviceId ? skills.byFqn.get(p.serviceId) : undefined;
+        const skill = resolvePaySkill(skills, p.serviceId);
+        const displayName = skill?.title || p.name;
         const brandDomain = inferBrandDomain({
-          fqn: p.serviceId,
+          fqn: skill?.fqn ?? p.serviceId,
           serviceUrl: skill?.service_url,
         }).domain;
         return (
@@ -179,7 +180,7 @@ export function ProvidersPicker() {
           >
             <div style={{ display: "flex", alignItems: "flex-start", gap: 12, minWidth: 0 }}>
               <ProviderAvatar
-                name={p.name}
+                name={displayName}
                 serviceId={p.serviceId}
                 brandDomain={brandDomain}
                 size={40}
@@ -194,9 +195,9 @@ export function ProvidersPicker() {
                     overflow: "hidden",
                     textOverflow: "ellipsis",
                   }}
-                  title={p.name}
+                  title={displayName}
                 >
-                  {p.name}
+                  {displayName}
                 </div>
                 {p.serviceId ? (
                   <div

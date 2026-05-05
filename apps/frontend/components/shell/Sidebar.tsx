@@ -8,7 +8,7 @@ import { useProviders } from "@/app/providers";
 import { Icon } from "@/components/ui/Icon";
 import { ProviderAvatar } from "@/components/shell/ProviderAvatar";
 import { inferBrandDomain } from "@/lib/pay-sh/brand";
-import { usePaySkills } from "@/lib/pay-sh/skills";
+import { resolvePaySkill, usePaySkills } from "@/lib/pay-sh/skills";
 import { isDemoProvider } from "@/lib/providers";
 import type { DashboardMode } from "@/lib/data-mode";
 // Phase 9: barrel ではなく leaf module から直 import (sdk-fixtures の他データを引き込まないため).
@@ -46,18 +46,19 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
   // のケースでも仮想 provider 名で揃える.
   const isViewingSdkDemo =
     dataMode === "sdkConnected" && activeProviderId === SDK_DEMO_PROVIDER_ID && !current;
+  const currentServiceId = current?.serviceId;
+  const skills = usePaySkills();
+  const currentSkill = resolvePaySkill(skills, currentServiceId);
   const currentName =
-    current?.name
+    currentSkill?.title
+    ?? current?.name
     ?? (isViewingSdkDemo || isSdkEmpty
       ? SDK_DEMO_PROVIDER_NAME
       : hydrated
         ? "Select a provider"
         : "Loading…");
-  const currentServiceId = current?.serviceId;
-  const skills = usePaySkills();
-  const currentSkill = currentServiceId ? skills.byFqn.get(currentServiceId) : undefined;
   const currentBrandDomain = inferBrandDomain({
-    fqn: currentServiceId,
+    fqn: currentSkill?.fqn ?? currentServiceId,
     serviceUrl: currentSkill?.service_url,
   }).domain;
   const currentIsDemo = current ? isDemoProvider(current, demoOpted, userIds) : false;
