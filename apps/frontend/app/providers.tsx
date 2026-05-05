@@ -120,38 +120,53 @@ export function ProvidersContextProvider({ children }: { children: React.ReactNo
         // Dedup providers that share the same display name (e.g. QuickNode appearing
         // once per supported chain) so the sidebar shows one entry per service.
         // Keep the row that already has customer facts when available, then fall
-        // back to the row with the highest transactionCount.
-        const groups = new Map<string, (typeof providers)[number]>();
+        // back to the row with the highest transactionCount. Collect every chain
+        // observed across the merged rows so multi-chain services surface all of
+        // their networks in the picker.
+        type CatalogItem = (typeof providers)[number];
+        type Protocol = "x402" | "MPP";
+        const groups = new Map<
+          string,
+          { winner: CatalogItem; networks: Set<string>; protocols: Set<Protocol> }
+        >();
         for (const provider of providers) {
           const key = `${(provider.serviceId ?? provider.name).toLowerCase()}::${(provider.title ?? provider.name).toLowerCase()}`;
           const existing = groups.get(key);
           if (!existing) {
-            groups.set(key, provider);
+            const networks = new Set<string>();
+            if (provider.network) networks.add(provider.network);
+            const protocols = new Set<Protocol>();
+            if (provider.protocol) protocols.add(provider.protocol);
+            groups.set(key, { winner: provider, networks, protocols });
             continue;
           }
+          if (provider.network) existing.networks.add(provider.network);
+          if (provider.protocol) existing.protocols.add(provider.protocol);
           const existingScore =
-            (existing.hasCustomerFacts ? 1_000_000_000 : 0) + existing.transactionCount;
+            (existing.winner.hasCustomerFacts ? 1_000_000_000 : 0) + existing.winner.transactionCount;
           const candidateScore =
             (provider.hasCustomerFacts ? 1_000_000_000 : 0) + provider.transactionCount;
           if (candidateScore > existingScore) {
-            groups.set(key, provider);
+            existing.winner = provider;
           }
         }
         const deduped = Array.from(groups.values());
         setGeneratedProviders(
-          deduped.map((provider) => ({
-            providerId: provider.providerId,
-            name: provider.name,
+          deduped.map(({ winner, networks, protocols }) => ({
+            providerId: winner.providerId,
+            name: winner.name,
             mode: "simple" as const,
-            payTo: provider.payTo,
+            payTo: winner.payTo,
             createdAt: Date.now(),
             source: "generated" as const,
-            network: provider.network,
-            asset: provider.asset,
-            serviceId: provider.serviceId,
-            transactionCount: provider.transactionCount,
-            uniqueSenderCount: provider.uniqueSenderCount,
-            hasCustomerFacts: provider.hasCustomerFacts,
+            network: winner.network,
+            networks: Array.from(networks),
+            protocols: Array.from(protocols),
+            asset: winner.asset,
+            serviceId: winner.serviceId,
+            transactionCount: winner.transactionCount,
+            uniqueSenderCount: winner.uniqueSenderCount,
+            hasCustomerFacts: winner.hasCustomerFacts,
           })),
         );
       })

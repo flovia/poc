@@ -18,6 +18,8 @@ type StoredProviderBase = {
   createdAt: number;
   source?: "user" | "demo" | "generated";
   network?: string;
+  networks?: string[];
+  protocols?: ("x402" | "MPP")[];
   asset?: string;
   serviceId?: string;
   transactionCount?: number;
