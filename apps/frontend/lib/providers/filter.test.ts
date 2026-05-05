@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import type { StoredProvider } from "@/lib/types";
 import {
   DEFAULT_PROVIDER_FILTER,
+  chainsOfProvider,
   collectAvailableChains,
   filterProviders,
   type ProviderClassifierContext,
@@ -140,6 +141,17 @@ describe("filterProviders", () => {
     );
     // QuickNode's name doesn't include "api" → empty.
     expect(r.map((p) => p.providerId)).toEqual([]);
+  });
+});
+
+describe("chainsOfProvider", () => {
+  test("places 'other' after named chains regardless of input order", () => {
+    const p = make({
+      providerId: "x",
+      name: "X",
+      networks: ["eip155:99999", "base", "solana"],
+    });
+    expect(chainsOfProvider(p)).toEqual(["base", "solana", "other"]);
   });
 });
 

@@ -41,14 +41,16 @@ export function chainsOfProvider(p: StoredProvider): CustomerChain[] {
   const raw = p.networks && p.networks.length > 0 ? p.networks : p.network ? [p.network] : [];
   if (raw.length === 0) return [];
   const seen = new Set<CustomerChain>();
-  const out: CustomerChain[] = [];
+  const named: CustomerChain[] = [];
+  const trailing: CustomerChain[] = [];
   for (const r of raw) {
     const c = normalizeChain(r);
     if (seen.has(c)) continue;
     seen.add(c);
-    out.push(c);
+    if (c === "other" || c === "eip155-other") trailing.push(c);
+    else named.push(c);
   }
-  return out;
+  return [...named, ...trailing];
 }
 
 export function collectAvailableChains(providers: StoredProvider[]): CustomerChain[] {

@@ -40,7 +40,6 @@ const CHAIN_OPTIONS: ReadonlyArray<SelectOption<CustomerChainFilter>> = [
   { value: "polygon-amoy", label: "Polygon Amoy" },
   { value: "base-sepolia", label: "Base Sepolia" },
   { value: "avalanche", label: "Avalanche" },
-  { value: "eip155-other", label: "EIP-155 (other)" },
   { value: "other", label: "Other" },
 ];
 
