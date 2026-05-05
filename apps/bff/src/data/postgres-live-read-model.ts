@@ -100,7 +100,13 @@ const optionalNumber = (value: unknown): number | undefined => {
   return Number.isFinite(parsed) ? parsed : undefined;
 };
 const optionalBoolean = (value: unknown): boolean | undefined =>
-  typeof value === "boolean" ? value : undefined;
+  typeof value === "boolean"
+    ? value
+    : value === "true"
+      ? true
+      : value === "false"
+        ? false
+        : undefined;
 const parseResources = (value: unknown): ProviderRow["resources"] => {
   const raw = typeof value === "string" ? JSON.parse(value) : value;
   if (!Array.isArray(raw)) return [];
@@ -700,12 +706,12 @@ export const loadPostgresLiveAnalyticsDataSource = async (
           p.use_case,
           p.category,
           p.service_url,
-          p.has_metering,
-          p.has_free_tier,
-          p.provider_sha,
-          p.registry_version,
-          p.registry_generated_at,
-          p.registry_source_url,
+          max(to_jsonb(p) ->> 'has_metering') AS has_metering,
+          max(to_jsonb(p) ->> 'has_free_tier') AS has_free_tier,
+          max(to_jsonb(p) ->> 'provider_sha') AS provider_sha,
+          max(to_jsonb(p) ->> 'registry_version') AS registry_version,
+          max(to_jsonb(p) ->> 'registry_generated_at') AS registry_generated_at,
+          max(to_jsonb(p) ->> 'registry_source_url') AS registry_source_url,
           p.endpoint_count,
           jsonb_agg(
             jsonb_build_object(
@@ -736,12 +742,6 @@ export const loadPostgresLiveAnalyticsDataSource = async (
           p.use_case,
           p.category,
           p.service_url,
-          p.has_metering,
-          p.has_free_tier,
-          p.provider_sha,
-          p.registry_version,
-          p.registry_generated_at,
-          p.registry_source_url,
           p.endpoint_count,
           p.price_range_min_usd,
           p.price_range_max_usd
