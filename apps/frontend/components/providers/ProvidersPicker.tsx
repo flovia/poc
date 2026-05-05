@@ -428,29 +428,34 @@ function ProvidersToolbar({
             display: "flex",
             alignItems: "center",
             gap: 10,
+            minWidth: 150,
+            justifyContent: "flex-end",
+            fontVariantNumeric: "tabular-nums",
           }}
         >
           <span>
             Showing <strong style={{ color: "var(--text-1)" }}>{filteredCount}</strong> of {total}
           </span>
-          {isFiltering && (
-            <button
-              type="button"
-              onClick={onClear}
-              style={{
-                padding: "4px 10px",
-                fontSize: 12,
-                fontWeight: 600,
-                color: "var(--mesh-blue)",
-                background: "transparent",
-                border: "1px solid var(--line)",
-                borderRadius: 4,
-                cursor: "pointer",
-              }}
-            >
-              Clear
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={onClear}
+            disabled={!isFiltering}
+            aria-hidden={!isFiltering}
+            tabIndex={isFiltering ? 0 : -1}
+            style={{
+              padding: "4px 10px",
+              fontSize: 12,
+              fontWeight: 600,
+              color: "var(--mesh-blue)",
+              background: "transparent",
+              border: "1px solid var(--line)",
+              borderRadius: 4,
+              cursor: isFiltering ? "pointer" : "default",
+              visibility: isFiltering ? "visible" : "hidden",
+            }}
+          >
+            Clear
+          </button>
         </div>
       </div>
       {availableChains.length > 0 && (
