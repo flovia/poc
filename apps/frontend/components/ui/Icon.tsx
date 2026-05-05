@@ -48,6 +48,13 @@ export const Icon = {
       <path d="M9 1.5 4 9h3.5L7 14.5 12 7H8.5z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
     </svg>
   ),
+  provider: ({ className, ...p }: IconProps) => (
+    <svg viewBox="0 0 16 16" fill="none" {...A11Y_DEFAULTS} {...p} className={navIcon(className)}>
+      <rect x="2.5" y="3" width="11" height="10" rx="2" stroke="currentColor" strokeWidth="1.3" />
+      <path d="M5 6h6M5 9h3.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+      <circle cx="11" cy="9" r="1" fill="currentColor" />
+    </svg>
+  ),
   spark: (p: IconProps) => (
     <svg viewBox="0 0 16 16" fill="none" {...A11Y_DEFAULTS} {...p}>
       <path

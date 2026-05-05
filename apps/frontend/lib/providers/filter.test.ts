@@ -7,6 +7,7 @@ import {
   filterProviders,
   type ProviderClassifierContext,
 } from "./filter";
+import { orderProvidersPinnedFirst } from "./order";
 
 const make = (
   overrides: Partial<StoredProvider> & { providerId: string; name: string },
@@ -182,5 +183,23 @@ describe("collectAvailableChains", () => {
   test("returns empty array when no providers expose chain info", () => {
     const providers: StoredProvider[] = [make({ providerId: "a", name: "A" })];
     expect(collectAvailableChains(providers)).toEqual([]);
+  });
+});
+
+describe("orderProvidersPinnedFirst", () => {
+  test("places CoinGecko and Nansen first while preserving the rest", () => {
+    const providers: StoredProvider[] = [
+      make({ providerId: "quicknode", name: "QuickNode", serviceId: "quicknode/rpc" }),
+      make({ providerId: "static-pro-api-coingecko-com", name: "CoinGecko Pro", serviceId: "pro-api.coingecko.com" }),
+      make({ providerId: "stripe", name: "Stripe", serviceId: "api.stripe.com" }),
+      make({ providerId: "static-api-nansen-ai", name: "Nansen", serviceId: "api.nansen.ai" }),
+    ];
+
+    expect(orderProvidersPinnedFirst(providers).map((p) => p.providerId)).toEqual([
+      "static-pro-api-coingecko-com",
+      "static-api-nansen-ai",
+      "quicknode",
+      "stripe",
+    ]);
   });
 });

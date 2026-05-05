@@ -339,6 +339,22 @@ a { color: inherit; text-decoration: none; }
   border-color: var(--line-strong);
   background: var(--surface-muted);
 }
+.provider-picker__placeholder-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--mesh-blue);
+  background: var(--mesh-blue-soft);
+  border: 1px solid rgba(47,111,237,0.18);
+}
+.provider-picker__placeholder-icon .ico {
+  width: 16px;
+  height: 16px;
+}
 .provider-picker:focus-visible {
   outline: 2px solid var(--mesh-blue);
   outline-offset: 1px;

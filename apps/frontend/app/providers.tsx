@@ -16,6 +16,7 @@ import {
   setSeedVersion,
 } from "@/lib/storage";
 import { findProviderByRouteId, SEED_IDS, seedProviders, slugifyProviderName } from "@/lib/providers";
+import { orderProvidersPinnedFirst } from "@/lib/providers/order";
 import { STATIC_PROVIDER_CAPABILITIES } from "@/lib/providers/static-capabilities";
 
 type Ctx = {
@@ -201,7 +202,7 @@ export function ProvidersContextProvider({ children }: { children: React.ReactNo
           uniqueSenderCount: provider.uniqueSenderCount,
           hasCustomerFacts: provider.transactionCount > 0,
         }));
-        setGeneratedProviders([...generated, ...staticOnly]);
+        setGeneratedProviders(orderProvidersPinnedFirst([...generated, ...staticOnly]));
       })
       .catch(() => {
         if (!cancelled) setGeneratedProviders([]);

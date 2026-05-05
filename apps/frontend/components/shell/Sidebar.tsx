@@ -64,6 +64,8 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
   });
   const currentIsDemo = current ? isDemoProvider(current, demoOpted, userIds) : false;
   const currentIsPaySh = current?.catalogSource === "pay_sh_curated";
+  const showProviderPlaceholderIcon =
+    !current && !isViewingSdkDemo && !isSdkEmpty && !currentServiceId;
 
   // hydration 後に provider が一つも無いとき My Customers を disabled 表示。
   // SSR (hydrated=false) では通常 Link を出すことで mismatch を避ける。
@@ -109,13 +111,19 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
         className="provider-picker"
         aria-label="Change API provider"
       >
-        <ProviderAvatar
-          name={currentName}
-          serviceId={currentServiceId}
-          brandDomain={currentBrand.domain}
-          brandIconUrl={currentBrand.iconUrl}
-          size={28}
-        />
+        {showProviderPlaceholderIcon ? (
+          <span className="provider-picker__placeholder-icon" aria-hidden>
+            <Icon.provider />
+          </span>
+        ) : (
+          <ProviderAvatar
+            name={currentName}
+            serviceId={currentServiceId}
+            brandDomain={currentBrand.domain}
+            brandIconUrl={currentBrand.iconUrl}
+            size={28}
+          />
+        )}
         <span className="provider-picker__body">
           <span className="provider-picker__eyebrow">Current provider</span>
           <span className="provider-picker__name" title={currentName}>
