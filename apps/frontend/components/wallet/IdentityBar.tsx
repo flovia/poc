@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
 import { Icon } from "@/components/ui/Icon";
 import type { CustomerIdentityDto, CustomerMetricsDto } from "@/lib/api/types";
 import type { DashboardMode } from "@/lib/data-mode";
 import type { SdkExtras } from "@/lib/sdk-fixtures/types";
-import { formatAtomic } from "@/lib/format";
+import { formatAtomic, formatUsd } from "@/lib/format";
+import { useClipboardCopy } from "@/lib/use-clipboard-copy";
 
 type IdentityBarProps = {
   customer: CustomerIdentityDto;
@@ -14,16 +14,8 @@ type IdentityBarProps = {
   sdkExtras: SdkExtras | null;
 };
 
-function formatUsd(value: number): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(value);
-}
-
 export function IdentityBar({ customer, metrics, dataMode, sdkExtras }: IdentityBarProps) {
-  const [copied, setCopied] = useState(false);
+  const { copied, copy } = useClipboardCopy(1400);
   const isSdkConnected = dataMode === "sdkConnected" && sdkExtras !== null;
   const hasSdkUpsell = isSdkConnected && sdkExtras!.upsell !== null; // 主役のみ
   const totalSpendDisplay =
@@ -33,11 +25,7 @@ export function IdentityBar({ customer, metrics, dataMode, sdkExtras }: Identity
   const totalSpendSub =
     isSdkConnected && hasSdkUpsell ? "USD · SDK preview (mock)" : "USDC spend";
   const baseScanUrl = `https://basescan.org/address/${customer.address}#tokentxns`;
-  const copyAddress = async () => {
-    await navigator.clipboard.writeText(customer.address);
-    setCopied(true);
-    window.setTimeout(() => setCopied(false), 1400);
-  };
+  const copyAddress = () => void copy(customer.address);
 
   return (
     <div

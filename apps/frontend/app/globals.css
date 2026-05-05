@@ -205,8 +205,8 @@ a { color: inherit; text-decoration: none; }
   background: var(--surface-card);
 }
 .brand {
-  display: flex; align-items: center; gap: 10px;
-  padding: 18px 20px 22px;
+  display: flex; align-items: center; gap: 12px;
+  padding: 18px 20px 20px;
   border-bottom: 1px solid var(--line);
 }
 .brand-mark {
@@ -215,10 +215,31 @@ a { color: inherit; text-decoration: none; }
   object-fit: cover;
   display: block;
 }
-.brand-name { font-family: var(--display); font-weight: 600; font-size: 18px; letter-spacing: -0.01em; color: var(--text-1); }
+.brand-name {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  font-family: var(--display); font-weight: 600; font-size: 18px; letter-spacing: -0.01em; color: var(--text-1);
+}
 .brand-name em {
   font-style: normal; color: var(--text-3); font-size: 12px; font-weight: 500;
-  display: block; letter-spacing: 0.06em; text-transform: uppercase; margin-top: 1px;
+  display: block; letter-spacing: 0.04em; text-transform: uppercase; margin-top: 2px;
+}
+.brand-tags {
+  display: flex;
+  gap: 4px;
+  margin-top: 6px;
+}
+.brand-tag {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--text-3);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  padding: 3px 7px;
 }
 
 .nav { padding: 12px 10px; flex: 1; }
@@ -503,6 +524,65 @@ a { color: inherit; text-decoration: none; }
 .btn.primary:hover { background: var(--primary-hover); border-color: var(--primary-hover); }
 .btn.ghost { background: transparent; border-color: transparent; color: var(--text-2); }
 .btn.ghost:hover { color: var(--text-1); background: var(--surface-muted); }
+
+/* ---- Mobile desktop-only gate ---- */
+.mobile-desktop-gate {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 28px 18px;
+  background: var(--bg-shell);
+}
+.mobile-desktop-gate-card {
+  width: min(100%, 430px);
+  padding: 24px 22px 22px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-xl);
+  background: var(--surface-card);
+  box-shadow: var(--shadow-3);
+}
+.mobile-desktop-gate-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 24px;
+  color: var(--text-1);
+  font-family: var(--display);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.mobile-desktop-gate-logo {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  display: block;
+  border-radius: 6px;
+  object-fit: cover;
+}
+.mobile-desktop-gate h1 {
+  margin: 0;
+  color: var(--text-1);
+  font-family: var(--display);
+  font-size: 30px;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+}
+.mobile-desktop-gate-copy {
+  margin: 14px 0 0;
+  color: var(--text-2);
+  font-size: 15px;
+  line-height: 1.65;
+}
+.mobile-desktop-gate-actions {
+  display: grid;
+  gap: 10px;
+  margin-top: 22px;
+}
+.mobile-desktop-gate-actions .btn {
+  min-height: 44px;
+  justify-content: center;
+}
 
 /* ---- Page onboarding ---- */
 .onboarding-modal-root {

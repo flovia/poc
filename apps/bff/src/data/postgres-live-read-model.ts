@@ -14,6 +14,8 @@ import {
 } from "./phase-b-demo";
 
 type ProviderRow = {
+  network: string;
+  asset: string;
   payTo: string;
   serviceId: string;
   serviceName: string;
@@ -65,6 +67,8 @@ type ProviderRow = {
 };
 
 type CustomerRow = {
+  network: string;
+  asset: string;
   payer: string;
   payTo: string;
   serviceId: string;
@@ -96,6 +100,10 @@ const optionalText = (value: unknown): string | undefined => {
 };
 const count = (value: unknown) => Number(value ?? 0);
 const amount = (value: unknown) => String(value ?? "0");
+const normalizePaymentAddressForNetwork = (value: unknown, network: string) => {
+  const raw = String(value ?? "");
+  return network.toLowerCase() === "base" ? raw.toLowerCase() : raw;
+};
 const optionalProtocol = (value: unknown): "x402" | "MPP" | undefined => {
   if (value === "x402" || value === "MPP") return value;
   return undefined;
@@ -204,7 +212,7 @@ const providerIdFor = (input: {
   asset: string;
   payTo: string;
 }) =>
-  `${slug(input.serviceId)}--${slug(input.network)}--${slug(input.asset)}--${input.payTo.toLowerCase()}`;
+  `${slug(input.serviceId)}--${slug(input.network)}--${slug(input.asset)}--${normalizePaymentAddressForNetwork(input.payTo, input.network)}`;
 const serviceIdForComparison = (serviceId: string) =>
   serviceId.toLowerCase().includes("coingecko") ? "coingecko" : serviceId.toLowerCase();
 const isValidPaymentRecipientAddress = (value: string) =>
@@ -213,8 +221,8 @@ const isValidPaymentRecipientAddress = (value: string) =>
 const candidateForProvider = (provider: CustomerRow) => ({
   providerId: providerIdFor({
     serviceId: provider.serviceId,
-    network: "base",
-    asset: "USDC",
+    network: provider.network,
+    asset: provider.asset,
     payTo: provider.payTo,
   }),
   providerName: provider.serviceName,
@@ -228,11 +236,18 @@ const candidateForProvider = (provider: CustomerRow) => ({
 });
 
 const mapProviderRow = (row: Record<string, unknown>): ProviderRow => {
-  const payTo = lower(row.pay_to ?? row.payTo ?? row.pay_to_wallet);
+  const network = text(row.network ?? row.chain, "base").toLowerCase();
+  const asset = text(row.asset ?? row.asset_symbol, "USDC");
+  const payTo = normalizePaymentAddressForNetwork(
+    row.pay_to ?? row.payTo ?? row.pay_to_wallet,
+    network,
+  );
   const serviceId = text(row.service_id ?? row.provider_id, payTo || "unknown-service");
   const serviceName = text(row.service_name ?? row.provider_name ?? row.name, serviceId);
   const payShProviderFqn = optionalText(row.pay_sh_provider_fqn ?? row.payShProviderFqn);
   return {
+    network,
+    asset,
     payTo,
     serviceId,
     serviceName,
@@ -269,11 +284,18 @@ const mapProviderRow = (row: Record<string, unknown>): ProviderRow => {
 };
 
 const mapCustomerRow = (row: Record<string, unknown>): CustomerRow => {
-  const payTo = lower(row.pay_to ?? row.payTo);
-  const payer = lower(row.payer ?? row.payer_address ?? row.from_address ?? row.customer_address);
+  const network = text(row.network ?? row.chain, "base").toLowerCase();
+  const asset = text(row.asset ?? row.asset_symbol, "USDC");
+  const payTo = normalizePaymentAddressForNetwork(row.pay_to ?? row.payTo, network);
+  const payer = normalizePaymentAddressForNetwork(
+    row.payer ?? row.payer_address ?? row.from_address ?? row.customer_address,
+    network,
+  );
   const serviceId = text(row.service_id ?? row.provider_id, payTo || "unknown-service");
   const serviceName = text(row.service_name ?? row.provider_name ?? row.name, serviceId);
   return {
+    network,
+    asset,
     payer,
     payTo,
     serviceId,
@@ -344,6 +366,8 @@ const buildPayload = (
     ? providers
     : [
         {
+          network: "base",
+          asset: "USDC",
           payTo: "0x0000000000000000000000000000000000000000",
           serviceId: "coingecko",
           serviceName: "CoinGecko",
@@ -398,15 +422,15 @@ const buildPayload = (
       providers: catalogProviders.map((provider) => ({
         providerId: providerIdFor({
           serviceId: provider.serviceId,
-          network: "base",
-          asset: "USDC",
+          network: provider.network,
+          asset: provider.asset,
           payTo: provider.payTo,
         }),
         name: provider.serviceName,
         serviceId: provider.serviceId,
         serviceName: provider.serviceName,
-        network: "base",
-        asset: "USDC",
+        network: provider.network,
+        asset: provider.asset,
         payTo: provider.payTo,
         catalogSource: provider.catalogSource,
         transactionCount: provider.transactionCount,
@@ -477,15 +501,20 @@ const buildPayload = (
         providerWallets: walletGraphProviders.map((provider) => ({
           providerId: providerIdFor({
             serviceId: provider.serviceId,
-            network: "base",
-            asset: "USDC",
+            network: provider.network,
+            asset: provider.asset,
             payTo: provider.payTo,
           }),
           providerName: provider.serviceName,
           name: provider.serviceName,
           payToWallet: provider.payTo,
           payerWallets: customerProviderRows
-            .filter((customer) => customer.payTo === provider.payTo)
+            .filter(
+              (customer) =>
+                customer.payTo === provider.payTo &&
+                customer.network === provider.network &&
+                customer.asset === provider.asset,
+            )
             .map((customer) => ({
               address: customer.payer,
               label: `Wallet ${customer.payer.slice(0, 6)}`,
@@ -499,8 +528,8 @@ const buildPayload = (
                 {
                   providerId: providerIdFor({
                     serviceId: provider.serviceId,
-                    network: "base",
-                    asset: "USDC",
+                    network: provider.network,
+                    asset: provider.asset,
                     payTo: provider.payTo,
                   }),
                   providerName: provider.serviceName,
@@ -517,7 +546,12 @@ const buildPayload = (
                 },
               ],
               otherServiceCandidates: (customersByPayer.get(customer.payer)?.providers ?? [])
-                .filter((candidate) => candidate.payTo !== provider.payTo)
+                .filter(
+                  (candidate) =>
+                    candidate.payTo !== provider.payTo ||
+                    candidate.network !== provider.network ||
+                    candidate.asset !== provider.asset,
+                )
                 .sort((left, right) => right.transactionCount - left.transactionCount)
                 .map(candidateForProvider),
               provenance: "derived_insight",
@@ -609,8 +643,8 @@ const buildPayload = (
             providers: customer.providers.map((provider) => ({
               providerId: providerIdFor({
                 serviceId: provider.serviceId,
-                network: "base",
-                asset: "USDC",
+                network: provider.network,
+                asset: provider.asset,
                 payTo: provider.payTo,
               }),
               name: provider.serviceName,
@@ -633,8 +667,8 @@ const buildPayload = (
               amountAtomic: provider.totalVolumeAtomic,
               relatedProviderId: providerIdFor({
                 serviceId: provider.serviceId,
-                network: "base",
-                asset: "USDC",
+                network: provider.network,
+                asset: provider.asset,
                 payTo: provider.payTo,
               }),
               provenance: "derived_insight",
@@ -670,8 +704,22 @@ export const loadPostgresLiveAnalyticsDataSource = async (
 ): Promise<BffAnalyticsDataSource> => {
   const [providerRows, customerRows] = await Promise.all([
     client.query(`
-      WITH provider_grouped AS (
+      WITH base_x402_payment_amounts AS (
+        SELECT DISTINCT
+          lower(po.pay_to_address) AS pay_to,
+          po.amount_atomic::numeric AS amount_atomic
+        FROM x402_payment_options po
+        JOIN x402_resources r ON r.resource_id = po.resource_id
+        WHERE lower(po.chain) = 'base'
+          AND po.pay_to_address IS NOT NULL
+          AND po.amount_atomic IS NOT NULL
+          AND po.active
+          AND r.active
+      ),
+      base_provider_grouped AS (
         SELECT
+          'base' AS network,
+          'USDC' AS asset,
           lower(g.to_owner_address) AS pay_to,
           CASE
             WHEN lower(g.to_owner_address) = '0x110cdbba7fe6434ec4ce3464cc523942ad6fb784'
@@ -693,7 +741,87 @@ export const loadPostgresLiveAnalyticsDataSource = async (
           ON lower(a.pay_to_address) = lower(g.to_owner_address)
         WHERE g.from_owner_address IS NOT NULL
           AND g.to_owner_address IS NOT NULL
+          AND EXISTS (
+            SELECT 1
+            FROM base_x402_payment_amounts option_amount
+            WHERE option_amount.pay_to = lower(g.to_owner_address)
+              AND g.amount::numeric = option_amount.amount_atomic
+          )
         GROUP BY lower(g.to_owner_address), service_id, service_name
+      ),
+      pay_sh_solana_offer_prices AS (
+        SELECT DISTINCT
+          o.provider_fqn,
+          CASE
+            WHEN lower(o.chain) IN ('solana', 'solana mainnet')
+              AND lower(o.protocol) = 'mpp'
+              THEN 'solana mainnet (mpp)'
+            WHEN lower(o.chain) IN ('solana', 'solana mainnet') THEN 'solana mainnet'
+            ELSE lower(o.chain)
+          END AS network,
+          CASE
+            WHEN lower(o.asset) = 'usdc' THEN 'USDC'
+            WHEN lower(o.asset) = 'usdt' THEN 'USDT'
+            ELSE o.asset
+          END AS asset,
+          o.pay_to_address AS pay_to,
+          ROUND((o.probe_price_usd::numeric * 1000000))::numeric AS amount_atomic
+        FROM pay_sh_payment_offers o
+        WHERE o.provider_fqn IS NOT NULL
+          AND o.pay_to_address IS NOT NULL
+          AND o.probe_price_usd IS NOT NULL
+          AND o.probe_price_usd > 0
+      ),
+      solana_provider_grouped AS (
+        SELECT
+          CASE
+            WHEN lower(s.chain) = 'solana'
+              AND EXISTS (SELECT 1 FROM unnest(s.protocols) protocol WHERE lower(protocol) = 'mpp')
+              THEN 'solana mainnet (mpp)'
+            WHEN lower(s.chain) = 'solana' THEN 'solana mainnet'
+            ELSE lower(s.chain)
+          END AS network,
+          CASE
+            WHEN lower(s.asset) = 'usdc' THEN 'USDC'
+            WHEN lower(s.asset) = 'usdt' THEN 'USDT'
+            ELSE s.asset
+          END AS asset,
+          s.pay_to_address AS pay_to,
+          provider.provider_fqn AS service_id,
+          provider.provider_fqn AS service_name,
+          COUNT(*)::int AS transaction_count,
+          COUNT(DISTINCT s.from_token_account)::int AS unique_sender_count,
+          COALESCE(SUM(s.amount), 0)::text AS total_volume_atomic,
+          MIN(s.block_timestamp) AS first_seen_at,
+          MAX(s.block_timestamp) AS last_seen_at
+        FROM payment_attributed_transfers_solana s
+        CROSS JOIN LATERAL unnest(s.provider_fqns) AS provider(provider_fqn)
+        JOIN pay_sh_solana_offer_prices offer_price
+          ON provider.provider_fqn = offer_price.provider_fqn
+         AND offer_price.network = CASE
+            WHEN lower(s.chain) = 'solana'
+              AND EXISTS (SELECT 1 FROM unnest(s.protocols) protocol WHERE lower(protocol) = 'mpp')
+              THEN 'solana mainnet (mpp)'
+            WHEN lower(s.chain) = 'solana' THEN 'solana mainnet'
+            ELSE lower(s.chain)
+          END
+         AND offer_price.asset = CASE
+            WHEN lower(s.asset) = 'usdc' THEN 'USDC'
+            WHEN lower(s.asset) = 'usdt' THEN 'USDT'
+            ELSE s.asset
+          END
+         AND offer_price.pay_to = s.pay_to_address
+        WHERE s.provider_fqns IS NOT NULL
+          AND array_length(s.provider_fqns, 1) >= 1
+          AND s.from_token_account IS NOT NULL
+          AND s.pay_to_address IS NOT NULL
+          AND s.amount::numeric = offer_price.amount_atomic
+        GROUP BY 1, 2, 3, 4, 5
+      ),
+      provider_grouped AS (
+        SELECT * FROM base_provider_grouped
+        UNION ALL
+        SELECT * FROM solana_provider_grouped
       ),
       pay_sh_provider_catalog AS (
         SELECT
@@ -746,24 +874,50 @@ export const loadPostgresLiveAnalyticsDataSource = async (
       provider_pay_tos AS (
         SELECT DISTINCT
           provider_fqn,
-          lower(pay_to_address) AS pay_to
+          CASE
+            WHEN lower(chain) = 'solana' AND lower(protocol) = 'mpp' THEN 'solana mainnet (mpp)'
+            WHEN lower(chain) = 'solana' THEN 'solana mainnet'
+            ELSE lower(chain)
+          END AS network,
+          CASE
+            WHEN lower(asset) = 'usdc' THEN 'USDC'
+            WHEN lower(asset) = 'usdt' THEN 'USDT'
+            ELSE asset
+          END AS asset,
+          chain AS display_chain,
+          CASE
+            WHEN lower(chain) = 'base' THEN lower(pay_to_address)
+            ELSE pay_to_address
+          END AS pay_to,
+          protocol
         FROM pay_sh_payment_offers
         WHERE pay_to_address IS NOT NULL
       ),
       provider_metrics AS (
         SELECT
           pc.provider_fqn,
+          ppt.network,
+          ppt.asset,
+          min(ppt.display_chain) AS display_chain,
+          ppt.pay_to,
+          min(ppt.protocol) AS protocol,
           COALESCE(SUM(pg.transaction_count), 0)::int AS transaction_count,
           COALESCE(SUM(pg.unique_sender_count), 0)::int AS unique_sender_count,
           COALESCE(SUM(pg.total_volume_atomic::numeric), 0)::text AS total_volume_atomic,
           MIN(pg.first_seen_at) AS first_seen_at,
           MAX(pg.last_seen_at) AS last_seen_at
         FROM pay_sh_provider_catalog pc
-        LEFT JOIN provider_pay_tos ppt ON ppt.provider_fqn = pc.provider_fqn
-        LEFT JOIN provider_grouped pg ON pg.pay_to = ppt.pay_to
-        GROUP BY pc.provider_fqn
+        JOIN provider_pay_tos ppt ON ppt.provider_fqn = pc.provider_fqn
+        LEFT JOIN provider_grouped pg
+          ON pg.pay_to = ppt.pay_to
+         AND pg.network = ppt.network
+         AND pg.asset = ppt.asset
+         AND (pg.network = 'base' OR pg.service_id = ppt.provider_fqn)
+        GROUP BY pc.provider_fqn, ppt.network, ppt.asset, ppt.pay_to
       )
       SELECT
+        pg.network,
+        pg.asset,
         pg.pay_to,
         pg.service_id,
         pg.service_name,
@@ -821,7 +975,9 @@ export const loadPostgresLiveAnalyticsDataSource = async (
       WHERE lower(pg.service_id) IN ('pro-api.coingecko.com', 'coingecko', 'api.nansen.ai', 'nansen')
       UNION ALL
       SELECT
-        pc.pay_to,
+        pm.network,
+        pm.asset,
+        pm.pay_to,
         pc.service_id,
         pc.service_name,
         pc.title,
@@ -837,9 +993,9 @@ export const loadPostgresLiveAnalyticsDataSource = async (
         pc.registry_source_url,
         pc.endpoint_count,
         pc.offers,
-        pc.protocol,
-        pc.offer_chain,
-        pc.asset_symbol,
+        pm.protocol,
+        pm.display_chain AS offer_chain,
+        pm.asset AS asset_symbol,
         pc.price_range_min_usd,
         pc.price_range_max_usd,
         pc.provider_fqn AS pay_sh_provider_fqn,
@@ -872,16 +1028,33 @@ export const loadPostgresLiveAnalyticsDataSource = async (
         ) AS resources
         FROM x402_payment_options po
         JOIN x402_resources r ON r.resource_id = po.resource_id
-        WHERE lower(po.pay_to_address) = pc.pay_to
+        WHERE CASE
+            WHEN lower(po.chain) = 'base' THEN lower(po.pay_to_address)
+            ELSE po.pay_to_address
+          END = pm.pay_to
           AND po.active
           AND r.active
       ) resources ON true
-      WHERE pc.pay_to IS NOT NULL
+      WHERE pm.pay_to IS NOT NULL
       ORDER BY transaction_count DESC, pay_to ASC
     `),
     client.query(`
-      WITH attributed_grouped AS (
+      WITH base_x402_payment_amounts AS (
+        SELECT DISTINCT
+          lower(po.pay_to_address) AS pay_to,
+          po.amount_atomic::numeric AS amount_atomic
+        FROM x402_payment_options po
+        JOIN x402_resources r ON r.resource_id = po.resource_id
+        WHERE lower(po.chain) = 'base'
+          AND po.pay_to_address IS NOT NULL
+          AND po.amount_atomic IS NOT NULL
+          AND po.active
+          AND r.active
+      ),
+      base_attributed_grouped AS (
         SELECT
+          'base' AS network,
+          'USDC' AS asset,
           lower(g.from_owner_address) AS payer,
           lower(g.to_owner_address) AS pay_to,
           CASE
@@ -903,9 +1076,91 @@ export const loadPostgresLiveAnalyticsDataSource = async (
           ON lower(a.pay_to_address) = lower(g.to_owner_address)
         WHERE g.from_owner_address IS NOT NULL
           AND g.to_owner_address IS NOT NULL
+          AND EXISTS (
+            SELECT 1
+            FROM base_x402_payment_amounts option_amount
+            WHERE option_amount.pay_to = lower(g.to_owner_address)
+              AND g.amount::numeric = option_amount.amount_atomic
+          )
         GROUP BY lower(g.from_owner_address), lower(g.to_owner_address), service_id, service_name
+      ),
+      pay_sh_solana_offer_prices AS (
+        SELECT DISTINCT
+          o.provider_fqn,
+          CASE
+            WHEN lower(o.chain) IN ('solana', 'solana mainnet')
+              AND lower(o.protocol) = 'mpp'
+              THEN 'solana mainnet (mpp)'
+            WHEN lower(o.chain) IN ('solana', 'solana mainnet') THEN 'solana mainnet'
+            ELSE lower(o.chain)
+          END AS network,
+          CASE
+            WHEN lower(o.asset) = 'usdc' THEN 'USDC'
+            WHEN lower(o.asset) = 'usdt' THEN 'USDT'
+            ELSE o.asset
+          END AS asset,
+          o.pay_to_address AS pay_to,
+          ROUND((o.probe_price_usd::numeric * 1000000))::numeric AS amount_atomic
+        FROM pay_sh_payment_offers o
+        WHERE o.provider_fqn IS NOT NULL
+          AND o.pay_to_address IS NOT NULL
+          AND o.probe_price_usd IS NOT NULL
+          AND o.probe_price_usd > 0
+      ),
+      solana_attributed_grouped AS (
+        SELECT
+          CASE
+            WHEN lower(s.chain) = 'solana'
+              AND EXISTS (SELECT 1 FROM unnest(s.protocols) protocol WHERE lower(protocol) = 'mpp')
+              THEN 'solana mainnet (mpp)'
+            WHEN lower(s.chain) = 'solana' THEN 'solana mainnet'
+            ELSE lower(s.chain)
+          END AS network,
+          CASE
+            WHEN lower(s.asset) = 'usdc' THEN 'USDC'
+            WHEN lower(s.asset) = 'usdt' THEN 'USDT'
+            ELSE s.asset
+          END AS asset,
+          s.from_token_account AS payer,
+          s.pay_to_address AS pay_to,
+          provider.provider_fqn AS service_id,
+          provider.provider_fqn AS service_name,
+          COUNT(*)::int AS transaction_count,
+          COALESCE(SUM(s.amount), 0)::text AS total_volume_atomic,
+          MIN(s.block_timestamp) AS first_seen_at,
+          MAX(s.block_timestamp) AS last_seen_at
+        FROM payment_attributed_transfers_solana s
+        CROSS JOIN LATERAL unnest(s.provider_fqns) AS provider(provider_fqn)
+        JOIN pay_sh_solana_offer_prices offer_price
+          ON provider.provider_fqn = offer_price.provider_fqn
+         AND offer_price.network = CASE
+            WHEN lower(s.chain) = 'solana'
+              AND EXISTS (SELECT 1 FROM unnest(s.protocols) protocol WHERE lower(protocol) = 'mpp')
+              THEN 'solana mainnet (mpp)'
+            WHEN lower(s.chain) = 'solana' THEN 'solana mainnet'
+            ELSE lower(s.chain)
+          END
+         AND offer_price.asset = CASE
+            WHEN lower(s.asset) = 'usdc' THEN 'USDC'
+            WHEN lower(s.asset) = 'usdt' THEN 'USDT'
+            ELSE s.asset
+          END
+         AND offer_price.pay_to = s.pay_to_address
+        WHERE s.provider_fqns IS NOT NULL
+          AND array_length(s.provider_fqns, 1) >= 1
+          AND s.from_token_account IS NOT NULL
+          AND s.pay_to_address IS NOT NULL
+          AND s.amount::numeric = offer_price.amount_atomic
+        GROUP BY 1, 2, 3, 4, 5, 6
+      ),
+      attributed_grouped AS (
+        SELECT * FROM base_attributed_grouped
+        UNION ALL
+        SELECT * FROM solana_attributed_grouped
       )
       SELECT
+        network,
+        asset,
         payer,
         pay_to,
         service_id,

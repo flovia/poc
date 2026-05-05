@@ -94,12 +94,12 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
           priority
         />
         <div className="brand-name">
-          Flovia
-          <em>
-            x402 / MPP
-            <br />
-            Agent Payments
-          </em>
+          <span>Flovia</span>
+          <em>Agent Payments</em>
+          <span className="brand-tags" aria-label="Supported protocols">
+            <span className="brand-tag">x402</span>
+            <span className="brand-tag">MPP</span>
+          </span>
         </div>
       </div>
 

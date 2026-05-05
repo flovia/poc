@@ -79,6 +79,16 @@ describe("BFF routes", () => {
     }
   });
 
+  test("serves health without waiting for analytics data source", async () => {
+    const unresolvedDataSource = new Promise<never>(() => {});
+    const handler = createBffHandler(unresolvedDataSource);
+
+    const response = await handler(request("/health"));
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({ status: "ok", service: "flovia-bff" });
+  });
+
   test("rejects non-GET requests to read-only endpoints", async () => {
     const handler = createBffHandler();
     const response = await handler(request("/health", { method: "POST" }));
@@ -907,6 +917,192 @@ describe("BFF routes", () => {
     expect(
       dataSource.serviceComparison.services.some((service) => service.serviceId === "coingecko"),
     ).toBe(true);
+  });
+
+  test("surfaces non-shared Solana facts as Solana provider and customer rows", async () => {
+    const basePayTo = "0x3333333333333333333333333333333333333333";
+    const solanaPayTo = "8MPzJeXx1RipFmRADExptc3UK4EV3nhEFN6NRSx7o7jm";
+    const solanaPayer = "7Payer111111111111111111111111111111111111";
+    const offers = [
+      {
+        protocol: "x402",
+        chain: "Base",
+        asset: "USDC",
+        payToAddress: basePayTo,
+      },
+      {
+        protocol: "x402",
+        chain: "Solana",
+        asset: "USDC",
+        payToAddress: solanaPayTo,
+      },
+    ];
+
+    const dataSource = await loadPostgresLiveAnalyticsDataSource({
+      async query(sql) {
+        if (sql.includes("attributed_grouped")) {
+          return [
+            {
+              network: "base",
+              asset: "USDC",
+              payer: "0x4444444444444444444444444444444444444444",
+              pay_to: basePayTo,
+              service_id: "dtelecom/voice",
+              service_name: "dtelecom/voice",
+              transaction_count: 1,
+              total_volume_atomic: "100",
+            },
+            {
+              network: "solana mainnet",
+              asset: "USDC",
+              payer: solanaPayer,
+              pay_to: solanaPayTo,
+              service_id: "dtelecom/voice",
+              service_name: "dtelecom/voice",
+              transaction_count: 12,
+              total_volume_atomic: "1046800001",
+            },
+          ];
+        }
+        if (sql.includes("provider_activity")) {
+          return [
+            {
+              network: "base",
+              asset: "USDC",
+              pay_to: basePayTo,
+              service_id: "dtelecom/voice",
+              service_name: "dtelecom/voice",
+              pay_sh_provider_fqn: "dtelecom/voice",
+              offers,
+              transaction_count: 1,
+              unique_sender_count: 1,
+              total_volume_atomic: "100",
+            },
+            {
+              network: "solana mainnet",
+              asset: "USDC",
+              pay_to: solanaPayTo,
+              service_id: "dtelecom/voice",
+              service_name: "dtelecom/voice",
+              pay_sh_provider_fqn: "dtelecom/voice",
+              offers,
+              transaction_count: 12,
+              unique_sender_count: 1,
+              total_volume_atomic: "1046800001",
+            },
+          ];
+        }
+        return [];
+      },
+    });
+
+    expect(dataSource.providers.providers).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          network: "solana mainnet",
+          asset: "USDC",
+          serviceId: "dtelecom/voice",
+          transactionCount: 12,
+        }),
+      ]),
+    );
+    const solanaProviderWallet = dataSource.walletUsageGraph.graph.providerWallets.find(
+      (provider) => provider.payToWallet === solanaPayTo,
+    );
+    expect(solanaProviderWallet).toEqual(
+      expect.objectContaining({
+        providerId: expect.stringContaining("dtelecom-voice--solana-mainnet--usdc"),
+        payerWallets: expect.arrayContaining([
+          expect.objectContaining({ address: solanaPayer, sharedTransactionCount: 12 }),
+        ]),
+      }),
+    );
+
+    const customers = dataSource.getCustomersByServiceId("dtelecom/voice");
+    expect(customers.customers).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          address: solanaPayer,
+          chains: expect.arrayContaining(["solana mainnet"]),
+          spendByAsset: expect.objectContaining({ USDC: "1046800001" }),
+        }),
+      ]),
+    );
+  });
+
+  test("normalizes Solana chain and token asset before joining catalog offers to live facts", async () => {
+    let providerSql = "";
+    let customerSql = "";
+
+    await loadPostgresLiveAnalyticsDataSource({
+      async query(sql) {
+        if (sql.includes("attributed_grouped")) {
+          customerSql = sql;
+          return [];
+        }
+        providerSql = sql;
+        return [];
+      },
+    });
+
+    expect(providerSql).toContain("WHEN lower(s.chain) = 'solana' THEN 'solana mainnet'");
+    expect(providerSql).toContain("WHEN lower(s.asset) = 'usdc' THEN 'USDC'");
+    expect(providerSql).toContain("WHEN lower(s.asset) = 'usdt' THEN 'USDT'");
+    expect(providerSql).toContain(
+      "WHEN lower(chain) = 'solana' AND lower(protocol) = 'mpp' THEN 'solana mainnet (mpp)'",
+    );
+    expect(providerSql).toContain("AND (pg.network = 'base' OR pg.service_id = ppt.provider_fqn)");
+    expect(customerSql).toContain("WHEN lower(s.chain) = 'solana' THEN 'solana mainnet'");
+    expect(customerSql).toContain("WHEN lower(s.asset) = 'usdc' THEN 'USDC'");
+    expect(customerSql).toContain("WHEN lower(s.asset) = 'usdt' THEN 'USDT'");
+    expect(customerSql).toContain("CROSS JOIN LATERAL unnest(s.provider_fqns)");
+  });
+
+  test("filters Solana live facts to Pay.sh offer-priced transfers", async () => {
+    let providerSql = "";
+    let customerSql = "";
+
+    await loadPostgresLiveAnalyticsDataSource({
+      async query(sql) {
+        if (sql.includes("attributed_grouped")) {
+          customerSql = sql;
+          return [];
+        }
+        providerSql = sql;
+        return [];
+      },
+    });
+
+    for (const sql of [providerSql, customerSql]) {
+      expect(sql).toContain("pay_sh_solana_offer_prices AS");
+      expect(sql).toContain("ROUND((o.probe_price_usd::numeric * 1000000))::numeric");
+      expect(sql).toContain("JOIN pay_sh_solana_offer_prices offer_price");
+      expect(sql).toContain("provider.provider_fqn = offer_price.provider_fqn");
+      expect(sql).toContain("s.amount::numeric = offer_price.amount_atomic");
+    }
+  });
+
+  test("filters Base live facts to known x402 payment option amounts", async () => {
+    let providerSql = "";
+    let customerSql = "";
+
+    await loadPostgresLiveAnalyticsDataSource({
+      async query(sql) {
+        if (sql.includes("attributed_grouped")) {
+          customerSql = sql;
+          return [];
+        }
+        providerSql = sql;
+        return [];
+      },
+    });
+
+    for (const sql of [providerSql, customerSql]) {
+      expect(sql).toContain("base_x402_payment_amounts AS");
+      expect(sql).toContain("FROM x402_payment_options po");
+      expect(sql).toContain("option_amount.pay_to = lower(g.to_owner_address)");
+      expect(sql).toContain("AND g.amount::numeric = option_amount.amount_atomic");
+    }
   });
 
   test("queries pay.sh catalog providers independently from live activity", async () => {

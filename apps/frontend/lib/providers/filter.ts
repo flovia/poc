@@ -21,6 +21,13 @@ export const DEFAULT_PROVIDER_FILTER: ProviderFilterState = {
   chains: [],
 };
 
+const HIDDEN_PROVIDER_CHAINS = new Set<CustomerChain>([
+  "base-sepolia",
+  "polygon-amoy",
+  "eip155-other",
+  "other",
+]);
+
 export type ProviderClassifierContext = {
   demoOpted: boolean;
   userIds: ReadonlySet<string>;
@@ -63,10 +70,14 @@ export function chainsOfProvider(p: StoredProvider): CustomerChain[] {
   return [...named, ...trailing];
 }
 
+export function visibleProviderChains(chains: CustomerChain[]): CustomerChain[] {
+  return chains.filter((chain) => !HIDDEN_PROVIDER_CHAINS.has(chain));
+}
+
 export function collectAvailableChains(providers: StoredProvider[]): CustomerChain[] {
   const seen = new Set<CustomerChain>();
   for (const p of providers) {
-    for (const c of chainsOfProvider(p)) seen.add(c);
+    for (const c of visibleProviderChains(chainsOfProvider(p))) seen.add(c);
   }
   return Array.from(seen);
 }

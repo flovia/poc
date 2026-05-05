@@ -1,18 +1,12 @@
 "use client";
 
 import type { X402AnalysisViewModel, X402IntermediarySummaryRow } from "@/lib/x402-analysis/transform";
+import { formatUsd } from "@/lib/format";
 import { X402SankeySection } from "./X402SankeySection";
 
 type X402AnalysisDashboardProps = {
   viewModel: X402AnalysisViewModel;
 };
-
-function formatUsd(value: number): string {
-  return new Intl.NumberFormat("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(value);
-}
 
 function formatPct(value: number): string {
   return `${(value * 100).toFixed(1)}%`;
@@ -91,7 +85,7 @@ export function X402AnalysisDashboard({ viewModel }: X402AnalysisDashboardProps)
           }}
         >
           <KeyValue label="Flow count" value={viewModel.totals.flow_count.toLocaleString()} accent />
-          <KeyValue label="Settled USDC" value={`$${formatUsd(viewModel.totals.settled_usdc)}`} />
+          <KeyValue label="Settled USDC" value={formatUsd(viewModel.totals.settled_usdc, { fractionDigits: 2 })} />
           <KeyValue label="Success rate" value={formatPct(viewModel.totals.success_rate)} />
           <KeyValue label="P95 latency" value={formatLatency(viewModel.totals.p95_latency_ms)} />
         </div>
@@ -126,7 +120,7 @@ export function X402AnalysisDashboard({ viewModel }: X402AnalysisDashboardProps)
                   <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
                     <div style={{ fontWeight: 700, color: "var(--text-1)" }}>{row.api_intermediary}</div>
                     <div className="mono" style={{ color: "var(--mesh-blue)", fontSize: 12 }}>
-                      ${formatUsd(row.settled_usdc)}
+                      {formatUsd(row.settled_usdc, { fractionDigits: 2 })}
                     </div>
                   </div>
                   <div style={{ marginTop: 6, fontSize: 12, color: "var(--text-2)", lineHeight: 1.5 }}>

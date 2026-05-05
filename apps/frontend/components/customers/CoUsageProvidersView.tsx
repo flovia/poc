@@ -5,6 +5,7 @@ import { HeaderTooltip } from "./HeaderTooltip";
 import { CoUsageProvidersChart } from "./CoUsageProvidersChart";
 import { CoUsageProviderDrawer } from "./CoUsageProviderDrawer";
 import type { CoUsageProviderRow } from "@/lib/customers/co-usage-providers";
+import { opportunityChipClass, opportunityLabel } from "@/lib/customers/co-usage-ui";
 
 const ENDPOINT_PREVIEW_COUNT = 3;
 
@@ -18,18 +19,6 @@ const isProviderUnavailable = (name: string | undefined | null): boolean => {
   if (!name) return false;
   const lower = name.toLowerCase();
   return UNAVAILABLE_PROVIDER_MATCHES.some((needle) => lower.includes(needle));
-};
-
-const opportunityChipClass = (level: "high" | "medium" | "low") => {
-  if (level === "high") return "chip blue";
-  if (level === "medium") return "chip teal";
-  return "chip mute";
-};
-
-const opportunityLabel = (level: "high" | "medium" | "low") => {
-  if (level === "high") return "High";
-  if (level === "medium") return "Medium";
-  return "Low";
 };
 
 const shortEndpoint = (serviceName: string): string => {
