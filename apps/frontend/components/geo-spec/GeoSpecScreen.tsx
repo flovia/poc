@@ -18,7 +18,7 @@ export function GeoSpecScreen({ providerId, spec }: Props) {
             className="display"
             style={{ fontSize: 30, fontWeight: 700, margin: 0, letterSpacing: "-0.02em" }}
           >
-            GEO spec{spec?.title ? ` · ${spec.title}` : ""}
+            GEO{spec?.title ? ` · ${spec.title}` : ""}
           </h1>
           <p
             style={{
@@ -56,7 +56,7 @@ function EmptyState({ providerId }: { providerId: string }) {
       style={{ padding: 22, background: "var(--surface-card)", color: "var(--text-2)" }}
     >
       <p style={{ margin: 0 }}>
-        No GEO spec available for <code className="mono">{providerId}</code>. This provider may not
+        No GEO data available for <code className="mono">{providerId}</code>. This provider may not
         be sourced from the Pay.sh atlas, or its catalog row could not be matched.
       </p>
     </article>

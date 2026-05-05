@@ -16,7 +16,7 @@ export default async function GeoSpecPage({
     <>
       <TopBar
         providerId={providerId}
-        crumbs={[{ label: "GEO spec" }]}
+        crumbs={[{ label: "GEO" }]}
         dataMode={pageCtx.dataMode}
         onboarding={{
           id: "geo-spec",

@@ -189,10 +189,10 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
             role="link"
             className="nav-item disabled"
             aria-disabled="true"
-            aria-label="GEO spec, setup required"
+            aria-label="GEO (Generative Engine Optimization), setup required"
           >
-            <Icon.spark width={16} height={16} />
-            <span style={{ flex: 1 }}>GEO spec</span>
+            <Icon.geo width={16} height={16} />
+            <GeoNavLabel />
           </span>
         ) : (
           <Link
@@ -200,8 +200,8 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
             className="nav-item"
             aria-current={activeRoute === "geo-spec"}
           >
-            <Icon.spark width={16} height={16} />
-            <span style={{ flex: 1 }}>GEO spec</span>
+            <Icon.geo width={16} height={16} />
+            <GeoNavLabel />
           </Link>
         )}
 
@@ -212,6 +212,17 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
         <span>Mock data · v0.4</span>
       </div>
     </aside>
+  );
+}
+
+function GeoNavLabel() {
+  return (
+    <span style={{ flex: 1, display: "flex", flexDirection: "column", lineHeight: 1.2 }}>
+      <span>GEO</span>
+      <span style={{ fontSize: 11, color: "var(--text-mute)", fontWeight: 400 }}>
+        Generative Engine Optimization
+      </span>
+    </span>
   );
 }
 

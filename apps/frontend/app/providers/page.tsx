@@ -32,7 +32,7 @@ export default async function ProvidersIndexPage() {
                     margin: "8px 0 0",
                   }}
                 >
-                  Pick an API provider to view its customers, growth, and GEO spec.
+                  Pick an API provider to view its customers, growth, and GEO.
                 </p>
               </header>
               <ProvidersPicker />
