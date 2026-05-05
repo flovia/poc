@@ -38,7 +38,11 @@ type ProviderRouteLike = {
   name: string;
   serviceId?: string;
   serviceName?: string;
+  serviceUrl?: string;
   payTo?: string;
+  network?: string;
+  asset?: string;
+  endpointCount?: number;
   paths?: Array<{ payTo: string }>;
 };
 

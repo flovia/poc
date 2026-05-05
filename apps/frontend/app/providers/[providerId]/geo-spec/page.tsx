@@ -1,4 +1,6 @@
 import { GeoSpecScreen } from "@/components/geo-spec/GeoSpecScreen";
+import { getProviders } from "@/lib/api/client";
+import { findProviderByRouteId } from "@/lib/providers";
 import { TopBar } from "@/components/shell/TopBar";
 import { getGeoSpec } from "@/lib/geo-spec/source";
 import { getTopBarPageContext } from "@/lib/server/page-context";
@@ -10,7 +12,25 @@ export default async function GeoSpecPage({
 }) {
   const { providerId } = await params;
   const pageCtx = await getTopBarPageContext();
-  const spec = getGeoSpec(providerId);
+  const liveProvider = await getProviders()
+    .then((providers) => findProviderByRouteId(providers, providerId) ?? null)
+    .catch(() => null);
+  const spec = getGeoSpec(
+    providerId,
+    liveProvider?.payTo
+      ? {
+          providerId: liveProvider.providerId,
+          name: liveProvider.name,
+          serviceId: liveProvider.serviceId,
+          serviceName: liveProvider.serviceName,
+          serviceUrl: liveProvider.serviceUrl,
+          payTo: liveProvider.payTo,
+          network: liveProvider.network ?? "base",
+          asset: liveProvider.asset ?? "USDC",
+          endpointCount: liveProvider.endpointCount,
+        }
+      : null,
+  );
 
   return (
     <>

@@ -80,11 +80,25 @@ type AtlasProvider = AtlasProviderDesc & {
 
 type AnalyticsCatalogRow = {
   providerId: string;
+  name?: string | null;
   serviceId?: string | null;
+  serviceName?: string | null;
   serviceUrl?: string | null;
   payTo: string;
   network: string;
   asset: string;
+};
+
+export type GeoSpecProviderHint = {
+  providerId: string;
+  name?: string | null;
+  serviceId?: string | null;
+  serviceName?: string | null;
+  serviceUrl?: string | null;
+  payTo: string;
+  network: string;
+  asset: string;
+  endpointCount?: number | null;
 };
 
 type AnalyticsX402Service = {
@@ -262,13 +276,30 @@ const findAnalyticsRow = (
   return rows.find((row) => row.payTo.toLowerCase() === routePayTo) ?? null;
 };
 
-export const getGeoSpec = (providerId: string): GeoSpec | null => {
+const rowFromHint = (hint: GeoSpecProviderHint | null | undefined): AnalyticsCatalogRow | null => {
+  if (!hint) return null;
+  return {
+    providerId: hint.providerId,
+    name: hint.name,
+    serviceId: hint.serviceId ?? hint.serviceName ?? hint.name ?? hint.providerId,
+    serviceName: hint.serviceName ?? hint.name ?? hint.serviceId ?? hint.providerId,
+    serviceUrl: hint.serviceUrl ?? null,
+    payTo: hint.payTo,
+    network: hint.network,
+    asset: hint.asset,
+  };
+};
+
+export const getGeoSpec = (
+  providerId: string,
+  providerHint?: GeoSpecProviderHint | null,
+): GeoSpec | null => {
   const analytics = loadAnalytics();
   const rows = analytics.providers?.providers ?? [];
-  const row = findAnalyticsRow(rows, providerId);
+  const row = findAnalyticsRow(rows, providerId) ?? rowFromHint(providerHint);
   if (!row) return null;
 
-  const serviceId = (row.serviceId ?? "").trim();
+  const serviceId = (row.serviceId ?? row.serviceName ?? row.name ?? "").trim();
   if (!serviceId) return null;
 
   const atlas = loadAtlas();
