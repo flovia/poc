@@ -6,6 +6,8 @@ import { useProviders } from "@/app/providers";
 import { ProviderAvatar } from "@/components/shell/ProviderAvatar";
 import { isDemoProvider } from "@/lib/providers";
 import { describeChain, type CustomerChain } from "@/lib/customers/chain";
+import { inferBrandDomain } from "@/lib/pay-sh/brand";
+import { usePaySkills } from "@/lib/pay-sh/skills";
 import {
   DEFAULT_PROVIDER_FILTER,
   chainsOfProvider,
@@ -29,6 +31,7 @@ const PROTOCOL_OPTIONS: ReadonlyArray<{ value: ProviderProtocolFilter; label: st
 
 export function ProvidersPicker() {
   const { stored, userProviders, hydrated, demoOpted } = useProviders();
+  const skills = usePaySkills();
   const userIds = useMemo(
     () => new Set(userProviders.map((p) => p.providerId)),
     [userProviders],
@@ -153,6 +156,11 @@ export function ProvidersPicker() {
         const isPaySh = p.source === "generated" && p.serviceId !== "pro-api.coingecko.com";
         const chains = chainsOfProvider(p);
         const protocols = p.protocols ?? [];
+        const skill = p.serviceId ? skills.byFqn.get(p.serviceId) : undefined;
+        const brandDomain = inferBrandDomain({
+          fqn: p.serviceId,
+          serviceUrl: skill?.service_url,
+        }).domain;
         return (
           <Link
             key={p.providerId}
@@ -170,7 +178,12 @@ export function ProvidersPicker() {
             }}
           >
             <div style={{ display: "flex", alignItems: "flex-start", gap: 12, minWidth: 0 }}>
-              <ProviderAvatar name={p.name} serviceId={p.serviceId} size={40} />
+              <ProviderAvatar
+                name={p.name}
+                serviceId={p.serviceId}
+                brandDomain={brandDomain}
+                size={40}
+              />
               <div style={{ minWidth: 0, flex: 1 }}>
                 <div
                   style={{

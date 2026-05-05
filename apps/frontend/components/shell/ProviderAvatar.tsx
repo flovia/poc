@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type ProviderAvatarProps = {
   name: string;
   serviceId?: string;
+  /** Resolved brand favicon domain (preferred over serviceId guessing). */
+  brandDomain?: string | null;
   size?: number;
 };
 
@@ -42,9 +44,19 @@ function hostnameOf(serviceId: string | undefined): string | null {
   return serviceId.toLowerCase();
 }
 
-export function ProviderAvatar({ name, serviceId, size = 32 }: ProviderAvatarProps) {
-  const host = hostnameOf(serviceId);
+export function ProviderAvatar({
+  name,
+  serviceId,
+  brandDomain,
+  size = 32,
+}: ProviderAvatarProps) {
+  const host = brandDomain || hostnameOf(serviceId);
   const [faviconFailed, setFaviconFailed] = useState(false);
+  // Reset the failure flag when the resolved host actually changes (e.g. when
+  // the skills.json fetch settles and we move from no-favicon to a real one).
+  useEffect(() => {
+    setFaviconFailed(false);
+  }, [host]);
   const showFavicon = host !== null && !faviconFailed;
   const color = pickColor(serviceId || name);
   const letter = initialOf(name);

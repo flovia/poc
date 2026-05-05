@@ -7,6 +7,8 @@ import { useMemo } from "react";
 import { useProviders } from "@/app/providers";
 import { Icon } from "@/components/ui/Icon";
 import { ProviderAvatar } from "@/components/shell/ProviderAvatar";
+import { inferBrandDomain } from "@/lib/pay-sh/brand";
+import { usePaySkills } from "@/lib/pay-sh/skills";
 import { isDemoProvider } from "@/lib/providers";
 import type { DashboardMode } from "@/lib/data-mode";
 // Phase 9: barrel ではなく leaf module から直 import (sdk-fixtures の他データを引き込まないため).
@@ -52,6 +54,12 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
         ? "Select a provider"
         : "Loading…");
   const currentServiceId = current?.serviceId;
+  const skills = usePaySkills();
+  const currentSkill = currentServiceId ? skills.byFqn.get(currentServiceId) : undefined;
+  const currentBrandDomain = inferBrandDomain({
+    fqn: currentServiceId,
+    serviceUrl: currentSkill?.service_url,
+  }).domain;
   const currentIsDemo = current ? isDemoProvider(current, demoOpted, userIds) : false;
   const currentIsPaySh =
     current?.source === "generated" && current.serviceId !== "pro-api.coingecko.com";
@@ -92,7 +100,12 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
         className="provider-picker"
         aria-label="Change API provider"
       >
-        <ProviderAvatar name={currentName} serviceId={currentServiceId} size={28} />
+        <ProviderAvatar
+          name={currentName}
+          serviceId={currentServiceId}
+          brandDomain={currentBrandDomain}
+          size={28}
+        />
         <span className="provider-picker__body">
           <span className="provider-picker__eyebrow">Current provider</span>
           <span className="provider-picker__name" title={currentName}>
