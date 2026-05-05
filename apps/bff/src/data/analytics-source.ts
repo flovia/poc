@@ -10,6 +10,7 @@ import {
   type ProviderCatalogResponse,
   type WalletUsageGraphResponse,
   type CustomerIntelligenceResponse,
+  normalizePaymentRecipientAddress,
   validatePhaseBCustomerUpsellMetricsResponse,
   validatePhaseBCustomerListResponse,
   validatePhaseBCustomerProfileResponse,
@@ -40,6 +41,7 @@ export type BffAnalyticsDataSource = {
   serviceComparison: ServiceAnalyticsComparisonResponse;
   serviceQuadrants: ServiceAnalyticsQuadrantResponse;
   getCustomers(payTo?: string): PhaseBCustomerListResponse;
+  getCustomersByServiceId(serviceId: string): PhaseBCustomerListResponse;
   getCustomerProfile(address: string): PhaseBCustomerProfileResponse | undefined;
   getCustomerIntelligence(address: string): CustomerIntelligenceResponse | undefined;
   getCustomerUpsellMetrics(address: string): PhaseBCustomerUpsellMetricsResponse | undefined;
@@ -66,57 +68,59 @@ const DEFAULT_GENERATED_ANALYTICS_PATH = path.join(
   "analytics.json",
 );
 
-export const fixtureAnalyticsDataSource: BffAnalyticsDataSource = {
-  customers: phaseBCustomerListResponse,
-  walletUsageGraph: phaseBWalletUsageGraphResponse,
-  providers: validateProviderCatalogResponse({
-    generatedAt: phaseBCustomerListResponse.generatedAt,
-    generatedFrom: "phase-b-demo-fixture-provider-catalog",
-    providers: phaseBWalletUsageGraphResponse.graph.providerWallets.map((provider) => ({
-      providerId: `${provider.providerId}--${provider.payToWallet}`,
-      name: provider.providerName ?? provider.name,
-      serviceId: provider.providerId,
-      serviceName: provider.providerName ?? provider.name,
-      network: "base",
-      asset: "USDC",
-      payTo: provider.payToWallet,
-      transactionCount: provider.payerWallets.reduce(
+const fixtureProviderCatalog = validateProviderCatalogResponse({
+  generatedAt: phaseBCustomerListResponse.generatedAt,
+  generatedFrom: "phase-b-demo-fixture-provider-catalog",
+  providers: phaseBWalletUsageGraphResponse.graph.providerWallets.map((provider) => ({
+    providerId: `${provider.providerId}--${provider.payToWallet}`,
+    name: provider.providerName ?? provider.name,
+    serviceId: provider.providerId,
+    serviceName: provider.providerName ?? provider.name,
+    network: "base",
+    asset: "USDC",
+    payTo: provider.payToWallet,
+    transactionCount: provider.payerWallets.reduce(
+      (sum, wallet) =>
+        sum +
+        wallet.observations.reduce(
+          (inner, observation) => inner + observation.sharedTransactionCount,
+          0,
+        ),
+      0,
+    ),
+    uniqueSenderCount: provider.payerWallets.length,
+    totalVolumeAtomic: provider.payerWallets
+      .reduce(
         (sum, wallet) =>
           sum +
           wallet.observations.reduce(
-            (inner, observation) => inner + observation.sharedTransactionCount,
-            0,
+            (inner, observation) => inner + BigInt(observation.sharedSpendAtomic),
+            0n,
           ),
-        0,
-      ),
-      uniqueSenderCount: provider.payerWallets.length,
-      totalVolumeAtomic: provider.payerWallets
-        .reduce(
-          (sum, wallet) =>
-            sum +
-            wallet.observations.reduce(
-              (inner, observation) => inner + BigInt(observation.sharedSpendAtomic),
-              0n,
-            ),
-          0n,
-        )
-        .toString(),
-      endpointCount: 1,
-      resourceCount: 1,
-      mappingPattern: "one_payto_many_endpoints",
-      endpointAttributionStatus: "bundled_payto_unknown_endpoint",
-      attributionConfidence: 0.35,
-      hasCustomerFacts: provider.payerWallets.length > 0,
-      customerFactCount: provider.payerWallets.length,
-      provenance: "derived_insight",
-      provenanceByField: { payTo: "onchain_fact", name: "derived_insight" },
-      reasons: [{ provenance: "derived_insight", label: "fixture provider catalog" }],
-    })),
-    providerCount: phaseBWalletUsageGraphResponse.graph.providerWallets.length,
+        0n,
+      )
+      .toString(),
+    endpointCount: 1,
+    resourceCount: 1,
+    mappingPattern: "one_payto_many_endpoints",
+    endpointAttributionStatus: "bundled_payto_unknown_endpoint",
+    attributionConfidence: 0.35,
+    hasCustomerFacts: provider.payerWallets.length > 0,
+    customerFactCount: provider.payerWallets.length,
     provenance: "derived_insight",
-    provenanceByField: { providers: "derived_insight" },
+    provenanceByField: { payTo: "onchain_fact", name: "derived_insight" },
     reasons: [{ provenance: "derived_insight", label: "fixture provider catalog" }],
-  }),
+  })),
+  providerCount: phaseBWalletUsageGraphResponse.graph.providerWallets.length,
+  provenance: "derived_insight",
+  provenanceByField: { providers: "derived_insight" },
+  reasons: [{ provenance: "derived_insight", label: "fixture provider catalog" }],
+});
+
+export const fixtureAnalyticsDataSource: BffAnalyticsDataSource = {
+  customers: phaseBCustomerListResponse,
+  walletUsageGraph: phaseBWalletUsageGraphResponse,
+  providers: fixtureProviderCatalog,
   serviceSummary: serviceAnalyticsSummaryResponse,
   serviceComparison: serviceAnalyticsComparisonResponse,
   serviceQuadrants: serviceAnalyticsQuadrantResponse,
@@ -125,6 +129,13 @@ export const fixtureAnalyticsDataSource: BffAnalyticsDataSource = {
       phaseBCustomerListResponse,
       payToMapFromWalletUsageGraph(phaseBWalletUsageGraphResponse),
       payTo,
+    ),
+  getCustomersByServiceId: (serviceId: string) =>
+    filterCustomersByServiceId(
+      phaseBCustomerListResponse,
+      fixtureProviderCatalog,
+      phaseBWalletUsageGraphResponse,
+      serviceId,
     ),
   getCustomerProfile: getPhaseBCustomerProfileByAddress,
   getCustomerIntelligence: getPhaseBCustomerIntelligenceByAddress,
@@ -138,29 +149,29 @@ export const loadGeneratedAnalyticsDataSource = (filePath: string): BffAnalytics
   );
   const profilesByAddress = Object.fromEntries(
     Object.entries(payload.profilesByAddress ?? {}).map(([address, profile]) => [
-      address.toLowerCase(),
+      normalizePaymentRecipientAddress(address),
       validatePhaseBCustomerProfileResponse(profile),
     ]),
   );
   const intelligenceByAddress = Object.fromEntries(
     Object.entries(payload.intelligenceByAddress ?? {}).map(([address, intelligence]) => [
-      address.toLowerCase(),
+      normalizePaymentRecipientAddress(address),
       validateCustomerIntelligenceResponse(intelligence),
     ]),
   );
   const profilesByPayTo = new Map<string, Set<string>>();
   for (const [address, profile] of Object.entries(profilesByAddress)) {
     for (const provider of profile.profile.providers) {
-      const key = provider.payToWallet.toLowerCase();
+      const key = normalizePaymentRecipientAddress(provider.payToWallet);
       const addresses = profilesByPayTo.get(key) ?? new Set<string>();
-      addresses.add(address.toLowerCase());
+      addresses.add(normalizePaymentRecipientAddress(address));
       profilesByPayTo.set(key, addresses);
     }
   }
   const generatedUpsellMetricsByAddress = Object.keys(payload.upsellMetricsByAddress ?? {}).length
     ? Object.fromEntries(
         Object.entries(payload.upsellMetricsByAddress ?? {}).map(([address, value]) => [
-          address.toLowerCase(),
+          normalizePaymentRecipientAddress(address),
           validatePhaseBCustomerUpsellMetricsResponse(value),
         ]),
       )
@@ -170,14 +181,17 @@ export const loadGeneratedAnalyticsDataSource = (filePath: string): BffAnalytics
         intelligenceByAddress,
       });
 
+  const walletUsageGraph = validatePhaseBWalletUsageGraphResponse(
+    payload.walletUsageGraph ?? phaseBWalletUsageGraphResponse,
+  );
+  const providers = validateProviderCatalogResponse(
+    payload.providers ?? fixtureAnalyticsDataSource.providers,
+  );
+
   return {
     customers,
-    walletUsageGraph: validatePhaseBWalletUsageGraphResponse(
-      payload.walletUsageGraph ?? phaseBWalletUsageGraphResponse,
-    ),
-    providers: validateProviderCatalogResponse(
-      payload.providers ?? fixtureAnalyticsDataSource.providers,
-    ),
+    walletUsageGraph,
+    providers,
     serviceSummary: validateServiceAnalyticsSummaryResponse(
       payload.serviceSummary ?? serviceAnalyticsSummaryResponse,
     ),
@@ -188,10 +202,14 @@ export const loadGeneratedAnalyticsDataSource = (filePath: string): BffAnalytics
       payload.serviceQuadrants ?? serviceAnalyticsQuadrantResponse,
     ),
     getCustomers: (payTo?: string) => filterCustomersByPayTo(customers, profilesByPayTo, payTo),
-    getCustomerProfile: (address: string) => profilesByAddress[address.toLowerCase()],
-    getCustomerIntelligence: (address: string) => intelligenceByAddress[address.toLowerCase()],
+    getCustomersByServiceId: (serviceId: string) =>
+      filterCustomersByServiceId(customers, providers, walletUsageGraph, serviceId),
+    getCustomerProfile: (address: string) =>
+      profilesByAddress[normalizePaymentRecipientAddress(address)],
+    getCustomerIntelligence: (address: string) =>
+      intelligenceByAddress[normalizePaymentRecipientAddress(address)],
     getCustomerUpsellMetrics: (address: string) =>
-      generatedUpsellMetricsByAddress[address.toLowerCase()],
+      generatedUpsellMetricsByAddress[normalizePaymentRecipientAddress(address)],
   };
 };
 
@@ -201,10 +219,12 @@ const filterCustomersByPayTo = (
   payTo?: string,
 ): PhaseBCustomerListResponse => {
   if (!payTo) return customers;
-  const normalized = payTo.toLowerCase();
+  const normalized = normalizePaymentRecipientAddress(payTo);
   const allowed = profilesByPayTo?.get(normalized);
   const filtered = allowed
-    ? customers.customers.filter((customer) => allowed.has(customer.address.toLowerCase()))
+    ? customers.customers.filter((customer) =>
+        allowed.has(normalizePaymentRecipientAddress(customer.address)),
+      )
     : customers.customers.filter(() => false);
   return validatePhaseBCustomerListResponse({
     ...customers,
@@ -218,11 +238,172 @@ const payToMapFromWalletUsageGraph = (walletUsageGraph: WalletUsageGraphResponse
   const map = new Map<string, Set<string>>();
   for (const provider of walletUsageGraph.graph.providerWallets) {
     map.set(
-      provider.payToWallet.toLowerCase(),
-      new Set(provider.payerWallets.map((wallet) => wallet.address.toLowerCase())),
+      normalizePaymentRecipientAddress(provider.payToWallet),
+      new Set(
+        provider.payerWallets.map((wallet) => normalizePaymentRecipientAddress(wallet.address)),
+      ),
     );
   }
   return map;
+};
+
+type ProviderRowSummary = {
+  providerId: string;
+  payTo: string;
+  network: string;
+  asset: string;
+};
+
+const filterCustomersByServiceId = (
+  baseCustomers: PhaseBCustomerListResponse,
+  providers: ProviderCatalogResponse,
+  walletUsageGraph: WalletUsageGraphResponse,
+  serviceId: string,
+): PhaseBCustomerListResponse => {
+  const target = serviceId.trim();
+  if (!target) {
+    return validatePhaseBCustomerListResponse({
+      ...baseCustomers,
+      customers: [],
+      customerCount: 0,
+      scope: { ...(baseCustomers.scope ?? {}), serviceId: target },
+    });
+  }
+
+  const matchingRows: ProviderRowSummary[] = [];
+  for (const row of providers.providers) {
+    if (
+      row.serviceId === target ||
+      row.providerId === target ||
+      (row.title && row.title === target) ||
+      row.name === target
+    ) {
+      matchingRows.push({
+        providerId: row.providerId,
+        payTo: normalizePaymentRecipientAddress(row.payTo),
+        network: row.network,
+        asset: row.asset,
+      });
+    }
+  }
+  if (matchingRows.length === 0) {
+    return validatePhaseBCustomerListResponse({
+      ...baseCustomers,
+      customers: [],
+      customerCount: 0,
+      scope: { ...(baseCustomers.scope ?? {}), serviceId: target },
+    });
+  }
+
+  // catalog row の providerId は build-fixture で生成された
+  // `<slug-url>--<chain>--<asset>--<payTo>` 形式で、walletUsageGraph 側の
+  // providerId と完全一致する。これを直接 lookup key として使う。
+  const matchingProviderIds = new Set(matchingRows.map((r) => r.providerId));
+  const rowsByProviderId = new Map(matchingRows.map((r) => [r.providerId, r] as const));
+
+  type Aggregate = {
+    address: string;
+    /** chain ごとにその chain で使われた asset の集合 */
+    chainAssetMap: Map<string, Set<string>>;
+    /** 一意の providerId 集合 (wallet が実際にヒットした catalog row 数) */
+    providerIds: Set<string>;
+    spendByAsset: Map<string, bigint>;
+    totalSpend: bigint;
+    observationCount: number;
+    lastSeenAt: string | undefined;
+  };
+
+  const aggByAddress = new Map<string, Aggregate>();
+
+  for (const provider of walletUsageGraph.graph.providerWallets) {
+    if (!matchingProviderIds.has(provider.providerId)) continue;
+    const row = rowsByProviderId.get(provider.providerId);
+    if (!row) continue;
+    const network = row.network;
+    const asset = row.asset;
+
+    for (const payer of provider.payerWallets) {
+      const addrKey = normalizePaymentRecipientAddress(payer.address);
+      const spendAtomic = BigInt(payer.sharedSpendAtomic);
+      const txCount = payer.sharedTransactionCount;
+      const lastSeen = payer.lastSeenAt;
+      const existing = aggByAddress.get(addrKey);
+      if (!existing) {
+        aggByAddress.set(addrKey, {
+          address: payer.address,
+          chainAssetMap: new Map([[network, new Set([asset])]]),
+          providerIds: new Set([provider.providerId]),
+          spendByAsset: new Map([[asset, spendAtomic]]),
+          totalSpend: spendAtomic,
+          observationCount: txCount,
+          lastSeenAt: lastSeen,
+        });
+        continue;
+      }
+      const chainAssets = existing.chainAssetMap.get(network);
+      if (chainAssets) {
+        chainAssets.add(asset);
+      } else {
+        existing.chainAssetMap.set(network, new Set([asset]));
+      }
+      existing.providerIds.add(provider.providerId);
+      existing.spendByAsset.set(asset, (existing.spendByAsset.get(asset) ?? 0n) + spendAtomic);
+      existing.totalSpend += spendAtomic;
+      existing.observationCount += txCount;
+      if (lastSeen && (!existing.lastSeenAt || lastSeen > existing.lastSeenAt)) {
+        existing.lastSeenAt = lastSeen;
+      }
+    }
+  }
+
+  const aggregated = Array.from(aggByAddress.values()).map((a) => {
+    const chainsArr = Array.from(a.chainAssetMap.keys());
+    const assetSet = new Set<string>();
+    for (const assets of a.chainAssetMap.values()) {
+      for (const asset of assets) assetSet.add(asset);
+    }
+    return {
+      address: a.address,
+      label: null as string | null,
+      observationCount: a.observationCount,
+      spendAtomic: a.totalSpend.toString(),
+      providerCount: a.providerIds.size,
+      lastSeenAt: a.lastSeenAt,
+      activityGrowth: 0,
+      upsellOpportunity:
+        chainsArr.length >= 2
+          ? ("high" as const)
+          : a.observationCount >= 5
+            ? ("medium" as const)
+            : ("low" as const),
+      chains: chainsArr,
+      assets: Array.from(assetSet),
+      spendByAsset: Object.fromEntries(
+        Array.from(a.spendByAsset.entries()).map(([k, v]) => [k, v.toString()] as const),
+      ),
+      provenance: "derived_insight" as const,
+      provenanceByField: {
+        address: "derived_insight",
+        spendAtomic: "derived_insight",
+        providerCount: "derived_insight",
+      },
+      reasons: [
+        {
+          provenance: "derived_insight" as const,
+          label: "service-aggregated customer",
+          description: `Aggregated across ${matchingRows.length} catalog row(s) sharing serviceId ${target}.`,
+        },
+      ],
+    };
+  });
+
+  return validatePhaseBCustomerListResponse({
+    ...baseCustomers,
+    generatedFrom: `service-aggregated:${target}`,
+    customers: aggregated,
+    customerCount: aggregated.length,
+    scope: { ...(baseCustomers.scope ?? {}), serviceId: target },
+  });
 };
 
 export const resolveAnalyticsDataSource = (

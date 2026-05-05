@@ -102,6 +102,31 @@ describe("BFF routes", () => {
     expect(parsed.providers.some((provider) => provider.hasCustomerFacts)).toBe(true);
   });
 
+  test("aggregates customers across chains by serviceId", async () => {
+    const handler = createBffHandler(fixtureAnalyticsDataSource);
+    const sampleProvider = fixtureAnalyticsDataSource.providers.providers.find((p) => p.serviceId);
+    if (!sampleProvider?.serviceId) throw new Error("fixture has no serviceId-bearing provider");
+
+    const aggregated = validatePhaseBCustomerListResponse(
+      await (
+        await handler(
+          request(`/customers?serviceId=${encodeURIComponent(sampleProvider.serviceId)}`),
+        )
+      ).json(),
+    );
+
+    expect(aggregated.scope?.serviceId).toBe(sampleProvider.serviceId);
+    expect(aggregated.customerCount).toBe(aggregated.customers.length);
+  });
+
+  test("returns empty list for unknown serviceId", async () => {
+    const handler = createBffHandler(fixtureAnalyticsDataSource);
+    const empty = validatePhaseBCustomerListResponse(
+      await (await handler(request("/customers?serviceId=does-not-exist"))).json(),
+    );
+    expect(empty.customerCount).toBe(0);
+  });
+
   test("filters customers by payTo without fabricating unknown payTo rows", async () => {
     const handler = createBffHandler(fixtureAnalyticsDataSource);
     const payTo = fixtureAnalyticsDataSource.providers.providers[0]?.payTo;
