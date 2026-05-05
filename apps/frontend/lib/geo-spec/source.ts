@@ -91,6 +91,7 @@ type AnalyticsCatalogRow = {
   payTo: string;
   network: string;
   asset: string;
+  resources?: GeoSpecProviderHint["resources"];
 };
 
 export type GeoSpecProviderHint = {
@@ -107,6 +108,14 @@ export type GeoSpecProviderHint = {
   network: string;
   asset: string;
   endpointCount?: number | null;
+  resources?: Array<{
+    resource: string;
+    network?: string;
+    asset?: string;
+    amountAtomic?: string;
+    transactionCount?: number;
+    totalAmountAtomic?: string;
+  }>;
 };
 
 type AnalyticsX402Service = {
@@ -299,6 +308,7 @@ const rowFromHint = (hint: GeoSpecProviderHint | null | undefined): AnalyticsCat
     payTo: hint.payTo,
     network: hint.network,
     asset: hint.asset,
+    resources: hint.resources,
   };
 };
 
@@ -373,6 +383,13 @@ export const getGeoSpec = (
       totalAmountAtomic: e.totalAtomic.toString(),
     }))
     .sort((a, b) => b.transactionCount - a.transactionCount);
+  const liveResourceEndpoints: GeoEndpoint[] = (row.resources ?? []).map((resource) => ({
+    resource: resource.resource,
+    networks: resource.network ? [resource.network] : [],
+    assets: resource.asset ? [resource.asset] : [],
+    transactionCount: resource.transactionCount ?? 0,
+    totalAmountAtomic: resource.totalAmountAtomic ?? resource.amountAtomic ?? "0",
+  }));
 
   const offers: GeoOffer[] = matched?.offers ?? [];
 
@@ -383,10 +400,10 @@ export const getGeoSpec = (
     category: matched?.category ?? row.category ?? null,
     description: matched?.description ?? row.description ?? null,
     useCase: matched?.useCase ?? row.useCase ?? null,
-    endpointCount: matched?.endpointCount ?? null,
+    endpointCount: matched?.endpointCount ?? row.resources?.length ?? null,
     priceRangeUsd: matched?.priceRangeUsd ?? null,
     offers,
-    observedEndpoints,
+    observedEndpoints: observedEndpoints.length ? observedEndpoints : liveResourceEndpoints,
     atlasMissing: matched === null,
   };
 };

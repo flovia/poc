@@ -416,6 +416,18 @@ const filterCustomersByServiceId = (
   // providerId と完全一致する。これを直接 lookup key として使う。
   const matchingProviderIds = new Set(matchingRows.map((r) => r.providerId));
   const rowsByProviderId = new Map(matchingRows.map((r) => [r.providerId, r] as const));
+  const allProviderIdsByAddress = new Map<string, Set<string>>();
+  for (const provider of walletUsageGraph.graph.providerWallets) {
+    for (const payer of provider.payerWallets) {
+      const addrKey = normalizePaymentRecipientAddress(payer.address);
+      const providerIds = allProviderIdsByAddress.get(addrKey) ?? new Set<string>();
+      providerIds.add(provider.providerId);
+      for (const candidate of payer.otherServiceCandidates) {
+        providerIds.add(candidate.providerId);
+      }
+      allProviderIdsByAddress.set(addrKey, providerIds);
+    }
+  }
 
   type Aggregate = {
     address: string;
@@ -483,7 +495,9 @@ const filterCustomersByServiceId = (
       label: null as string | null,
       observationCount: a.observationCount,
       spendAtomic: a.totalSpend.toString(),
-      providerCount: a.providerIds.size,
+      providerCount:
+        allProviderIdsByAddress.get(normalizePaymentRecipientAddress(a.address))?.size ??
+        a.providerIds.size,
       lastSeenAt: a.lastSeenAt,
       activityGrowth: 0,
       upsellOpportunity:

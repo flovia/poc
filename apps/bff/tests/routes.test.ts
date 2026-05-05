@@ -555,6 +555,107 @@ describe("BFF routes", () => {
     ).toThrow("BFF analytics JSON read model not found");
   });
 
+  test("service customer filters preserve cross-provider providerCount", async () =>
+    withTempFile(async (filePath) => {
+      const payer = "0x9999999999999999999999999999999999999001";
+      const ownPayTo = "0x9999999999999999999999999999999999999010";
+      const otherPayTo = "0x9999999999999999999999999999999999999020";
+      const baseCustomer = phaseBCustomerListResponse.customers[0];
+      const baseProvider = fixtureAnalyticsDataSource.providers.providers[0];
+      const baseGraphProvider =
+        fixtureAnalyticsDataSource.walletUsageGraph.graph.providerWallets[0];
+      const basePayer = baseGraphProvider?.payerWallets[0];
+      const baseObservation = basePayer?.observations[0];
+
+      fs.writeFileSync(
+        filePath,
+        JSON.stringify(
+          {
+            customers: {
+              ...phaseBCustomerListResponse,
+              customers: [{ ...baseCustomer, address: payer, providerCount: 1 }],
+              customerCount: 1,
+            },
+            providers: {
+              ...fixtureAnalyticsDataSource.providers,
+              providers: [
+                {
+                  ...baseProvider,
+                  providerId: `own-service--base--usdc--${ownPayTo}`,
+                  name: "Own Service",
+                  serviceId: "own-service.example",
+                  serviceName: "Own Service",
+                  payTo: ownPayTo,
+                },
+                {
+                  ...baseProvider,
+                  providerId: `other-service--base--usdc--${otherPayTo}`,
+                  name: "Other Service",
+                  serviceId: "other-service.example",
+                  serviceName: "Other Service",
+                  payTo: otherPayTo,
+                },
+              ],
+              providerCount: 2,
+            },
+            walletUsageGraph: {
+              ...fixtureAnalyticsDataSource.walletUsageGraph,
+              graph: {
+                ...fixtureAnalyticsDataSource.walletUsageGraph.graph,
+                providerWallets: [
+                  {
+                    ...baseGraphProvider,
+                    providerId: `own-service--base--usdc--${ownPayTo}`,
+                    providerName: "Own Service",
+                    name: "Own Service",
+                    payToWallet: ownPayTo,
+                    payerWallets: [
+                      {
+                        ...basePayer,
+                        address: payer,
+                        sharedSpendAtomic: "100",
+                        sharedTransactionCount: 1,
+                        overlapProviderCount: 2,
+                        observations: [
+                          {
+                            ...baseObservation,
+                            providerId: `own-service--base--usdc--${ownPayTo}`,
+                            providerName: "Own Service",
+                            serviceName: "Own Service",
+                          },
+                        ],
+                        otherServiceCandidates: [
+                          {
+                            providerId: `other-service--base--usdc--${otherPayTo}`,
+                            providerName: "Other Service",
+                            serviceName: "Other Service",
+                            coUsageCount: 1,
+                            confidence: 0.5,
+                            payToWallet: otherPayTo,
+                            provenance: "derived_insight",
+                            provenanceByField: { payToWallet: "onchain_fact" },
+                            reasons: [{ provenance: "derived_insight", label: "test" }],
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+            },
+          },
+          null,
+          2,
+        ),
+      );
+
+      const dataSource = loadGeneratedAnalyticsDataSource(filePath);
+      const filtered = dataSource.getCustomersByServiceId("own-service.example");
+
+      expect(filtered.customers).toHaveLength(1);
+      expect(filtered.customers[0]?.providerCount).toBe(2);
+    }));
+
   test("throws when postgres analytics source has no database URL", () => {
     expect(() =>
       resolveAnalyticsDataSource(undefined, {

@@ -32,6 +32,7 @@ export default async function GeoSpecPage({
           network: liveProvider.network ?? "base",
           asset: liveProvider.asset ?? "USDC",
           endpointCount: liveProvider.endpointCount,
+          resources: liveProvider.resources,
         }
       : null,
   );

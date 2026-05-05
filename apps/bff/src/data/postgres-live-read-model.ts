@@ -16,6 +16,14 @@ type ProviderRow = {
   payTo: string;
   serviceId: string;
   serviceName: string;
+  resources: Array<{
+    resource: string;
+    network?: string;
+    asset?: string;
+    amountAtomic?: string;
+    transactionCount?: number;
+    totalAmountAtomic?: string;
+  }>;
   title?: string;
   description?: string;
   useCase?: string;
@@ -65,6 +73,30 @@ const optionalPriceRange = (
   if (!Number.isFinite(parsedMin) || !Number.isFinite(parsedMax)) return undefined;
   return { min: parsedMin, max: parsedMax };
 };
+const parseResources = (value: unknown): ProviderRow["resources"] => {
+  const raw = typeof value === "string" ? JSON.parse(value) : value;
+  if (!Array.isArray(raw)) return [];
+  return raw.flatMap((item) => {
+    if (!item || typeof item !== "object") return [];
+    const row = item as Record<string, unknown>;
+    const resource = optionalText(row.resource ?? row.url);
+    if (!resource) return [];
+    return [
+      {
+        resource,
+        ...(optionalText(row.network) ? { network: optionalText(row.network) } : {}),
+        ...(optionalText(row.asset) ? { asset: optionalText(row.asset) } : {}),
+        ...(optionalText(row.amountAtomic) ? { amountAtomic: optionalText(row.amountAtomic) } : {}),
+        ...(Number.isFinite(Number(row.transactionCount))
+          ? { transactionCount: Number(row.transactionCount) }
+          : {}),
+        ...(optionalText(row.totalAmountAtomic)
+          ? { totalAmountAtomic: optionalText(row.totalAmountAtomic) }
+          : {}),
+      },
+    ];
+  });
+};
 const iso = (value: unknown, fallback: string) => {
   if (value instanceof Date) return value.toISOString();
   const raw = String(value ?? "");
@@ -113,6 +145,7 @@ const mapProviderRow = (row: Record<string, unknown>): ProviderRow => {
     payTo,
     serviceId,
     serviceName,
+    resources: parseResources(row.resources),
     title: optionalText(row.title),
     description: optionalText(row.description),
     useCase: optionalText(row.use_case ?? row.useCase),
@@ -287,6 +320,7 @@ const buildPayload = (
         ...(provider.chain ? { chain: provider.chain } : {}),
         ...(provider.assetSymbol ? { assetSymbol: provider.assetSymbol } : {}),
         ...(provider.priceRangeUsd ? { priceRangeUsd: provider.priceRangeUsd } : {}),
+        ...(provider.resources.length ? { resources: provider.resources } : {}),
         provenance: "derived_insight",
         provenanceByField: { payTo: "onchain_fact", transactionCount: "onchain_fact" },
         reasons: [{ provenance: "derived_insight", label: "postgres live provider aggregate" }],
@@ -519,18 +553,35 @@ export const loadPostgresLiveAnalyticsDataSource = async (
 ): Promise<BffAnalyticsDataSource> => {
   const [providerRows, customerRows] = await Promise.all([
     client.query(`
+      WITH provider_grouped AS (
+        SELECT
+          lower(g.to_owner_address) AS pay_to,
+          CASE
+            WHEN lower(g.to_owner_address) = '0x110cdbba7fe6434ec4ce3464cc523942ad6fb784'
+              THEN COALESCE(NULLIF(a.service, ''), NULLIF(a.provider, ''), NULLIF(a.domain, ''), 'pro-api.coingecko.com')
+            ELSE COALESCE(NULLIF(a.service, ''), NULLIF(a.provider, ''), NULLIF(a.domain, ''), lower(g.to_owner_address))
+          END AS service_id,
+          CASE
+            WHEN lower(g.to_owner_address) = '0x110cdbba7fe6434ec4ce3464cc523942ad6fb784'
+              THEN COALESCE(NULLIF(a.service, ''), NULLIF(a.provider, ''), NULLIF(a.domain, ''), 'pro-api.coingecko.com')
+            ELSE COALESCE(NULLIF(a.service, ''), NULLIF(a.provider, ''), NULLIF(a.domain, ''), lower(g.to_owner_address))
+          END AS service_name,
+          COUNT(*)::int AS transaction_count,
+          COUNT(DISTINCT lower(g.from_owner_address))::int AS unique_sender_count,
+          COALESCE(SUM(g.amount), 0)::text AS total_volume_atomic,
+          to_timestamp(MIN(g.block_timestamp)) AS first_seen_at,
+          to_timestamp(MAX(g.block_timestamp)) AS last_seen_at
+        FROM goldsky_webhook_transfers_x402_paytos g
+        LEFT JOIN x402_provider_activity a
+          ON lower(a.pay_to_address) = lower(g.to_owner_address)
+        WHERE g.from_owner_address IS NOT NULL
+          AND g.to_owner_address IS NOT NULL
+        GROUP BY lower(g.to_owner_address), service_id, service_name
+      )
       SELECT
-        lower(g.to_owner_address) AS pay_to,
-        CASE
-          WHEN lower(g.to_owner_address) = '0x110cdbba7fe6434ec4ce3464cc523942ad6fb784'
-            THEN COALESCE(NULLIF(a.service, ''), NULLIF(a.provider, ''), NULLIF(a.domain, ''), 'pro-api.coingecko.com')
-          ELSE COALESCE(NULLIF(a.service, ''), NULLIF(a.provider, ''), NULLIF(a.domain, ''), lower(g.to_owner_address))
-        END AS service_id,
-        CASE
-          WHEN lower(g.to_owner_address) = '0x110cdbba7fe6434ec4ce3464cc523942ad6fb784'
-            THEN COALESCE(NULLIF(a.service, ''), NULLIF(a.provider, ''), NULLIF(a.domain, ''), 'pro-api.coingecko.com')
-          ELSE COALESCE(NULLIF(a.service, ''), NULLIF(a.provider, ''), NULLIF(a.domain, ''), lower(g.to_owner_address))
-        END AS service_name,
+        pg.pay_to,
+        pg.service_id,
+        pg.service_name,
         pay_sh.title,
         pay_sh.description,
         pay_sh.use_case,
@@ -541,14 +592,13 @@ export const loadPostgresLiveAnalyticsDataSource = async (
         pay_sh.asset_symbol,
         pay_sh.price_range_min_usd,
         pay_sh.price_range_max_usd,
-        COUNT(*)::int AS transaction_count,
-        COUNT(DISTINCT lower(g.from_owner_address))::int AS unique_sender_count,
-        COALESCE(SUM(g.amount), 0)::text AS total_volume_atomic,
-        to_timestamp(MIN(g.block_timestamp)) AS first_seen_at,
-        to_timestamp(MAX(g.block_timestamp)) AS last_seen_at
-      FROM goldsky_webhook_transfers_x402_paytos g
-      LEFT JOIN x402_provider_activity a
-        ON lower(a.pay_to_address) = lower(g.to_owner_address)
+        COALESCE(resources.resources, '[]'::jsonb) AS resources,
+        pg.transaction_count,
+        pg.unique_sender_count,
+        pg.total_volume_atomic,
+        pg.first_seen_at,
+        pg.last_seen_at
+      FROM provider_grouped pg
       LEFT JOIN LATERAL (
         SELECT
           p.title,
@@ -563,7 +613,7 @@ export const loadPostgresLiveAnalyticsDataSource = async (
           p.price_range_max_usd
         FROM pay_sh_payment_offers o
         JOIN pay_sh_providers p ON p.provider_fqn = o.provider_fqn
-        WHERE lower(o.pay_to_address) = lower(g.to_owner_address)
+        WHERE lower(o.pay_to_address) = pg.pay_to
         GROUP BY
           p.provider_fqn,
           p.title,
@@ -576,23 +626,25 @@ export const loadPostgresLiveAnalyticsDataSource = async (
         ORDER BY p.provider_fqn ASC
         LIMIT 1
       ) pay_sh ON true
-      WHERE g.from_owner_address IS NOT NULL
-        AND g.to_owner_address IS NOT NULL
-      GROUP BY
-        lower(g.to_owner_address),
-        service_id,
-        service_name,
-        pay_sh.title,
-        pay_sh.description,
-        pay_sh.use_case,
-        pay_sh.category,
-        pay_sh.service_url,
-        pay_sh.protocol,
-        pay_sh.offer_chain,
-        pay_sh.asset_symbol,
-        pay_sh.price_range_min_usd,
-        pay_sh.price_range_max_usd
-      ORDER BY COUNT(*) DESC, lower(g.to_owner_address) ASC
+      LEFT JOIN LATERAL (
+        SELECT jsonb_agg(
+          jsonb_build_object(
+            'resource', r.resource_url,
+            'network', po.chain,
+            'asset', CASE
+              WHEN lower(po.token_address) = '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913' THEN 'USDC'
+              ELSE po.token_address
+            END,
+            'amountAtomic', po.amount_atomic::text
+          ) ORDER BY r.resource_url
+        ) AS resources
+        FROM x402_payment_options po
+        JOIN x402_resources r ON r.resource_id = po.resource_id
+        WHERE lower(po.pay_to_address) = pg.pay_to
+          AND po.active
+          AND r.active
+      ) resources ON true
+      ORDER BY pg.transaction_count DESC, pg.pay_to ASC
     `),
     client.query(`
       WITH attributed_grouped AS (

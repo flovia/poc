@@ -27,3 +27,5 @@
 - GEO spec は generated fixture の providerId 完全一致だけでなく、route providerId 末尾の payTo でも fallback 解決するようにし、live providerId と fixture providerId のズレを吸収した。
 - generated fixture に存在しない live-only provider でも GEO page が空にならないよう、BFF `/providers` の live catalog 行を hint として `getGeoSpec` に渡し、最小 spec を表示するようにした。
 - BFF live provider catalog が `pay_sh_providers` / `pay_sh_payment_offers` の metadata を payTo で enrichment し、frontend GEO spec が live provider hint の title/description/useCase/category を使えるようにした。
+- StableEnrich などの endpoint 詳細は `pay_sh_*` ではなく既存 `x402_resources` / `x402_payment_options` に入っていたため、BFF `/providers` に `resources` を追加し、GEO spec が live resource list を fallback 表示できるようにした。
+- serviceId filter の customer list は対象 service 内の provider 数だけでなく、walletUsageGraph の `otherServiceCandidates` も含めた cross-provider `providerCount` を返すようにした。

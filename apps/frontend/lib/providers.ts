@@ -47,6 +47,14 @@ type ProviderRouteLike = {
   network?: string;
   asset?: string;
   endpointCount?: number;
+  resources?: Array<{
+    resource: string;
+    network?: string;
+    asset?: string;
+    amountAtomic?: string;
+    transactionCount?: number;
+    totalAmountAtomic?: string;
+  }>;
   paths?: Array<{ payTo: string }>;
 };
 

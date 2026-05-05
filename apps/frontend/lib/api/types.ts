@@ -52,6 +52,14 @@ export type ProviderCatalogItemDto = {
   chain?: string;
   assetSymbol?: string;
   priceRangeUsd?: { min: number; max: number };
+  resources?: Array<{
+    resource: string;
+    network?: string;
+    asset?: string;
+    amountAtomic?: string;
+    transactionCount?: number;
+    totalAmountAtomic?: string;
+  }>;
   provenance: DataProvenance;
   provenanceByField: Record<string, DataProvenance>;
   reasons: EvidenceLabel[];

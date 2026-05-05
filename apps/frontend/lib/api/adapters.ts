@@ -147,6 +147,7 @@ export function adaptProviderCatalog(response: ProviderCatalogResponse): Provide
       chain: provider.chain,
       assetSymbol: provider.assetSymbol,
       priceRangeUsd: provider.priceRangeUsd,
+      resources: provider.resources,
       provenance: provider.provenance,
       provenanceByField: provider.provenanceByField ?? {},
       reasons: provider.reasons ?? [],

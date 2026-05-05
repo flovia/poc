@@ -548,6 +548,17 @@ export const PriceRangeUsdSchema = z
   })
   .strict();
 
+const ProviderResourceSchema = z
+  .object({
+    resource: z.string().url(),
+    network: z.string().min(1).optional(),
+    asset: z.string().min(1).optional(),
+    amountAtomic: AtomicAmountSchema.optional(),
+    transactionCount: z.number().int().nonnegative().optional(),
+    totalAmountAtomic: AtomicAmountSchema.optional(),
+  })
+  .strict();
+
 export const ProviderCatalogRowSchema = withDerivedInsightReasons(
   z
     .object({
@@ -582,6 +593,7 @@ export const ProviderCatalogRowSchema = withDerivedInsightReasons(
       chain: z.string().min(1).optional(),
       assetSymbol: z.string().min(1).optional(),
       priceRangeUsd: PriceRangeUsdSchema.optional(),
+      resources: z.array(ProviderResourceSchema).optional(),
       provenance: DataProvenanceSchema,
       provenanceByField: ProvenanceByFieldSchema,
       reasons: z.array(EvidenceLabelSchema).optional(),
