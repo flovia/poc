@@ -17,6 +17,9 @@ export type CustomerListItemDto = {
   lastSeenAt: number;
   activityGrowth: number;
   upsellOpportunity: UpsellOpportunity;
+  chains?: string[];
+  assets?: string[];
+  spendByAsset?: Record<string, string>;
   provenance: DataProvenance;
   provenanceByField: Record<string, DataProvenance>;
   reasons: EvidenceLabel[];
@@ -39,6 +42,15 @@ export type ProviderCatalogItemDto = {
   attributionConfidence: number;
   hasCustomerFacts: boolean;
   customerFactCount: number;
+  title?: string;
+  description?: string;
+  useCase?: string;
+  category?: string;
+  serviceUrl?: string;
+  protocol?: "x402" | "MPP";
+  chain?: string;
+  assetSymbol?: string;
+  priceRangeUsd?: { min: number; max: number };
   provenance: DataProvenance;
   provenanceByField: Record<string, DataProvenance>;
   reasons: EvidenceLabel[];

@@ -176,12 +176,25 @@ export function CustomersTable({
               </div>
             )}
 
-            <div>
-              <ChainBadge chain={chainAttribution.chain} asset={chainAttribution.asset} />
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+              {chainAttribution.chains.map((chain) => (
+                <ChainBadge key={chain} chain={chain} />
+              ))}
             </div>
 
             <div className="mono" style={{ fontSize: 14, color: "var(--text-1)" }}>
-              {formatAtomic(c.spendAtomic)}
+              {c.spendByAsset && Object.keys(c.spendByAsset).length > 1 ? (
+                <span style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                  {Object.entries(c.spendByAsset).map(([asset, amt]) => (
+                    <span key={asset} style={{ whiteSpace: "nowrap" }}>
+                      {formatAtomic(amt)}{" "}
+                      <span style={{ fontSize: 11, color: "var(--text-3)" }}>{asset}</span>
+                    </span>
+                  ))}
+                </span>
+              ) : (
+                formatAtomic(c.spendAtomic)
+              )}
             </div>
             <div className="mono" style={{ fontSize: 14, color: "var(--text-2)" }}>
               {c.observationCount}

@@ -27,9 +27,13 @@ export async function getProviders(): Promise<ProviderCatalogItemDto[]> {
   return live.getProviders();
 }
 
-export async function getCustomers(payTo?: string): Promise<CustomerListItemDto[]> {
+export type GetCustomersFilter = { payTo?: string; serviceId?: string };
+
+export async function getCustomers(
+  filter?: string | GetCustomersFilter,
+): Promise<CustomerListItemDto[]> {
   const mode = await getServerDashboardMode();
-  if (mode === "onChainOnly") return live.getCustomers(payTo);
+  if (mode === "onChainOnly") return live.getCustomers(filter);
   const v = await sdkModule();
   return v.getCustomers();
 }
@@ -48,9 +52,9 @@ export async function getObservations(): Promise<PaymentObservationDto[]> {
   return v.getObservations();
 }
 
-export async function getSummary(payTo?: string): Promise<ReportSummaryDto> {
+export async function getSummary(filter?: string | GetCustomersFilter): Promise<ReportSummaryDto> {
   const mode = await getServerDashboardMode();
-  if (mode === "onChainOnly") return live.getSummary(payTo);
+  if (mode === "onChainOnly") return live.getSummary(filter);
   const v = await sdkModule();
   return v.getSummary();
 }

@@ -1,3 +1,4 @@
+import { normalizePaymentRecipientAddress } from "contracts";
 import type { CustomerProfileDto, WalletUsageGraphDto } from "@/lib/api/types";
 
 export type OpportunityLevel = "high" | "medium" | "low";
@@ -37,6 +38,18 @@ export type CoUsageProviderSankeyFlow = {
   occurrences: number;
 };
 
+export type CoUsageProviderMetadata = {
+  title?: string;
+  description?: string;
+  useCase?: string;
+  category?: string;
+  serviceUrl?: string;
+  protocol?: "x402" | "MPP";
+  chain?: string;
+  assetSymbol?: string;
+  priceRangeUsd?: { min: number; max: number };
+};
+
 export type CoUsageProviderRow = {
   providerId: string;
   providerName: string;
@@ -48,11 +61,12 @@ export type CoUsageProviderRow = {
   opportunity: OpportunityLevel;
   endpoints: CoUsageProviderEndpoint[];
   payerWallets: CoUsageProviderPayer[];
-};
+} & CoUsageProviderMetadata;
 
 export type AggregateOptions = {
   ownPayTo: string | undefined;
   resolveProviderName?: (payToWallet: string) => string | null;
+  resolveMetadata?: (payToWallet: string) => CoUsageProviderMetadata | null;
 };
 
 export type BuildCoUsageProviderSankeyOptions = {
@@ -68,7 +82,8 @@ const opportunityFor = (confidence: number): OpportunityLevel => {
   return "low";
 };
 
-const normalize = (value: string | null | undefined) => (value ? value.toLowerCase() : "");
+const normalize = (value: string | null | undefined) =>
+  value ? normalizePaymentRecipientAddress(value) : "";
 
 const EVM_ADDRESS_PATTERN = /^0x[0-9a-f]{40}$/i;
 
@@ -305,7 +320,7 @@ function classifyCoUsageCustomer(
 
 export const aggregateCoUsageProviders = (
   graph: WalletUsageGraphDto,
-  { ownPayTo, resolveProviderName }: AggregateOptions,
+  { ownPayTo, resolveProviderName, resolveMetadata }: AggregateOptions,
 ): CoUsageProviderRow[] => {
   const own = normalize(ownPayTo);
   const accByPayTo = new Map<string, ProviderAcc>();
@@ -314,18 +329,19 @@ export const aggregateCoUsageProviders = (
     for (const payer of provider.payerWallets) {
       const payerLower = payer.wallet.toLowerCase();
       for (const candidate of payer.otherServiceCandidates) {
-        const candidatePayTo = normalize(candidate.payToWallet);
-        if (!candidatePayTo) continue;
-        if (own && candidatePayTo === own) continue;
+        const rawCandidatePayTo = candidate.payToWallet?.trim() ?? "";
+        if (!rawCandidatePayTo) continue;
+        const candidatePayToKey = normalizePaymentRecipientAddress(rawCandidatePayTo);
+        if (own && candidatePayToKey === own) continue;
 
-        const key = candidatePayTo;
+        const key = candidatePayToKey;
         let acc = accByPayTo.get(key);
         if (!acc) {
           acc = {
             providerId: candidate.providerId,
             providerName: candidate.providerName,
             serviceName: candidate.serviceName,
-            payToWallet: candidatePayTo,
+            payToWallet: rawCandidatePayTo,
             walletSet: new Set(),
             txTotal: 0,
             confidenceSum: 0,
@@ -383,6 +399,7 @@ export const aggregateCoUsageProviders = (
         if (b.sharedTxCount !== a.sharedTxCount) return b.sharedTxCount - a.sharedTxCount;
         return a.wallet.localeCompare(b.wallet);
       });
+    const metadata = resolveMetadata ? resolveMetadata(acc.payToWallet) : null;
     rows.push({
       providerId: acc.providerId,
       providerName: displayProviderName(acc.providerName, topEndpointName, resolvedName),
@@ -394,6 +411,7 @@ export const aggregateCoUsageProviders = (
       opportunity: opportunityFor(avgConfidence),
       endpoints,
       payerWallets,
+      ...(metadata ?? {}),
     });
   }
 
