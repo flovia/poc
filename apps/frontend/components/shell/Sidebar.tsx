@@ -78,6 +78,7 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
   const customerOverviewHref = providerRouteId ? `/providers/${providerRouteId}/customers` : undefined;
   const coUsageHref = providerRouteId ? `/providers/${providerRouteId}/customers/co-usage-providers` : undefined;
   const customerOverviewActive = pathname === customerOverviewHref || activeRoute === "wallet";
+  const customersSectionActive = customerOverviewActive || pathname === coUsageHref;
 
   const navHrefFor = (segment: "api-growth" | "geo-spec" | "macro-metrics" | "metrics-catalog") => {
     return providerRouteId ? `/providers/${providerRouteId}/${segment}` : "/setup";
@@ -149,7 +150,7 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
           <>
             <div className="nav-row">
               <span
-                className="nav-item nav-item--with-toggle nav-item--category"
+                className={`nav-item nav-item--with-toggle nav-item--category${customersSectionActive ? " nav-item--category-active" : ""}`}
               >
                 <Icon.customers />
                 <span style={{ flex: 1 }}>My Customers</span>
