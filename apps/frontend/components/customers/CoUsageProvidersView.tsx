@@ -8,6 +8,18 @@ import type { CoUsageProviderRow } from "@/lib/customers/co-usage-providers";
 
 const ENDPOINT_PREVIEW_COUNT = 3;
 
+// Hosts whose live endpoint is currently unreachable. Marked with a red
+// badge so readers understand the data may not be verifiable today.
+const UNAVAILABLE_PROVIDER_MATCHES: readonly string[] = [
+  "evplus-funding-server.onrender.com",
+];
+
+const isProviderUnavailable = (name: string | undefined | null): boolean => {
+  if (!name) return false;
+  const lower = name.toLowerCase();
+  return UNAVAILABLE_PROVIDER_MATCHES.some((needle) => lower.includes(needle));
+};
+
 const opportunityChipClass = (level: "high" | "medium" | "low") => {
   if (level === "high") return "chip blue";
   if (level === "medium") return "chip teal";
@@ -132,14 +144,31 @@ export function CoUsageProvidersView({
                     >
                       <div
                         style={{
-                          fontWeight: 600,
-                          color: "var(--mesh-blue)",
-                          textDecoration: "underline",
-                          textDecorationStyle: "dotted",
-                          textDecorationColor: "var(--text-mute)",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 8,
+                          flexWrap: "wrap",
                         }}
                       >
-                        {row.providerName}
+                        <span
+                          style={{
+                            fontWeight: 600,
+                            color: "var(--mesh-blue)",
+                            textDecoration: "underline",
+                            textDecorationStyle: "dotted",
+                            textDecorationColor: "var(--text-mute)",
+                          }}
+                        >
+                          {row.providerName}
+                        </span>
+                        {isProviderUnavailable(row.providerName) && (
+                          <span
+                            className="chip danger"
+                            title="The hosted endpoint is not currently reachable"
+                          >
+                            Unavailable
+                          </span>
+                        )}
                       </div>
                       {row.payToWallet && (
                         <div

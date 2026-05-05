@@ -3,7 +3,7 @@
 // 画面上端に出る。dataMode は server で cookie から確定させて client に props で渡す。
 
 import { SdkPreviewNoticeBar } from "@/components/shell/SdkPreviewNoticeBar";
-import { getServerDashboardMode } from "@/lib/data-mode";
+import { getServerDashboardMode } from "@/lib/server/dashboard-mode";
 import { ProviderClientLayout } from "./ProviderClientLayout";
 
 export default async function ProviderLayout({

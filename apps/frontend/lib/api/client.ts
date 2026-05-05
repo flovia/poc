@@ -25,8 +25,8 @@ import type {
   ReportSummaryDto,
   WalletUsageGraphDto,
 } from "./types";
+import { resolveServerBffBaseUrl } from "../data-source-env";
 
-const DEFAULT_BFF_URL = "http://localhost:3001";
 const DEFAULT_PUBLIC_BFF_URL = "/api";
 
 function stripTrailingSlash(url: string): string {
@@ -37,8 +37,7 @@ function bffBaseUrl(): string {
   const isServer = typeof window === "undefined";
 
   if (isServer) {
-    const url = process.env.BFF_URL ?? DEFAULT_BFF_URL;
-    return stripTrailingSlash(url);
+    return resolveServerBffBaseUrl();
   }
 
   const url = process.env.NEXT_PUBLIC_BFF_URL ?? DEFAULT_PUBLIC_BFF_URL;
