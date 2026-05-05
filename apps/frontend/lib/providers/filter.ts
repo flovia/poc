@@ -1,5 +1,6 @@
 import { normalizeChain, type CustomerChain } from "@/lib/customers/chain";
 import { isPreservedBaseProvider } from "@/lib/providers/preserved";
+import { STATIC_PROVIDER_CAPABILITY_BY_SERVICE_ID } from "@/lib/providers/static-capabilities";
 import type { StoredProvider } from "@/lib/types";
 
 export type ProviderSourceFilter = "all" | "pay-sh" | "demo" | "real";
@@ -28,7 +29,7 @@ export type ProviderClassifierContext = {
 };
 
 function isPaySh(p: StoredProvider): boolean {
-  return p.source === "generated" && !isPreservedBaseProvider(p.serviceId);
+  return p.catalogSource === "pay_sh_curated";
 }
 
 function isReal(p: StoredProvider, ctx: ProviderClassifierContext): boolean {
@@ -39,7 +40,15 @@ function isReal(p: StoredProvider, ctx: ProviderClassifierContext): boolean {
 }
 
 export function chainsOfProvider(p: StoredProvider): CustomerChain[] {
-  const raw = p.networks && p.networks.length > 0 ? p.networks : p.network ? [p.network] : [];
+  const capability = p.serviceId
+    ? STATIC_PROVIDER_CAPABILITY_BY_SERVICE_ID.get(p.serviceId)
+    : undefined;
+  const raw =
+    p.networks && p.networks.length > 0
+      ? p.networks
+      : p.network
+        ? [p.network]
+        : (capability?.networks ?? []);
   if (raw.length === 0) return [];
   const seen = new Set<CustomerChain>();
   const named: CustomerChain[] = [];
@@ -60,6 +69,15 @@ export function collectAvailableChains(providers: StoredProvider[]): CustomerCha
     for (const c of chainsOfProvider(p)) seen.add(c);
   }
   return Array.from(seen);
+}
+
+export function protocolsOfProvider(p: StoredProvider): ("x402" | "MPP")[] {
+  if (p.protocols && p.protocols.length > 0) return p.protocols;
+  const capability = p.serviceId
+    ? STATIC_PROVIDER_CAPABILITY_BY_SERVICE_ID.get(p.serviceId)
+    : undefined;
+  if (capability) return capability.protocols;
+  return isPreservedBaseProvider(p.serviceId) ? ["x402"] : [];
 }
 
 function matchesQuery(p: StoredProvider, query: string): boolean {
@@ -91,7 +109,7 @@ function matchesChains(p: StoredProvider, selected: CustomerChain[]): boolean {
 
 function matchesProtocol(p: StoredProvider, selected: ProviderProtocolFilter): boolean {
   if (selected === "all") return true;
-  const protos = p.protocols ?? [];
+  const protos = protocolsOfProvider(p);
   if (protos.length === 0) return false;
   return protos.includes(selected);
 }

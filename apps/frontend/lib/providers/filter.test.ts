@@ -30,6 +30,7 @@ describe("filterProviders", () => {
       providerId: "quicknode",
       name: "QuickNode",
       source: "generated",
+      catalogSource: "pay_sh_curated",
       serviceId: "quicknode/rpc",
       networks: ["base", "solana", "x-layer"],
       protocols: ["x402", "MPP"],
@@ -40,7 +41,6 @@ describe("filterProviders", () => {
       source: "generated",
       serviceId: "pro-api.coingecko.com",
       networks: ["base"],
-      protocols: ["x402"],
     }),
     make({
       providerId: "nansen",
@@ -48,7 +48,6 @@ describe("filterProviders", () => {
       source: "generated",
       serviceId: "api.nansen.ai",
       networks: ["base"],
-      protocols: ["x402"],
     }),
     make({
       providerId: "northwind-price",
@@ -81,6 +80,25 @@ describe("filterProviders", () => {
 
   test("source 'pay-sh' excludes preserved base generated rows and demo/user rows", () => {
     const r = filterProviders(providers, { ...DEFAULT_PROVIDER_FILTER, source: "pay-sh" }, ctx());
+    expect(r.map((p) => p.providerId)).toEqual(["quicknode"]);
+  });
+
+  test("source 'pay-sh' excludes generated raw x402 rows", () => {
+    const r = filterProviders(
+      [
+        ...providers,
+        make({
+          providerId: "raw-x402",
+          name: "High Tx Raw Endpoint",
+          source: "generated",
+          catalogSource: "raw_x402",
+          serviceId: "raw.example.com",
+        }),
+      ],
+      { ...DEFAULT_PROVIDER_FILTER, source: "pay-sh" },
+      ctx(),
+    );
+
     expect(r.map((p) => p.providerId)).toEqual(["quicknode"]);
   });
 

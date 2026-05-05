@@ -3,6 +3,7 @@ import type {
   GeneratedReadModelFile,
   PostgresAnalyticsClient,
 } from "./analytics-source";
+import { PaymentRecipientAddressSchema } from "contracts";
 import { loadGeneratedAnalyticsDataSourceFromPayload } from "./analytics-source";
 import {
   phaseBCustomerListResponse,
@@ -16,6 +17,7 @@ type ProviderRow = {
   payTo: string;
   serviceId: string;
   serviceName: string;
+  catalogSource: "base_curated" | "pay_sh_curated" | "raw_x402";
   resources: Array<{
     resource: string;
     network?: string;
@@ -53,6 +55,7 @@ type ProviderRow = {
   chain?: string;
   assetSymbol?: string;
   priceRangeUsd?: { min: number; max: number };
+  payShProviderFqn?: string;
   endpointCount?: number;
   transactionCount: number;
   uniqueSenderCount: number;
@@ -74,6 +77,18 @@ type CustomerRow = {
 
 const generatedAt = () => new Date().toISOString();
 const lower = (value: unknown) => String(value ?? "").toLowerCase();
+const isBaseCuratedProvider = (serviceId: string) =>
+  ["pro-api.coingecko.com", "coingecko", "api.nansen.ai", "nansen"].includes(
+    serviceId.toLowerCase(),
+  );
+const catalogSourceFor = (
+  serviceId: string,
+  payShProviderFqn: string | undefined,
+): ProviderRow["catalogSource"] => {
+  if (isBaseCuratedProvider(serviceId)) return "base_curated";
+  if (payShProviderFqn) return "pay_sh_curated";
+  return "raw_x402";
+};
 const text = (value: unknown, fallback: string) => String(value ?? fallback);
 const optionalText = (value: unknown): string | undefined => {
   const raw = String(value ?? "").trim();
@@ -192,6 +207,8 @@ const providerIdFor = (input: {
   `${slug(input.serviceId)}--${slug(input.network)}--${slug(input.asset)}--${input.payTo.toLowerCase()}`;
 const serviceIdForComparison = (serviceId: string) =>
   serviceId.toLowerCase().includes("coingecko") ? "coingecko" : serviceId.toLowerCase();
+const isValidPaymentRecipientAddress = (value: string) =>
+  PaymentRecipientAddressSchema.safeParse(value).success;
 
 const candidateForProvider = (provider: CustomerRow) => ({
   providerId: providerIdFor({
@@ -214,10 +231,12 @@ const mapProviderRow = (row: Record<string, unknown>): ProviderRow => {
   const payTo = lower(row.pay_to ?? row.payTo ?? row.pay_to_wallet);
   const serviceId = text(row.service_id ?? row.provider_id, payTo || "unknown-service");
   const serviceName = text(row.service_name ?? row.provider_name ?? row.name, serviceId);
+  const payShProviderFqn = optionalText(row.pay_sh_provider_fqn ?? row.payShProviderFqn);
   return {
     payTo,
     serviceId,
     serviceName,
+    catalogSource: catalogSourceFor(serviceId, payShProviderFqn),
     resources: parseResources(row.resources),
     title: optionalText(row.title),
     description: optionalText(row.description),
@@ -237,6 +256,7 @@ const mapProviderRow = (row: Record<string, unknown>): ProviderRow => {
     chain: optionalText(row.offer_chain ?? row.chain),
     assetSymbol: optionalText(row.asset_symbol ?? row.assetSymbol),
     priceRangeUsd: optionalPriceRange(row.price_range_min_usd, row.price_range_max_usd),
+    payShProviderFqn,
     endpointCount: optionalNumber(row.endpoint_count),
     transactionCount: count(row.transaction_count ?? row.tx_count),
     uniqueSenderCount: count(row.unique_sender_count ?? row.customer_count ?? row.payer_count),
@@ -311,6 +331,10 @@ const buildPayload = (
 ): GeneratedReadModelFile => {
   const now = generatedAt();
   const providers = providerRows.filter((row) => row.payTo);
+  const catalogProviders = providers.filter((provider) => provider.catalogSource !== "raw_x402");
+  const walletGraphProviders = providers.filter((provider) =>
+    isValidPaymentRecipientAddress(provider.payTo),
+  );
   const customerProviderRows = customerRows.filter((row) => row.payer && row.payTo);
   const customers = aggregateCustomers(customerProviderRows);
   const customersByPayer = new Map(customers.map((customer) => [customer.payer, customer]));
@@ -371,7 +395,7 @@ const buildPayload = (
     providers: {
       generatedAt: now,
       generatedFrom: "postgres-live-read-model",
-      providers: providers.map((provider) => ({
+      providers: catalogProviders.map((provider) => ({
         providerId: providerIdFor({
           serviceId: provider.serviceId,
           network: "base",
@@ -384,6 +408,7 @@ const buildPayload = (
         network: "base",
         asset: "USDC",
         payTo: provider.payTo,
+        catalogSource: provider.catalogSource,
         transactionCount: provider.transactionCount,
         uniqueSenderCount: provider.uniqueSenderCount,
         totalVolumeAtomic: provider.totalVolumeAtomic,
@@ -417,7 +442,7 @@ const buildPayload = (
         provenanceByField: { payTo: "onchain_fact", transactionCount: "onchain_fact" },
         reasons: [{ provenance: "derived_insight", label: "postgres live provider aggregate" }],
       })),
-      providerCount: providers.length,
+      providerCount: catalogProviders.length,
       provenance: "derived_insight",
       provenanceByField: { providers: "onchain_fact" },
       reasons: [{ provenance: "derived_insight", label: "postgres live provider catalog" }],
@@ -449,7 +474,7 @@ const buildPayload = (
       graph: {
         ...phaseBWalletUsageGraphResponse.graph,
         generatedFrom: "postgres-live-read-model",
-        providerWallets: providers.map((provider) => ({
+        providerWallets: walletGraphProviders.map((provider) => ({
           providerId: providerIdFor({
             serviceId: provider.serviceId,
             network: "base",
@@ -669,38 +694,13 @@ export const loadPostgresLiveAnalyticsDataSource = async (
         WHERE g.from_owner_address IS NOT NULL
           AND g.to_owner_address IS NOT NULL
         GROUP BY lower(g.to_owner_address), service_id, service_name
-      )
-      SELECT
-        pg.pay_to,
-        pg.service_id,
-        pg.service_name,
-        pay_sh.title,
-        pay_sh.description,
-        pay_sh.use_case,
-        pay_sh.category,
-        pay_sh.service_url,
-        pay_sh.has_metering,
-        pay_sh.has_free_tier,
-        pay_sh.provider_sha,
-        pay_sh.registry_version,
-        pay_sh.registry_generated_at,
-        pay_sh.registry_source_url,
-        pay_sh.endpoint_count,
-        pay_sh.offers,
-        pay_sh.protocol,
-        pay_sh.offer_chain,
-        pay_sh.asset_symbol,
-        pay_sh.price_range_min_usd,
-        pay_sh.price_range_max_usd,
-        COALESCE(resources.resources, '[]'::jsonb) AS resources,
-        pg.transaction_count,
-        pg.unique_sender_count,
-        pg.total_volume_atomic,
-        pg.first_seen_at,
-        pg.last_seen_at
-      FROM provider_grouped pg
-      LEFT JOIN LATERAL (
+      ),
+      pay_sh_provider_catalog AS (
         SELECT
+          p.provider_fqn,
+          min(lower(o.pay_to_address)) FILTER (WHERE o.pay_to_address IS NOT NULL) AS pay_to,
+          p.provider_fqn AS service_id,
+          COALESCE(NULLIF(p.title, ''), p.provider_fqn) AS service_name,
           p.title,
           p.description,
           p.use_case,
@@ -713,14 +713,17 @@ export const loadPostgresLiveAnalyticsDataSource = async (
           max(to_jsonb(p) ->> 'registry_generated_at') AS registry_generated_at,
           max(to_jsonb(p) ->> 'registry_source_url') AS registry_source_url,
           p.endpoint_count,
-          jsonb_agg(
-            jsonb_build_object(
-              'protocol', o.protocol,
-              'chain', o.chain,
-              'asset', o.asset,
-              'payToAddress', o.pay_to_address,
-              'probePriceUsd', o.probe_price_usd
-            ) ORDER BY o.chain, o.asset, o.pay_to_address
+          COALESCE(
+            jsonb_agg(
+              jsonb_build_object(
+                'protocol', o.protocol,
+                'chain', o.chain,
+                'asset', o.asset,
+                'payToAddress', o.pay_to_address,
+                'probePriceUsd', o.probe_price_usd
+              ) ORDER BY o.chain, o.asset, o.pay_to_address
+            ) FILTER (WHERE o.provider_fqn IS NOT NULL),
+            '[]'::jsonb
           ) AS offers,
           min(o.protocol) AS protocol,
           min(o.chain) AS offer_chain,
@@ -729,12 +732,6 @@ export const loadPostgresLiveAnalyticsDataSource = async (
           p.price_range_max_usd
         FROM pay_sh_providers p
         LEFT JOIN pay_sh_payment_offers o ON o.provider_fqn = p.provider_fqn
-        WHERE EXISTS (
-          SELECT 1
-          FROM pay_sh_payment_offers matched_o
-          WHERE matched_o.provider_fqn = p.provider_fqn
-            AND lower(matched_o.pay_to_address) = pg.pay_to
-        )
         GROUP BY
           p.provider_fqn,
           p.title,
@@ -745,9 +742,57 @@ export const loadPostgresLiveAnalyticsDataSource = async (
           p.endpoint_count,
           p.price_range_min_usd,
           p.price_range_max_usd
-        ORDER BY p.provider_fqn ASC
-        LIMIT 1
-      ) pay_sh ON true
+      ),
+      provider_pay_tos AS (
+        SELECT DISTINCT
+          provider_fqn,
+          lower(pay_to_address) AS pay_to
+        FROM pay_sh_payment_offers
+        WHERE pay_to_address IS NOT NULL
+      ),
+      provider_metrics AS (
+        SELECT
+          pc.provider_fqn,
+          COALESCE(SUM(pg.transaction_count), 0)::int AS transaction_count,
+          COALESCE(SUM(pg.unique_sender_count), 0)::int AS unique_sender_count,
+          COALESCE(SUM(pg.total_volume_atomic::numeric), 0)::text AS total_volume_atomic,
+          MIN(pg.first_seen_at) AS first_seen_at,
+          MAX(pg.last_seen_at) AS last_seen_at
+        FROM pay_sh_provider_catalog pc
+        LEFT JOIN provider_pay_tos ppt ON ppt.provider_fqn = pc.provider_fqn
+        LEFT JOIN provider_grouped pg ON pg.pay_to = ppt.pay_to
+        GROUP BY pc.provider_fqn
+      )
+      SELECT
+        pg.pay_to,
+        pg.service_id,
+        pg.service_name,
+        NULL AS title,
+        NULL AS description,
+        NULL AS use_case,
+        NULL AS category,
+        NULL AS service_url,
+        NULL AS has_metering,
+        NULL AS has_free_tier,
+        NULL AS provider_sha,
+        NULL AS registry_version,
+        NULL AS registry_generated_at,
+        NULL AS registry_source_url,
+        NULL AS endpoint_count,
+        '[]'::jsonb AS offers,
+        NULL AS protocol,
+        NULL AS offer_chain,
+        NULL AS asset_symbol,
+        NULL AS price_range_min_usd,
+        NULL AS price_range_max_usd,
+        NULL AS pay_sh_provider_fqn,
+        COALESCE(resources.resources, '[]'::jsonb) AS resources,
+        pg.transaction_count,
+        pg.unique_sender_count,
+        pg.total_volume_atomic,
+        pg.first_seen_at,
+        pg.last_seen_at
+      FROM provider_grouped pg
       LEFT JOIN LATERAL (
         SELECT jsonb_agg(
           jsonb_build_object(
@@ -773,7 +818,66 @@ export const loadPostgresLiveAnalyticsDataSource = async (
           AND po.active
           AND r.active
       ) resources ON true
-      ORDER BY pg.transaction_count DESC, pg.pay_to ASC
+      WHERE lower(pg.service_id) IN ('pro-api.coingecko.com', 'coingecko', 'api.nansen.ai', 'nansen')
+      UNION ALL
+      SELECT
+        pc.pay_to,
+        pc.service_id,
+        pc.service_name,
+        pc.title,
+        pc.description,
+        pc.use_case,
+        pc.category,
+        pc.service_url,
+        pc.has_metering,
+        pc.has_free_tier,
+        pc.provider_sha,
+        pc.registry_version,
+        pc.registry_generated_at,
+        pc.registry_source_url,
+        pc.endpoint_count,
+        pc.offers,
+        pc.protocol,
+        pc.offer_chain,
+        pc.asset_symbol,
+        pc.price_range_min_usd,
+        pc.price_range_max_usd,
+        pc.provider_fqn AS pay_sh_provider_fqn,
+        COALESCE(resources.resources, '[]'::jsonb) AS resources,
+        pm.transaction_count,
+        pm.unique_sender_count,
+        pm.total_volume_atomic,
+        COALESCE(pm.first_seen_at, to_timestamp(0)) AS first_seen_at,
+        COALESCE(pm.last_seen_at, to_timestamp(0)) AS last_seen_at
+      FROM pay_sh_provider_catalog pc
+      JOIN provider_metrics pm ON pm.provider_fqn = pc.provider_fqn
+      LEFT JOIN LATERAL (
+        SELECT jsonb_agg(
+          jsonb_build_object(
+            'resource', r.resource_url,
+            'network', po.chain,
+            'asset', CASE
+              WHEN lower(po.token_address) = '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913' THEN 'USDC'
+              ELSE po.token_address
+            END,
+            'amountAtomic', po.amount_atomic::text,
+            'description', r.raw ->> 'description',
+            'method', r.raw #>> '{extensions,bazaar,info,input,method}',
+            'inputSchema', r.raw #> '{extensions,bazaar,schema}',
+            'lastUpdated', r.raw ->> 'lastUpdated',
+            'x402Version', r.raw -> 'x402Version',
+            'l30DaysTotalCalls', r.raw #> '{quality,l30DaysTotalCalls}',
+            'l30DaysUniquePayers', r.raw #> '{quality,l30DaysUniquePayers}'
+          ) ORDER BY r.resource_url
+        ) AS resources
+        FROM x402_payment_options po
+        JOIN x402_resources r ON r.resource_id = po.resource_id
+        WHERE lower(po.pay_to_address) = pc.pay_to
+          AND po.active
+          AND r.active
+      ) resources ON true
+      WHERE pc.pay_to IS NOT NULL
+      ORDER BY transaction_count DESC, pay_to ASC
     `),
     client.query(`
       WITH attributed_grouped AS (

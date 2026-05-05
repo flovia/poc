@@ -576,6 +576,10 @@ const ProviderOfferSchema = z
   })
   .strict();
 
+export const ProviderCatalogSourceSchema = z.enum(["base_curated", "pay_sh_curated", "raw_x402"]);
+
+export type ProviderCatalogSource = z.infer<typeof ProviderCatalogSourceSchema>;
+
 export const ProviderCatalogRowSchema = withDerivedInsightReasons(
   z
     .object({
@@ -586,6 +590,7 @@ export const ProviderCatalogRowSchema = withDerivedInsightReasons(
       network: z.string().min(1),
       asset: z.string().min(1),
       payTo: z.string().min(1),
+      catalogSource: ProviderCatalogSourceSchema.optional(),
       transactionCount: z.number().int().nonnegative(),
       uniqueSenderCount: z.number().int().nonnegative(),
       totalVolumeAtomic: AtomicAmountSchema,

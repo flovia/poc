@@ -129,6 +129,7 @@ export function adaptProviderCatalog(response: ProviderCatalogResponse): Provide
       network: provider.network,
       asset: provider.asset,
       payTo: provider.payTo,
+      catalogSource: provider.catalogSource,
       transactionCount: provider.transactionCount,
       uniqueSenderCount: provider.uniqueSenderCount,
       totalVolumeAtomic: provider.totalVolumeAtomic,

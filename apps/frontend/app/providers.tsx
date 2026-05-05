@@ -15,7 +15,8 @@ import {
   setDemoOptedIn as storageSetDemoOptedIn,
   setSeedVersion,
 } from "@/lib/storage";
-import { findProviderByRouteId, SEED_IDS, seedProviders } from "@/lib/providers";
+import { findProviderByRouteId, SEED_IDS, seedProviders, slugifyProviderName } from "@/lib/providers";
+import { STATIC_PROVIDER_CAPABILITIES } from "@/lib/providers/static-capabilities";
 
 type Ctx = {
   // effective providers (demo + user, demo first)。Sidebar / SavedProviderList の
@@ -151,25 +152,56 @@ export function ProvidersContextProvider({ children }: { children: React.ReactNo
           }
         }
         const deduped = Array.from(groups.values());
-        setGeneratedProviders(
-          deduped.map(({ winner, networks, protocols }) => ({
+        const generated = deduped.map(({ winner, networks, protocols }) => {
+          const capability = winner.serviceId
+            ? STATIC_PROVIDER_CAPABILITIES.find((entry) => entry.serviceId === winner.serviceId)
+            : undefined;
+          const mergedNetworks = new Set([...networks, ...(capability?.networks ?? [])]);
+          const mergedProtocols = new Set<Protocol>([
+            ...protocols,
+            ...((capability?.protocols ?? []) as Protocol[]),
+          ]);
+          return {
             providerId: winner.providerId,
             name: winner.name,
             mode: "simple" as const,
             payTo: winner.payTo,
             createdAt: Date.now(),
             source: "generated" as const,
-            network: winner.network,
-            networks: Array.from(networks),
-            protocols: Array.from(protocols),
+            network: winner.network || capability?.network,
+            networks: Array.from(mergedNetworks),
+            catalogSource: winner.catalogSource ?? capability?.catalogSource,
+            protocols: Array.from(mergedProtocols),
             asset: winner.asset,
             serviceId: winner.serviceId,
             serviceName: winner.serviceName,
             transactionCount: winner.transactionCount,
             uniqueSenderCount: winner.uniqueSenderCount,
             hasCustomerFacts: winner.hasCustomerFacts,
-          })),
-        );
+          };
+        });
+        const existingServiceIds = new Set(generated.map((provider) => provider.serviceId));
+        const staticOnly = STATIC_PROVIDER_CAPABILITIES.filter(
+          (provider) => !existingServiceIds.has(provider.serviceId),
+        ).map((provider) => ({
+          providerId: `static-${slugifyProviderName(provider.serviceId)}`,
+          name: provider.name,
+          mode: "simple" as const,
+          payTo: provider.payTo,
+          createdAt: Date.now(),
+          source: "generated" as const,
+          network: provider.network,
+          networks: provider.networks,
+          catalogSource: provider.catalogSource,
+          protocols: provider.protocols,
+          asset: provider.asset,
+          serviceId: provider.serviceId,
+          serviceName: provider.name,
+          transactionCount: provider.transactionCount,
+          uniqueSenderCount: provider.uniqueSenderCount,
+          hasCustomerFacts: provider.transactionCount > 0,
+        }));
+        setGeneratedProviders([...generated, ...staticOnly]);
       })
       .catch(() => {
         if (!cancelled) setGeneratedProviders([]);

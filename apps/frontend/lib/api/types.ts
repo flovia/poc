@@ -2,9 +2,9 @@
 // `apps/cli/lib/api/dto.ts` の export と一対一で対応する。BFF が拡張された
 // ときはここも合わせて更新する。
 
-import type { DataProvenance, EvidenceLabel } from "contracts";
+import type { DataProvenance, EvidenceLabel, ProviderCatalogSource } from "contracts";
 
-export type { DataProvenance, EvidenceLabel } from "contracts";
+export type { DataProvenance, EvidenceLabel, ProviderCatalogSource } from "contracts";
 
 export type UpsellOpportunity = "low" | "medium" | "high";
 
@@ -34,6 +34,7 @@ export type ProviderCatalogItemDto = {
   network: string;
   asset: string;
   payTo: string;
+  catalogSource?: ProviderCatalogSource;
   transactionCount: number;
   uniqueSenderCount: number;
   totalVolumeAtomic: string;

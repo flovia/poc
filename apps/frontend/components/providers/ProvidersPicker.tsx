@@ -8,12 +8,12 @@ import { isDemoProvider } from "@/lib/providers";
 import { describeChain, type CustomerChain } from "@/lib/customers/chain";
 import { inferBrandDisplayName, inferBrandDomain } from "@/lib/pay-sh/brand";
 import { resolvePaySkill, usePaySkills } from "@/lib/pay-sh/skills";
-import { isPreservedBaseProvider } from "@/lib/providers/preserved";
 import {
   DEFAULT_PROVIDER_FILTER,
   chainsOfProvider,
   collectAvailableChains,
   filterProviders,
+  protocolsOfProvider,
   type ProviderFilterState,
   type ProviderProtocolFilter,
   type ProviderSourceFilter,
@@ -155,9 +155,9 @@ export function ProvidersPicker() {
         >
           {filtered.map((p) => {
         const isDemo = isDemoProvider(p, demoOpted, userIds);
-        const isPaySh = p.source === "generated" && !isPreservedBaseProvider(p.serviceId);
+        const isPaySh = p.catalogSource === "pay_sh_curated";
         const chains = chainsOfProvider(p);
-        const protocols = p.protocols ?? [];
+        const protocols = protocolsOfProvider(p);
         const skill = resolvePaySkill(skills, p.serviceId);
         const displayName = skill?.title || inferBrandDisplayName({ fqn: p.serviceId }) || p.name;
         const brand = inferBrandDomain({

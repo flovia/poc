@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import fs from "node:fs";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
@@ -41,6 +41,8 @@ import {
 const request = (path: string, init: RequestInit = {}) =>
   new Request(`http://localhost${path}`, init);
 
+const originalAnalyticsSource = process.env.BFF_ANALYTICS_SOURCE;
+
 const withTempFile = async (fn: (filePath: string) => Promise<void> | void) => {
   const directory = path.join(process.cwd(), "tmp", `bff-read-model-${randomUUID()}`);
   fs.mkdirSync(directory, { recursive: true });
@@ -52,6 +54,18 @@ const withTempFile = async (fn: (filePath: string) => Promise<void> | void) => {
 };
 
 describe("BFF routes", () => {
+  beforeAll(() => {
+    process.env.BFF_ANALYTICS_SOURCE = "fixture";
+  });
+
+  afterAll(() => {
+    if (originalAnalyticsSource === undefined) {
+      delete process.env.BFF_ANALYTICS_SOURCE;
+      return;
+    }
+    process.env.BFF_ANALYTICS_SOURCE = originalAnalyticsSource;
+  });
+
   test("serves minimal read-only endpoints", async () => {
     const handler = createBffHandler();
 
@@ -687,6 +701,7 @@ describe("BFF routes", () => {
                 pay_to: "0x1111111111111111111111111111111111111111",
                 service_id: "live-service",
                 service_name: "Live Service",
+                pay_sh_provider_fqn: "live/service",
                 transaction_count: 3,
                 unique_sender_count: 1,
                 total_volume_atomic: "300",
@@ -700,6 +715,7 @@ describe("BFF routes", () => {
 
     expect(dataSource.serviceSummary.generatedFrom).toBe("postgres-live-read-model");
     expect(dataSource.providers.providers[0]?.serviceId).toBe("live-service");
+    expect(dataSource.providers.providers[0]?.catalogSource).toBe("pay_sh_curated");
   });
 
   test("uses postgres snapshot loader when snapshot mode is configured", async () => {
@@ -787,6 +803,7 @@ describe("BFF routes", () => {
               pay_to: "0x3333333333333333333333333333333333333333",
               service_id: "alpha",
               service_name: "Alpha",
+              pay_sh_provider_fqn: "alpha/provider",
               title: "Alpha Pay.sh",
               description: "Alpha provider description",
               use_case: "Use Alpha for tests",
@@ -842,6 +859,7 @@ describe("BFF routes", () => {
 
     expect(dataSource.providers.providerCount).toBe(1);
     expect(dataSource.providers.providers[0]).toMatchObject({
+      catalogSource: "pay_sh_curated",
       title: "Alpha Pay.sh",
       description: "Alpha provider description",
       useCase: "Use Alpha for tests",
@@ -889,6 +907,165 @@ describe("BFF routes", () => {
     expect(
       dataSource.serviceComparison.services.some((service) => service.serviceId === "coingecko"),
     ).toBe(true);
+  });
+
+  test("queries pay.sh catalog providers independently from live activity", async () => {
+    let providerSql = "";
+
+    await loadPostgresLiveAnalyticsDataSource({
+      async query(sql) {
+        if (sql.includes("attributed_grouped")) return [];
+        providerSql = sql;
+        return [];
+      },
+    });
+
+    expect(providerSql).toContain("pay_sh_provider_catalog AS");
+    expect(providerSql).toContain("FROM pay_sh_providers p");
+    expect(providerSql).toContain("provider_pay_tos AS");
+    expect(providerSql).toContain("SELECT DISTINCT");
+    expect(providerSql).toContain("provider_metrics AS");
+    expect(providerSql).toContain("LEFT JOIN provider_grouped pg");
+    expect(providerSql).toContain("UNION ALL");
+    expect(providerSql).toContain("WHERE lower(pg.service_id) IN");
+    expect(providerSql).not.toContain("OR pay_sh.provider_fqn IS NOT NULL");
+  });
+
+  test("includes pay.sh catalog providers without live tx and excludes raw live-only providers", async () => {
+    const payShWithLivePayTo = "0x1111111111111111111111111111111111111111";
+    const payShWithoutLivePayTo = "0x2222222222222222222222222222222222222222";
+    const rawLiveOnlyPayTo = "0x3333333333333333333333333333333333333333";
+    const basePayTo = "0x4444444444444444444444444444444444444444";
+
+    const dataSource = await loadPostgresLiveAnalyticsDataSource({
+      async query(sql) {
+        if (sql.includes("attributed_grouped")) return [];
+        return [
+          {
+            pay_to: payShWithLivePayTo,
+            service_id: "pay-sh/live-provider",
+            service_name: "Pay.sh Live Provider",
+            pay_sh_provider_fqn: "pay-sh/live-provider",
+            offers: [
+              {
+                protocol: "x402",
+                chain: "Base",
+                asset: "USDC",
+                payToAddress: payShWithLivePayTo,
+              },
+            ],
+            transaction_count: 5,
+            unique_sender_count: 2,
+            total_volume_atomic: "500",
+          },
+          {
+            pay_to: payShWithoutLivePayTo,
+            service_id: "pay-sh/no-live-provider",
+            service_name: "Pay.sh No Live Provider",
+            pay_sh_provider_fqn: "pay-sh/no-live-provider",
+            offers: [
+              {
+                protocol: "x402",
+                chain: "Base",
+                asset: "USDC",
+                payToAddress: payShWithoutLivePayTo,
+              },
+            ],
+            transaction_count: 0,
+            unique_sender_count: 0,
+            total_volume_atomic: "0",
+          },
+          {
+            pay_to: rawLiveOnlyPayTo,
+            service_id: "raw-live-only.example",
+            service_name: "Raw Live Only",
+            transaction_count: 99,
+            unique_sender_count: 10,
+            total_volume_atomic: "9900",
+          },
+          {
+            pay_to: basePayTo,
+            service_id: "api.nansen.ai",
+            service_name: "api.nansen.ai",
+            transaction_count: 3,
+            unique_sender_count: 1,
+            total_volume_atomic: "300",
+          },
+        ];
+      },
+    });
+
+    expect(dataSource.providers.providers.map((provider) => provider.serviceId)).toEqual([
+      "pay-sh/live-provider",
+      "pay-sh/no-live-provider",
+      "api.nansen.ai",
+    ]);
+    expect(dataSource.providers.providerCount).toBe(3);
+    expect(dataSource.providers.providers).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          serviceId: "pay-sh/live-provider",
+          catalogSource: "pay_sh_curated",
+          transactionCount: 5,
+          uniqueSenderCount: 2,
+          totalVolumeAtomic: "500",
+          hasCustomerFacts: true,
+        }),
+        expect.objectContaining({
+          serviceId: "pay-sh/no-live-provider",
+          catalogSource: "pay_sh_curated",
+          transactionCount: 0,
+          uniqueSenderCount: 0,
+          totalVolumeAtomic: "0",
+          hasCustomerFacts: false,
+        }),
+        expect.objectContaining({
+          serviceId: "api.nansen.ai",
+          catalogSource: "base_curated",
+        }),
+      ]),
+    );
+    expect(
+      dataSource.providers.providers.some(
+        (provider) => provider.serviceId === "raw-live-only.example",
+      ),
+    ).toBe(false);
+  });
+
+  test("keeps non-wallet pay.sh recipients out of wallet usage graph", async () => {
+    const dataSource = await loadPostgresLiveAnalyticsDataSource({
+      async query(sql) {
+        if (sql.includes("attributed_grouped")) return [];
+        return [
+          {
+            pay_to: "https://api.invalid.example/x402",
+            service_id: "pay-sh/http-recipient",
+            service_name: "Pay.sh HTTP Recipient",
+            pay_sh_provider_fqn: "pay-sh/http-recipient",
+            offers: [
+              {
+                protocol: "x402",
+                chain: "Base",
+                asset: "USDC",
+                payToAddress: "https://api.invalid.example/x402",
+              },
+            ],
+            transaction_count: 0,
+            unique_sender_count: 0,
+            total_volume_atomic: "0",
+          },
+        ];
+      },
+    });
+
+    expect(dataSource.providers.providers).toEqual([
+      expect.objectContaining({
+        serviceId: "pay-sh/http-recipient",
+        catalogSource: "pay_sh_curated",
+        payTo: "https://api.invalid.example/x402",
+      }),
+    ]);
+    expect(dataSource.walletUsageGraph.graph.providerWallets).toEqual([]);
   });
 
   test("reflects generic x402 overlap in CoinGecko customer providerCount", async () => {
@@ -949,6 +1126,10 @@ describe("BFF routes", () => {
     );
     const payerWallet = coingeckoProvider?.payerWallets.find((wallet) => wallet.address === payer);
 
+    expect(dataSource.providers.providers.map((provider) => provider.serviceId)).toEqual([
+      "pro-api.coingecko.com",
+    ]);
+    expect(dataSource.providers.providers[0]?.catalogSource).toBe("base_curated");
     expect(payerWallet?.overlapProviderCount).toBe(2);
     expect(payerWallet?.otherServiceCandidates).toEqual([
       expect.objectContaining({
