@@ -26,3 +26,4 @@
 - live mode の wallet usage graph で同一 payer が使った他 provider を `otherServiceCandidates` に出すようにし、Co-Usage Providers が空になる regression を修正した。
 - GEO spec は generated fixture の providerId 完全一致だけでなく、route providerId 末尾の payTo でも fallback 解決するようにし、live providerId と fixture providerId のズレを吸収した。
 - generated fixture に存在しない live-only provider でも GEO page が空にならないよう、BFF `/providers` の live catalog 行を hint として `getGeoSpec` に渡し、最小 spec を表示するようにした。
+- BFF live provider catalog が `pay_sh_providers` / `pay_sh_payment_offers` の metadata を payTo で enrichment し、frontend GEO spec が live provider hint の title/description/useCase/category を使えるようにした。

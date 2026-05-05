@@ -16,6 +16,15 @@ type ProviderRow = {
   payTo: string;
   serviceId: string;
   serviceName: string;
+  title?: string;
+  description?: string;
+  useCase?: string;
+  category?: string;
+  serviceUrl?: string;
+  protocol?: "x402" | "MPP";
+  chain?: string;
+  assetSymbol?: string;
+  priceRangeUsd?: { min: number; max: number };
   transactionCount: number;
   uniqueSenderCount: number;
   totalVolumeAtomic: string;
@@ -37,8 +46,25 @@ type CustomerRow = {
 const generatedAt = () => new Date().toISOString();
 const lower = (value: unknown) => String(value ?? "").toLowerCase();
 const text = (value: unknown, fallback: string) => String(value ?? fallback);
+const optionalText = (value: unknown): string | undefined => {
+  const raw = String(value ?? "").trim();
+  return raw ? raw : undefined;
+};
 const count = (value: unknown) => Number(value ?? 0);
 const amount = (value: unknown) => String(value ?? "0");
+const optionalProtocol = (value: unknown): "x402" | "MPP" | undefined => {
+  if (value === "x402" || value === "MPP") return value;
+  return undefined;
+};
+const optionalPriceRange = (
+  min: unknown,
+  max: unknown,
+): { min: number; max: number } | undefined => {
+  const parsedMin = Number(min);
+  const parsedMax = Number(max);
+  if (!Number.isFinite(parsedMin) || !Number.isFinite(parsedMax)) return undefined;
+  return { min: parsedMin, max: parsedMax };
+};
 const iso = (value: unknown, fallback: string) => {
   if (value instanceof Date) return value.toISOString();
   const raw = String(value ?? "");
@@ -87,6 +113,15 @@ const mapProviderRow = (row: Record<string, unknown>): ProviderRow => {
     payTo,
     serviceId,
     serviceName,
+    title: optionalText(row.title),
+    description: optionalText(row.description),
+    useCase: optionalText(row.use_case ?? row.useCase),
+    category: optionalText(row.category),
+    serviceUrl: optionalText(row.service_url ?? row.serviceUrl),
+    protocol: optionalProtocol(row.protocol),
+    chain: optionalText(row.offer_chain ?? row.chain),
+    assetSymbol: optionalText(row.asset_symbol ?? row.assetSymbol),
+    priceRangeUsd: optionalPriceRange(row.price_range_min_usd, row.price_range_max_usd),
     transactionCount: count(row.transaction_count ?? row.tx_count),
     uniqueSenderCount: count(row.unique_sender_count ?? row.customer_count ?? row.payer_count),
     totalVolumeAtomic: amount(
@@ -243,6 +278,15 @@ const buildPayload = (
         attributionConfidence: 0.5,
         hasCustomerFacts: provider.uniqueSenderCount > 0,
         customerFactCount: provider.uniqueSenderCount,
+        ...(provider.title ? { title: provider.title } : {}),
+        ...(provider.description ? { description: provider.description } : {}),
+        ...(provider.useCase ? { useCase: provider.useCase } : {}),
+        ...(provider.category ? { category: provider.category } : {}),
+        ...(provider.serviceUrl ? { serviceUrl: provider.serviceUrl } : {}),
+        ...(provider.protocol ? { protocol: provider.protocol } : {}),
+        ...(provider.chain ? { chain: provider.chain } : {}),
+        ...(provider.assetSymbol ? { assetSymbol: provider.assetSymbol } : {}),
+        ...(provider.priceRangeUsd ? { priceRangeUsd: provider.priceRangeUsd } : {}),
         provenance: "derived_insight",
         provenanceByField: { payTo: "onchain_fact", transactionCount: "onchain_fact" },
         reasons: [{ provenance: "derived_insight", label: "postgres live provider aggregate" }],
@@ -487,6 +531,16 @@ export const loadPostgresLiveAnalyticsDataSource = async (
             THEN COALESCE(NULLIF(a.service, ''), NULLIF(a.provider, ''), NULLIF(a.domain, ''), 'pro-api.coingecko.com')
           ELSE COALESCE(NULLIF(a.service, ''), NULLIF(a.provider, ''), NULLIF(a.domain, ''), lower(g.to_owner_address))
         END AS service_name,
+        pay_sh.title,
+        pay_sh.description,
+        pay_sh.use_case,
+        pay_sh.category,
+        pay_sh.service_url,
+        pay_sh.protocol,
+        pay_sh.offer_chain,
+        pay_sh.asset_symbol,
+        pay_sh.price_range_min_usd,
+        pay_sh.price_range_max_usd,
         COUNT(*)::int AS transaction_count,
         COUNT(DISTINCT lower(g.from_owner_address))::int AS unique_sender_count,
         COALESCE(SUM(g.amount), 0)::text AS total_volume_atomic,
@@ -495,9 +549,49 @@ export const loadPostgresLiveAnalyticsDataSource = async (
       FROM goldsky_webhook_transfers_x402_paytos g
       LEFT JOIN x402_provider_activity a
         ON lower(a.pay_to_address) = lower(g.to_owner_address)
+      LEFT JOIN LATERAL (
+        SELECT
+          p.title,
+          p.description,
+          p.use_case,
+          p.category,
+          p.service_url,
+          min(o.protocol) AS protocol,
+          min(o.chain) AS offer_chain,
+          min(o.asset) AS asset_symbol,
+          p.price_range_min_usd,
+          p.price_range_max_usd
+        FROM pay_sh_payment_offers o
+        JOIN pay_sh_providers p ON p.provider_fqn = o.provider_fqn
+        WHERE lower(o.pay_to_address) = lower(g.to_owner_address)
+        GROUP BY
+          p.provider_fqn,
+          p.title,
+          p.description,
+          p.use_case,
+          p.category,
+          p.service_url,
+          p.price_range_min_usd,
+          p.price_range_max_usd
+        ORDER BY p.provider_fqn ASC
+        LIMIT 1
+      ) pay_sh ON true
       WHERE g.from_owner_address IS NOT NULL
         AND g.to_owner_address IS NOT NULL
-      GROUP BY lower(g.to_owner_address), service_id, service_name
+      GROUP BY
+        lower(g.to_owner_address),
+        service_id,
+        service_name,
+        pay_sh.title,
+        pay_sh.description,
+        pay_sh.use_case,
+        pay_sh.category,
+        pay_sh.service_url,
+        pay_sh.protocol,
+        pay_sh.offer_chain,
+        pay_sh.asset_symbol,
+        pay_sh.price_range_min_usd,
+        pay_sh.price_range_max_usd
       ORDER BY COUNT(*) DESC, lower(g.to_owner_address) ASC
     `),
     client.query(`

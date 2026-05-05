@@ -36,6 +36,10 @@ export function ensureUniqueId(desired: string, existing: string[]): string {
 type ProviderRouteLike = {
   providerId: string;
   name: string;
+  title?: string;
+  description?: string;
+  useCase?: string;
+  category?: string;
   serviceId?: string;
   serviceName?: string;
   serviceUrl?: string;

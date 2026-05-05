@@ -81,6 +81,10 @@ type AtlasProvider = AtlasProviderDesc & {
 type AnalyticsCatalogRow = {
   providerId: string;
   name?: string | null;
+  title?: string | null;
+  description?: string | null;
+  useCase?: string | null;
+  category?: string | null;
   serviceId?: string | null;
   serviceName?: string | null;
   serviceUrl?: string | null;
@@ -92,6 +96,10 @@ type AnalyticsCatalogRow = {
 export type GeoSpecProviderHint = {
   providerId: string;
   name?: string | null;
+  title?: string | null;
+  description?: string | null;
+  useCase?: string | null;
+  category?: string | null;
   serviceId?: string | null;
   serviceName?: string | null;
   serviceUrl?: string | null;
@@ -281,6 +289,10 @@ const rowFromHint = (hint: GeoSpecProviderHint | null | undefined): AnalyticsCat
   return {
     providerId: hint.providerId,
     name: hint.name,
+    title: hint.title,
+    description: hint.description,
+    useCase: hint.useCase,
+    category: hint.category,
     serviceId: hint.serviceId ?? hint.serviceName ?? hint.name ?? hint.providerId,
     serviceName: hint.serviceName ?? hint.name ?? hint.serviceId ?? hint.providerId,
     serviceUrl: hint.serviceUrl ?? null,
@@ -367,10 +379,10 @@ export const getGeoSpec = (
   return {
     serviceId,
     serviceUrl: matched?.serviceUrl ?? row.serviceUrl ?? null,
-    title: matched?.title ?? null,
-    category: matched?.category ?? null,
-    description: matched?.description ?? null,
-    useCase: matched?.useCase ?? null,
+    title: matched?.title ?? row.title ?? row.name ?? null,
+    category: matched?.category ?? row.category ?? null,
+    description: matched?.description ?? row.description ?? null,
+    useCase: matched?.useCase ?? row.useCase ?? null,
     endpointCount: matched?.endpointCount ?? null,
     priceRangeUsd: matched?.priceRangeUsd ?? null,
     offers,

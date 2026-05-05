@@ -18,6 +18,10 @@ describe("geo spec source", () => {
         providerId:
           "x402-gateway-production-up-railway-app--base--usdc--0x7dd5be069f2d2ead75ec7c3423b116ff043c2629",
         name: "x402-gateway-production.up.railway.app",
+        title: "x402 Gateway",
+        description: "Live provider description",
+        useCase: "Use for live provider tests",
+        category: "gateway",
         serviceId: "x402-gateway-production.up.railway.app",
         serviceName: "x402-gateway-production.up.railway.app",
         payTo: "0x7dd5be069f2d2ead75ec7c3423b116ff043c2629",
@@ -28,6 +32,8 @@ describe("geo spec source", () => {
     );
 
     expect(spec).not.toBeNull();
+    expect(spec?.title).toBe("x402 Gateway");
+    expect(spec?.description).toBe("Live provider description");
     expect(spec?.serviceId).toBe("x402-gateway-production.up.railway.app");
     expect(spec?.atlasMissing).toBe(true);
   });

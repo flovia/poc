@@ -686,6 +686,16 @@ describe("BFF routes", () => {
               pay_to: "0x3333333333333333333333333333333333333333",
               service_id: "alpha",
               service_name: "Alpha",
+              title: "Alpha Pay.sh",
+              description: "Alpha provider description",
+              use_case: "Use Alpha for tests",
+              category: "data",
+              service_url: "https://alpha.example.com",
+              protocol: "x402",
+              offer_chain: "Base",
+              asset_symbol: "USDC",
+              price_range_min_usd: "0.01",
+              price_range_max_usd: "0.05",
               transaction_count: 7,
               unique_sender_count: 2,
               total_volume_atomic: "700",
@@ -697,6 +707,17 @@ describe("BFF routes", () => {
     });
 
     expect(dataSource.providers.providerCount).toBe(1);
+    expect(dataSource.providers.providers[0]).toMatchObject({
+      title: "Alpha Pay.sh",
+      description: "Alpha provider description",
+      useCase: "Use Alpha for tests",
+      category: "data",
+      serviceUrl: "https://alpha.example.com",
+      protocol: "x402",
+      chain: "Base",
+      assetSymbol: "USDC",
+      priceRangeUsd: { min: 0.01, max: 0.05 },
+    });
     expect(dataSource.customers.customerCount).toBe(2);
     expect(dataSource.walletUsageGraph.graph.providerWallets[0]?.payerWallets.length).toBe(2);
     expect(dataSource.serviceSummary.userCount).toBe(2);

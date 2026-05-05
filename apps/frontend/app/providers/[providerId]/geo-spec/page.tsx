@@ -21,6 +21,10 @@ export default async function GeoSpecPage({
       ? {
           providerId: liveProvider.providerId,
           name: liveProvider.name,
+          title: liveProvider.title,
+          description: liveProvider.description,
+          useCase: liveProvider.useCase,
+          category: liveProvider.category,
           serviceId: liveProvider.serviceId,
           serviceName: liveProvider.serviceName,
           serviceUrl: liveProvider.serviceUrl,
