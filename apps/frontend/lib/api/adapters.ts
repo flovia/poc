@@ -162,22 +162,28 @@ export function adaptProviderCatalog(response: ProviderCatalogResponse): Provide
     originalIndex,
   }));
 
-  // Stable-sort: coingecko を最上段に固定し、それ以外は BFF が返した順 (= atlas
-  // pay-skills atlas / skills.json の出現順) を保持する。
+  // Stable-sort: pinned providers first (in PINNED_PROVIDER_MARKS order), then
+  // everything else in the order the BFF returned (= atlas / skills.json
+  // appearance order).
   adapted.sort((left, right) => {
-    const leftCg = isCoinGeckoRow(left.item);
-    const rightCg = isCoinGeckoRow(right.item);
-    if (leftCg !== rightCg) return leftCg ? -1 : 1;
+    const leftRank = pinnedRank(left.item);
+    const rightRank = pinnedRank(right.item);
+    if (leftRank !== rightRank) return leftRank - rightRank;
     return left.originalIndex - right.originalIndex;
   });
   return adapted.map((entry) => entry.item);
 }
 
-function isCoinGeckoRow(provider: ProviderCatalogItemDto): boolean {
+const PINNED_PROVIDER_MARKS = ["coingecko", "nansen"] as const;
+
+function pinnedRank(provider: ProviderCatalogItemDto): number {
   const identity = `${provider.providerId} ${provider.serviceId ?? ""} ${provider.name} ${
     provider.serviceName ?? ""
   }`.toLowerCase();
-  return identity.includes("coingecko");
+  for (let i = 0; i < PINNED_PROVIDER_MARKS.length; i++) {
+    if (identity.includes(PINNED_PROVIDER_MARKS[i]!)) return i;
+  }
+  return PINNED_PROVIDER_MARKS.length;
 }
 
 export function adaptCustomerProfile(response: PhaseBCustomerProfileResponse): CustomerProfileDto {

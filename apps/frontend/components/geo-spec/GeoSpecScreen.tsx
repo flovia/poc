@@ -18,7 +18,7 @@ export function GeoSpecScreen({ providerId, spec }: Props) {
             className="display"
             style={{ fontSize: 30, fontWeight: 700, margin: 0, letterSpacing: "-0.02em" }}
           >
-            GEO spec{spec?.title ? ` · ${spec.title}` : ""}
+            GEO{spec?.title ? ` · ${spec.title}` : ""}
           </h1>
           <p
             style={{
@@ -56,7 +56,7 @@ function EmptyState({ providerId }: { providerId: string }) {
       style={{ padding: 22, background: "var(--surface-card)", color: "var(--text-2)" }}
     >
       <p style={{ margin: 0 }}>
-        No GEO spec available for <code className="mono">{providerId}</code>. This provider may not
+        No GEO data available for <code className="mono">{providerId}</code>. This provider may not
         be sourced from the Pay.sh atlas, or its catalog row could not be matched.
       </p>
     </article>
@@ -192,13 +192,13 @@ function EndpointsSection({ spec }: { spec: GeoSpec }) {
         <article className="card" style={{ padding: 0, overflow: "hidden" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
             <colgroup>
-              <col />
+              <col style={{ width: "30%" }} />
               <col style={{ width: 90 }} />
               <col />
               <col style={{ width: 140 }} />
-              <col style={{ width: 110 }} />
-              <col style={{ width: 110 }} />
-              <col style={{ width: 160 }} />
+              <col />
+              <col style={{ width: 90 }} />
+              <col style={{ width: 140 }} />
             </colgroup>
             <thead>
               <tr style={tableHeadRowStyle}>
@@ -228,9 +228,22 @@ function EndpointsSection({ spec }: { spec: GeoSpec }) {
                   <td style={{ ...tdStyle, fontFamily: "var(--mono)", fontSize: 12 }}>
                     {e.method ?? "—"}
                   </td>
-                  <td style={tdStyle}>{e.description ?? "—"}</td>
-                  <td style={tdStyle}>{e.networks.join(", ") || "—"}</td>
-                  <td style={tdStyle}>{e.assets.join(", ") || "—"}</td>
+                  <td style={{ ...tdStyle, overflowWrap: "anywhere" }}>{e.description ?? "—"}</td>
+                  <td style={{ ...tdStyle, overflowWrap: "anywhere" }}>
+                    {e.networks.join(", ") || "—"}
+                  </td>
+                  <td
+                    style={{
+                      ...tdStyle,
+                      fontFamily: "var(--mono)",
+                      fontSize: 12,
+                      overflowWrap: "anywhere",
+                      wordBreak: "break-all",
+                    }}
+                    title={e.assets.join(", ")}
+                  >
+                    {e.assets.join(", ") || "—"}
+                  </td>
                   <td style={{ ...tdStyle, textAlign: "right", fontFamily: "var(--mono)" }}>
                     {e.transactionCount.toLocaleString()}
                   </td>

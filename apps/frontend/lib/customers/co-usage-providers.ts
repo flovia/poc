@@ -65,6 +65,7 @@ export type CoUsageProviderRow = {
 
 export type AggregateOptions = {
   ownPayTo: string | undefined;
+  ownPayTos?: readonly string[];
   resolveProviderName?: (payToWallet: string) => string | null;
   resolveMetadata?: (payToWallet: string) => CoUsageProviderMetadata | null;
 };
@@ -320,20 +321,26 @@ function classifyCoUsageCustomer(
 
 export const aggregateCoUsageProviders = (
   graph: WalletUsageGraphDto,
-  { ownPayTo, resolveProviderName, resolveMetadata }: AggregateOptions,
+  { ownPayTo, ownPayTos, resolveProviderName, resolveMetadata }: AggregateOptions,
 ): CoUsageProviderRow[] => {
   const own = normalize(ownPayTo);
+  const ownSet = new Set(
+    [ownPayTo, ...(ownPayTos ?? [])]
+      .map((payTo) => normalize(payTo))
+      .filter((payTo): payTo is string => payTo !== null),
+  );
   const accByPayTo = new Map<string, ProviderAcc>();
 
   for (const provider of graph.providerWallets) {
-    if (own && normalizePaymentRecipientAddress(provider.payTo) !== own) continue;
+    const providerPayTo = normalizePaymentRecipientAddress(provider.payTo);
+    if (ownSet.size > 0 && !ownSet.has(providerPayTo)) continue;
     for (const payer of provider.payerWallets) {
       const payerLower = payer.wallet.toLowerCase();
       for (const candidate of payer.otherServiceCandidates) {
         const rawCandidatePayTo = candidate.payToWallet?.trim() ?? "";
         if (!rawCandidatePayTo) continue;
         const candidatePayToKey = normalizePaymentRecipientAddress(rawCandidatePayTo);
-        if (own && candidatePayToKey === own) continue;
+        if ((own && candidatePayToKey === own) || ownSet.has(candidatePayToKey)) continue;
 
         const key = candidatePayToKey;
         let acc = accByPayTo.get(key);
