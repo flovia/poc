@@ -120,6 +120,7 @@ sync_optional_env_var "$stack_env_file" AWS_REGION "$bedrock_region"
 sync_optional_env_var "$stack_env_file" AWS_DEFAULT_REGION "$bedrock_region"
 sync_optional_env_var "$stack_env_file" BFF_BEDROCK_MODEL_ID "${BFF_BEDROCK_MODEL_ID:-}"
 sync_optional_env_var "$stack_env_file" BFF_BEDROCK_PROMPT_VERSION "${BFF_BEDROCK_PROMPT_VERSION:-}"
+sync_optional_env_var "$stack_env_file" BFF_ANALYTICS_SOURCE "${BFF_ANALYTICS_SOURCE:-}"
 
 printf '%s\n' "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USERNAME" --password-stdin
 docker compose --env-file "$stack_env_file" -f "$stack_compose_file" config >/dev/null
