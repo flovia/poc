@@ -229,6 +229,8 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
               {stored.map((p) => {
                 const isActive = p.providerId === activeProviderId;
                 const isDemo = isDemoProvider(p, demoOpted, userIds);
+                const isPaySh =
+                  p.source === "generated" && p.serviceId !== "pro-api.coingecko.com";
                 return (
                   <div key={p.providerId} className="provider-row" aria-current={isActive}>
                     <Link
@@ -270,6 +272,23 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
                           }}
                         >
                           demo
+                        </span>
+                      )}
+                      {isPaySh && (
+                        <span
+                          style={{
+                            fontSize: 11,
+                            fontWeight: 600,
+                            padding: "1px 5px",
+                            borderRadius: 3,
+                            background: "rgba(148,163,184,0.18)",
+                            color: "var(--text-3)",
+                            letterSpacing: "0.04em",
+                            textTransform: "none",
+                            flexShrink: 0,
+                          }}
+                        >
+                          Pay.sh
                         </span>
                       )}
                     </Link>
