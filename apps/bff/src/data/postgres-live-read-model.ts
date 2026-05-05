@@ -62,6 +62,23 @@ const providerIdFor = (input: {
 const serviceIdForComparison = (serviceId: string) =>
   serviceId.toLowerCase().includes("coingecko") ? "coingecko" : serviceId.toLowerCase();
 
+const candidateForProvider = (provider: CustomerRow) => ({
+  providerId: providerIdFor({
+    serviceId: provider.serviceId,
+    network: "base",
+    asset: "USDC",
+    payTo: provider.payTo,
+  }),
+  providerName: provider.serviceName,
+  serviceName: provider.serviceName,
+  coUsageCount: provider.transactionCount,
+  confidence: 0.5,
+  payToWallet: provider.payTo,
+  provenance: "derived_insight" as const,
+  provenanceByField: { payToWallet: "onchain_fact", coUsageCount: "onchain_fact" },
+  reasons: [{ provenance: "derived_insight" as const, label: "postgres live co-usage" }],
+});
+
 const mapProviderRow = (row: Record<string, unknown>): ProviderRow => {
   const payTo = lower(row.pay_to ?? row.payTo ?? row.pay_to_wallet);
   const serviceId = text(row.service_id ?? row.provider_id, payTo || "unknown-service");
@@ -145,6 +162,7 @@ const buildPayload = (
   const providers = providerRows.filter((row) => row.payTo);
   const customerProviderRows = customerRows.filter((row) => row.payer && row.payTo);
   const customers = aggregateCustomers(customerProviderRows);
+  const customersByPayer = new Map(customers.map((customer) => [customer.payer, customer]));
   const totalTransactions = providers.reduce((sum, row) => sum + row.transactionCount, 0);
   const totalUsers = customers.length;
   const serviceRows = providers.length
@@ -278,7 +296,7 @@ const buildPayload = (
               label: `Wallet ${customer.payer.slice(0, 6)}`,
               sharedSpendAtomic: customer.totalVolumeAtomic,
               sharedTransactionCount: customer.transactionCount,
-              overlapProviderCount: 1,
+              overlapProviderCount: customersByPayer.get(customer.payer)?.providers.length ?? 1,
               confidence: 0.5,
               firstSeenAt: customer.firstSeenAt,
               lastSeenAt: customer.lastSeenAt,
@@ -303,7 +321,10 @@ const buildPayload = (
                   reasons: [{ provenance: "derived_insight", label: "postgres live observation" }],
                 },
               ],
-              otherServiceCandidates: [],
+              otherServiceCandidates: (customersByPayer.get(customer.payer)?.providers ?? [])
+                .filter((candidate) => candidate.payTo !== provider.payTo)
+                .sort((left, right) => right.transactionCount - left.transactionCount)
+                .map(candidateForProvider),
               provenance: "derived_insight",
               provenanceByField: { address: "onchain_fact" },
               reasons: [{ provenance: "derived_insight", label: "postgres live payer wallet" }],

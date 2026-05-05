@@ -759,6 +759,20 @@ describe("BFF routes", () => {
     expect(
       dataSource.customers.customers.find((customer) => customer.address === payer)?.providerCount,
     ).toBe(2);
+    const coingeckoProvider = dataSource.walletUsageGraph.graph.providerWallets.find(
+      (provider) => provider.payToWallet === coingeckoPayTo,
+    );
+    const payerWallet = coingeckoProvider?.payerWallets.find((wallet) => wallet.address === payer);
+
+    expect(payerWallet?.overlapProviderCount).toBe(2);
+    expect(payerWallet?.otherServiceCandidates).toEqual([
+      expect.objectContaining({
+        providerName: "Generic Service",
+        serviceName: "Generic Service",
+        coUsageCount: 2,
+        payToWallet: genericPayTo,
+      }),
+    ]);
   });
 
   test("does not mix generated customer lookups with demo fixture profiles", async () =>

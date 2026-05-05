@@ -101,6 +101,8 @@ type AnalyticsFile = {
   intelligenceByAddress?: Record<string, { x402Services?: AnalyticsX402Service[] }>;
 };
 
+const EVM_ADDRESS_PATTERN = /0x[0-9a-f]{40}/gi;
+
 const splitTableRow = (line: string): string[] => {
   const trimmed = line.trim();
   if (!trimmed.startsWith("|") || !trimmed.endsWith("|")) return [];
@@ -242,10 +244,28 @@ const matchesAtlas = (atlas: AtlasProvider, serviceId: string, serviceUrl: strin
   return false;
 };
 
+const payToFromProviderRouteId = (providerId: string): string | null => {
+  const matches = providerId.match(EVM_ADDRESS_PATTERN);
+  return matches?.at(-1)?.toLowerCase() ?? null;
+};
+
+const findAnalyticsRow = (
+  rows: AnalyticsCatalogRow[],
+  providerId: string,
+): AnalyticsCatalogRow | null => {
+  const normalizedProviderId = providerId.toLowerCase();
+  const exact = rows.find((row) => row.providerId.toLowerCase() === normalizedProviderId);
+  if (exact) return exact;
+
+  const routePayTo = payToFromProviderRouteId(providerId);
+  if (!routePayTo) return null;
+  return rows.find((row) => row.payTo.toLowerCase() === routePayTo) ?? null;
+};
+
 export const getGeoSpec = (providerId: string): GeoSpec | null => {
   const analytics = loadAnalytics();
   const rows = analytics.providers?.providers ?? [];
-  const row = rows.find((r) => r.providerId === providerId);
+  const row = findAnalyticsRow(rows, providerId);
   if (!row) return null;
 
   const serviceId = (row.serviceId ?? "").trim();

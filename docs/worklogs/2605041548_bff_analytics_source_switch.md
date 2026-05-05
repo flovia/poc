@@ -23,3 +23,5 @@
 - CoinGecko rows も `goldsky_webhook_transfers_x402_paytos` にコピー済みになったため、live mode は `goldsky_webhook_transfers_coingecko` との union をやめ、generic table だけを正本として読むように簡略化した。
 - CoinGecko metadata が欠ける場合のみ、既知 payTo に `pro-api.coingecko.com` を fallback するようにした。
 - Lightsail deploy は `BFF_ANALYTICS_DATABASE_URL` secret がある場合に `BFF_ANALYTICS_SOURCE=postgres` / `BFF_ANALYTICS_POSTGRES_MODE=live` を stack `.env` へ同期し、main/develop 両方の BFF compose env に渡すようにした。
+- live mode の wallet usage graph で同一 payer が使った他 provider を `otherServiceCandidates` に出すようにし、Co-Usage Providers が空になる regression を修正した。
+- GEO spec は generated fixture の providerId 完全一致だけでなく、route providerId 末尾の payTo でも fallback 解決するようにし、live providerId と fixture providerId のズレを吸収した。
