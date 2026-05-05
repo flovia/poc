@@ -22,3 +22,4 @@
 - generic table 由来の provider overlap が customer `providerCount` に反映されるテストを追加した。
 - CoinGecko rows も `goldsky_webhook_transfers_x402_paytos` にコピー済みになったため、live mode は `goldsky_webhook_transfers_coingecko` との union をやめ、generic table だけを正本として読むように簡略化した。
 - CoinGecko metadata が欠ける場合のみ、既知 payTo に `pro-api.coingecko.com` を fallback するようにした。
+- Lightsail deploy は `BFF_ANALYTICS_DATABASE_URL` secret がある場合に `BFF_ANALYTICS_SOURCE=postgres` / `BFF_ANALYTICS_POSTGRES_MODE=live` を stack `.env` へ同期し、main/develop 両方の BFF compose env に渡すようにした。

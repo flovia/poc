@@ -529,7 +529,7 @@ export const resolveAnalyticsDataSource = (
   options: ResolveAnalyticsDataSourceOptions = {},
 ): BffAnalyticsDataSource | Promise<BffAnalyticsDataSource> => {
   const env = options.env ?? process.env;
-  const source = env.BFF_ANALYTICS_SOURCE as AnalyticsSourceKind | undefined;
+  const source = (env.BFF_ANALYTICS_SOURCE?.trim() || undefined) as AnalyticsSourceKind | undefined;
   const readModelPath = env.BFF_ANALYTICS_READ_MODEL_PATH ?? filePath;
 
   if (source === "fixture") return fixtureAnalyticsDataSource;

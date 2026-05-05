@@ -71,7 +71,10 @@ function providerRouteAliases(provider: ProviderRouteLike): Set<string> {
   return aliases;
 }
 
-export function matchesProviderRouteId(provider: ProviderRouteLike, routeProviderId: string): boolean {
+export function matchesProviderRouteId(
+  provider: ProviderRouteLike,
+  routeProviderId: string,
+): boolean {
   return providerRouteAliases(provider).has(routeProviderId.toLowerCase());
 }
 

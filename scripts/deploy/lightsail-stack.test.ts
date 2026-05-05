@@ -58,4 +58,58 @@ describe("lightsail shared stack", () => {
     expect(syncScript).not.toContain("remove_old_bff_images");
     expect(syncScript).not.toContain("nginx");
   });
+
+  test("deployment passes live analytics database url to stack sync", () => {
+    const workflow = read("../../.github/workflows/deploy-lightsail-shared.yml");
+
+    expect(workflow).toContain("# - MAIN_BFF_ANALYTICS_DATABASE_URL");
+    expect(workflow).toContain("# - DEVELOP_BFF_ANALYTICS_DATABASE_URL");
+    expect(workflow).toContain("# - BFF_ANALYTICS_DATABASE_URL");
+    expect(workflow).toContain(
+      'MAIN_BFF_ANALYTICS_DATABASE_URL="${{ secrets.MAIN_BFF_ANALYTICS_DATABASE_URL }}"',
+    );
+    expect(workflow).toContain(
+      'DEVELOP_BFF_ANALYTICS_DATABASE_URL="${{ secrets.DEVELOP_BFF_ANALYTICS_DATABASE_URL }}"',
+    );
+    expect(workflow).toContain(
+      'BFF_ANALYTICS_DATABASE_URL="${{ secrets.BFF_ANALYTICS_DATABASE_URL }}"',
+    );
+  });
+
+  test("deployment sync upserts or deletes live analytics env", () => {
+    const syncScript = read("./lightsail-sync-stack.sh");
+
+    expect(syncScript).toContain('analytics_prefix="MAIN"');
+    expect(syncScript).toContain('analytics_prefix="DEVELOP"');
+    expect(syncScript).toContain(
+      'analytics_database_url_key="${analytics_prefix}_BFF_ANALYTICS_DATABASE_URL"',
+    );
+    expect(syncScript).toContain(
+      'analytics_database_url="${!analytics_database_url_key:-${BFF_ANALYTICS_DATABASE_URL:-}}"',
+    );
+    expect(syncScript).toContain('if [ -n "$analytics_database_url" ]; then');
+    expect(syncScript).toContain(
+      'upsert_env_var "$stack_env_file" "$analytics_source_key" "postgres"',
+    );
+    expect(syncScript).toContain(
+      'upsert_env_var "$stack_env_file" "$analytics_database_url_key" "$analytics_database_url"',
+    );
+    expect(syncScript).toContain(
+      'upsert_env_var "$stack_env_file" "$analytics_postgres_mode_key" "live"',
+    );
+    expect(syncScript).toContain('delete_env_var "$stack_env_file" "$analytics_source_key"');
+    expect(syncScript).toContain('delete_env_var "$stack_env_file" "$analytics_database_url_key"');
+    expect(syncScript).toContain('delete_env_var "$stack_env_file" "$analytics_postgres_mode_key"');
+  });
+
+  test("compose passes live analytics postgres mode to both branches", () => {
+    const compose = read("../../docker-compose.lightsail.yml");
+
+    expect(compose).toContain(
+      "BFF_ANALYTICS_POSTGRES_MODE: ${MAIN_BFF_ANALYTICS_POSTGRES_MODE:-${BFF_ANALYTICS_POSTGRES_MODE:-live}}",
+    );
+    expect(compose).toContain(
+      "BFF_ANALYTICS_POSTGRES_MODE: ${DEVELOP_BFF_ANALYTICS_POSTGRES_MODE:-${BFF_ANALYTICS_POSTGRES_MODE:-live}}",
+    );
+  });
 });

@@ -10,6 +10,10 @@ name: deploy-lightsail-shared
 # - BFF_BEDROCK_REGION
 # - BFF_BEDROCK_MODEL_ID
 # - BFF_BEDROCK_PROMPT_VERSION
+# Optional repository secrets for live analytics:
+# - MAIN_BFF_ANALYTICS_DATABASE_URL
+# - DEVELOP_BFF_ANALYTICS_DATABASE_URL
+# - BFF_ANALYTICS_DATABASE_URL
 # Deploy layout on the instance:
 # - $HOME/apps/main/poc and $HOME/apps/main/data
 # - $HOME/apps/develop/poc and $HOME/apps/develop/data
@@ -153,6 +157,9 @@ jobs:
             BFF_BEDROCK_REGION="${{ secrets.BFF_BEDROCK_REGION }}" \
             BFF_BEDROCK_MODEL_ID="${{ secrets.BFF_BEDROCK_MODEL_ID }}" \
             BFF_BEDROCK_PROMPT_VERSION="${{ secrets.BFF_BEDROCK_PROMPT_VERSION }}" \
+            MAIN_BFF_ANALYTICS_DATABASE_URL="${{ secrets.MAIN_BFF_ANALYTICS_DATABASE_URL }}" \
+            DEVELOP_BFF_ANALYTICS_DATABASE_URL="${{ secrets.DEVELOP_BFF_ANALYTICS_DATABASE_URL }}" \
+            BFF_ANALYTICS_DATABASE_URL="${{ secrets.BFF_ANALYTICS_DATABASE_URL }}" \
             "bash -s" <<'EOF'
           set -euo pipefail
           apps_root="$HOME/apps"
