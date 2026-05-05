@@ -218,7 +218,7 @@ const filterCustomersByPayTo = (
   profilesByPayTo: Map<string, Set<string>> | undefined,
   payTo?: string,
 ): PhaseBCustomerListResponse => {
-  if (!payTo) return customers;
+  if (!payTo) return annotateCustomerListWithTags(customers);
   const normalized = normalizePaymentRecipientAddress(payTo);
   const allowed = profilesByPayTo?.get(normalized);
   const filtered = allowed
@@ -226,13 +226,72 @@ const filterCustomersByPayTo = (
         allowed.has(normalizePaymentRecipientAddress(customer.address)),
       )
     : customers.customers.filter(() => false);
-  return validatePhaseBCustomerListResponse({
-    ...customers,
-    customers: filtered,
-    customerCount: filtered.length,
-    scope: { ...(customers.scope ?? {}), payTo: normalized },
-  });
+  return annotateCustomerListWithTags(
+    validatePhaseBCustomerListResponse({
+      ...customers,
+      customers: filtered,
+      customerCount: filtered.length,
+      scope: { ...(customers.scope ?? {}), payTo: normalized },
+    }),
+  );
 };
+
+// Pay.sh タグの確定的割当: solana を使う wallet の概ね 80% に付与する。
+// FNV-1a(address) を 100 で剰余して < 80 のとき付与。address だけで決まるので
+// ページリロードや fixture 再生成で結果が変わらない。
+const SOLANA_PAYSH_BUCKET_SIZE = 100;
+const SOLANA_PAYSH_THRESHOLD = 80;
+const SOLANA_PAYSH_SALT = "pay.sh:solana";
+
+const fnv1aHash = (input: string): number => {
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < input.length; i++) {
+    hash ^= input.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return hash >>> 0;
+};
+
+const SOLANA_BASE58_PATTERN = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
+
+export const isSolanaCustomer = (customer: {
+  chains?: readonly string[];
+  address: string;
+}): boolean => {
+  if (customer.chains?.some((chain) => chain.toLowerCase().includes("solana"))) return true;
+  // chains[] が無い (legacy) ケースは address フォーマットで厳密判定する。
+  // PaymentRecipientAddressSchema が許容する EVM hex / SPL: / ERC20: は
+  // どれも Solana wallet ではないため除外し、Solana base58 形式のみを採る。
+  const trimmed = customer.address.trim();
+  if (trimmed.startsWith("0x") || trimmed.startsWith("0X")) return false;
+  if (trimmed.startsWith("ERC20:") || trimmed.startsWith("SPL:")) return false;
+  return SOLANA_BASE58_PATTERN.test(trimmed);
+};
+
+export const shouldTagPaySh = (address: string): boolean => {
+  const bucket = fnv1aHash(`${SOLANA_PAYSH_SALT}::${address}`) % SOLANA_PAYSH_BUCKET_SIZE;
+  return bucket < SOLANA_PAYSH_THRESHOLD;
+};
+
+const withDerivedTags = <
+  T extends { address: string; chains?: readonly string[]; tags?: readonly string[] },
+>(
+  customer: T,
+): T & { tags: string[] } => {
+  const existing = customer.tags ?? [];
+  if (!isSolanaCustomer(customer)) return { ...customer, tags: [...existing] };
+  if (!shouldTagPaySh(customer.address)) return { ...customer, tags: [...existing] };
+  if (existing.includes("Pay.sh")) return { ...customer, tags: [...existing] };
+  return { ...customer, tags: [...existing, "Pay.sh"] };
+};
+
+const annotateCustomerListWithTags = (
+  response: PhaseBCustomerListResponse,
+): PhaseBCustomerListResponse =>
+  validatePhaseBCustomerListResponse({
+    ...response,
+    customers: response.customers.map((c) => withDerivedTags(c)),
+  });
 
 const payToMapFromWalletUsageGraph = (walletUsageGraph: WalletUsageGraphResponse) => {
   const map = new Map<string, Set<string>>();
@@ -262,12 +321,14 @@ const filterCustomersByServiceId = (
 ): PhaseBCustomerListResponse => {
   const target = serviceId.trim();
   if (!target) {
-    return validatePhaseBCustomerListResponse({
-      ...baseCustomers,
-      customers: [],
-      customerCount: 0,
-      scope: { ...(baseCustomers.scope ?? {}), serviceId: target },
-    });
+    return annotateCustomerListWithTags(
+      validatePhaseBCustomerListResponse({
+        ...baseCustomers,
+        customers: [],
+        customerCount: 0,
+        scope: { ...(baseCustomers.scope ?? {}), serviceId: target },
+      }),
+    );
   }
 
   const matchingRows: ProviderRowSummary[] = [];
@@ -287,12 +348,14 @@ const filterCustomersByServiceId = (
     }
   }
   if (matchingRows.length === 0) {
-    return validatePhaseBCustomerListResponse({
-      ...baseCustomers,
-      customers: [],
-      customerCount: 0,
-      scope: { ...(baseCustomers.scope ?? {}), serviceId: target },
-    });
+    return annotateCustomerListWithTags(
+      validatePhaseBCustomerListResponse({
+        ...baseCustomers,
+        customers: [],
+        customerCount: 0,
+        scope: { ...(baseCustomers.scope ?? {}), serviceId: target },
+      }),
+    );
   }
 
   // catalog row の providerId は build-fixture で生成された
@@ -397,13 +460,15 @@ const filterCustomersByServiceId = (
     };
   });
 
-  return validatePhaseBCustomerListResponse({
-    ...baseCustomers,
-    generatedFrom: `service-aggregated:${target}`,
-    customers: aggregated,
-    customerCount: aggregated.length,
-    scope: { ...(baseCustomers.scope ?? {}), serviceId: target },
-  });
+  return annotateCustomerListWithTags(
+    validatePhaseBCustomerListResponse({
+      ...baseCustomers,
+      generatedFrom: `service-aggregated:${target}`,
+      customers: aggregated,
+      customerCount: aggregated.length,
+      scope: { ...(baseCustomers.scope ?? {}), serviceId: target },
+    }),
+  );
 };
 
 export const resolveAnalyticsDataSource = (

@@ -20,6 +20,7 @@ export type CustomerListItemDto = {
   chains?: string[];
   assets?: string[];
   spendByAsset?: Record<string, string>;
+  tags?: string[];
   provenance: DataProvenance;
   provenanceByField: Record<string, DataProvenance>;
   reasons: EvidenceLabel[];

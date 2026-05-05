@@ -1334,4 +1334,29 @@ describe("multi-chain customer aggregation fields", () => {
     });
     expect(parsed.customers[0]?.chains).toBeUndefined();
   });
+
+  test("PhaseBCustomerListItem accepts tags[] (e.g. Pay.sh)", () => {
+    const parsed = validatePhaseBCustomerListResponse({
+      generatedAt: "2026-05-01T00:00:00Z",
+      generatedFrom: "pay-skills-atlas-aggregated",
+      provenance: "derived_insight",
+      reasons: [{ provenance: "derived_insight", label: "tagged customer" }],
+      customers: [
+        {
+          address: "8MPzJeXx1RipFmRADExptc3UK4EV3nhEFN6NRSx7o7jm",
+          label: null,
+          observationCount: 1,
+          spendAtomic: "1000",
+          providerCount: 1,
+          activityGrowth: 0,
+          upsellOpportunity: "low",
+          tags: ["Pay.sh"],
+          provenance: "derived_insight",
+          reasons: [{ provenance: "derived_insight", label: "tagged" }],
+        },
+      ],
+      customerCount: 1,
+    });
+    expect(parsed.customers[0]?.tags).toEqual(["Pay.sh"]);
+  });
 });

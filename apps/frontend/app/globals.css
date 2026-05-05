@@ -856,6 +856,7 @@ a { color: inherit; text-decoration: none; }
   grid-template-columns:
     minmax(220px, 1fr) /* Wallet */
     140px              /* Chain */
+    100px              /* Tag */
     140px              /* Spend */
     120px              /* Observations */
     100px              /* Providers */
@@ -875,6 +876,7 @@ a { color: inherit; text-decoration: none; }
     minmax(220px, 1fr)  /* Wallet */
     140px               /* Agent (sdk) */
     140px               /* Chain */
+    100px               /* Tag */
     140px               /* Spend */
     100px               /* Observations */
     100px               /* Providers */

@@ -112,6 +112,7 @@ export function adaptCustomerList(response: PhaseBCustomerListResponse): Custome
     chains: customer.chains,
     assets: customer.assets,
     spendByAsset: customer.spendByAsset,
+    tags: customer.tags,
     provenance: customer.provenance,
     provenanceByField: customer.provenanceByField ?? {},
     reasons: customer.reasons ?? [],

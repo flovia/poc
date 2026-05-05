@@ -503,6 +503,7 @@ export const PhaseBCustomerListItemSchema = withDerivedInsightReasons(
       chains: z.array(z.string().min(1)).optional(),
       assets: z.array(z.string().min(1)).optional(),
       spendByAsset: z.record(z.string().min(1), AtomicAmountSchema).optional(),
+      tags: z.array(z.string().min(1)).optional(),
       provenance: DataProvenanceSchema,
       provenanceByField: ProvenanceByFieldSchema,
       evidence: z.array(EvidenceLabelSchema).optional(),

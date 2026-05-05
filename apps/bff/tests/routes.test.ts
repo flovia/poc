@@ -5,7 +5,9 @@ import { randomUUID } from "node:crypto";
 import { createBffHandler } from "../src/http";
 import {
   fixtureAnalyticsDataSource,
+  isSolanaCustomer,
   loadGeneratedAnalyticsDataSource,
+  shouldTagPaySh,
 } from "../src/data/analytics-source";
 import type { BffLlmService } from "../src/data/llm";
 import {
@@ -117,6 +119,60 @@ describe("BFF routes", () => {
 
     expect(aggregated.scope?.serviceId).toBe(sampleProvider.serviceId);
     expect(aggregated.customerCount).toBe(aggregated.customers.length);
+  });
+
+  describe("Pay.sh tag derivation", () => {
+    const SOLANA = "8MPzJeXx1RipFmRADExptc3UK4EV3nhEFN6NRSx7o7jm";
+    const EVM_LOWER = "0xffecfcd0e9888a738a64d9854abfc22ef3a6c717";
+    const EVM_UPPER = "0XFFECFCD0E9888A738A64D9854ABFC22EF3A6C717";
+
+    test("isSolanaCustomer recognises chains[].solana regardless of address shape", () => {
+      expect(isSolanaCustomer({ address: EVM_LOWER, chains: ["solana", "base"] })).toBe(true);
+    });
+
+    test("isSolanaCustomer falls back to base58 detection when chains[] is absent", () => {
+      expect(isSolanaCustomer({ address: SOLANA })).toBe(true);
+    });
+
+    test("isSolanaCustomer rejects EVM hex addresses (0x and 0X)", () => {
+      expect(isSolanaCustomer({ address: EVM_LOWER })).toBe(false);
+      expect(isSolanaCustomer({ address: EVM_UPPER })).toBe(false);
+    });
+
+    test("isSolanaCustomer rejects ERC20: and SPL: prefixed token identifiers", () => {
+      expect(
+        isSolanaCustomer({ address: "ERC20:0x036CbD53842c5426634e7929541eC2318f3dCF7e" }),
+      ).toBe(false);
+      expect(
+        isSolanaCustomer({ address: "SPL:4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU" }),
+      ).toBe(false);
+    });
+
+    test("shouldTagPaySh is deterministic per address", () => {
+      const first = shouldTagPaySh(SOLANA);
+      const second = shouldTagPaySh(SOLANA);
+      expect(first).toBe(second);
+    });
+
+    test("shouldTagPaySh covers ~80% of distinct solana wallets", () => {
+      // sample 1000 deterministic base58 wallets to verify the FNV-1a bucket
+      // distribution lands close to the documented 80% threshold.
+      const charset = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+      const samples: string[] = [];
+      let seed = 0xdeadbeef;
+      for (let i = 0; i < 1000; i++) {
+        let s = "";
+        for (let j = 0; j < 36; j++) {
+          seed = Math.imul(seed ^ (seed >>> 15), seed | 1) >>> 0;
+          s += charset[seed % charset.length];
+        }
+        samples.push(s);
+      }
+      const tagged = samples.filter(shouldTagPaySh).length;
+      const ratio = tagged / samples.length;
+      expect(ratio).toBeGreaterThanOrEqual(0.75);
+      expect(ratio).toBeLessThanOrEqual(0.85);
+    });
   });
 
   test("returns empty list for unknown serviceId", async () => {
