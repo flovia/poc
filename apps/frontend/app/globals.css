@@ -264,6 +264,13 @@ a { color: inherit; text-decoration: none; }
   width: 100%;
   min-width: 0;
 }
+.nav-item--category {
+  cursor: default;
+}
+.nav-item--category:hover {
+  background: transparent;
+  color: var(--text-2);
+}
 .nav-toggle {
   display: inline-flex;
   align-items: center;
