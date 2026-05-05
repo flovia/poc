@@ -70,12 +70,9 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
   // hydration 後に provider が一つも無いとき My Customers を disabled 表示。
   // SSR (hydrated=false) では通常 Link を出すことで mismatch を避ける。
   // Phase 9: SDK connected モードでは disabled にしない.
-  const navDisabled = isOnChainOnlyEmpty;
+  const providerRouteId = activeProviderId ?? (isSdkEmpty ? SDK_DEMO_PROVIDER_ID : undefined);
+  const navDisabled = isOnChainOnlyEmpty || !providerRouteId;
 
-  const providerRouteId =
-    activeProviderId
-    ?? stored[0]?.providerId
-    ?? (dataMode === "sdkConnected" ? SDK_DEMO_PROVIDER_ID : undefined);
   const customerOverviewHref = providerRouteId ? `/providers/${providerRouteId}/customers` : undefined;
   const coUsageHref = providerRouteId ? `/providers/${providerRouteId}/customers/co-usage-providers` : undefined;
   const customerOverviewActive = pathname === customerOverviewHref || activeRoute === "wallet";
