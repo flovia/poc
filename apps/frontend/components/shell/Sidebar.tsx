@@ -7,7 +7,7 @@ import { useMemo } from "react";
 import { useProviders } from "@/app/providers";
 import { Icon } from "@/components/ui/Icon";
 import { ProviderAvatar } from "@/components/shell/ProviderAvatar";
-import { inferBrandDomain } from "@/lib/pay-sh/brand";
+import { inferBrandDisplayName, inferBrandDomain } from "@/lib/pay-sh/brand";
 import { resolvePaySkill, usePaySkills } from "@/lib/pay-sh/skills";
 import { isPreservedBaseProvider } from "@/lib/providers/preserved";
 import { findProviderByRouteId, isDemoProvider } from "@/lib/providers";
@@ -52,6 +52,7 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
   const currentSkill = resolvePaySkill(skills, currentServiceId);
   const currentName =
     currentSkill?.title
+    ?? inferBrandDisplayName({ fqn: currentServiceId })
     ?? current?.name
     ?? (isViewingSdkDemo || isSdkEmpty
       ? SDK_DEMO_PROVIDER_NAME

@@ -6,6 +6,7 @@
 
 type BrandEntry = {
   domain: string;
+  displayName?: string;
   // Direct icon URL override. Used when a Google favicon API lookup against
   // `domain` returns a generic globe (e.g. nansen.ai's icons are hosted on
   // framerusercontent.com and the favicon resolver fails to follow them).
@@ -44,6 +45,7 @@ const BRAND_BY_KEY: Record<string, BrandEntry> = {
   dtelecom: { domain: "dtelecom.org" },
   nansen: {
     domain: "nansen.ai",
+    displayName: "Nansen",
     iconUrl: "https://framerusercontent.com/images/X6PAJXo4BDwSFLJcxI2JZNWsQ.png",
   },
   purch: { domain: "purch.xyz" },
@@ -115,6 +117,19 @@ export type BrandResolution = {
   iconUrl?: string;
   reason: "curated" | "direct-host" | "fqn-fallback" | "none";
 };
+
+function findCuratedBrandEntry(fqn: string | undefined): BrandEntry | undefined {
+  const candidates = brandKeyCandidatesFromFqn(fqn);
+  for (const key of candidates) {
+    const entry = BRAND_BY_KEY[key];
+    if (entry) return entry;
+  }
+  return undefined;
+}
+
+export function inferBrandDisplayName({ fqn }: { fqn?: string }): string | null {
+  return findCuratedBrandEntry(fqn)?.displayName ?? null;
+}
 
 /**
  * Best-effort favicon domain for a Pay.sh provider.

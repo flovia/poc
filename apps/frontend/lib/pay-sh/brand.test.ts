@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { inferBrandDomain } from "./brand";
+import { inferBrandDisplayName, inferBrandDomain } from "./brand";
 
 describe("inferBrandDomain", () => {
   test("solana-foundation/google/* maps to google.com via curated map", () => {
@@ -87,6 +87,12 @@ describe("inferBrandDomain", () => {
     expect(inferBrandDomain({ fqn: "api.nansen.ai" }).domain).toBe("nansen.ai");
     expect(inferBrandDomain({ fqn: "api.nansen.ai" }).iconUrl).toBeDefined();
     expect(inferBrandDomain({ fqn: "pro-api.coingecko.com" }).domain).toBe("coingecko.com");
+  });
+
+  test("hostname-style serviceId resolves to a curated display name", () => {
+    expect(inferBrandDisplayName({ fqn: "api.nansen.ai" })).toBe("Nansen");
+    expect(inferBrandDisplayName({ fqn: "nansen" })).toBe("Nansen");
+    expect(inferBrandDisplayName({ fqn: "unknown.example" })).toBeNull();
   });
 
   test("returns null reason 'none' when nothing is known at all", () => {

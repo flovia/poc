@@ -6,7 +6,7 @@ import { useProviders } from "@/app/providers";
 import { ProviderAvatar } from "@/components/shell/ProviderAvatar";
 import { isDemoProvider } from "@/lib/providers";
 import { describeChain, type CustomerChain } from "@/lib/customers/chain";
-import { inferBrandDomain } from "@/lib/pay-sh/brand";
+import { inferBrandDisplayName, inferBrandDomain } from "@/lib/pay-sh/brand";
 import { resolvePaySkill, usePaySkills } from "@/lib/pay-sh/skills";
 import { isPreservedBaseProvider } from "@/lib/providers/preserved";
 import {
@@ -159,7 +159,7 @@ export function ProvidersPicker() {
         const chains = chainsOfProvider(p);
         const protocols = p.protocols ?? [];
         const skill = resolvePaySkill(skills, p.serviceId);
-        const displayName = skill?.title || p.name;
+        const displayName = skill?.title || inferBrandDisplayName({ fqn: p.serviceId }) || p.name;
         const brand = inferBrandDomain({
           fqn: skill?.fqn ?? p.serviceId,
           serviceUrl: skill?.service_url,
