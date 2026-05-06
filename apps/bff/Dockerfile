@@ -14,6 +14,7 @@ RUN bun install --frozen-lockfile
 
 COPY apps/bff ./apps/bff
 COPY packages/contracts ./packages/contracts
+COPY packages/sources ./packages/sources
 
 WORKDIR /app/apps/bff
 
