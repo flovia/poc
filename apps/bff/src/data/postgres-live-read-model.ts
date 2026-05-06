@@ -1010,23 +1010,30 @@ export const loadPostgresLiveAnalyticsDataSource = async (
       LEFT JOIN LATERAL (
         SELECT jsonb_agg(
           jsonb_build_object(
-            'resource', CASE
-              WHEN pr.resource_url ~ '^https?://' THEN pr.resource_url
-              ELSE regexp_replace(pc.service_url, '/+$', '') || CASE
-                WHEN pr.resource_url LIKE '/%' THEN pr.resource_url
-                ELSE '/' || pr.resource_url
-              END
+            'resource', r.resource_url,
+            'network', po.chain,
+            'asset', CASE
+              WHEN lower(po.token_address) = '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913' THEN 'USDC'
+              ELSE po.token_address
             END,
-            'network', array_to_string(ARRAY(SELECT jsonb_array_elements_text(pr.networks)), ', '),
-            'asset', array_to_string(ARRAY(SELECT jsonb_array_elements_text(pr.assets)), ', '),
-            'description', pr.description,
-            'method', pr.method,
-            'transactionCount', pr.transaction_count,
-            'totalAmountAtomic', pr.observed_spend_atomic::text
-          ) ORDER BY pr.resource_index, pr.resource_url
+            'amountAtomic', po.amount_atomic::text,
+            'description', r.raw ->> 'description',
+            'method', r.raw #>> '{extensions,bazaar,info,input,method}',
+            'inputSchema', r.raw #> '{extensions,bazaar,schema}',
+            'lastUpdated', r.raw ->> 'lastUpdated',
+            'x402Version', r.raw -> 'x402Version',
+            'l30DaysTotalCalls', r.raw #> '{quality,l30DaysTotalCalls}',
+            'l30DaysUniquePayers', r.raw #> '{quality,l30DaysUniquePayers}'
+          ) ORDER BY r.resource_url
         ) AS resources
-        FROM pay_sh_provider_resources pr
-        WHERE pr.provider_fqn = pc.provider_fqn
+        FROM x402_payment_options po
+        JOIN x402_resources r ON r.resource_id = po.resource_id
+        WHERE CASE
+            WHEN lower(po.chain) = 'base' THEN lower(po.pay_to_address)
+            ELSE po.pay_to_address
+          END = pm.pay_to
+          AND po.active
+          AND r.active
       ) resources ON true
       WHERE pm.pay_to IS NOT NULL
       ORDER BY transaction_count DESC, pay_to ASC

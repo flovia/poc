@@ -1229,7 +1229,6 @@ describe("BFF routes", () => {
     expect(providerSql).toContain("pay_sh_provider_catalog AS");
     expect(providerSql).toContain("FROM pay_sh_providers p");
     expect(providerSql).toContain("provider_pay_tos AS");
-    expect(providerSql).toContain("FROM pay_sh_provider_resources pr");
     expect(providerSql).toContain("SELECT DISTINCT");
     expect(providerSql).toContain("provider_metrics AS");
     expect(providerSql).toContain("LEFT JOIN provider_grouped pg");
