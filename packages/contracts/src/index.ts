@@ -121,6 +121,7 @@ export const DataProvenanceSchema = z.enum([
   "demo_label",
   "future_sdk_field",
   "derived_insight",
+  "registry_fact",
 ]);
 export type DataProvenance = z.infer<typeof DataProvenanceSchema>;
 
@@ -130,6 +131,7 @@ export const EndpointAttributionStatusSchema = z.enum([
   "amount_inferred_endpoint",
   "sdk_attributed_endpoint",
   "demo_attributed_endpoint",
+  "mpp_attributed_endpoint",
   "unresolved_payto",
 ]);
 export type EndpointAttributionStatus = z.infer<typeof EndpointAttributionStatusSchema>;
@@ -563,6 +565,17 @@ const ProviderResourceSchema = z
     l30DaysUniquePayers: z.number().int().nonnegative().optional(),
     transactionCount: z.number().int().nonnegative().optional(),
     totalAmountAtomic: AtomicAmountSchema.optional(),
+    /**
+     * MPP registry payment metadata.
+     * - `intent`: "charge" (per-call, fixed price) or "session" (per-session, often dynamic).
+     * - `unitType`: e.g. "request" — billing unit when the price is unit-based.
+     * - `dynamic`: true when the price is computed at runtime (e.g. token-based LLM cost).
+     * - `decimals`: token decimals for amountAtomic (typically 6 for USDC).
+     */
+    intent: z.enum(["charge", "session"]).optional(),
+    unitType: z.string().min(1).optional(),
+    dynamic: z.boolean().optional(),
+    decimals: z.number().int().nonnegative().optional(),
   })
   .strict();
 
@@ -576,7 +589,12 @@ const ProviderOfferSchema = z
   })
   .strict();
 
-export const ProviderCatalogSourceSchema = z.enum(["base_curated", "pay_sh_curated", "raw_x402"]);
+export const ProviderCatalogSourceSchema = z.enum([
+  "base_curated",
+  "pay_sh_curated",
+  "raw_x402",
+  "mpp_registry",
+]);
 
 export type ProviderCatalogSource = z.infer<typeof ProviderCatalogSourceSchema>;
 
@@ -608,6 +626,12 @@ export const ProviderCatalogRowSchema = withDerivedInsightReasons(
       customerFactCount: z.number().int().nonnegative(),
       title: z.string().min(1).optional(),
       description: z.string().min(1).optional(),
+      /**
+       * MPP services registry の公式 description。Pay.sh atlas 由来の
+       * `description` と並べて GEO ページに別フィールドとして表示するため、
+       * 衝突せず独立に保持する。
+       */
+      mppDescription: z.string().min(1).optional(),
       useCase: z.string().min(1).optional(),
       category: z.string().min(1).optional(),
       serviceUrl: z.string().url().optional(),
