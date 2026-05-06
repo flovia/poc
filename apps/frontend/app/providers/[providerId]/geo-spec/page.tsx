@@ -3,31 +3,8 @@ import { getProviders } from "@/lib/api/client";
 import { findProviderByRouteId } from "@/lib/providers";
 import { TopBar } from "@/components/shell/TopBar";
 import { getGeoSpec } from "@/lib/geo-spec/source";
-import { extractBrandKey } from "@/lib/pay-sh/brand";
 import { getTopBarPageContext } from "@/lib/server/page-context";
 import type { ProviderCatalogItemDto } from "@/lib/api/types";
-
-// Find rows that share the active provider's brand key. The picker collapses
-// MPP + Pay.sh rows for the same brand into a single card; when the user
-// clicks through to GEO we want to combine those rows so the page shows BOTH
-// catalog sources (Pay.sh description + MPP endpoints, etc.).
-const collectBrandSiblings = (
-  providers: ProviderCatalogItemDto[],
-  active: ProviderCatalogItemDto,
-): ProviderCatalogItemDto[] => {
-  const activeKey = extractBrandKey(active.serviceId);
-  if (!activeKey) return [active];
-  return providers.filter((p) => extractBrandKey(p.serviceId) === activeKey);
-};
-
-const pickFirstNonEmpty = <T,>(values: ReadonlyArray<T | undefined | null>): T | undefined => {
-  for (const v of values) {
-    if (v === undefined || v === null) continue;
-    if (typeof v === "string" && v.length === 0) continue;
-    return v;
-  }
-  return undefined;
-};
 
 export default async function GeoSpecPage({
   params,
@@ -36,19 +13,13 @@ export default async function GeoSpecPage({
 }) {
   const { providerId } = await params;
   const pageCtx = await getTopBarPageContext();
+  // The live BFF row is only used as a hint for `getGeoSpec` so it can find
+  // the right entry in the baked GEO data file via serviceId / brandKey /
+  // payTo. baked JSON is the authoritative source for description, offers,
+  // observed endpoints, and MPP-registry endpoints. The hint is a graceful
+  // fallback when no baked entry is found (e.g. a fresh user-saved provider).
   const allProviders = await getProviders().catch(() => [] as ProviderCatalogItemDto[]);
   const liveProvider = findProviderByRouteId(allProviders, providerId) ?? null;
-  const siblings = liveProvider ? collectBrandSiblings(allProviders, liveProvider) : [];
-  // Prefer MPP-side fields from the sibling MPP row when the user landed on a
-  // Pay.sh row, so MPP description / endpoints surface even on the Pay.sh URL.
-  const mppSibling = siblings.find((s) => s.catalogSource === "mpp_registry") ?? null;
-  // Combined resources: prefer Pay.sh resources when the active row has them,
-  // otherwise carry the MPP sibling's. (Concatenating would double-count when
-  // both sides describe the same endpoints.)
-  const combinedResources =
-    (liveProvider?.resources && liveProvider.resources.length > 0
-      ? liveProvider.resources
-      : mppSibling?.resources) ?? undefined;
 
   const spec = getGeoSpec(
     providerId,
@@ -58,12 +29,12 @@ export default async function GeoSpecPage({
           name: liveProvider.name,
           title: liveProvider.title,
           description: liveProvider.description,
-          mppDescription: pickFirstNonEmpty([liveProvider.mppDescription, mppSibling?.mppDescription]),
+          mppDescription: liveProvider.mppDescription,
           useCase: liveProvider.useCase,
           category: liveProvider.category,
           serviceId: liveProvider.serviceId,
           serviceName: liveProvider.serviceName,
-          serviceUrl: pickFirstNonEmpty([liveProvider.serviceUrl, mppSibling?.serviceUrl]),
+          serviceUrl: liveProvider.serviceUrl,
           hasMetering: liveProvider.hasMetering,
           hasFreeTier: liveProvider.hasFreeTier,
           providerSha: liveProvider.providerSha,
@@ -76,7 +47,7 @@ export default async function GeoSpecPage({
           network: liveProvider.network ?? "base",
           asset: liveProvider.asset ?? "USDC",
           endpointCount: liveProvider.endpointCount,
-          resources: combinedResources,
+          resources: liveProvider.resources,
         }
       : null,
   );
