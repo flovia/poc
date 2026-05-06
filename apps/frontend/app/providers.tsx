@@ -18,6 +18,7 @@ import {
 import { findProviderByRouteId, SEED_IDS, seedProviders, slugifyProviderName } from "@/lib/providers";
 import { orderProvidersPinnedFirst } from "@/lib/providers/order";
 import { STATIC_PROVIDER_CAPABILITIES } from "@/lib/providers/static-capabilities";
+import { extractBrandKey } from "@/lib/pay-sh/brand";
 
 type Ctx = {
   // effective providers (demo + user, demo first)。Sidebar / SavedProviderList の
@@ -119,49 +120,103 @@ export function ProvidersContextProvider({ children }: { children: React.ReactNo
     getBffProviders()
       .then((providers) => {
         if (cancelled) return;
-        // Dedup providers that share the same display name (e.g. QuickNode appearing
-        // once per supported chain) so the sidebar shows one entry per service.
-        // Keep the row that already has customer facts when available, then fall
-        // back to the row with the highest transactionCount. Collect every chain
-        // observed across the merged rows so multi-chain services surface all of
-        // their networks in the picker.
+        // Dedup providers describing the same brand (cross-catalog +
+        // cross-chain) so the picker shows ONE entry per provider.
+        //
+        // Key precedence:
+        //   1. brand-key (serviceId reduced to its brand label) so that
+        //      Pay.sh `agentmail/email` and MPP `agentmail` collapse together;
+        //      `merit-systems/stablesocial/social-data` and MPP `stablesocial`
+        //      collapse together; etc.
+        //   2. display name (lower-cased) when no brand-key can be derived —
+        //      preserves prior behavior for legacy rows.
+        // Within a group: the winner is the row preferred for click-through.
+        // We prefer Pay.sh atlas rows (catalogSource !== "mpp_registry") so
+        // existing provider URLs stay stable. If no Pay.sh row exists, the MPP
+        // row wins by default. Tie-breakers: hasCustomerFacts > transactionCount.
         type CatalogItem = (typeof providers)[number];
         type Protocol = "x402" | "MPP";
         const groups = new Map<
           string,
-          { winner: CatalogItem; networks: Set<string>; protocols: Set<Protocol> }
+          {
+            winner: CatalogItem;
+            networks: Set<string>;
+            protocols: Set<Protocol>;
+            catalogSources: Set<string>;
+          }
         >();
+        const groupKey = (p: CatalogItem): string => {
+          const brand = extractBrandKey(p.serviceId);
+          if (brand) return `brand:${brand}`;
+          return `name:${(p.name ?? p.serviceId ?? p.providerId).toLowerCase()}`;
+        };
+        const isPaySh = (p: CatalogItem): boolean =>
+          p.catalogSource !== "mpp_registry" && !p.providerId.startsWith("mpp:");
+        const score = (p: CatalogItem): number => {
+          const paysh = isPaySh(p) ? 1_000_000_000_000 : 0;
+          const facts = p.hasCustomerFacts ? 1_000_000_000 : 0;
+          return paysh + facts + p.transactionCount;
+        };
         for (const provider of providers) {
-          const key = `${(provider.serviceId ?? provider.name).toLowerCase()}::${(provider.title ?? provider.name).toLowerCase()}`;
+          const key = groupKey(provider);
           const existing = groups.get(key);
           if (!existing) {
             const networks = new Set<string>();
             if (provider.network) networks.add(provider.network);
             const protocols = new Set<Protocol>();
             if (provider.protocol) protocols.add(provider.protocol);
-            groups.set(key, { winner: provider, networks, protocols });
+            const catalogSources = new Set<string>();
+            if (provider.catalogSource) catalogSources.add(provider.catalogSource);
+            groups.set(key, { winner: provider, networks, protocols, catalogSources });
             continue;
           }
           if (provider.network) existing.networks.add(provider.network);
           if (provider.protocol) existing.protocols.add(provider.protocol);
-          const existingScore =
-            (existing.winner.hasCustomerFacts ? 1_000_000_000 : 0) + existing.winner.transactionCount;
-          const candidateScore =
-            (provider.hasCustomerFacts ? 1_000_000_000 : 0) + provider.transactionCount;
-          if (candidateScore > existingScore) {
+          if (provider.catalogSource) existing.catalogSources.add(provider.catalogSource);
+          if (score(provider) > score(existing.winner)) {
             existing.winner = provider;
           }
         }
         const deduped = Array.from(groups.values());
-        const generated = deduped.map(({ winner, networks, protocols }) => {
+        const generated = deduped.map(({ winner, networks, protocols, catalogSources }) => {
           const capability = winner.serviceId
             ? STATIC_PROVIDER_CAPABILITIES.find((entry) => entry.serviceId === winner.serviceId)
             : undefined;
-          // The Postgres live BFF currently emits `network: "base"` for catalog
-          // rows even when the provider capability is Solana-only. When a static
-          // capability exists, treat it as authoritative for badges.
-          const mergedNetworks = capability?.networks ?? Array.from(networks);
-          const mergedProtocols = capability?.protocols ?? Array.from(protocols);
+          // Union capability + aggregated values rather than override. Static
+          // capability may know about networks/protocols the live BFF row
+          // doesn't (e.g. legacy Solana-only capability), but the brand-key
+          // dedup also adds rows from sibling catalogs (Pay.sh + MPP) whose
+          // networks/protocols MUST also surface. Override would erase TEMPO
+          // and MPP badges for AgentMail.
+          const mergedNetworks = Array.from(
+            new Set<string>([...(capability?.networks ?? []), ...networks]),
+          );
+          const mergedProtocols = Array.from(
+            new Set<"x402" | "MPP">([...(capability?.protocols ?? []), ...protocols]),
+          );
+          // Pay.sh tag wins over MPP for display when both are present (the
+          // group is being represented by a Pay.sh row); otherwise carry MPP.
+          const mergedCatalogSource =
+            winner.catalogSource ??
+            (catalogSources.has("mpp_registry") ? "mpp_registry" : undefined) ??
+            capability?.catalogSource;
+          // Preserve every catalogSource that contributed to this group so the
+          // picker can show e.g. both Pay.sh + MPP badges on AgentMail.
+          const knownCatalogSources: ReadonlyArray<
+            "base_curated" | "pay_sh_curated" | "raw_x402" | "mpp_registry"
+          > = ["base_curated", "pay_sh_curated", "raw_x402", "mpp_registry"];
+          const aggregatedCatalogSources = knownCatalogSources.filter((c) =>
+            catalogSources.has(c),
+          );
+          if (winner.catalogSource && !aggregatedCatalogSources.includes(winner.catalogSource)) {
+            aggregatedCatalogSources.unshift(winner.catalogSource);
+          }
+          if (
+            capability?.catalogSource &&
+            !aggregatedCatalogSources.includes(capability.catalogSource)
+          ) {
+            aggregatedCatalogSources.push(capability.catalogSource);
+          }
           return {
             providerId: winner.providerId,
             name: winner.name,
@@ -171,11 +226,14 @@ export function ProvidersContextProvider({ children }: { children: React.ReactNo
             source: "generated" as const,
             network: capability?.network ?? winner.network,
             networks: mergedNetworks,
-            catalogSource: winner.catalogSource ?? capability?.catalogSource,
+            catalogSource: mergedCatalogSource,
+            catalogSources:
+              aggregatedCatalogSources.length > 0 ? aggregatedCatalogSources : undefined,
             protocols: mergedProtocols,
             asset: winner.asset,
             serviceId: winner.serviceId,
             serviceName: winner.serviceName,
+            serviceUrl: winner.serviceUrl,
             transactionCount: winner.transactionCount,
             uniqueSenderCount: winner.uniqueSenderCount,
             hasCustomerFacts: winner.hasCustomerFacts,

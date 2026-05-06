@@ -141,6 +141,7 @@ export function adaptProviderCatalog(response: ProviderCatalogResponse): Provide
       customerFactCount: provider.customerFactCount,
       title: provider.title,
       description: provider.description,
+      mppDescription: provider.mppDescription,
       useCase: provider.useCase,
       category: provider.category,
       serviceUrl: provider.serviceUrl,

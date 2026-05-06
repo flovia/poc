@@ -1,5 +1,5 @@
 import { formatAtomic, shortAddr } from "@/lib/format";
-import type { GeoSpec } from "@/lib/geo-spec/source";
+import type { GeoSpec, MppRegistryEndpoint } from "@/lib/geo-spec/source";
 
 type Props = {
   providerId: string;
@@ -41,6 +41,7 @@ export function GeoSpecScreen({ providerId, spec }: Props) {
           <>
             <GeoGroup spec={spec} />
             <ChainsAssetsSection spec={spec} />
+            <MppRegistrySection spec={spec} />
             <EndpointsSection spec={spec} />
           </>
         )}
@@ -70,21 +71,44 @@ function GeoGroup({ spec }: { spec: GeoSpec }) {
         eyebrow="GEO"
         title="What this provider tells AI agents"
         note={
-          spec.atlasMissing
-            ? "No Pay.sh catalog entry was matched, so description/use case below may be empty."
-            : undefined
+          spec.atlasMissing && !spec.mppDescription
+            ? "No Pay.sh or MPP catalog entry was matched, so description/use case may be empty."
+            : spec.atlasMissing
+              ? "Provider is registered in the MPP services registry only — no Pay.sh atlas entry."
+              : undefined
         }
       />
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(360px, 1fr))",
-          gap: 14,
-        }}
-      >
-        <DefinitionCard label="Description" body={spec.description} />
-        <DefinitionCard label="Use case" body={spec.useCase} />
-      </div>
+      {spec.description || spec.useCase ? (
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(360px, 1fr))",
+            gap: 14,
+          }}
+        >
+          {spec.description ? (
+            <DefinitionCard label="Description (Pay.sh)" body={spec.description} />
+          ) : null}
+          {spec.useCase ? (
+            <DefinitionCard label="Use case (Pay.sh)" body={spec.useCase} />
+          ) : null}
+        </div>
+      ) : null}
+      {spec.mppDescription ? (
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr",
+            gap: 14,
+            marginTop: spec.description || spec.useCase ? 14 : 0,
+          }}
+        >
+          <DefinitionCard
+            label="Description (MPP registry)"
+            body={spec.mppDescription}
+          />
+        </div>
+      ) : null}
       <div
         style={{
           display: "grid",
@@ -382,3 +406,110 @@ const tdStyle: React.CSSProperties = {
   fontSize: 13,
   color: "var(--text-1)",
 };
+
+// Render the registry-declared paid endpoints exposed by MPP services. Mirrors
+// the layout of `EndpointsSection` (which shows Pay.sh observed endpoints) so
+// the user can compare path-by-path price tables across both catalog sources.
+function MppRegistrySection({ spec }: { spec: GeoSpec }) {
+  if (!spec.mppEndpoints || spec.mppEndpoints.length === 0) return null;
+
+  const sessionPresent = spec.mppEndpoints.some((e) => e.intent === "session");
+  const dynamicPresent = spec.mppEndpoints.some((e) => e.dynamic === true);
+  const noteParts: string[] = [
+    "Prices are published in the MPP services registry. `charge` = per-call fixed price.",
+  ];
+  if (sessionPresent) {
+    noteParts.push(
+      "`session` = per-session billing; the listed unit (e.g. per request) is the billable increment when known.",
+    );
+  }
+  if (dynamicPresent) {
+    noteParts.push(
+      "`dynamic` rows quote no fixed price — the runtime price depends on input/output (e.g. tokens, MB).",
+    );
+  }
+
+  return (
+    <section style={{ marginTop: 30 }}>
+      <SectionHeading
+        eyebrow="API paths · MPP registry"
+        title="Endpoints declared by the MPP services registry"
+        note={noteParts.join(" ")}
+      />
+      <article className="card" style={{ padding: 0, overflow: "hidden" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
+          <colgroup>
+            <col style={{ width: "30%" }} />
+            <col style={{ width: 90 }} />
+            <col />
+            <col style={{ width: 110 }} />
+            <col style={{ width: 110 }} />
+            <col style={{ width: 140 }} />
+          </colgroup>
+          <thead>
+            <tr style={tableHeadRowStyle}>
+              <th style={thStyle}>Resource (path)</th>
+              <th style={thStyle}>Method</th>
+              <th style={thStyle}>Description</th>
+              <th style={thStyle}>Intent</th>
+              <th style={thStyle}>Unit</th>
+              <th style={{ ...thStyle, textAlign: "right" }}>Price</th>
+            </tr>
+          </thead>
+          <tbody>
+            {spec.mppEndpoints.map((e, i) => (
+              <tr key={`${e.method ?? "GET"}-${e.resource}-${i}`} style={tableRowStyle}>
+                <td
+                  style={{
+                    ...tdStyle,
+                    fontFamily: "var(--mono)",
+                    fontSize: 12,
+                    wordBreak: "break-all",
+                  }}
+                  title={e.resource}
+                >
+                  {pathOf(e.resource)}
+                </td>
+                <td style={{ ...tdStyle, fontFamily: "var(--mono)", fontSize: 12 }}>
+                  {e.method ?? "—"}
+                </td>
+                <td style={{ ...tdStyle, overflowWrap: "anywhere" }}>{e.description ?? "—"}</td>
+                <td style={tdStyle}>{e.intent ?? "—"}</td>
+                <td style={tdStyle}>{formatUnit(e)}</td>
+                <td style={{ ...tdStyle, textAlign: "right", fontFamily: "var(--mono)" }}>
+                  {formatRegistryPrice(e)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </article>
+    </section>
+  );
+}
+
+function formatUnit(e: MppRegistryEndpoint): string {
+  if (e.intent === "session") {
+    return e.unitType ? `per ${e.unitType}` : "per session";
+  }
+  if (e.intent === "charge") {
+    return e.unitType ? `per ${e.unitType}` : "per call";
+  }
+  return e.unitType ? `per ${e.unitType}` : "—";
+}
+
+function formatRegistryPrice(e: MppRegistryEndpoint): string {
+  if (e.dynamic) return "dynamic";
+  if (!e.amountAtomic) return "—";
+  if (e.decimals === undefined) return `${e.amountAtomic} atomic`;
+  // Use parseFloat after manual scaling so trailing zeros collapse cleanly.
+  const denom = 10 ** e.decimals;
+  const value = Number(e.amountAtomic) / denom;
+  if (!Number.isFinite(value)) return "—";
+  if (value === 0) return "$0.00";
+  if (value < 0.01) {
+    // For sub-cent prices show 4 decimals so $0.0001 is readable.
+    return `$${value.toFixed(4).replace(/0+$/, "").replace(/\.$/, "")}`;
+  }
+  return `$${value.toFixed(2)}`;
+}

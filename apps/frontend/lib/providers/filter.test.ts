@@ -5,6 +5,7 @@ import {
   chainsOfProvider,
   collectAvailableChains,
   filterProviders,
+  protocolsOfProvider,
   visibleProviderChains,
   type ProviderClassifierContext,
 } from "./filter";
@@ -206,7 +207,44 @@ describe("visibleProviderChains", () => {
 });
 
 describe("orderProvidersPinnedFirst", () => {
-  test("places CoinGecko and Nansen first while preserving the rest", () => {
+  test("places MPP-registry rows first, then CoinGecko + Nansen, then the rest", () => {
+    const providers: StoredProvider[] = [
+      make({ providerId: "quicknode", name: "QuickNode", serviceId: "quicknode/rpc" }),
+      make({
+        providerId: "static-pro-api-coingecko-com",
+        name: "CoinGecko Pro",
+        serviceId: "pro-api.coingecko.com",
+      }),
+      make({ providerId: "stripe", name: "Stripe", serviceId: "api.stripe.com" }),
+      make({
+        providerId: "mpp:agentmail::tempo:4217::USDC::0x6e3184c2",
+        name: "AgentMail",
+        serviceId: "agentmail",
+        catalogSource: "mpp_registry",
+      }),
+      make({ providerId: "static-api-nansen-ai", name: "Nansen", serviceId: "api.nansen.ai" }),
+      make({
+        providerId: "mpp:openai::tempo:4217::USDC::0xca4e835f",
+        name: "OpenAI",
+        serviceId: "openai",
+        catalogSource: "mpp_registry",
+      }),
+    ];
+
+    expect(orderProvidersPinnedFirst(providers).map((p) => p.providerId)).toEqual([
+      // MPP rows first, in original-index order
+      "mpp:agentmail::tempo:4217::USDC::0x6e3184c2",
+      "mpp:openai::tempo:4217::USDC::0xca4e835f",
+      // then CoinGecko, then Nansen
+      "static-pro-api-coingecko-com",
+      "static-api-nansen-ai",
+      // then everything else in original order
+      "quicknode",
+      "stripe",
+    ]);
+  });
+
+  test("preserves CoinGecko/Nansen pin when no MPP rows are present", () => {
     const providers: StoredProvider[] = [
       make({ providerId: "quicknode", name: "QuickNode", serviceId: "quicknode/rpc" }),
       make({
@@ -224,5 +262,38 @@ describe("orderProvidersPinnedFirst", () => {
       "quicknode",
       "stripe",
     ]);
+  });
+});
+
+describe("protocolsOfProvider ordering", () => {
+  test("places MPP before x402 regardless of stored order", () => {
+    expect(
+      protocolsOfProvider(
+        make({
+          providerId: "x",
+          name: "X",
+          protocols: ["x402", "MPP"],
+        }),
+      ),
+    ).toEqual(["MPP", "x402"]);
+
+    expect(
+      protocolsOfProvider(
+        make({
+          providerId: "y",
+          name: "Y",
+          protocols: ["MPP", "x402"],
+        }),
+      ),
+    ).toEqual(["MPP", "x402"]);
+  });
+
+  test("preserves single-protocol arrays", () => {
+    expect(
+      protocolsOfProvider(make({ providerId: "a", name: "A", protocols: ["x402"] })),
+    ).toEqual(["x402"]);
+    expect(
+      protocolsOfProvider(make({ providerId: "b", name: "B", protocols: ["MPP"] })),
+    ).toEqual(["MPP"]);
   });
 });

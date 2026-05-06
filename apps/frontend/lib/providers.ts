@@ -101,11 +101,27 @@ function providerRouteAliases(provider: ProviderRouteLike): Set<string> {
   return aliases;
 }
 
+function tryDecodeRouteId(value: string): string | null {
+  // Next.js dynamic route params can arrive percent-encoded (e.g. when the
+  // providerId contains `:` such as MPP rows: `mpp:agentmail::tempo:4217::...`).
+  // We try a single decode pass and tolerate malformed sequences.
+  if (!value.includes("%")) return null;
+  try {
+    const decoded = decodeURIComponent(value);
+    return decoded === value ? null : decoded;
+  } catch {
+    return null;
+  }
+}
+
 export function matchesProviderRouteId(
   provider: ProviderRouteLike,
   routeProviderId: string,
 ): boolean {
-  return providerRouteAliases(provider).has(routeProviderId.toLowerCase());
+  const aliases = providerRouteAliases(provider);
+  if (aliases.has(routeProviderId.toLowerCase())) return true;
+  const decoded = tryDecodeRouteId(routeProviderId);
+  return decoded !== null && aliases.has(decoded.toLowerCase());
 }
 
 export function findProviderByRouteId<T extends ProviderRouteLike>(

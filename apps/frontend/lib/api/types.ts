@@ -46,6 +46,12 @@ export type ProviderCatalogItemDto = {
   customerFactCount: number;
   title?: string;
   description?: string;
+  /**
+   * Description published by the MPP services registry. Lives alongside
+   * `description` (which is Pay.sh atlas-sourced) so the GEO page can show
+   * both signals separately.
+   */
+  mppDescription?: string;
   useCase?: string;
   category?: string;
   serviceUrl?: string;

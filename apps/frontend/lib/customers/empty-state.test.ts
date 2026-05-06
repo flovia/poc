@@ -40,4 +40,22 @@ describe("customer empty state", () => {
       ),
     ).toBeNull();
   });
+
+  test("explains MPP-registry-only payment targets distinctly from Pay.sh catalog", () => {
+    const notice = buildNoCustomerFactsNotice(
+      {
+        serviceId: "agentmail",
+        network: "tempo:4217",
+        asset: "USDC",
+        payTo: "0x6e3184C204e596dED89E8A5693B602097F4Ab687",
+        catalogSource: "mpp_registry",
+        hasCustomerFacts: false,
+      },
+      0,
+    );
+
+    expect(notice?.title).toContain("No live customer facts");
+    // Should mention MPP catalog explicitly so users understand why facts are missing.
+    expect(notice?.body.toLowerCase()).toContain("mpp");
+  });
 });

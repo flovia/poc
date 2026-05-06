@@ -27,8 +27,8 @@ const SOURCE_OPTIONS: ReadonlyArray<{ value: ProviderSourceFilter; label: string
 
 const PROTOCOL_OPTIONS: ReadonlyArray<{ value: ProviderProtocolFilter; label: string }> = [
   { value: "all", label: "All" },
-  { value: "x402", label: "x402" },
   { value: "MPP", label: "MPP" },
+  { value: "x402", label: "x402" },
 ];
 
 
@@ -156,14 +156,19 @@ export function ProvidersPicker() {
         >
           {filtered.map((p) => {
         const isDemo = isDemoProvider(p, demoOpted, userIds);
-        const isPaySh = p.catalogSource === "pay_sh_curated";
+        // Aggregated catalog sources from the brand-key dedup (e.g.
+        // ["pay_sh_curated", "mpp_registry"] for AgentMail). Falls back to the
+        // single `catalogSource` when no aggregation happened.
+        const allCatalogSources = p.catalogSources ?? (p.catalogSource ? [p.catalogSource] : []);
+        const isPaySh = allCatalogSources.includes("pay_sh_curated");
+        const isMpp = allCatalogSources.includes("mpp_registry");
         const chains = visibleProviderChains(chainsOfProvider(p));
         const protocols = protocolsOfProvider(p);
         const skill = resolvePaySkill(skills, p.serviceId);
         const displayName = skill?.title || inferBrandDisplayName({ fqn: p.serviceId }) || p.name;
         const brand = inferBrandDomain({
           fqn: skill?.fqn ?? p.serviceId,
-          serviceUrl: skill?.service_url,
+          serviceUrl: skill?.service_url ?? p.serviceUrl,
         });
         return (
           <Link
@@ -220,14 +225,25 @@ export function ProvidersPicker() {
                   </div>
                 ) : null}
               </div>
-              {(isDemo || isPaySh || p.source !== "generated") && (
-                <div style={{ flexShrink: 0, marginTop: 1 }}>
+              {(isDemo || isPaySh || isMpp || p.source !== "generated") && (
+                <div
+                  style={{
+                    flexShrink: 0,
+                    marginTop: 1,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 4,
+                    alignItems: "flex-end",
+                  }}
+                >
                   {isDemo ? (
                     <CardBadge tone="muted">demo</CardBadge>
-                  ) : isPaySh ? (
-                    <CardBadge tone="muted">Pay.sh</CardBadge>
                   ) : (
-                    <CardBadge tone="blue">real</CardBadge>
+                    <>
+                      {isMpp ? <CardBadge tone="muted">MPP official</CardBadge> : null}
+                      {isPaySh ? <CardBadge tone="muted">Pay.sh</CardBadge> : null}
+                      {!isPaySh && !isMpp ? <CardBadge tone="blue">real</CardBadge> : null}
+                    </>
                   )}
                 </div>
               )}
