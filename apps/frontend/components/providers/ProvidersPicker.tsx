@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useProviders } from "@/app/providers";
 import { ProviderAvatar } from "@/components/shell/ProviderAvatar";
-import { isDemoProvider } from "@/lib/providers";
+import { isDemoProvider, routeIdForProvider } from "@/lib/providers";
 import { describeChain, type CustomerChain } from "@/lib/customers/chain";
 import { inferBrandDisplayName, inferBrandDomain } from "@/lib/pay-sh/brand";
 import { resolvePaySkill, usePaySkills } from "@/lib/pay-sh/skills";
@@ -173,7 +173,7 @@ export function ProvidersPicker() {
         return (
           <Link
             key={p.providerId}
-            href={`/providers/${p.providerId}/customers`}
+            href={`/providers/${routeIdForProvider(p)}/customers`}
             className="card"
             style={{
               padding: 18,

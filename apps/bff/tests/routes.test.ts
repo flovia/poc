@@ -90,6 +90,21 @@ describe("BFF routes", () => {
     await expect(response.json()).resolves.toEqual({ status: "ok", service: "flovia-bff" });
   });
 
+  test("returns not found for unsupported routes without waiting for analytics data source", async () => {
+    const unresolvedDataSource = new Promise<never>(() => {});
+    const handler = createBffHandler(unresolvedDataSource);
+
+    const response = await Promise.race([
+      handler(request("/unknown")),
+      new Promise<"timeout">((resolve) => setTimeout(() => resolve("timeout"), 50)),
+    ]);
+
+    expect(response).not.toBe("timeout");
+    if (response === "timeout") return;
+    expect(response.status).toBe(404);
+    await expect(response.json()).resolves.toEqual(expect.objectContaining({ error: "not_found" }));
+  });
+
   test("rejects non-GET requests to read-only endpoints", async () => {
     const handler = createBffHandler();
     const response = await handler(request("/health", { method: "POST" }));
@@ -142,7 +157,8 @@ describe("BFF routes", () => {
         generatedFrom: "mpp-registry-capture",
         providers: [
           {
-            providerId: "mpp:test-only::tempo:4217::USDC::0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            providerId:
+              "mpp:test-only::tempo:4217::USDC::0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
             name: "MPP Test Only",
             serviceId: "test-only",
             serviceName: "MPP Test Only",
@@ -1138,6 +1154,21 @@ describe("BFF routes", () => {
         }),
       ]),
     );
+    expect(
+      dataSource.customers.customers.find((customer) => customer.address === solanaPayer),
+    ).toEqual(
+      expect.objectContaining({
+        chains: ["solana mainnet"],
+        assets: ["USDC"],
+        spendByAsset: { USDC: "1046800001" },
+      }),
+    );
+    expect(dataSource.getCustomerProfile(solanaPayer)?.profile.identity).toEqual(
+      expect.objectContaining({
+        network: "solana mainnet",
+        asset: "USDC",
+      }),
+    );
   });
 
   test("normalizes Solana chain and token asset before joining catalog offers to live facts", async () => {
@@ -1168,6 +1199,29 @@ describe("BFF routes", () => {
     expect(customerSql).toContain("CROSS JOIN LATERAL unnest(s.provider_fqns)");
   });
 
+  test("deduplicates Base provider activity before joining transfer facts", async () => {
+    let providerSql = "";
+    let customerSql = "";
+
+    await loadPostgresLiveAnalyticsDataSource({
+      async query(sql) {
+        if (sql.includes("attributed_grouped")) {
+          customerSql = sql;
+          return [];
+        }
+        providerSql = sql;
+        return [];
+      },
+    });
+
+    for (const sql of [providerSql, customerSql]) {
+      expect(sql).toContain("base_provider_activity AS");
+      expect(sql).toContain("FROM x402_provider_activity");
+      expect(sql).toContain("GROUP BY lower(pay_to_address)");
+      expect(sql).toContain("LEFT JOIN base_provider_activity a");
+    }
+  });
+
   test("filters Solana live facts to Pay.sh offer-priced transfers", async () => {
     let providerSql = "";
     let customerSql = "";
@@ -1190,6 +1244,51 @@ describe("BFF routes", () => {
       expect(sql).toContain("provider.provider_fqn = offer_price.provider_fqn");
       expect(sql).toContain("s.amount::numeric = offer_price.amount_atomic");
     }
+  });
+
+  test("normalizes lowercase Pay.sh payment protocols in live catalog metadata", async () => {
+    const payTo = "8MPzJeXx1RipFmRADExptc3UK4EV3nhEFN6NRSx7o7jm";
+
+    const dataSource = await loadPostgresLiveAnalyticsDataSource({
+      async query(sql) {
+        if (sql.includes("attributed_grouped")) return [];
+        return [
+          {
+            network: "solana mainnet (mpp)",
+            asset: "USDC",
+            pay_to: payTo,
+            service_id: "demo/mpp",
+            service_name: "Demo MPP",
+            pay_sh_provider_fqn: "demo/mpp",
+            offers: [
+              {
+                protocol: "mpp",
+                chain: "Solana",
+                asset: "USDC",
+                payToAddress: payTo,
+                probePriceUsd: 0.01,
+              },
+            ],
+            protocol: "mpp",
+            transaction_count: 0,
+            unique_sender_count: 0,
+            total_volume_atomic: "0",
+          },
+        ];
+      },
+    });
+
+    expect(dataSource.providers.providers[0]).toEqual(
+      expect.objectContaining({
+        protocol: "MPP",
+        offers: [
+          expect.objectContaining({
+            protocol: "MPP",
+            payToAddress: payTo,
+          }),
+        ],
+      }),
+    );
   });
 
   test("filters Base live facts to known x402 payment option amounts", async () => {

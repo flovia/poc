@@ -111,6 +111,16 @@ export const createBffHandler =
         break;
     }
 
+    if (
+      !readonlyRoutes.has(path) &&
+      toProfileAddress(path) === null &&
+      toIntelligenceAddress(path) === null &&
+      toUpsellMetricsAddress(path) === null &&
+      toUpsellExplanationAddress(path) === null
+    ) {
+      return notFound(path);
+    }
+
     const resolvedDataSource = await dataSource;
 
     switch (path) {

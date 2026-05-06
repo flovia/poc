@@ -1,3 +1,4 @@
+import { PaymentRecipientAddressSchema } from "contracts";
 import type { StoredProvider } from "@/lib/types";
 
 // demo provider 識別子の単一の真実源。seedProviders() の providerId と一致させる。
@@ -72,9 +73,13 @@ type ProviderRouteLike = {
   paths?: Array<{ payTo: string }>;
 };
 
+function rawCandidatePayTos(provider: ProviderRouteLike): string[] {
+  if (provider.payTo) return [provider.payTo];
+  return (provider.paths ?? []).map((path) => path.payTo);
+}
+
 function candidatePayTos(provider: ProviderRouteLike): string[] {
-  if (provider.payTo) return [provider.payTo.toLowerCase()];
-  return (provider.paths ?? []).map((path) => path.payTo.toLowerCase());
+  return rawCandidatePayTos(provider).map((payTo) => payTo.toLowerCase());
 }
 
 function providerRouteAliases(provider: ProviderRouteLike): Set<string> {
@@ -129,6 +134,30 @@ export function findProviderByRouteId<T extends ProviderRouteLike>(
   routeProviderId: string,
 ): T | undefined {
   return providers.find((provider) => matchesProviderRouteId(provider, routeProviderId));
+}
+
+export function payToFromProviderRouteId(routeProviderId: string): string | undefined {
+  const segments = routeProviderId.split("--").reverse();
+  for (const segment of segments) {
+    let decoded = segment;
+    try {
+      decoded = decodeURIComponent(segment);
+    } catch {
+      decoded = segment;
+    }
+    const parsed = PaymentRecipientAddressSchema.safeParse(decoded);
+    if (parsed.success) return parsed.data;
+  }
+  return undefined;
+}
+
+export function routeIdForProvider(provider: ProviderRouteLike): string {
+  if (payToFromProviderRouteId(provider.providerId)) return provider.providerId;
+  for (const payTo of rawCandidatePayTos(provider)) {
+    const parsed = PaymentRecipientAddressSchema.safeParse(payTo);
+    if (parsed.success) return `${provider.providerId}--${parsed.data}`;
+  }
+  return provider.providerId;
 }
 
 // demo provider の payTo は UI 用の表示ダミー値で、本リポジトリの BFF

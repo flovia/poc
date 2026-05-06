@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Icon } from "@/components/ui/Icon";
 import { Field, FieldHeader, fieldInputStyle } from "./Field";
 import { useProviders } from "@/app/providers";
-import { ensureUniqueId, slugifyProviderName } from "@/lib/providers";
+import { ensureUniqueId, routeIdForProvider, slugifyProviderName } from "@/lib/providers";
 import type { StoredProvider, StoredProviderMode } from "@/lib/types";
 
 type PathRow = { apiPath: string; payTo: string };
@@ -63,12 +63,12 @@ export function SetupForm() {
               .map((p) => ({ apiPath: p.apiPath.trim(), payTo: p.payTo.trim() })),
           };
     addProvider(next);
-    router.push(`/providers/${providerId}/customers`);
+    router.push(`/providers/${routeIdForProvider(next)}/customers`);
   };
 
   const handleSkip = () => {
     if (!canSkip) return;
-    router.push(`/providers/${stored[0].providerId}/customers`);
+    router.push(`/providers/${routeIdForProvider(stored[0])}/customers`);
   };
 
   const handleTryDemo = () => {

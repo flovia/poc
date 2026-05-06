@@ -1,4 +1,3 @@
-import { notFound } from "next/navigation";
 import { TopBar } from "@/components/shell/TopBar";
 import { CustomersBrowser } from "@/components/customers/CustomersBrowser";
 import { CustomersHeader } from "@/components/customers/CustomersHeader";
@@ -6,8 +5,32 @@ import { CustomersOverview } from "@/components/customers/overview/CustomersOver
 import { SnapshotIndicator } from "@/components/customers/SnapshotIndicator";
 import { getCustomers, getProviders, getSdkExtrasMap, getSummary } from "@/lib/data-source";
 import { buildNoCustomerFactsNotice } from "@/lib/customers/empty-state";
-import { findProviderByRouteId } from "@/lib/providers";
+import { findProviderByRouteId, payToFromProviderRouteId } from "@/lib/providers";
+import type { ProviderCatalogItemDto } from "@/lib/api/types";
 import { getTopBarPageContext } from "@/lib/server/page-context";
+
+const fallbackProviderForRoute = (
+  providerId: string,
+  payTo: string | undefined,
+): ProviderCatalogItemDto => ({
+  providerId,
+  name: providerId,
+  network: "unknown",
+  asset: "unknown",
+  payTo: payTo ?? "unknown",
+  transactionCount: 0,
+  uniqueSenderCount: 0,
+  totalVolumeAtomic: "0",
+  endpointCount: 0,
+  resourceCount: 0,
+  endpointAttributionStatus: "unresolved_payto",
+  attributionConfidence: 0,
+  hasCustomerFacts: false,
+  customerFactCount: 0,
+  provenance: "derived_insight",
+  provenanceByField: {},
+  reasons: [{ provenance: "derived_insight", label: "route fallback provider" }],
+});
 
 export default async function CustomersPage({
   params,
@@ -16,8 +39,9 @@ export default async function CustomersPage({
 }) {
   const { providerId } = await params;
   const providers = await getProviders();
-  const activeProvider = findProviderByRouteId(providers, providerId);
-  if (!activeProvider?.payTo) notFound();
+  const routePayTo = payToFromProviderRouteId(providerId);
+  const activeProvider =
+    findProviderByRouteId(providers, providerId) ?? fallbackProviderForRoute(providerId, routePayTo);
   const resolvedProviderId = activeProvider.providerId;
   const filter = activeProvider?.serviceId
     ? { serviceId: activeProvider.serviceId }

@@ -5,7 +5,7 @@ import { useMemo } from "react";
 import { useProviders } from "@/app/providers";
 import { Icon } from "@/components/ui/Icon";
 import { classNames } from "@/lib/format";
-import { getDisplayPayTo, getPathCount, isDemoProvider } from "@/lib/providers";
+import { getDisplayPayTo, getPathCount, isDemoProvider, routeIdForProvider } from "@/lib/providers";
 
 function daysAgo(ts: number): number {
   return Math.max(0, Math.round((Date.now() - ts) / 86_400_000));
@@ -98,7 +98,7 @@ export function SavedProviderList() {
                   <Link
                     className="btn ghost"
                     style={{ padding: "5px 10px", fontSize: 13 }}
-                    href={`/providers/${p.providerId}/customers`}
+                    href={`/providers/${routeIdForProvider(p)}/customers`}
                   >
                     Open
                   </Link>

@@ -105,7 +105,11 @@ const normalizePaymentAddressForNetwork = (value: unknown, network: string) => {
   return network.toLowerCase() === "base" ? raw.toLowerCase() : raw;
 };
 const optionalProtocol = (value: unknown): "x402" | "MPP" | undefined => {
-  if (value === "x402" || value === "MPP") return value;
+  const raw = String(value ?? "")
+    .trim()
+    .toLowerCase();
+  if (raw === "x402") return "x402";
+  if (raw === "mpp") return "MPP";
   return undefined;
 };
 const optionalPriceRange = (
@@ -347,6 +351,37 @@ const aggregateCustomers = (rows: CustomerRow[]) => {
   });
 };
 
+const uniqueSorted = (values: Iterable<string>) =>
+  Array.from(new Set(Array.from(values).filter(Boolean))).sort((left, right) =>
+    left.localeCompare(right),
+  );
+
+const customerNetworks = (customer: CustomerAggregate) =>
+  uniqueSorted(customer.providers.map((provider) => provider.network));
+
+const customerAssets = (customer: CustomerAggregate) =>
+  uniqueSorted(customer.providers.map((provider) => provider.asset));
+
+const singleOr = (values: readonly string[], fallback: string) => values[0] ?? fallback;
+
+const profileNetworkFor = (values: readonly string[]) =>
+  values.length === 1 ? singleOr(values, "unknown") : "multi-chain";
+
+const profileAssetFor = (values: readonly string[]) =>
+  values.length === 1 ? singleOr(values, "unknown") : "multi-asset";
+
+const spendByAssetFor = (rows: readonly CustomerRow[]) => {
+  const totals = new Map<string, bigint>();
+  for (const row of rows) {
+    totals.set(row.asset, (totals.get(row.asset) ?? 0n) + BigInt(row.totalVolumeAtomic));
+  }
+  return Object.fromEntries(
+    Array.from(totals.entries())
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([asset, total]) => [asset, total.toString()] as const),
+  );
+};
+
 const buildPayload = (
   providerRows: ProviderRow[],
   customerRows: CustomerRow[],
@@ -475,19 +510,26 @@ const buildPayload = (
       ...phaseBCustomerListResponse,
       generatedAt: now,
       generatedFrom: "postgres-live-read-model",
-      customers: customers.map((customer) => ({
-        address: customer.payer,
-        label: `Wallet ${customer.payer.slice(0, 6)}`,
-        observationCount: customer.transactionCount,
-        spendAtomic: customer.totalVolumeAtomic,
-        providerCount: customer.providers.length,
-        lastSeenAt: customer.lastSeenAt,
-        activityGrowth: 0,
-        upsellOpportunity: customer.transactionCount >= 5 ? "high" : "medium",
-        provenance: "derived_insight",
-        provenanceByField: { address: "onchain_fact", spendAtomic: "onchain_fact" },
-        reasons: [{ provenance: "derived_insight", label: "postgres live customer aggregate" }],
-      })),
+      customers: customers.map((customer) => {
+        const chains = customerNetworks(customer);
+        const assets = customerAssets(customer);
+        return {
+          address: customer.payer,
+          label: `Wallet ${customer.payer.slice(0, 6)}`,
+          observationCount: customer.transactionCount,
+          spendAtomic: customer.totalVolumeAtomic,
+          providerCount: customer.providers.length,
+          lastSeenAt: customer.lastSeenAt,
+          activityGrowth: 0,
+          upsellOpportunity: customer.transactionCount >= 5 ? "high" : "medium",
+          chains,
+          assets,
+          spendByAsset: spendByAssetFor(customer.providers),
+          provenance: "derived_insight",
+          provenanceByField: { address: "onchain_fact", spendAtomic: "onchain_fact" },
+          reasons: [{ provenance: "derived_insight", label: "postgres live customer aggregate" }],
+        };
+      }),
       customerCount: customers.length,
       provenance: "derived_insight",
       reasons: [{ provenance: "derived_insight", label: "postgres live customers" }],
@@ -601,100 +643,114 @@ const buildPayload = (
       })),
     },
     profilesByAddress: Object.fromEntries(
-      customers.map((customer) => [
-        customer.payer,
-        {
-          generatedAt: now,
-          generatedFrom: "postgres-live-read-model",
-          scope: { network: "base", asset: "USDC" },
-          profile: {
-            identity: {
-              address: customer.payer,
-              label: `Wallet ${customer.payer.slice(0, 6)}`,
-              network: "base",
-              asset: "USDC",
-              role: "payer_wallet",
-              identityBasis: "onchain transfer sender",
-              caveat: "Derived from x402 attributed transfer facts.",
-              provenance: "derived_insight",
-              provenanceByField: { address: "onchain_fact" },
-              reasons: [{ provenance: "derived_insight", label: "postgres live wallet identity" }],
-            },
-            metrics: {
-              spendAtomic: customer.totalVolumeAtomic,
-              activityGrowth: 0,
-              freeTierProgress: Math.min(1, customer.transactionCount / 20),
-              entryPointRatio: 1,
-              upsellOpportunity: customer.transactionCount >= 5 ? "high" : "medium",
-              totalSpendAtomic: customer.totalVolumeAtomic,
-              txCount: customer.transactionCount,
-              uniqueProviderCount: customer.providers.length,
-              averageSpendAtomic: customer.transactionCount
-                ? (
-                    BigInt(customer.totalVolumeAtomic) / BigInt(customer.transactionCount)
-                  ).toString()
-                : "0",
-              firstSeenAt: customer.firstSeenAt,
-              lastSeenAt: customer.lastSeenAt,
-              provenance: "derived_insight",
-              provenanceByField: { spendAtomic: "onchain_fact", txCount: "onchain_fact" },
-              reasons: [{ provenance: "derived_insight", label: "postgres live wallet metrics" }],
-            },
-            providers: customer.providers.map((provider) => ({
-              providerId: providerIdFor({
-                serviceId: provider.serviceId,
-                network: provider.network,
-                asset: provider.asset,
-                payTo: provider.payTo,
-              }),
-              name: provider.serviceName,
-              providerName: provider.serviceName,
-              payToWallet: provider.payTo,
-              spendAtomic: provider.totalVolumeAtomic,
-              transactionCount: provider.transactionCount,
-              txCount: provider.transactionCount,
-              firstSeenAt: provider.firstSeenAt,
-              lastSeenAt: provider.lastSeenAt,
-              confidence: 0.5,
-              provenance: "derived_insight",
-              provenanceByField: { payToWallet: "onchain_fact", spendAtomic: "onchain_fact" },
-              reasons: [{ provenance: "derived_insight", label: "postgres live wallet provider" }],
-            })),
-            timeline: customer.providers.slice(0, 5).map((provider) => ({
-              at: provider.lastSeenAt,
-              eventType: "payment",
-              description: `Paid ${provider.serviceName}`,
-              amountAtomic: provider.totalVolumeAtomic,
-              relatedProviderId: providerIdFor({
-                serviceId: provider.serviceId,
-                network: provider.network,
-                asset: provider.asset,
-                payTo: provider.payTo,
-              }),
-              provenance: "derived_insight",
-              provenanceByField: { amountAtomic: "onchain_fact" },
-              reasons: [{ provenance: "derived_insight", label: "postgres live payment timeline" }],
-            })),
-            insights: [
-              {
-                key: "x402-activity",
-                title: "Observed x402 payment activity",
-                summary: `${customer.transactionCount} attributed transfer(s) across ${customer.providers.length} payTo wallet(s).`,
-                confidence: 0.5,
-                classification: "upsell",
+      customers.map((customer) => {
+        const networks = customerNetworks(customer);
+        const assets = customerAssets(customer);
+        const profileNetwork = profileNetworkFor(networks);
+        const profileAsset = profileAssetFor(assets);
+        return [
+          customer.payer,
+          {
+            generatedAt: now,
+            generatedFrom: "postgres-live-read-model",
+            scope: { network: profileNetwork, asset: profileAsset },
+            profile: {
+              identity: {
+                address: customer.payer,
+                label: `Wallet ${customer.payer.slice(0, 6)}`,
+                network: profileNetwork,
+                asset: profileAsset,
+                role: "payer_wallet",
+                identityBasis: "onchain transfer sender",
+                caveat: "Derived from x402 attributed transfer facts.",
                 provenance: "derived_insight",
-                provenanceByField: { summary: "derived_insight" },
-                reasons: [{ provenance: "derived_insight", label: "postgres live x402 insight" }],
+                provenanceByField: { address: "onchain_fact" },
+                reasons: [
+                  { provenance: "derived_insight", label: "postgres live wallet identity" },
+                ],
               },
-            ],
+              metrics: {
+                spendAtomic: customer.totalVolumeAtomic,
+                activityGrowth: 0,
+                freeTierProgress: Math.min(1, customer.transactionCount / 20),
+                entryPointRatio: 1,
+                upsellOpportunity: customer.transactionCount >= 5 ? "high" : "medium",
+                totalSpendAtomic: customer.totalVolumeAtomic,
+                txCount: customer.transactionCount,
+                uniqueProviderCount: customer.providers.length,
+                averageSpendAtomic: customer.transactionCount
+                  ? (
+                      BigInt(customer.totalVolumeAtomic) / BigInt(customer.transactionCount)
+                    ).toString()
+                  : "0",
+                firstSeenAt: customer.firstSeenAt,
+                lastSeenAt: customer.lastSeenAt,
+                provenance: "derived_insight",
+                provenanceByField: { spendAtomic: "onchain_fact", txCount: "onchain_fact" },
+                reasons: [{ provenance: "derived_insight", label: "postgres live wallet metrics" }],
+              },
+              providers: customer.providers.map((provider) => ({
+                providerId: providerIdFor({
+                  serviceId: provider.serviceId,
+                  network: provider.network,
+                  asset: provider.asset,
+                  payTo: provider.payTo,
+                }),
+                name: provider.serviceName,
+                providerName: provider.serviceName,
+                payToWallet: provider.payTo,
+                spendAtomic: provider.totalVolumeAtomic,
+                transactionCount: provider.transactionCount,
+                txCount: provider.transactionCount,
+                firstSeenAt: provider.firstSeenAt,
+                lastSeenAt: provider.lastSeenAt,
+                chain: provider.network,
+                assetSymbol: provider.asset,
+                confidence: 0.5,
+                provenance: "derived_insight",
+                provenanceByField: { payToWallet: "onchain_fact", spendAtomic: "onchain_fact" },
+                reasons: [
+                  { provenance: "derived_insight", label: "postgres live wallet provider" },
+                ],
+              })),
+              timeline: customer.providers.slice(0, 5).map((provider) => ({
+                at: provider.lastSeenAt,
+                eventType: "payment",
+                description: `Paid ${provider.serviceName}`,
+                amountAtomic: provider.totalVolumeAtomic,
+                relatedProviderId: providerIdFor({
+                  serviceId: provider.serviceId,
+                  network: provider.network,
+                  asset: provider.asset,
+                  payTo: provider.payTo,
+                }),
+                provenance: "derived_insight",
+                provenanceByField: { amountAtomic: "onchain_fact" },
+                reasons: [
+                  { provenance: "derived_insight", label: "postgres live payment timeline" },
+                ],
+              })),
+              insights: [
+                {
+                  key: "x402-activity",
+                  title: "Observed x402 payment activity",
+                  summary: `${customer.transactionCount} attributed transfer(s) across ${customer.providers.length} payTo wallet(s).`,
+                  confidence: 0.5,
+                  classification: "upsell",
+                  provenance: "derived_insight",
+                  provenanceByField: { summary: "derived_insight" },
+                  reasons: [{ provenance: "derived_insight", label: "postgres live x402 insight" }],
+                },
+              ],
+              provenance: "derived_insight",
+              provenanceByField: { providers: "onchain_fact", metrics: "derived_insight" },
+              reasons: [{ provenance: "derived_insight", label: "postgres live customer profile" }],
+            },
             provenance: "derived_insight",
-            provenanceByField: { providers: "onchain_fact", metrics: "derived_insight" },
             reasons: [{ provenance: "derived_insight", label: "postgres live customer profile" }],
           },
-          provenance: "derived_insight",
-          reasons: [{ provenance: "derived_insight", label: "postgres live customer profile" }],
-        },
-      ]),
+        ] as const;
+      }),
     ),
   };
 };
@@ -715,6 +771,16 @@ export const loadPostgresLiveAnalyticsDataSource = async (
           AND po.amount_atomic IS NOT NULL
           AND po.active
           AND r.active
+      ),
+      base_provider_activity AS (
+        SELECT
+          lower(pay_to_address) AS pay_to_address,
+          max(NULLIF(service, '')) AS service,
+          max(NULLIF(provider, '')) AS provider,
+          max(NULLIF(domain, '')) AS domain
+        FROM x402_provider_activity
+        WHERE pay_to_address IS NOT NULL
+        GROUP BY lower(pay_to_address)
       ),
       base_provider_grouped AS (
         SELECT
@@ -737,7 +803,7 @@ export const loadPostgresLiveAnalyticsDataSource = async (
           to_timestamp(MIN(g.block_timestamp)) AS first_seen_at,
           to_timestamp(MAX(g.block_timestamp)) AS last_seen_at
         FROM goldsky_webhook_transfers_x402_paytos g
-        LEFT JOIN x402_provider_activity a
+        LEFT JOIN base_provider_activity a
           ON lower(a.pay_to_address) = lower(g.to_owner_address)
         WHERE g.from_owner_address IS NOT NULL
           AND g.to_owner_address IS NOT NULL
@@ -1051,6 +1117,16 @@ export const loadPostgresLiveAnalyticsDataSource = async (
           AND po.active
           AND r.active
       ),
+      base_provider_activity AS (
+        SELECT
+          lower(pay_to_address) AS pay_to_address,
+          max(NULLIF(service, '')) AS service,
+          max(NULLIF(provider, '')) AS provider,
+          max(NULLIF(domain, '')) AS domain
+        FROM x402_provider_activity
+        WHERE pay_to_address IS NOT NULL
+        GROUP BY lower(pay_to_address)
+      ),
       base_attributed_grouped AS (
         SELECT
           'base' AS network,
@@ -1072,7 +1148,7 @@ export const loadPostgresLiveAnalyticsDataSource = async (
           to_timestamp(MIN(g.block_timestamp)) AS first_seen_at,
           to_timestamp(MAX(g.block_timestamp)) AS last_seen_at
         FROM goldsky_webhook_transfers_x402_paytos g
-        LEFT JOIN x402_provider_activity a
+        LEFT JOIN base_provider_activity a
           ON lower(a.pay_to_address) = lower(g.to_owner_address)
         WHERE g.from_owner_address IS NOT NULL
           AND g.to_owner_address IS NOT NULL

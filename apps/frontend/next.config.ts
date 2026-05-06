@@ -1,10 +1,10 @@
 import type { NextConfig } from "next";
-import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   allowedDevOrigins: ["127.0.0.1", "localhost:3333", "127.0.0.1:3333"],
-  outputFileTracingRoot: path.join(process.cwd(), "../.."),
+  outputFileTracingRoot: fileURLToPath(new URL("../..", import.meta.url)),
   async rewrites() {
     const bffUrl = process.env.BFF_URL ?? "http://localhost:3001";
 

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { findProviderByRouteId } from "./providers";
+import { findProviderByRouteId, payToFromProviderRouteId, routeIdForProvider } from "./providers";
 
 const coingeckoProvider = {
   providerId: "pro-api-coingecko-com--base--usdc--0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
@@ -44,8 +44,34 @@ describe("provider route aliases", () => {
   });
 
   test("invalid percent-encoded sequence does not throw", () => {
-    expect(() =>
-      findProviderByRouteId([coingeckoProvider], "%E0%A4%A"),
-    ).not.toThrow();
+    expect(() => findProviderByRouteId([coingeckoProvider], "%E0%A4%A")).not.toThrow();
+  });
+
+  test("builds route ids that retain user provider payTo for server fallback", () => {
+    expect(
+      routeIdForProvider({
+        providerId: "my-provider",
+        name: "My Provider",
+        payTo: "0x9999999999999999999999999999999999999999",
+      }),
+    ).toBe("my-provider--0x9999999999999999999999999999999999999999");
+
+    expect(
+      routeIdForProvider({
+        providerId: "advanced-provider",
+        name: "Advanced Provider",
+        paths: [{ payTo: "0x8888888888888888888888888888888888888888" }],
+      }),
+    ).toBe("advanced-provider--0x8888888888888888888888888888888888888888");
+  });
+
+  test("extracts EVM and Solana payTo values from route ids", () => {
+    const solana = "8MPzJeXx1RipFmRADExptc3UK4EV3nhEFN6NRSx7o7jm";
+
+    expect(
+      payToFromProviderRouteId("my-provider--0x9999999999999999999999999999999999999999"),
+    ).toBe("0x9999999999999999999999999999999999999999");
+    expect(payToFromProviderRouteId(`my-provider--${solana}`)).toBe(solana);
+    expect(payToFromProviderRouteId("my-provider")).toBeUndefined();
   });
 });
