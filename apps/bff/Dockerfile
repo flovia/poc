@@ -19,7 +19,8 @@ COPY packages/sources ./packages/sources
 WORKDIR /app/apps/bff
 
 ENV PORT=3001 \
-    DATABASE_URL=/data/flovia.db
+    DATABASE_URL=/data/flovia.db \
+    BFF_MPP_CATALOG_PATH=/app/apps/bff/data/mpp-provider-catalog.json
 
 RUN mkdir -p /data
 
