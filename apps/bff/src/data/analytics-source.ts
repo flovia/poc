@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { SQL } from "bun";
+import { mergeProviderCatalogs } from "sources";
 import { loadPostgresLiveAnalyticsDataSource } from "./postgres-live-read-model";
 import {
   type PhaseBCustomerUpsellMetricsResponse,
@@ -72,6 +73,8 @@ type AnalyticsSourceEnv = Partial<
     | "DATABASE_URL"
     | "BFF_ANALYTICS_SNAPSHOT_ID"
     | "BFF_ANALYTICS_POSTGRES_MODE"
+    | "BFF_MPP_CATALOG_PATH"
+    | "NODE_ENV"
   >
 >;
 
@@ -91,6 +94,16 @@ const DEFAULT_GENERATED_ANALYTICS_PATH = path.join(
   "fixtures",
   "generated",
   "analytics.json",
+);
+
+const DEFAULT_MPP_CATALOG_PATH = path.join(
+  import.meta.dir,
+  "..",
+  "..",
+  "..",
+  "..",
+  "tmp",
+  "mpp-provider-catalog.json",
 );
 
 const fixtureProviderCatalog = validateProviderCatalogResponse({
@@ -242,6 +255,32 @@ export const loadGeneratedAnalyticsDataSourceFromPayload = (
 export const loadGeneratedAnalyticsDataSource = (filePath: string): BffAnalyticsDataSource => {
   const payload = JSON.parse(fs.readFileSync(filePath, "utf8")) as GeneratedReadModelFile;
   return loadGeneratedAnalyticsDataSourceFromPayload(payload);
+};
+
+// Merge an MPP-derived ProviderCatalogResponse on top of an existing data source's
+// providers. The data source identity is preserved (only the providers field is replaced),
+// so customers/profiles/wallet graph etc. continue to work unchanged.
+//
+// Behavior:
+// - overlayPath is undefined/empty -> no-op (overlay disabled)
+// - overlayPath is set but file missing/unreadable -> throw (fail-fast on misconfig)
+export const applyMppCatalogOverlay = (
+  dataSource: BffAnalyticsDataSource,
+  overlayPath: string | undefined,
+): BffAnalyticsDataSource => {
+  const trimmed = overlayPath?.trim();
+  if (!trimmed) return dataSource;
+  if (!fs.existsSync(trimmed)) {
+    throw new Error(
+      `BFF_MPP_CATALOG_PATH is set but file does not exist: ${trimmed}. ` +
+        "Either unset BFF_MPP_CATALOG_PATH or point it to a readable mpp-provider-catalog.json.",
+    );
+  }
+  const raw = JSON.parse(fs.readFileSync(trimmed, "utf8"));
+  const mppCatalog = validateProviderCatalogResponse(raw);
+  const merged = mergeProviderCatalogs(dataSource.providers, mppCatalog);
+  if (merged === dataSource.providers) return dataSource;
+  return { ...dataSource, providers: merged };
 };
 
 const createBunPostgresClient = (url: string): PostgresAnalyticsClient => {
@@ -545,14 +584,31 @@ export const resolveAnalyticsDataSource = (
   const env = options.env ?? process.env;
   const source = (env.BFF_ANALYTICS_SOURCE?.trim() || undefined) as AnalyticsSourceKind | undefined;
   const readModelPath = env.BFF_ANALYTICS_READ_MODEL_PATH ?? filePath;
+  // Overlay resolution:
+  // - BFF_MPP_CATALOG_PATH explicitly set (any value, including ""):
+  //     non-empty path -> use it (fail-fast if file missing)
+  //     empty string   -> overlay disabled
+  // - BFF_MPP_CATALOG_PATH undefined:
+  //     non-production: auto-load tmp/mpp-provider-catalog.json if it exists (dev convenience)
+  //     production:     no auto-load (must be opt-in via BFF_MPP_CATALOG_PATH)
+  const isProduction = (env.NODE_ENV ?? "").toLowerCase() === "production";
+  const mppOverlayPath =
+    env.BFF_MPP_CATALOG_PATH !== undefined
+      ? env.BFF_MPP_CATALOG_PATH
+      : !isProduction && fs.existsSync(DEFAULT_MPP_CATALOG_PATH)
+        ? DEFAULT_MPP_CATALOG_PATH
+        : undefined;
 
-  if (source === "fixture") return fixtureAnalyticsDataSource;
+  const overlay = (resolved: BffAnalyticsDataSource): BffAnalyticsDataSource =>
+    applyMppCatalogOverlay(resolved, mppOverlayPath);
+
+  if (source === "fixture") return overlay(fixtureAnalyticsDataSource);
 
   if (source === "json") {
     if (!readModelPath || !fs.existsSync(readModelPath)) {
       throw new Error(`BFF analytics JSON read model not found: ${readModelPath}`);
     }
-    return loadGeneratedAnalyticsDataSource(readModelPath);
+    return overlay(loadGeneratedAnalyticsDataSource(readModelPath));
   }
 
   if (source === "postgres") {
@@ -564,9 +620,11 @@ export const resolveAnalyticsDataSource = (
     }
     const client = options.postgresClient ?? createBunPostgresClient(databaseUrl as string);
     if ((env.BFF_ANALYTICS_POSTGRES_MODE ?? "live") === "snapshot") {
-      return loadPostgresAnalyticsDataSource(client, env.BFF_ANALYTICS_SNAPSHOT_ID ?? "latest");
+      return loadPostgresAnalyticsDataSource(client, env.BFF_ANALYTICS_SNAPSHOT_ID ?? "latest").then(
+        overlay,
+      );
     }
-    return loadPostgresLiveAnalyticsDataSource(client);
+    return loadPostgresLiveAnalyticsDataSource(client).then(overlay);
   }
 
   if (source !== undefined) {
@@ -574,6 +632,6 @@ export const resolveAnalyticsDataSource = (
   }
 
   if (readModelPath && fs.existsSync(readModelPath))
-    return loadGeneratedAnalyticsDataSource(readModelPath);
-  return fixtureAnalyticsDataSource;
+    return overlay(loadGeneratedAnalyticsDataSource(readModelPath));
+  return overlay(fixtureAnalyticsDataSource);
 };

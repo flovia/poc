@@ -14,12 +14,20 @@ export function buildNoCustomerFactsNotice(
   customerCount: number,
 ): CustomerFactsNotice | null {
   if (customerCount > 0 || provider.hasCustomerFacts) return null;
-  const isCatalogOnly = provider.catalogSource === "pay_sh_curated";
+  const isPaySh = provider.catalogSource === "pay_sh_curated";
+  const isMpp = provider.catalogSource === "mpp_registry";
+  let body =
+    "The current on-chain read model has not observed payer wallets for this payment target yet.";
+  if (isPaySh) {
+    body =
+      "This provider is available in the Pay.sh catalog, but the current on-chain read model has not observed payer wallets for this specific chain / asset / payTo target.";
+  } else if (isMpp) {
+    body =
+      "This provider was discovered via the MPP services registry. We have not yet correlated on-chain payments to this specific chain / asset / payTo target.";
+  }
   return {
     title: "No live customer facts for this payment target yet",
-    body: isCatalogOnly
-      ? "This provider is available in the Pay.sh catalog, but the current on-chain read model has not observed payer wallets for this specific chain / asset / payTo target."
-      : "The current on-chain read model has not observed payer wallets for this payment target yet.",
+    body,
     details: [
       `Service: ${provider.serviceId ?? "unknown"}`,
       `Target: ${provider.network} / ${provider.asset}`,

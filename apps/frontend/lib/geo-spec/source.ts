@@ -29,12 +29,38 @@ export type GeoEndpoint = {
   totalAmountAtomic: string;
 };
 
+/**
+ * Endpoint declared in the MPP services registry, with the registry's payment
+ * metadata. Unlike `GeoEndpoint` (observed on-chain), these are catalog
+ * declarations: each row has a path, an intent (charge or session), a unit
+ * type when known, a dynamic flag for runtime-priced calls (e.g. LLM tokens),
+ * and a fixed atomic amount for charge-style endpoints.
+ */
+export type MppRegistryEndpoint = {
+  resource: string;
+  method?: string;
+  description?: string;
+  intent?: "charge" | "session";
+  unitType?: string;
+  dynamic?: boolean;
+  amountAtomic?: string;
+  decimals?: number;
+  asset?: string;
+  network?: string;
+};
+
 export type GeoSpec = {
   serviceId: string;
   serviceUrl: string | null;
   title: string | null;
   category: string | null;
   description: string | null;
+  /**
+   * Description published by the MPP services registry. Rendered separately
+   * from `description` (Pay.sh atlas) on the GEO page so each catalog source
+   * can be attributed independently.
+   */
+  mppDescription: string | null;
   useCase: string | null;
   endpointCount: number | null;
   hasMetering: boolean | null;
@@ -46,6 +72,12 @@ export type GeoSpec = {
   priceRangeUsd: { min: number; max: number } | null;
   offers: GeoOffer[];
   observedEndpoints: GeoEndpoint[];
+  /**
+   * MPP services registry が宣言する各 paid endpoint と料金体系。
+   * Pay.sh の "API paths observed" と同形式の表で描画する。
+   * MPP 由来でない provider では空配列。
+   */
+  mppEndpoints: MppRegistryEndpoint[];
   // atlas に該当 provider が見つからなかったときに true。
   // 観測データのみで GEO まとまりは空表示になる。
   atlasMissing: boolean;
@@ -100,6 +132,7 @@ type AnalyticsCatalogRow = {
   name?: string | null;
   title?: string | null;
   description?: string | null;
+  mppDescription?: string | null;
   useCase?: string | null;
   category?: string | null;
   serviceId?: string | null;
@@ -125,6 +158,7 @@ export type GeoSpecProviderHint = {
   name?: string | null;
   title?: string | null;
   description?: string | null;
+  mppDescription?: string | null;
   useCase?: string | null;
   category?: string | null;
   serviceId?: string | null;
@@ -162,6 +196,11 @@ export type GeoSpecProviderHint = {
     l30DaysUniquePayers?: number;
     transactionCount?: number;
     totalAmountAtomic?: string;
+    // MPP-registry-only payment metadata (carried through ProviderResourceSchema).
+    intent?: "charge" | "session";
+    unitType?: string;
+    dynamic?: boolean;
+    decimals?: number;
   }>;
 };
 
@@ -365,6 +404,7 @@ const rowFromHint = (hint: GeoSpecProviderHint | null | undefined): AnalyticsCat
     name: hint.name,
     title: hint.title,
     description: hint.description,
+    mppDescription: hint.mppDescription,
     useCase: hint.useCase,
     category: hint.category,
     serviceId: hint.serviceId ?? hint.serviceName ?? hint.name ?? hint.providerId,
@@ -398,7 +438,15 @@ export const getGeoSpec = (
 ): GeoSpec | null => {
   const analytics = loadAnalytics();
   const rows = analytics.providers?.providers ?? [];
-  const row = findAnalyticsRow(rows, providerId) ?? rowFromHint(providerHint);
+  // Priority:
+  //   1. providerHint — the BFF already resolved providerId via
+  //      findProviderByRouteId, so the hint represents THE row the user is
+  //      looking at (incl. MPP rows that aren't in the static analytics.json).
+  //   2. analytics.json lookup — fallback for cases where no hint is provided
+  //      (older callers or test fixtures without live data).
+  // Without this ordering, the analytics.json payTo-fallback can return a
+  // Pay.sh row that shares a payTo with an MPP row, masking the MPP data.
+  const row = rowFromHint(providerHint) ?? findAnalyticsRow(rows, providerId);
   if (!row) return null;
 
   const serviceId = (row.serviceId ?? row.serviceName ?? row.name ?? "").trim();
@@ -478,13 +526,44 @@ export const getGeoSpec = (
 
   const offers: GeoOffer[] = matched?.offers ?? row.offers ?? [];
 
+  // MPP-registry endpoints: derived from `row.resources` when the row carries
+  // MPP-flavored payment metadata (intent / dynamic / decimals). We only emit
+  // these when the row was produced by the MPP capture path; otherwise the
+  // resources[] either don't have these fields or aren't a registry projection.
+  const mppEndpoints: MppRegistryEndpoint[] = (row.resources ?? [])
+    .filter(
+      (r) =>
+        r.intent !== undefined ||
+        r.dynamic !== undefined ||
+        r.decimals !== undefined ||
+        r.unitType !== undefined,
+    )
+    .map((r) => ({
+      resource: r.resource,
+      method: r.method,
+      description: r.description,
+      intent: r.intent,
+      unitType: r.unitType,
+      dynamic: r.dynamic,
+      amountAtomic: r.amountAtomic,
+      decimals: r.decimals,
+      asset: r.asset,
+      network: r.network,
+    }));
+
   return {
     serviceId,
     serviceUrl: matched?.serviceUrl ?? row.serviceUrl ?? null,
     title: matched?.title ?? row.title ?? row.name ?? null,
     category: matched?.category ?? row.category ?? null,
-    description: matched?.description ?? row.description ?? null,
-    useCase: matched?.useCase ?? row.useCase ?? null,
+    // description / useCase は Pay.sh atlas (matched) にヒットしたときだけ
+    // 値を返す。ヒットしないときは null にして、GEO ページの
+    // 「Description (Pay.sh)」/「Use case (Pay.sh)」カードを非表示にする。
+    // (`row.description` には MPP-only プロバイダの場合 MPP registry 由来の
+    // テキストが入っているため、Pay.sh ラベルで出すのは誤情報になる。)
+    description: matched?.description ?? null,
+    mppDescription: row.mppDescription ?? null,
+    useCase: matched?.useCase ?? null,
     endpointCount: matched?.endpointCount ?? row.resources?.length ?? null,
     hasMetering: row.hasMetering ?? null,
     hasFreeTier: row.hasFreeTier ?? null,
@@ -495,6 +574,7 @@ export const getGeoSpec = (
     priceRangeUsd: matched?.priceRangeUsd ?? row.priceRangeUsd ?? null,
     offers,
     observedEndpoints: observedEndpoints.length ? observedEndpoints : liveResourceEndpoints,
+    mppEndpoints,
     atlasMissing: matched === null,
   };
 };

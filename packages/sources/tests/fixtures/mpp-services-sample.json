@@ -1,0 +1,69 @@
+{
+  "version": 1,
+  "services": [
+    {
+      "id": "agentmail",
+      "name": "AgentMail",
+      "url": "https://mpp.api.agentmail.to",
+      "serviceUrl": "https://mpp.api.agentmail.to",
+      "description": "Email inboxes for AI agents.",
+      "categories": ["ai", "social"],
+      "integration": "first-party",
+      "tags": ["email", "inboxes"],
+      "status": "active",
+      "docs": { "homepage": "https://docs.agentmail.to" },
+      "methods": {
+        "tempo": {
+          "intents": ["charge"],
+          "assets": ["0x20c000000000000000000000b9537d11c60e8b50"]
+        }
+      },
+      "realm": "mpp.api.agentmail.to",
+      "provider": { "name": "AgentMail", "url": "https://agentmail.to" },
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/v0/inboxes",
+          "description": "List inboxes",
+          "payment": null
+        },
+        {
+          "method": "POST",
+          "path": "/v0/inboxes",
+          "description": "Create inbox",
+          "payment": {
+            "intent": "charge",
+            "method": "tempo",
+            "currency": "0x20c000000000000000000000b9537d11c60e8b50",
+            "decimals": 6,
+            "description": "Create inbox",
+            "amount": "2000000"
+          }
+        }
+      ]
+    },
+    {
+      "id": "service-without-paid-endpoints",
+      "name": "Free Service",
+      "url": "https://free.example",
+      "serviceUrl": "https://free.example",
+      "description": "All endpoints are free.",
+      "categories": ["misc"],
+      "integration": "first-party",
+      "tags": [],
+      "status": "active",
+      "docs": {},
+      "methods": {},
+      "realm": "free.example",
+      "provider": { "name": "Free", "url": "https://free.example" },
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/free",
+          "description": "free endpoint",
+          "payment": null
+        }
+      ]
+    }
+  ]
+}

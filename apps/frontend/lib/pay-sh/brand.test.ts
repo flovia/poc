@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { inferBrandDisplayName, inferBrandDomain } from "./brand";
+import { extractBrandKey, inferBrandDisplayName, inferBrandDomain } from "./brand";
 
 describe("inferBrandDomain", () => {
   test("solana-foundation/google/* maps to google.com via curated map", () => {
@@ -102,5 +102,126 @@ describe("inferBrandDomain", () => {
   test("invalid serviceUrl is ignored gracefully", () => {
     const r = inferBrandDomain({ fqn: "totally/unknown", serviceUrl: "not a url" });
     expect(r.domain).toBeNull();
+  });
+
+  describe("extractBrandKey", () => {
+    test("collapses Pay.sh and MPP serviceIds for the same brand to the same key", () => {
+      // AgentMail: Pay.sh atlas uses `agentmail/email`, MPP uses bare `agentmail`.
+      expect(extractBrandKey("agentmail/email")).toBe("agentmail");
+      expect(extractBrandKey("agentmail")).toBe("agentmail");
+    });
+
+    test("Merit Systems stable* brands: Pay.sh `merit-systems/stableX/Y` ≡ MPP `stableX`", () => {
+      expect(extractBrandKey("merit-systems/stablesocial/social-data")).toBe("stablesocial");
+      expect(extractBrandKey("stablesocial")).toBe("stablesocial");
+      expect(extractBrandKey("merit-systems/stablephone/calls")).toBe("stablephone");
+      expect(extractBrandKey("stablephone")).toBe("stablephone");
+    });
+
+    test("hostname-style serviceIds reduce to apex brand label", () => {
+      expect(extractBrandKey("api.nansen.ai")).toBe("nansen");
+      expect(extractBrandKey("pro-api.coingecko.com")).toBe("coingecko");
+    });
+
+    test("undefined / empty input returns null", () => {
+      expect(extractBrandKey(undefined)).toBeNull();
+      expect(extractBrandKey("")).toBeNull();
+    });
+  });
+
+  describe("MPP wrapper hosts", () => {
+    test("strips 'mpp' infra prefix to reach the brand apex", () => {
+      // mpp.firecrawl.dev -> firecrawl.dev (mpp is the infra label)
+      expect(
+        inferBrandDomain({ fqn: "firecrawl-host", serviceUrl: "https://mpp.firecrawl.dev" }).domain,
+      ).toBe("firecrawl.dev");
+      // mpp.browserbase.com -> browserbase.com (also curated as fqn match)
+      expect(
+        inferBrandDomain({ fqn: "browserbase-host", serviceUrl: "https://mpp.browserbase.com" })
+          .domain,
+      ).toBe("browserbase.com");
+    });
+
+    test("looks up *.mpp.tempo.xyz subdomain in curated brand map first", () => {
+      // openrouter.mpp.tempo.xyz -> openrouter.ai via curated map (NOT openrouter.com)
+      expect(
+        inferBrandDomain({ fqn: "openrouter", serviceUrl: "https://openrouter.mpp.tempo.xyz" })
+          .domain,
+      ).toBe("openrouter.ai");
+      // exa.mpp.tempo.xyz -> exa.ai via curated map (NOT exa.com)
+      expect(
+        inferBrandDomain({ fqn: "exa", serviceUrl: "https://exa.mpp.tempo.xyz" }).domain,
+      ).toBe("exa.ai");
+      // firecrawl.mpp.tempo.xyz -> firecrawl.dev via curated map (NOT firecrawl.com)
+      expect(
+        inferBrandDomain({ fqn: "firecrawl", serviceUrl: "https://firecrawl.mpp.tempo.xyz" })
+          .domain,
+      ).toBe("firecrawl.dev");
+    });
+
+    test("fixes mis-mapped Tempo wrapper brands (FlightAPI, 2Captcha, KicksDB)", () => {
+      // flightapi.mpp.tempo.xyz -> flightapi.io (NOT flightapi.com which 404s)
+      expect(
+        inferBrandDomain({ fqn: "flightapi", serviceUrl: "https://flightapi.mpp.tempo.xyz" })
+          .domain,
+      ).toBe("flightapi.io");
+      // twocaptcha.mpp.tempo.xyz -> 2captcha.com (NOT twocaptcha.com)
+      expect(
+        inferBrandDomain({ fqn: "twocaptcha", serviceUrl: "https://twocaptcha.mpp.tempo.xyz" })
+          .domain,
+      ).toBe("2captcha.com");
+      // kicksdb.mpp.tempo.xyz -> kicks.dev (NOT kicksdb.com)
+      expect(
+        inferBrandDomain({ fqn: "kicksdb", serviceUrl: "https://kicksdb.mpp.tempo.xyz" }).domain,
+      ).toBe("kicks.dev");
+    });
+
+    test("Tempo internal services (rpc, storage, codestorage) resolve to tempo.xyz", () => {
+      expect(
+        inferBrandDomain({ fqn: "rpc", serviceUrl: "https://rpc.mpp.tempo.xyz" }).domain,
+      ).toBe("tempo.xyz");
+      expect(
+        inferBrandDomain({ fqn: "storage", serviceUrl: "https://storage.mpp.tempo.xyz" }).domain,
+      ).toBe("tempo.xyz");
+      expect(
+        inferBrandDomain({ fqn: "codestorage", serviceUrl: "https://codestorage.mpp.tempo.xyz" })
+          .domain,
+      ).toBe("tempo.xyz");
+    });
+
+    test("falls back to <brand>.com for unknown *.mpp.tempo.xyz subdomains", () => {
+      // A future Tempo wrapper for an unmapped brand should still resolve to a
+      // best-effort `<brand>.com` rather than the Tempo apex.
+      const r = inferBrandDomain({
+        fqn: "unknown-future-brand",
+        serviceUrl: "https://unknown-future-brand.mpp.tempo.xyz",
+      });
+      expect(r.domain).toBe("unknown-future-brand.com");
+      expect(r.reason).toBe("direct-host");
+    });
+
+    test("MPP serviceId resolves directly even for non-wrapper hosts (martin-estate)", () => {
+      // martin-estate uses agents.martinestate.com directly (not an MPP wrapper).
+      // Its agents-subdomain has no favicon, but martinestate.com (apex) does.
+      // The MPP map should win over the direct-host strip-infra-prefix guess.
+      const r = inferBrandDomain({
+        fqn: "martin-estate",
+        serviceUrl: "https://agents.martinestate.com",
+      });
+      expect(r.domain).toBe("martinestate.com");
+    });
+
+    test("recognizes *.mpp.paywithlocus.com as a wrapper and uses curated brand", () => {
+      expect(
+        inferBrandDomain({ fqn: "deepl", serviceUrl: "https://deepl.mpp.paywithlocus.com" }).domain,
+      ).toBe("deepl.com");
+      expect(
+        inferBrandDomain({ fqn: "groq", serviceUrl: "https://groq.mpp.paywithlocus.com" }).domain,
+      ).toBe("groq.com");
+      expect(
+        inferBrandDomain({ fqn: "hunter", serviceUrl: "https://hunter.mpp.paywithlocus.com" })
+          .domain,
+      ).toBe("hunter.io");
+    });
   });
 });

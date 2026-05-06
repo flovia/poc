@@ -4,6 +4,7 @@ import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { createBffHandler } from "../src/http";
 import {
+  applyMppCatalogOverlay,
   fixtureAnalyticsDataSource,
   isSolanaCustomer,
   loadGeneratedAnalyticsDataSource,
@@ -129,6 +130,115 @@ describe("BFF routes", () => {
     expect(response.status).toBe(200);
     expect(parsed.providerCount).toBe(parsed.providers.length);
     expect(parsed.providers.some((provider) => provider.hasCustomerFacts)).toBe(true);
+  });
+
+  test("merges MPP catalog into providers when overlay path is provided", async () => {
+    const tempDir = path.join(process.cwd(), "tmp", `bff-mpp-${randomUUID()}`);
+    fs.mkdirSync(tempDir, { recursive: true });
+    const overlayPath = path.join(tempDir, "mpp-catalog.json");
+    try {
+      const mppCatalog = {
+        generatedAt: "2026-05-07T00:00:00.000Z",
+        generatedFrom: "mpp-registry-capture",
+        providers: [
+          {
+            providerId: "mpp:test-only::tempo:4217::USDC::0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            name: "MPP Test Only",
+            serviceId: "test-only",
+            serviceName: "MPP Test Only",
+            network: "tempo:4217",
+            asset: "USDC",
+            payTo: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            catalogSource: "mpp_registry",
+            transactionCount: 0,
+            uniqueSenderCount: 0,
+            totalVolumeAtomic: "0",
+            endpointCount: 5,
+            resourceCount: 1,
+            mappingPattern: "one_payto_one_endpoint",
+            endpointAttributionStatus: "mpp_attributed_endpoint",
+            attributionConfidence: 1,
+            hasCustomerFacts: false,
+            customerFactCount: 0,
+            provenance: "registry_fact",
+            provenanceByField: { providerId: "registry_fact" },
+            reasons: [{ provenance: "registry_fact", label: "MPP" }],
+          },
+        ],
+        providerCount: 1,
+        provenance: "registry_fact",
+        provenanceByField: { providers: "registry_fact" },
+        reasons: [{ provenance: "registry_fact", label: "MPP overlay test" }],
+      };
+      fs.writeFileSync(overlayPath, JSON.stringify(mppCatalog));
+
+      const overlaid = applyMppCatalogOverlay(fixtureAnalyticsDataSource, overlayPath);
+      const handler = createBffHandler(overlaid);
+      const response = await handler(request("/providers"));
+      const parsed = validateProviderCatalogResponse(await response.json());
+
+      const mppRow = parsed.providers.find((p) => p.providerId.startsWith("mpp:test-only::"));
+      expect(mppRow).toBeDefined();
+      expect(mppRow?.catalogSource).toBe("mpp_registry");
+      expect(parsed.providerCount).toBe(fixtureAnalyticsDataSource.providers.providerCount + 1);
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  test("applyMppCatalogOverlay is a no-op when overlay path is undefined", () => {
+    const overlaid = applyMppCatalogOverlay(fixtureAnalyticsDataSource, undefined);
+    expect(overlaid).toBe(fixtureAnalyticsDataSource);
+  });
+
+  test("applyMppCatalogOverlay fails fast when overlay path is set but file is missing", () => {
+    expect(() =>
+      applyMppCatalogOverlay(
+        fixtureAnalyticsDataSource,
+        "/tmp/this-file-should-not-exist-bff-mpp-overlay.json",
+      ),
+    ).toThrow(/BFF_MPP_CATALOG_PATH is set but file does not exist/);
+  });
+
+  test("does not auto-load MPP overlay when NODE_ENV=production and BFF_MPP_CATALOG_PATH is unset", () => {
+    // Critical regression guard: even if tmp/mpp-provider-catalog.json physically
+    // exists at the repo-root location used by DEFAULT_MPP_CATALOG_PATH, production
+    // runs must require explicit opt-in via BFF_MPP_CATALOG_PATH.
+    const defaultMppPath = path.join(
+      import.meta.dir,
+      "..",
+      "..",
+      "..",
+      "tmp",
+      "mpp-provider-catalog.json",
+    );
+    let createdForTest = false;
+    if (!fs.existsSync(defaultMppPath)) {
+      fs.mkdirSync(path.dirname(defaultMppPath), { recursive: true });
+      fs.writeFileSync(
+        defaultMppPath,
+        JSON.stringify({
+          generatedAt: "2026-05-07T00:00:00.000Z",
+          generatedFrom: "test",
+          providers: [],
+          providerCount: 0,
+          provenance: "registry_fact",
+          provenanceByField: { providers: "registry_fact" },
+          reasons: [{ provenance: "registry_fact", label: "test" }],
+        }),
+      );
+      createdForTest = true;
+    }
+    try {
+      // Sanity: file must be in place for this regression test to be meaningful.
+      expect(fs.existsSync(defaultMppPath)).toBe(true);
+      const dataSource = resolveAnalyticsDataSource(undefined, {
+        env: { BFF_ANALYTICS_SOURCE: "fixture", NODE_ENV: "production" },
+      });
+      expect(dataSource).toBe(fixtureAnalyticsDataSource);
+    } finally {
+      if (createdForTest) fs.rmSync(defaultMppPath, { force: true });
+    }
   });
 
   test("aggregates customers across chains by serviceId", async () => {
@@ -530,7 +640,7 @@ describe("BFF routes", () => {
 
   test("resolves fixture analytics source when explicitly configured", () => {
     const dataSource = resolveAnalyticsDataSource(undefined, {
-      env: { BFF_ANALYTICS_SOURCE: "fixture" },
+      env: { BFF_ANALYTICS_SOURCE: "fixture", BFF_MPP_CATALOG_PATH: "" },
     });
 
     expect(dataSource).toBe(fixtureAnalyticsDataSource);
@@ -538,7 +648,7 @@ describe("BFF routes", () => {
 
   test("treats empty analytics source as unset", () => {
     const dataSource = resolveAnalyticsDataSource("/tmp/flovia-missing-bff-analytics.json", {
-      env: { BFF_ANALYTICS_SOURCE: "" },
+      env: { BFF_ANALYTICS_SOURCE: "", BFF_MPP_CATALOG_PATH: "" },
     });
 
     expect(dataSource).toBe(fixtureAnalyticsDataSource);
