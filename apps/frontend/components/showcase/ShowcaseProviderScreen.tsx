@@ -193,6 +193,36 @@ export function ShowcaseProviderScreen({ provider }: ShowcaseProviderScreenProps
     }
   }
 
+  function showHitPayFallbackSuccess() {
+    hitPayContinueRef.current = null;
+    setHitPayCheckoutUrl(null);
+    setChallengeId(null);
+    setResult({
+      status: 200,
+      body: {
+        response: {
+          ok: true,
+          foo: "bar",
+          provider: "hitpay",
+          paidApi: {
+            endpoint: config.endpoint,
+            message: "HitPay MPP showcase paid response",
+            generatedAt: new Date().toISOString(),
+          },
+        },
+        receipt: {
+          mode: "demo_fallback",
+          provider: "hitpay",
+          rail: "mpp",
+          paymentId: config.simulatedId,
+        },
+        receiptJws: null,
+        challenge: null,
+      },
+    });
+    setState("paid");
+  }
+
   return (
     <div className="scroll">
       <div style={{ padding: "32px 40px 80px", maxWidth: 1440, margin: "0 auto" }}>
@@ -211,7 +241,11 @@ export function ShowcaseProviderScreen({ provider }: ShowcaseProviderScreenProps
         </Card>
 
         <div style={{ marginTop: 24 }}>
-          <Card eyebrow="Live flow" title={provider === "hitpay" ? "Call the real HitPay MPP endpoint" : "Call the BFF-hosted demo endpoint"}>
+          <Card
+            eyebrow="Live flow"
+            title={provider === "hitpay" ? "Call the real HitPay MPP endpoint" : "Call the BFF-hosted demo endpoint"}
+            action={provider === "hitpay" ? <CheatCodeButton onClick={showHitPayFallbackSuccess} /> : null}
+          >
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 16 }}>
               <button type="button" onClick={() => void callPaidApi(false)} style={buttonStyle(provider)} disabled={state === "calling"}>
                 Call paid API
@@ -348,13 +382,63 @@ const codeStyle = {
   lineHeight: 1.55,
 } satisfies CSSProperties;
 
-function Card({ eyebrow, title, children }: { eyebrow: string; title?: string; children: ReactNode }) {
+function Card({
+  eyebrow,
+  title,
+  action,
+  children,
+}: {
+  eyebrow: string;
+  title?: string;
+  action?: ReactNode;
+  children: ReactNode;
+}) {
   return (
     <section className="card" style={{ padding: 24 }}>
       <div className="eyebrow" style={{ marginBottom: 8 }}>{eyebrow}</div>
-      {title ? <h2 style={{ margin: "0 0 16px", fontSize: 18, fontWeight: 600 }}>{title}</h2> : null}
+      {title || action ? (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            gap: 12,
+            alignItems: "flex-start",
+            marginBottom: title ? 16 : 0,
+          }}
+        >
+          {title ? <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600 }}>{title}</h2> : <span />}
+          {action}
+        </div>
+      ) : null}
       {children}
     </section>
+  );
+}
+
+function CheatCodeButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title="Show the successful Flovia result when checkout cannot be completed."
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 6,
+        border: "1px solid var(--teal-soft)",
+        borderRadius: 999,
+        padding: "5px 10px",
+        background: "var(--teal-dim)",
+        color: "var(--teal)",
+        fontSize: 12,
+        fontWeight: 700,
+        cursor: "pointer",
+        whiteSpace: "nowrap",
+      }}
+    >
+      <span aria-hidden style={{ fontSize: 13 }}>✦</span>
+      Cheat code
+    </button>
   );
 }
 
