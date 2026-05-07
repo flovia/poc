@@ -24,7 +24,7 @@ describe("X402SankeySection", () => {
     );
 
     expect(html).toContain("Embedded sankey views");
-    expect(html).toContain("User intent → middleman → target API category");
+    expect(html).toContain("Source route → payment rail → API workflow/paid endpoint");
     expect(html).toContain("Previous endpoint → target endpoint → next endpoint");
   });
 });

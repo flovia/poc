@@ -1,11 +1,15 @@
 import {
   type PhaseBCustomerProfileResponse,
+  type RouteAnalyticsSankeyResponse,
+  type RouteAnalyticsSummaryResponse,
   type WalletUsageGraphResponse,
   validatePhaseBCustomerListResponse,
   validatePhaseBCustomerUpsellExplanationResponse,
   validatePhaseBCustomerProfileResponse,
   validatePhaseBWalletUsageGraphResponse,
   validateProviderCatalogResponse,
+  validateRouteAnalyticsSankeyResponse,
+  validateRouteAnalyticsSummaryResponse,
 } from "contracts";
 import {
   adaptCustomerList,
@@ -130,6 +134,16 @@ export async function getWalletUsageGraph(): Promise<WalletUsageGraphDto> {
 
 export async function getWalletUsageGraphRaw(): Promise<WalletUsageGraphResponse> {
   return validatePhaseBWalletUsageGraphResponse(await bffFetch<unknown>("/wallet-usage-graph"));
+}
+
+export async function getRouteAnalyticsSummary(): Promise<RouteAnalyticsSummaryResponse> {
+  return validateRouteAnalyticsSummaryResponse(
+    await bffFetch<unknown>("/analytics/routes/summary"),
+  );
+}
+
+export async function getRouteAnalyticsSankey(): Promise<RouteAnalyticsSankeyResponse> {
+  return validateRouteAnalyticsSankeyResponse(await bffFetch<unknown>("/analytics/routes/sankey"));
 }
 
 // Phase B BFF は /observations を提供しないため、/wallet-usage-graph から合成する。

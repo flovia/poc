@@ -23,6 +23,8 @@ const readonlyRoutes = new Set([
   "/analytics/services/coingecko/summary",
   "/analytics/services/comparison",
   "/analytics/services/quadrants",
+  "/analytics/routes/summary",
+  "/analytics/routes/sankey",
 ]);
 
 const toProfileAddress = (path: string) => {
@@ -131,6 +133,10 @@ export const createBffHandler =
         return json(resolvedDataSource.serviceComparison);
       case "/analytics/services/quadrants":
         return json(resolvedDataSource.serviceQuadrants);
+      case "/analytics/routes/summary":
+        return json(resolvedDataSource.routeSummary);
+      case "/analytics/routes/sankey":
+        return json(resolvedDataSource.routeSankey);
       default:
         break;
     }

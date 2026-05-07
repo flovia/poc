@@ -15,6 +15,8 @@ import {
   validatePortfolioSourceResult,
   validateProviderCatalogResponse,
   validateRealTransactionFixture,
+  validateRouteAnalyticsSankeyResponse,
+  validateRouteAnalyticsSummaryResponse,
 } from "../src/index";
 
 const validCustomerIntelligence = () => ({
@@ -117,6 +119,104 @@ const readFixture = <T>(name: string): T => {
 };
 
 describe("contracts schema validation", () => {
+  test("accepts machine payment route analytics summary and sankey payloads", () => {
+    const summary = validateRouteAnalyticsSummaryResponse({
+      generatedAt: "2026-05-06T00:00:00.000Z",
+      generatedFrom: "route-analytics-demo",
+      routeCount: 3,
+      workflowCount: 3,
+      paidWorkflowCount: 3,
+      settledUsd: 42.5,
+      successRate: 1,
+      repeatUsage: 2,
+      paymentToAccessConversion: 1,
+      rails: [
+        {
+          rail: "x402",
+          routeCount: 1,
+          workflowCount: 1,
+          paidWorkflowCount: 1,
+          settledUsd: 10,
+          successRate: 1,
+          repeatUsage: 1,
+          visibility: "public_onchain",
+        },
+        {
+          rail: "stripe_mpp",
+          routeCount: 1,
+          workflowCount: 1,
+          paidWorkflowCount: 1,
+          settledUsd: 20,
+          successRate: 1,
+          repeatUsage: 1,
+          visibility: "provider_attested",
+        },
+      ],
+      sampleRoutes: [
+        {
+          routeId: "route:x402:forecast",
+          workflowId: "workflow:forecast",
+          rail: "x402",
+          protocol: "x402",
+          sourceRoute: "Direct API client",
+          providerId: "coingecko",
+          endpointGroup: "Forecast API",
+          payerIdentity: "0x1111111111111111111111111111111111111111",
+          payeeIdentity: "0x2222222222222222222222222222222222222222",
+          amountUsd: 10,
+          currency: "USD",
+          status: "settled",
+          settlementRef: { type: "onchain_tx", value: "0xabc" },
+          visibility: "public_onchain",
+          provenance: "derived_insight",
+          provenanceByField: { rail: "onchain_fact" },
+          timestamp: "2026-05-06T00:00:00.000Z",
+          latencyMs: 120,
+          reasons: [{ provenance: "derived_insight", label: "route analytics fixture" }],
+        },
+      ],
+      provenance: "derived_insight",
+      provenanceByField: { rails: "derived_insight" },
+      reasons: [{ provenance: "derived_insight", label: "route analytics fixture" }],
+    });
+
+    expect(summary.rails.map((rail) => rail.rail)).toContain("stripe_mpp");
+    expect(summary.sampleRoutes[0]?.visibility).toBe("public_onchain");
+
+    const sankey = validateRouteAnalyticsSankeyResponse({
+      generatedAt: "2026-05-06T00:00:00.000Z",
+      generatedFrom: "route-analytics-demo",
+      layers: ["source_route", "payment_rail", "api_workflow"],
+      nodes: [
+        { id: "source:direct", label: "Direct API client", layer: "source_route" },
+        {
+          id: "rail:x402",
+          label: "x402",
+          layer: "payment_rail",
+          rail: "x402",
+          visibility: "public_onchain",
+        },
+        { id: "workflow:forecast", label: "Forecast API", layer: "api_workflow" },
+      ],
+      links: [
+        {
+          source: "source:direct",
+          target: "rail:x402",
+          routeCount: 1,
+          workflowCount: 1,
+          settledUsd: 10,
+          rail: "x402",
+          visibility: "public_onchain",
+        },
+      ],
+      provenance: "derived_insight",
+      provenanceByField: { links: "derived_insight" },
+      reasons: [{ provenance: "derived_insight", label: "route analytics fixture" }],
+    });
+
+    expect(sankey.layers).toEqual(["source_route", "payment_rail", "api_workflow"]);
+  });
+
   test("accepts a valid customer intelligence response and normalizes scope", () => {
     const parsed = validateCustomerIntelligenceResponse(validCustomerIntelligence());
 

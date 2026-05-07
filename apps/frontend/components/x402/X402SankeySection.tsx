@@ -15,14 +15,14 @@ type X402SankeySectionProps = {
 
 const METRIC_LABELS: Record<X402MetricMode, string> = {
   flow_count: "flow_count",
-  settled_usdc: "settled_usdc",
+  settled_usdc: "settled USD",
 };
 
 export function X402SankeySection({
   viewModel,
   eyebrow = "x402 analysis",
   title = "Sankey views",
-  description = "Two sankey views show both the intent-level routing through middlemen and the endpoint sequence immediately before and after the target API call.",
+  description = "Two sankey views show both the source routing through payment rails and the endpoint sequence immediately before and after the target API call.",
   surface = "flat",
 }: X402SankeySectionProps) {
   const [metric, setMetric] = useState<X402MetricMode>("flow_count");

@@ -37,6 +37,8 @@ import {
   validateServiceAnalyticsComparisonResponse,
   validateServiceAnalyticsQuadrantResponse,
   validateServiceAnalyticsSummaryResponse,
+  validateRouteAnalyticsSankeyResponse,
+  validateRouteAnalyticsSummaryResponse,
 } from "contracts";
 
 const request = (path: string, init: RequestInit = {}) =>
@@ -132,6 +134,29 @@ describe("BFF routes", () => {
     expect(parsed.providers.some((provider) => provider.hasCustomerFacts)).toBe(true);
   });
 
+  test("serves machine payment route analytics summary and sankey", async () => {
+    const handler = createBffHandler(fixtureAnalyticsDataSource);
+
+    const summaryResponse = await handler(request("/analytics/routes/summary"));
+    const summary = validateRouteAnalyticsSummaryResponse(await summaryResponse.json());
+    const sankeyResponse = await handler(request("/analytics/routes/sankey"));
+    const sankey = validateRouteAnalyticsSankeyResponse(await sankeyResponse.json());
+
+    expect(summaryResponse.status).toBe(200);
+    expect(sankeyResponse.status).toBe(200);
+    expect(summary.rails.map((rail) => rail.rail)).toEqual(
+      expect.arrayContaining(["x402", "stripe_mpp", "hitpay_mpp"]),
+    );
+    expect(summary.rails.find((rail) => rail.rail === "x402")?.visibility).toBe("public_onchain");
+    expect(summary.rails.find((rail) => rail.rail === "stripe_mpp")?.visibility).toBe(
+      "provider_attested",
+    );
+    expect(sankey.layers).toEqual(["source_route", "payment_rail", "api_workflow"]);
+    expect(sankey.nodes.some((node) => node.label === "Stripe MPP")).toBe(true);
+    expect(sankey.nodes.some((node) => node.label === "HitPay MPP")).toBe(true);
+    expect(sankey.nodes.some((node) => node.label === "/v1/scrape")).toBe(true);
+  });
+
   test("merges MPP catalog into providers when overlay path is provided", async () => {
     const tempDir = path.join(process.cwd(), "tmp", `bff-mpp-${randomUUID()}`);
     fs.mkdirSync(tempDir, { recursive: true });
@@ -142,7 +167,8 @@ describe("BFF routes", () => {
         generatedFrom: "mpp-registry-capture",
         providers: [
           {
-            providerId: "mpp:test-only::tempo:4217::USDC::0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            providerId:
+              "mpp:test-only::tempo:4217::USDC::0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
             name: "MPP Test Only",
             serviceId: "test-only",
             serviceName: "MPP Test Only",
@@ -796,6 +822,14 @@ describe("BFF routes", () => {
         env: { BFF_ANALYTICS_SOURCE: "postgres" },
       }),
     ).toThrow("BFF analytics postgres source requires");
+  });
+
+  test("does not treat a sqlite-style DATABASE_URL as a postgres analytics URL", () => {
+    expect(() =>
+      resolveAnalyticsDataSource(undefined, {
+        env: { BFF_ANALYTICS_SOURCE: "postgres", DATABASE_URL: "/data/flovia.db" },
+      }),
+    ).toThrow("postgres:// DATABASE_URL");
   });
 
   test("uses postgres live loader by default", async () => {
