@@ -154,8 +154,6 @@ function addEndpointSankeyFlow(
 }
 
 export function MachinePaymentRoutesScreen({ summary, sankey }: MachinePaymentRoutesScreenProps) {
-  const railNodes = sankey.nodes.filter((node) => node.layer === "payment_rail");
-  const workflowNodes = sankey.nodes.filter((node) => node.layer === "api_workflow");
   const routeSankeyFlows = buildRouteSankeyFlows(summary);
   const topLinks = [...sankey.links]
     .sort((left, right) => right.settledUsd - left.settledUsd || right.routeCount - left.routeCount)
@@ -177,12 +175,8 @@ export function MachinePaymentRoutesScreen({ summary, sankey }: MachinePaymentRo
           Machine payment routes
         </div>
         <h1 className="display" style={{ margin: "6px 0 0", fontSize: 32, letterSpacing: "-0.02em" }}>
-          Route → rail → workflow analytics
+          Machine Payment Flow
         </h1>
-        <p style={{ margin: "8px 0 0", maxWidth: 860, color: "var(--text-2)", fontSize: 15, lineHeight: 1.6 }}>
-          Flovia joins payment context with API usage outcomes, showing which source routes,
-          payment rails, and paid API workflows create retained machine-payment demand.
-        </p>
       </div>
 
       <div
@@ -200,8 +194,7 @@ export function MachinePaymentRoutesScreen({ summary, sankey }: MachinePaymentRo
         <StatCard label="Repeat usage" value={summary.repeatUsage.toLocaleString()} />
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: 18, alignItems: "start" }}>
-        <section className="card" style={{ padding: 20 }}>
+      <section className="card" style={{ padding: 20 }}>
           <div style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "start" }}>
             <div>
               <h2 style={{ margin: 0, fontSize: 18 }}>Payment rail comparison</h2>
@@ -210,7 +203,6 @@ export function MachinePaymentRoutesScreen({ summary, sankey }: MachinePaymentRo
                 routes for P0.
               </p>
             </div>
-            <Badge tone="blue">{summary.generatedFrom}</Badge>
           </div>
 
           <div style={{ marginTop: 16, overflowX: "auto" }}>
@@ -243,22 +235,7 @@ export function MachinePaymentRoutesScreen({ summary, sankey }: MachinePaymentRo
               </tbody>
             </table>
           </div>
-        </section>
-
-        <section className="card" style={{ padding: 20 }}>
-          <h2 style={{ margin: 0, fontSize: 18 }}>Payment rails</h2>
-          <p style={{ margin: "6px 0 0", color: "var(--text-2)", fontSize: 13 }}>
-            Rail nodes carried by the BFF route Sankey response.
-          </p>
-          <div style={{ marginTop: 16, display: "flex", flexWrap: "wrap", gap: 8 }}>
-            {railNodes.map((node) => (
-              <Badge key={node.id} tone={node.visibility === "public_onchain" ? "green" : "blue"}>
-                {node.label}
-              </Badge>
-            ))}
-          </div>
-        </section>
-      </div>
+      </section>
 
       <section className="card" style={{ padding: 20, marginTop: 18 }}>
         <div
@@ -338,15 +315,6 @@ export function MachinePaymentRoutesScreen({ summary, sankey }: MachinePaymentRo
           </div>
         </section>
       </div>
-
-      <section className="card" style={{ padding: 20, marginTop: 18 }}>
-        <h2 style={{ margin: 0, fontSize: 18 }}>API workflows</h2>
-        <div style={{ marginTop: 12, display: "flex", flexWrap: "wrap", gap: 8 }}>
-          {workflowNodes.map((node) => (
-            <Badge key={node.id}>{node.label}</Badge>
-          ))}
-        </div>
-      </section>
     </div>
   );
 }
