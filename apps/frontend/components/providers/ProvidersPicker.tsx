@@ -31,6 +31,8 @@ const PROTOCOL_OPTIONS: ReadonlyArray<{ value: ProviderProtocolFilter; label: st
   { value: "x402", label: "x402" },
 ];
 
+const preferedServices = new Set(["api.nansen.ai", "pro-api.coingecko.com"]);
+
 
 export function ProvidersPicker() {
   const { stored, userProviders, hydrated, demoOpted } = useProviders();
@@ -47,7 +49,20 @@ export function ProvidersPicker() {
   const [filter, setFilter] = useState<ProviderFilterState>(DEFAULT_PROVIDER_FILTER);
   const availableChains = useMemo(() => collectAvailableChains(stored), [stored]);
   const filtered = useMemo(
-    () => filterProviders(stored, filter, { demoOpted, userIds, demoIds }),
+    () => {
+      const filtered = filterProviders(stored, filter, { demoOpted, userIds, demoIds });
+
+      // XXX: Bring CoinGecko and Nansen up
+      return filtered.sort((a: any, b: any) => {
+        const aIsTarget = preferedServices.has(a.serviceName);
+        const bIsTarget = preferedServices.has(b.serviceName);
+
+        if (aIsTarget && !bIsTarget) return -1;
+        if (!aIsTarget && bIsTarget) return 1;
+
+        return 0;
+      });
+    },
     [stored, filter, demoOpted, userIds, demoIds],
   );
 
