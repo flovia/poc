@@ -980,6 +980,33 @@ export function tempoReceiptExplorerUrl(txHash: string) {
   return `https://explore.testnet.tempo.xyz/receipt/${encodeURIComponent(txHash)}`;
 }
 
+export function extractLiveResultFacts(result: LiveResult | null) {
+  const body = asRecord(result?.body);
+  const response = asRecord(body?.response);
+  const floviaEvent = asRecord(body?.floviaEvent) ?? asRecord(response?.floviaEvent);
+  const apiUsage = asRecord(floviaEvent?.apiUsage);
+  const payment = asRecord(floviaEvent?.payment);
+  const receipt = asRecord(body?.receipt);
+
+  return {
+    paymentId: stringValue(payment?.paymentIntentId) ?? stringValue(payment?.paymentId),
+    txHash: stringValue(receipt?.reference),
+    requestId: stringValue(floviaEvent?.requestId),
+    status: stringValue(floviaEvent?.status),
+    rail: stringValue(floviaEvent?.rail) ?? stringValue(payment?.rail),
+    amount: stringValue(floviaEvent?.amount) ?? stringValue(payment?.amount),
+    currency: stringValue(floviaEvent?.currency) ?? stringValue(payment?.currency),
+    endpoint: stringValue(apiUsage?.endpoint) ?? stringValue(floviaEvent?.endpoint),
+    method: stringValue(apiUsage?.method) ?? stringValue(floviaEvent?.method),
+    responseStatus: stringValue(apiUsage?.responseStatus) ?? stringValue(floviaEvent?.responseStatus),
+    latencyMs: stringValue(apiUsage?.latencyMs) ?? stringValue(floviaEvent?.latencyMs),
+  };
+}
+
+function compactItems(items: Array<{ label: string; value: string; href?: string } | null>) {
+  return items.filter((item): item is { label: string; value: string; href?: string } => item !== null);
+}
+
 function asRecord(value: unknown): Record<string, unknown> | null {
   return typeof value === "object" && value !== null && !Array.isArray(value) ? value as Record<string, unknown> : null;
 }
@@ -1044,8 +1071,32 @@ function ProviderVsFloviaPanel({
   const providerName = provider === "stripe" ? "Stripe dashboard" : "HitPay dashboard";
   const providerEyebrow = provider === "stripe" ? "What you see in Stripe Dashboard" : "What you see in HitPay Dashboard";
   const paymentLabel = provider === "stripe" ? "PaymentIntent" : "Charge / checkout";
+  const liveFacts = extractLiveResultFacts(result);
+  const joinedPaymentId = liveFacts.paymentId ?? paymentId;
   const paymentStatus = result?.status === 200 ? "paid" : result?.status === 402 ? "pending payment" : "demo-ready";
   const apiStatus = result?.status ? `HTTP ${result.status}` : "not called yet";
+  const floviaItems = compactItems([
+    { label: "Payment id", value: joinedPaymentId },
+    liveFacts.txHash
+      ? {
+          label: "Tx hash",
+          value: liveFacts.txHash,
+          href: tempoReceiptExplorerUrl(liveFacts.txHash),
+        }
+      : null,
+    { label: "Payment rail", value: liveFacts.rail ?? rail },
+    liveFacts.amount
+      ? { label: "Amount", value: liveFacts.currency ? `${liveFacts.amount} ${liveFacts.currency}` : liveFacts.amount }
+      : null,
+    { label: "Endpoint", value: `${liveFacts.method ?? "GET"} ${liveFacts.endpoint ?? endpoint}` },
+    { label: "API status", value: liveFacts.responseStatus ? `HTTP ${liveFacts.responseStatus}` : apiStatus },
+    liveFacts.latencyMs ? { label: "Latency", value: `${liveFacts.latencyMs}ms` } : null,
+    liveFacts.requestId ? { label: "Request id", value: liveFacts.requestId } : null,
+    { label: "API response", value: result?.status === 200 ? "paid access granted" : "pending paid access" },
+    liveFacts.status ? { label: "Event status", value: liveFacts.status } : null,
+    { label: "Workflow", value: "agent paid API request" },
+    { label: "Decision signal", value: "conversion + retained demand" },
+  ]);
 
   return (
     <div style={{ display: "grid", gap: 14 }}>
@@ -1054,7 +1105,7 @@ function ProviderVsFloviaPanel({
           eyebrow={providerEyebrow}
           title={providerName}
           items={[
-            { label: paymentLabel, value: paymentId },
+            { label: paymentLabel, value: joinedPaymentId },
             { label: "Amount", value: amount },
             { label: "Payment status", value: paymentStatus },
             { label: "Payment rail", value: rail },
@@ -1065,17 +1116,7 @@ function ProviderVsFloviaPanel({
           title="Joined payment + API usage"
           accent={accent}
           highlighted
-          items={[
-            { label: "Payment id", value: paymentId },
-            { label: "Payment rail", value: rail },
-            { label: "Endpoint", value: `GET ${endpoint}` },
-            { label: "API status", value: apiStatus },
-            { label: "Latency", value: result ? "captured from response" : "captured on call" },
-            { label: "Request id", value: result ? "captured by SDK" : "created on call" },
-            { label: "API response", value: result?.status === 200 ? "paid access granted" : "pending paid access" },
-            { label: "Workflow", value: "agent paid API request" },
-            { label: "Decision signal", value: "conversion + retained demand" },
-          ]}
+          items={floviaItems}
         />
       </div>
 
@@ -1089,7 +1130,7 @@ function ProviderVsFloviaPanel({
       >
         <div className="eyebrow" style={{ marginBottom: 6, color: accent }}>Joined by Flovia</div>
         <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr)", gap: 10, alignItems: "center" }}>
-          <JoinPill label="payment" value={paymentId} />
+          <JoinPill label="payment" value={joinedPaymentId} />
           <span className="mono" style={{ color: "var(--text-3)", fontSize: 18 }}>×</span>
           <JoinPill label="endpoint" value={endpoint} />
           <span className="mono" style={{ color: "var(--text-3)", fontSize: 18 }}>→</span>
@@ -1109,7 +1150,7 @@ function ComparisonColumn({
 }: {
   eyebrow: string;
   title: string;
-  items: Array<{ label: string; value: string }>;
+  items: Array<{ label: string; value: string; href?: string }>;
   accent?: string;
   highlighted?: boolean;
 }) {
@@ -1129,7 +1170,13 @@ function ComparisonColumn({
         {items.map((item) => (
           <div key={item.label} style={{ display: "grid", gridTemplateColumns: "120px minmax(0, 1fr)", gap: 10, alignItems: "baseline" }}>
             <span style={{ color: "var(--text-3)", fontSize: 12 }}>{item.label}</span>
-            <span className="mono" style={{ color: "var(--text-1)", fontSize: 12, overflowWrap: "anywhere" }}>{item.value}</span>
+            {item.href ? (
+              <a className="mono" href={item.href} target="_blank" rel="noreferrer" style={{ color: accent, fontSize: 12, overflowWrap: "anywhere" }}>
+                {item.value}
+              </a>
+            ) : (
+              <span className="mono" style={{ color: "var(--text-1)", fontSize: 12, overflowWrap: "anywhere" }}>{item.value}</span>
+            )}
           </div>
         ))}
       </div>

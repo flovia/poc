@@ -1,5 +1,9 @@
 import { describe, expect, test } from "bun:test";
-import { parsePaymentReceiptHeader, tempoReceiptExplorerUrl } from "./ShowcaseProviderScreen";
+import {
+  extractLiveResultFacts,
+  parsePaymentReceiptHeader,
+  tempoReceiptExplorerUrl,
+} from "./ShowcaseProviderScreen";
 
 const encodeReceipt = (receipt: unknown) =>
   btoa(JSON.stringify(receipt)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
@@ -29,5 +33,46 @@ describe("tempoReceiptExplorerUrl", () => {
     expect(tempoReceiptExplorerUrl(txHash)).toBe(
       `https://explore.testnet.tempo.xyz/receipt/${txHash}`,
     );
+  });
+});
+
+describe("extractLiveResultFacts", () => {
+  test("extracts joined PaymentIntent and receipt tx hash", () => {
+    const txHash = "0xdb82e47e27fa089ba92edd5b6f7a1c9c1fe007820e2ede449c1c1698720d6b05";
+
+    expect(
+      extractLiveResultFacts({
+        status: 200,
+        body: {
+          floviaEvent: {
+            requestId: "req_live_123",
+            rail: "mpp",
+            amount: "1.00",
+            currency: "usd",
+            status: "paid_api_delivered",
+            payment: { paymentIntentId: "pi_live_123" },
+            apiUsage: {
+              endpoint: "/showcase/stripe-mpp/paid",
+              method: "GET",
+              responseStatus: 200,
+              latencyMs: 42,
+            },
+          },
+          receipt: { reference: txHash },
+        },
+      }),
+    ).toEqual({
+      paymentId: "pi_live_123",
+      txHash,
+      requestId: "req_live_123",
+      status: "paid_api_delivered",
+      rail: "mpp",
+      amount: "1.00",
+      currency: "usd",
+      endpoint: "/showcase/stripe-mpp/paid",
+      method: "GET",
+      responseStatus: "200",
+      latencyMs: "42",
+    });
   });
 });
