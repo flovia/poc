@@ -1,11 +1,17 @@
+"use client";
+
 import type {
   MachinePaymentRail,
   RouteAnalyticsSummaryResponse,
 } from "contracts";
+import { useMemo, useState } from "react";
+import { EndpointSankey } from "@/components/macro-metrics/EndpointSankey";
 import {
-  EndpointSankey,
-  type EndpointSankeyFlow,
-} from "@/components/macro-metrics/EndpointSankey";
+  buildRouteSankeyFlows,
+  getRouteSankeyViewCopy,
+  ROUTE_SANKEY_VIEWS,
+  type RouteSankeyView,
+} from "./route-sankey";
 import { RouteTrendChart } from "./RouteTrendChart";
 
 type MachinePaymentRoutesScreenProps = {
@@ -61,118 +67,6 @@ function StatCard({ label, value, note }: { label: string; value: string; note?:
   );
 }
 
-function buildRouteSankeyFlows(summary: RouteAnalyticsSummaryResponse): EndpointSankeyFlow[] {
-  const selectedRoutes = [...selectSankeyRouteRows(summary)].sort(compareSankeyRouteRows);
-  const maxAmountUsd = Math.max(...selectedRoutes.map((route) => route.amountUsd ?? 0), 1);
-  const grouped = new Map<string, EndpointSankeyFlow>();
-
-  for (const route of selectedRoutes) {
-    const source = route.sourceRoute ?? "Direct API client";
-    const rail = paymentRailLabel(route);
-    const workflow = route.endpointGroup ?? route.workflowId;
-    const amountScore = Math.round(((route.amountUsd ?? 0) / maxAmountUsd) * 5);
-    const occurrences = Math.max(1, amountScore);
-
-    addEndpointSankeyFlow(grouped, {
-      from: source,
-      to: rail,
-      fromStep: 0,
-      toStep: 1,
-      occurrences,
-      fromLabel: source,
-      toLabel: rail,
-    });
-    addEndpointSankeyFlow(grouped, {
-      from: rail,
-      to: workflow,
-      fromStep: 1,
-      toStep: 2,
-      occurrences,
-      fromLabel: rail,
-      toLabel: workflow,
-    });
-  }
-
-  return Array.from(grouped.values());
-}
-
-function selectSankeyRouteRows(summary: RouteAnalyticsSummaryResponse) {
-  const machineFlowRows = summary.sampleRoutes.filter(
-    (route) => route.provenance === "demo_label" && route.endpointGroup?.startsWith("/v1/"),
-  );
-  if (machineFlowRows.length > 0) return machineFlowRows;
-
-  const demoRails = new Set<MachinePaymentRail>(["stripe_mpp", "hitpay_mpp"]);
-  const demoRoutes = summary.sampleRoutes.filter((route) => demoRails.has(route.rail));
-  const x402Routes = summary.sampleRoutes
-    .filter((route) => route.rail === "x402")
-    .sort((left, right) => (right.amountUsd ?? 0) - (left.amountUsd ?? 0))
-    .slice(0, 8);
-
-  // Keep the original response-row semantics, but cap noisy x402 fanout so the
-  // Nivo Sankey still reads as a diagram instead of a dense table substitute.
-  return [...x402Routes, ...demoRoutes].slice(0, 12);
-}
-
-function paymentRailLabel(route: RouteAnalyticsSummaryResponse["sampleRoutes"][number]): string {
-  if (route.rail === "hitpay_mpp") return "HitPay MPP";
-  if (route.router && ["Solana", "Base", "Tempo", "STP"].includes(route.router)) {
-    return `${railLabel(route.rail)} · ${route.router}`;
-  }
-  return railLabel(route.rail);
-}
-
-const MIDDLE_NODE_ORDER = [
-  "x402 · Base",
-  "x402 · Solana",
-  "Stripe MPP · Tempo",
-  "Stripe MPP · Solana",
-  "Stripe MPP · STP",
-  "HitPay MPP",
-] as const;
-
-const SOURCE_NODE_ORDER = ["Direct", "pay.sh", "dexter", "agentcash", "agents.market"] as const;
-
-function compareSankeyRouteRows(
-  left: RouteAnalyticsSummaryResponse["sampleRoutes"][number],
-  right: RouteAnalyticsSummaryResponse["sampleRoutes"][number],
-): number {
-  const leftMiddle = MIDDLE_NODE_ORDER.indexOf(
-    paymentRailLabel(left) as (typeof MIDDLE_NODE_ORDER)[number],
-  );
-  const rightMiddle = MIDDLE_NODE_ORDER.indexOf(
-    paymentRailLabel(right) as (typeof MIDDLE_NODE_ORDER)[number],
-  );
-  if (leftMiddle !== rightMiddle) {
-    return (leftMiddle === -1 ? 999 : leftMiddle) - (rightMiddle === -1 ? 999 : rightMiddle);
-  }
-
-  const leftSource = SOURCE_NODE_ORDER.indexOf(
-    (left.sourceRoute ?? "") as (typeof SOURCE_NODE_ORDER)[number],
-  );
-  const rightSource = SOURCE_NODE_ORDER.indexOf(
-    (right.sourceRoute ?? "") as (typeof SOURCE_NODE_ORDER)[number],
-  );
-  if (leftSource !== rightSource) {
-    return (leftSource === -1 ? 999 : leftSource) - (rightSource === -1 ? 999 : rightSource);
-  }
-
-  return (right.amountUsd ?? 0) - (left.amountUsd ?? 0);
-}
-
-function addEndpointSankeyFlow(
-  grouped: Map<string, EndpointSankeyFlow>,
-  flow: EndpointSankeyFlow,
-) {
-  const key = `${flow.fromStep}:${flow.from}->${flow.toStep}:${flow.to}`;
-  const existing = grouped.get(key);
-  if (existing) {
-    existing.occurrences += flow.occurrences;
-    return;
-  }
-  grouped.set(key, { ...flow });
-}
-
 type DisplayRailRow = {
   rail: Extract<MachinePaymentRail, "x402" | "stripe_mpp" | "hitpay_mpp">;
   routeCount: number;
@@ -216,7 +110,12 @@ function buildDisplayRailRows(summary: RouteAnalyticsSummaryResponse): DisplayRa
 }
 
 export function MachinePaymentRoutesScreen({ providerId, summary }: MachinePaymentRoutesScreenProps) {
-  const routeSankeyFlows = buildRouteSankeyFlows(summary);
+  const [routeSankeyView, setRouteSankeyView] = useState<RouteSankeyView>("rail");
+  const routeSankeyFlows = useMemo(
+    () => buildRouteSankeyFlows(summary, routeSankeyView),
+    [summary, routeSankeyView],
+  );
+  const routeSankeyCopy = getRouteSankeyViewCopy(routeSankeyView);
   const railRows = buildDisplayRailRows(summary);
 
   return (
@@ -311,17 +210,53 @@ export function MachinePaymentRoutesScreen({ providerId, summary }: MachinePayme
             <div className="eyebrow" style={{ marginBottom: 4 }}>
               Repeated route transitions
             </div>
-            <h2 style={{ margin: 0, fontSize: 18 }}>Source route → payment rail → API workflow</h2>
+            <h2 style={{ margin: 0, fontSize: 18 }}>{routeSankeyCopy.title}</h2>
           </div>
-          <span className="mono" style={{ color: "var(--text-3)", fontSize: 11 }}>
-            Nivo Sankey · capped response rows
-          </span>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            <div
+              role="group"
+              aria-label="Repeated route transitions view"
+              style={{
+                display: "inline-flex",
+                border: "1px solid var(--line)",
+                borderRadius: 8,
+                overflow: "hidden",
+                background: "#fff",
+              }}
+            >
+              {ROUTE_SANKEY_VIEWS.map((option) => {
+                const active = option.value === routeSankeyView;
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => setRouteSankeyView(option.value)}
+                    aria-pressed={active}
+                    style={{
+                      padding: "6px 12px",
+                      fontSize: 12,
+                      fontWeight: active ? 700 : 500,
+                      color: active ? "var(--text-1)" : "var(--text-2)",
+                      background: active ? "var(--surface-muted, #f0f1f4)" : "transparent",
+                      border: "none",
+                      cursor: "pointer",
+                    }}
+                  >
+                    {option.label}
+                  </button>
+                );
+              })}
+            </div>
+            <span className="mono" style={{ color: "var(--text-3)", fontSize: 11 }}>
+              Nivo Sankey · capped response rows
+            </span>
+          </div>
         </div>
         <div style={{ overflow: "visible", display: "flex", justifyContent: "center", minWidth: 0 }}>
           <EndpointSankey
             flows={routeSankeyFlows}
             ariaLabel="Machine payment route Sankey diagram"
-            emptyMessage="No route flow detected."
+            emptyMessage={routeSankeyCopy.emptyMessage}
             height={340}
             minWidth={0}
             margin={{ top: 16, right: 160, bottom: 16, left: 160 }}
@@ -329,8 +264,7 @@ export function MachinePaymentRoutesScreen({ providerId, summary }: MachinePayme
           />
         </div>
         <div style={{ color: "var(--text-mute)", fontSize: 12, marginTop: 8 }}>
-          Built from the route analytics response rows with noisy x402 fanout capped for legibility.
-          Wider links indicate stronger per-route settled-USD signal.
+          {routeSankeyCopy.note}
         </div>
       </section>
 
