@@ -93,7 +93,7 @@ function Badge({ children, tone = "neutral" }: { children: React.ReactNode; tone
 }
 
 function buildRouteSankeyFlows(summary: RouteAnalyticsSummaryResponse): EndpointSankeyFlow[] {
-  const selectedRoutes = selectSankeyRouteRows(summary);
+  const selectedRoutes = [...selectSankeyRouteRows(summary)].sort(compareSankeyRouteRows);
   const maxAmountUsd = Math.max(...selectedRoutes.map((route) => route.amountUsd ?? 0), 1);
   const grouped = new Map<string, EndpointSankeyFlow>();
 
@@ -124,7 +124,7 @@ function buildRouteSankeyFlows(summary: RouteAnalyticsSummaryResponse): Endpoint
     });
   }
 
-  return Array.from(grouped.values()).sort((left, right) => right.occurrences - left.occurrences);
+  return Array.from(grouped.values());
 }
 
 function selectSankeyRouteRows(summary: RouteAnalyticsSummaryResponse) {
@@ -150,6 +150,45 @@ function paymentRailLabel(route: RouteAnalyticsSummaryResponse["sampleRoutes"][n
     return `${railLabel(route.rail)} · ${route.router}`;
   }
   return railLabel(route.rail);
+}
+
+const MIDDLE_NODE_ORDER = [
+  "x402 · Base",
+  "x402 · Solana",
+  "Stripe MPP · Tempo",
+  "Stripe MPP · Solana",
+  "Stripe MPP · STP",
+  "HitPay MPP · Solana",
+  "HitPay MPP · STP",
+] as const;
+
+const SOURCE_NODE_ORDER = ["Direct", "pay.sh", "dexter", "agentcash", "agents.market"] as const;
+
+function compareSankeyRouteRows(
+  left: RouteAnalyticsSummaryResponse["sampleRoutes"][number],
+  right: RouteAnalyticsSummaryResponse["sampleRoutes"][number],
+): number {
+  const leftMiddle = MIDDLE_NODE_ORDER.indexOf(
+    paymentRailLabel(left) as (typeof MIDDLE_NODE_ORDER)[number],
+  );
+  const rightMiddle = MIDDLE_NODE_ORDER.indexOf(
+    paymentRailLabel(right) as (typeof MIDDLE_NODE_ORDER)[number],
+  );
+  if (leftMiddle !== rightMiddle) {
+    return (leftMiddle === -1 ? 999 : leftMiddle) - (rightMiddle === -1 ? 999 : rightMiddle);
+  }
+
+  const leftSource = SOURCE_NODE_ORDER.indexOf(
+    (left.sourceRoute ?? "") as (typeof SOURCE_NODE_ORDER)[number],
+  );
+  const rightSource = SOURCE_NODE_ORDER.indexOf(
+    (right.sourceRoute ?? "") as (typeof SOURCE_NODE_ORDER)[number],
+  );
+  if (leftSource !== rightSource) {
+    return (leftSource === -1 ? 999 : leftSource) - (rightSource === -1 ? 999 : rightSource);
+  }
+
+  return (right.amountUsd ?? 0) - (left.amountUsd ?? 0);
 }
 
 function addEndpointSankeyFlow(

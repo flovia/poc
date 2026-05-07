@@ -145,7 +145,7 @@ describe("BFF routes", () => {
     expect(summaryResponse.status).toBe(200);
     expect(sankeyResponse.status).toBe(200);
     expect(summary.rails.map((rail) => rail.rail)).toEqual(
-      expect.arrayContaining(["x402", "stripe_mpp"]),
+      expect.arrayContaining(["x402", "stripe_mpp", "hitpay_mpp"]),
     );
     expect(summary.rails.find((rail) => rail.rail === "x402")?.visibility).toBe("public_onchain");
     expect(summary.rails.find((rail) => rail.rail === "stripe_mpp")?.visibility).toBe(
@@ -153,6 +153,7 @@ describe("BFF routes", () => {
     );
     expect(sankey.layers).toEqual(["source_route", "payment_rail", "api_workflow"]);
     expect(sankey.nodes.some((node) => node.label === "Stripe MPP")).toBe(true);
+    expect(sankey.nodes.some((node) => node.label === "HitPay MPP")).toBe(true);
     expect(sankey.nodes.some((node) => node.label === "/v1/scrape")).toBe(true);
   });
 
