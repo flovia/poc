@@ -32,7 +32,7 @@ export function CoUsageRanking({ address: _address, providers }: Props) {
   };
 
   return (
-    <div className="card" style={{ padding: 0, overflow: "hidden", background: "#FFFFFF", minWidth: 0 }}>
+    <div className="card" style={{ padding: 0, overflow: "hidden", background: "#FFFFFF" }}>
       <div style={{ padding: "14px 20px 10px", borderBottom: "1px solid var(--line)" }}>
         <div
           style={{
