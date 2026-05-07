@@ -385,7 +385,7 @@ describe("buildX402LiveAnalysisViewModelFromData", () => {
       intentPattern?.flows.some(
         (flow) =>
           flow.left_label === "Monitor token and pool prices" &&
-          flow.middle_label === "CoinGecko" &&
+          flow.middle_label === "x402" &&
           flow.right_label === "Market data",
       ),
     ).toBe(true);
@@ -393,7 +393,7 @@ describe("buildX402LiveAnalysisViewModelFromData", () => {
       intentPattern?.flows.some(
         (flow) =>
           flow.left_label === "Query chain state and liquidity" &&
-          flow.middle_label === "QuickNode" &&
+          flow.middle_label === "x402" &&
           flow.right_label === "Chain & query access",
       ),
     ).toBe(true);
@@ -401,7 +401,7 @@ describe("buildX402LiveAnalysisViewModelFromData", () => {
       intentPattern?.flows.some(
         (flow) =>
           flow.left_label === "Generate signals and risk views" &&
-          flow.middle_label === "Cryptobuddy" &&
+          flow.middle_label === "x402" &&
           flow.right_label === "Signals & analysis",
       ),
     ).toBe(true);
@@ -444,7 +444,7 @@ describe("buildX402LiveAnalysisViewModelFromData", () => {
     ).toBeLessThanOrEqual(6);
   });
 
-  test("limits pattern 1 to representative middlemen and uses graph-sized flow counts", () => {
+  test("limits pattern 1 to representative rails and uses graph-sized flow counts", () => {
     const extendedGraph = {
       ...WALLET_USAGE_GRAPH,
       graph: {
@@ -567,14 +567,17 @@ describe("buildX402LiveAnalysisViewModelFromData", () => {
     const intentPattern = viewModel.sankey_patterns.find(
       (pattern) => pattern.id === "intent_intermediary_target_category",
     );
-    const middlemen = Array.from(
-      new Set(intentPattern?.flows.map((flow) => flow.middle_label) ?? []),
+    const rails = Array.from(new Set(intentPattern?.flows.map((flow) => flow.middle_label) ?? []));
+    const marketDataFlow = intentPattern?.flows.find(
+      (flow) =>
+        flow.left_label === "Monitor token and pool prices" &&
+        flow.middle_label === "x402" &&
+        flow.right_label === "Market data",
     );
-    const coingeckoFlow = intentPattern?.flows.find((flow) => flow.middle_label === "CoinGecko");
 
-    expect(middlemen.length).toBeLessThanOrEqual(6);
-    expect(middlemen.includes("Folio")).toBe(false);
-    expect(middlemen.includes("Book Bot")).toBe(false);
-    expect(coingeckoFlow?.flow_count).toBe(2);
+    expect(rails.length).toBeLessThanOrEqual(2);
+    expect(rails.includes("Folio")).toBe(false);
+    expect(rails.includes("Book Bot")).toBe(false);
+    expect(marketDataFlow?.flow_count).toBe(2);
   });
 });
