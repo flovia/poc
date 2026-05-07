@@ -48,4 +48,21 @@ describe("provider route aliases", () => {
       findProviderByRouteId([coingeckoProvider], "%E0%A4%A"),
     ).not.toThrow();
   });
+
+  test("resolves a `static-${slug(serviceId)}` route id to the matching live row", () => {
+    // The live BFF row's providerId is a long deterministic id, but older
+    // links (and the static-only path) use `static-${slug(serviceId)}`. Both
+    // should resolve to the same provider so the page does not 404.
+    const liveRow = {
+      providerId:
+        "goodstech-alibaba-gateway-402-com--solana--usdc--cs2zdfunonrdrgsizuqqldtxzxvvjzmgix2mplykueqp",
+      name: "Alibaba Cloud Goods Tech",
+      serviceId: "solana-foundation/alibaba/goodstech",
+      serviceName: "Alibaba Cloud Goods Tech",
+      payTo: "Cs2zdfUNonRdRGsiZUQQLdTxzxVvJZmgiX2mpLYKuEqP",
+    };
+    expect(
+      findProviderByRouteId([liveRow], "static-solana-foundation-alibaba-goodstech")?.providerId,
+    ).toBe(liveRow.providerId);
+  });
 });
