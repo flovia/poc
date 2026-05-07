@@ -24,8 +24,17 @@ type StoredProviderBase = {
   network?: string;
   networks?: string[];
   catalogSource?: ProviderCatalogSource;
+  /**
+   * 集約 (brand-key dedup) で1枚のカードにまとまった元 row の catalogSource 集合。
+   * 例: AgentMail の場合 ["pay_sh_curated", "mpp_registry"] の両方を持つので
+   * カード上で Pay.sh と MPP の両方のバッジを出せる。
+   */
+  catalogSources?: ProviderCatalogSource[];
   protocols?: ("x402" | "MPP")[];
   asset?: string;
+  /** BFF-side `ProviderCatalogRow.serviceUrl` (the provider's API base URL).
+   * Used by the avatar to resolve a brand favicon when no curated map entry exists. */
+  serviceUrl?: string;
   transactionCount?: number;
   uniqueSenderCount?: number;
   hasCustomerFacts?: boolean;

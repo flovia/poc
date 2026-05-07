@@ -1,5 +1,5 @@
 import { formatAtomic, shortAddr } from "@/lib/format";
-import type { GeoSpec } from "@/lib/geo-spec/source";
+import type { GeoSpec, MppRegistryEndpoint } from "@/lib/geo-spec/source";
 
 type Props = {
   providerId: string;
@@ -39,9 +39,9 @@ export function GeoSpecScreen({ providerId, spec }: Props) {
           <EmptyState providerId={providerId} />
         ) : (
           <>
-            <GeoGroup spec={spec} />
-            <ChainsAssetsSection spec={spec} />
-            <EndpointsSection spec={spec} />
+            <ProviderDetailsSection spec={spec} />
+            <MppOfficialRegistrySection spec={spec} />
+            <PayShSection spec={spec} />
           </>
         )}
       </div>
@@ -63,44 +63,69 @@ function EmptyState({ providerId }: { providerId: string }) {
   );
 }
 
-function GeoGroup({ spec }: { spec: GeoSpec }) {
+// Top-level section divider for catalog-source groupings (Pay.sh / MPP).
+// Visually heavier than `SectionHeading` so the page reads as two parent
+// groups with sub-content beneath each.
+function CatalogSectionHeader({
+  badge,
+  title,
+  subtitle,
+}: {
+  badge: string;
+  title: string;
+  subtitle?: string;
+}) {
   return (
-    <section style={{ marginTop: 6 }}>
-      <SectionHeading
-        eyebrow="GEO"
-        title="What this provider tells AI agents"
-        note={
-          spec.atlasMissing
-            ? "No Pay.sh catalog entry was matched, so description/use case below may be empty."
-            : undefined
-        }
-      />
+    <header
+      style={{
+        marginBottom: 16,
+        paddingBottom: 12,
+        borderBottom: "2px solid var(--text-1, #111)",
+      }}
+    >
       <div
         style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(360px, 1fr))",
-          gap: 14,
+          display: "inline-block",
+          fontSize: 11,
+          fontWeight: 700,
+          letterSpacing: "0.08em",
+          textTransform: "uppercase",
+          color: "var(--text-1)",
+          background: "var(--surface-muted, #f0f1f4)",
+          padding: "3px 10px",
+          borderRadius: 999,
+          marginBottom: 10,
         }}
       >
-        <DefinitionCard label="Description" body={spec.description} />
-        <DefinitionCard label="Use case" body={spec.useCase} />
+        {badge}
       </div>
+      <h2 className="display" style={{ fontSize: 24, fontWeight: 700, margin: "0 0 6px" }}>
+        {title}
+      </h2>
+      {subtitle ? (
+        <p style={{ color: "var(--text-mute)", fontSize: 13, lineHeight: 1.5, margin: 0 }}>
+          {subtitle}
+        </p>
+      ) : null}
+    </header>
+  );
+}
+
+function ProviderDetailsSection({ spec }: { spec: GeoSpec }) {
+  return (
+    <section style={{ marginTop: 6 }}>
+      <SectionHeading eyebrow="Provider details" title="Catalog metadata" />
       <div
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
           gap: 12,
-          marginTop: 12,
         }}
       >
-        <MetaTile
-          label="Service URL"
-          value={spec.serviceUrl}
-          mono
-        />
+        <MetaTile label="Service URL" value={spec.serviceUrl} mono />
         <MetaTile label="Category" value={spec.category} />
         <MetaTile
-          label="Endpoints (Pay.sh catalog)"
+          label="Endpoints"
           value={spec.endpointCount !== null ? String(spec.endpointCount) : null}
           mono
         />
@@ -124,20 +149,75 @@ function GeoGroup({ spec }: { spec: GeoSpec }) {
   );
 }
 
-function ChainsAssetsSection({ spec }: { spec: GeoSpec }) {
+function PayShSection({ spec }: { spec: GeoSpec }) {
+  const hasDescription = !!(spec.description || spec.useCase);
+  const hasOffers = spec.offers.length > 0;
+  const hasObservedEndpoints = spec.observedEndpoints.length > 0;
+  // Hide the entire section when the active provider has no Pay.sh data at all.
+  if (!hasDescription && !hasOffers && !hasObservedEndpoints) return null;
+
   return (
-    <section style={{ marginTop: 30 }}>
+    <section style={{ marginTop: 36 }}>
+      <CatalogSectionHeader
+        badge="Pay.sh"
+        title="Pay.sh"
+        subtitle="Description, supported chains, and observed API paths from the Pay.sh atlas."
+      />
+      {hasDescription ? (
+        <div style={{ marginBottom: 24 }}>
+          <SectionHeading eyebrow="Description" title="What this provider tells AI agents" />
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(360px, 1fr))",
+              gap: 14,
+            }}
+          >
+            {spec.description ? <DefinitionCard label="Description" body={spec.description} /> : null}
+            {spec.useCase ? <DefinitionCard label="Use case" body={spec.useCase} /> : null}
+          </div>
+        </div>
+      ) : null}
+      {hasOffers ? <PayShOffersTable spec={spec} /> : null}
+      {hasObservedEndpoints ? <PayShObservedEndpointsTable spec={spec} /> : null}
+    </section>
+  );
+}
+
+function MppOfficialRegistrySection({ spec }: { spec: GeoSpec }) {
+  const hasDescription = !!spec.mppDescription;
+  const hasMppEndpoints = spec.mppEndpoints.length > 0;
+  if (!hasDescription && !hasMppEndpoints) return null;
+
+  return (
+    <section style={{ marginTop: 36 }}>
+      <CatalogSectionHeader
+        badge="MPP official"
+        title="MPP Official Registry"
+        subtitle="Description and per-path pricing as published in the MPP services registry (mpp.dev)."
+      />
+      {hasDescription ? (
+        <div style={{ marginBottom: 24 }}>
+          <SectionHeading eyebrow="Description" title="Registry description" />
+          <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 14 }}>
+            <DefinitionCard label="Description" body={spec.mppDescription} />
+          </div>
+        </div>
+      ) : null}
+      {hasMppEndpoints ? <MppEndpointsTable spec={spec} /> : null}
+    </section>
+  );
+}
+
+function PayShOffersTable({ spec }: { spec: GeoSpec }) {
+  return (
+    <section style={{ marginTop: 24 }}>
       <SectionHeading
         eyebrow="Supported chains, assets, and probe price"
         title="Pay.sh offers"
-        note={
-          spec.offers.length === 0
-            ? "No payment offers found in the Pay.sh catalog for this provider."
-            : "Each row is one (chain × asset × payTo) combination Pay.sh published. Probe price is the per-call USD amount Pay.sh observed from a probe; individual endpoint prices are not separately published."
-        }
+        note="Each row is one (chain × asset × payTo) combination Pay.sh published. Probe price is the per-call USD amount Pay.sh observed from a probe; individual endpoint prices are not separately published."
       />
-      {spec.offers.length === 0 ? null : (
-        <article className="card" style={{ padding: 0, overflow: "hidden" }}>
+      <article className="card" style={{ padding: 0, overflow: "hidden" }}>
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr style={tableHeadRowStyle}>
@@ -171,25 +251,19 @@ function ChainsAssetsSection({ spec }: { spec: GeoSpec }) {
             </tbody>
           </table>
         </article>
-      )}
     </section>
   );
 }
 
-function EndpointsSection({ spec }: { spec: GeoSpec }) {
+function PayShObservedEndpointsTable({ spec }: { spec: GeoSpec }) {
   return (
-    <section style={{ marginTop: 30 }}>
+    <section style={{ marginTop: 24 }}>
       <SectionHeading
         eyebrow="API paths observed"
         title="Endpoints called against this provider"
-        note={
-          spec.observedEndpoints.length === 0
-            ? "No observed endpoint calls in the current fixture for this provider's serviceId."
-            : "Per-endpoint USD price is not separately published in the Pay.sh catalog — only the per-offer probe price above. Observed spend is the total paid amount seen in the current fixture, formatted as USDC where applicable, not a posted price."
-        }
+        note="Per-endpoint USD price is not separately published in the Pay.sh catalog — only the per-offer probe price above. Observed spend is the total paid amount seen in the current fixture, formatted as USDC where applicable, not a posted price."
       />
-      {spec.observedEndpoints.length === 0 ? null : (
-        <article className="card" style={{ padding: 0, overflow: "hidden" }}>
+      <article className="card" style={{ padding: 0, overflow: "hidden" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
             <colgroup>
               <col style={{ width: "30%" }} />
@@ -255,7 +329,6 @@ function EndpointsSection({ spec }: { spec: GeoSpec }) {
             </tbody>
           </table>
         </article>
-      )}
     </section>
   );
 }
@@ -382,3 +455,108 @@ const tdStyle: React.CSSProperties = {
   fontSize: 13,
   color: "var(--text-1)",
 };
+
+// Render the registry-declared paid endpoints exposed by MPP services. Mirrors
+// the layout of `PayShObservedEndpointsTable` so the user can compare
+// path-by-path price tables across both catalog sources.
+function MppEndpointsTable({ spec }: { spec: GeoSpec }) {
+  const sessionPresent = spec.mppEndpoints.some((e) => e.intent === "session");
+  const dynamicPresent = spec.mppEndpoints.some((e) => e.dynamic === true);
+  const noteParts: string[] = [
+    "Prices are published in the MPP services registry. `charge` = per-call fixed price.",
+  ];
+  if (sessionPresent) {
+    noteParts.push(
+      "`session` = per-session billing; the listed unit (e.g. per request) is the billable increment when known.",
+    );
+  }
+  if (dynamicPresent) {
+    noteParts.push(
+      "`dynamic` rows quote no fixed price — the runtime price depends on input/output (e.g. tokens, MB).",
+    );
+  }
+
+  return (
+    <section style={{ marginTop: 24 }}>
+      <SectionHeading
+        eyebrow="API paths · MPP registry"
+        title="Endpoints declared by the MPP services registry"
+        note={noteParts.join(" ")}
+      />
+      <article className="card" style={{ padding: 0, overflow: "hidden" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
+          <colgroup>
+            <col style={{ width: "30%" }} />
+            <col style={{ width: 90 }} />
+            <col />
+            <col style={{ width: 110 }} />
+            <col style={{ width: 110 }} />
+            <col style={{ width: 140 }} />
+          </colgroup>
+          <thead>
+            <tr style={tableHeadRowStyle}>
+              <th style={thStyle}>Resource (path)</th>
+              <th style={thStyle}>Method</th>
+              <th style={thStyle}>Description</th>
+              <th style={thStyle}>Intent</th>
+              <th style={thStyle}>Unit</th>
+              <th style={{ ...thStyle, textAlign: "right" }}>Price</th>
+            </tr>
+          </thead>
+          <tbody>
+            {spec.mppEndpoints.map((e, i) => (
+              <tr key={`${e.method ?? "GET"}-${e.resource}-${i}`} style={tableRowStyle}>
+                <td
+                  style={{
+                    ...tdStyle,
+                    fontFamily: "var(--mono)",
+                    fontSize: 12,
+                    wordBreak: "break-all",
+                  }}
+                  title={e.resource}
+                >
+                  {pathOf(e.resource)}
+                </td>
+                <td style={{ ...tdStyle, fontFamily: "var(--mono)", fontSize: 12 }}>
+                  {e.method ?? "—"}
+                </td>
+                <td style={{ ...tdStyle, overflowWrap: "anywhere" }}>{e.description ?? "—"}</td>
+                <td style={tdStyle}>{e.intent ?? "—"}</td>
+                <td style={tdStyle}>{formatUnit(e)}</td>
+                <td style={{ ...tdStyle, textAlign: "right", fontFamily: "var(--mono)" }}>
+                  {formatRegistryPrice(e)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </article>
+    </section>
+  );
+}
+
+function formatUnit(e: MppRegistryEndpoint): string {
+  if (e.intent === "session") {
+    return e.unitType ? `per ${e.unitType}` : "per session";
+  }
+  if (e.intent === "charge") {
+    return e.unitType ? `per ${e.unitType}` : "per call";
+  }
+  return e.unitType ? `per ${e.unitType}` : "—";
+}
+
+function formatRegistryPrice(e: MppRegistryEndpoint): string {
+  if (e.dynamic) return "dynamic";
+  if (!e.amountAtomic) return "—";
+  if (e.decimals === undefined) return `${e.amountAtomic} atomic`;
+  // Use parseFloat after manual scaling so trailing zeros collapse cleanly.
+  const denom = 10 ** e.decimals;
+  const value = Number(e.amountAtomic) / denom;
+  if (!Number.isFinite(value)) return "—";
+  if (value === 0) return "$0.00";
+  if (value < 0.01) {
+    // For sub-cent prices show 4 decimals so $0.0001 is readable.
+    return `$${value.toFixed(4).replace(/0+$/, "").replace(/\.$/, "")}`;
+  }
+  return `$${value.toFixed(2)}`;
+}

@@ -8,11 +8,13 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "bake:geo": "cd ../cli && bun run geo:bake",
+    "build": "bun run bake:geo && next build",
     "start": "next start",
     "test": "bun test",
     "typecheck": "tsc --noEmit",
-    "verify": "bun run typecheck && bun test"
+    "verify:geo-bake-fresh": "bun scripts/check-geo-bake-fresh.ts",
+    "verify": "bun run verify:geo-bake-fresh && bun run typecheck && bun test"
   },
   "dependencies": {
     "@nivo/sankey": "^0.99.0",
