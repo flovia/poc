@@ -224,11 +224,6 @@ export function ShowcaseProviderScreen({ provider }: ShowcaseProviderScreenProps
               >
                 {provider === "stripe" ? "Simulate Tempo payment" : "I paid. Continue."}
               </button>
-              {provider === "hitpay" && hitPayCheckoutUrl ? (
-                <a href={hitPayCheckoutUrl} target="_blank" rel="noreferrer" className="ghost" style={{ alignSelf: "center", fontSize: 13 }}>
-                  Open checkout ↗
-                </a>
-              ) : null}
               <a href={config.dashboardHref} target="_blank" rel="noreferrer" className="ghost" style={{ alignSelf: "center", fontSize: 13 }}>
                 Provider dashboard ↗
               </a>
@@ -938,14 +933,19 @@ function ProviderVsFloviaPanel({
         />
         <ComparisonColumn
           eyebrow="Flovia knows"
-          title="Paid API usage"
+          title="Joined payment + API usage"
           accent={accent}
           highlighted
           items={[
+            { label: "Payment id", value: paymentId },
+            { label: "Payment rail", value: rail },
             { label: "Endpoint", value: `GET ${endpoint}` },
             { label: "API status", value: apiStatus },
             { label: "Latency", value: result ? "captured from response" : "captured on call" },
+            { label: "Request id", value: result ? "captured by SDK" : "created on call" },
+            { label: "API response", value: result?.status === 200 ? "paid access granted" : "pending paid access" },
             { label: "Workflow", value: "agent paid API request" },
+            { label: "Decision signal", value: "conversion + retained demand" },
           ]}
         />
       </div>
