@@ -4,6 +4,17 @@ on:
   push:
     branches:
       - develop
+    paths:
+      - .github/workflows/deploy-lightsail-develop.yml
+      - .github/workflows/deploy-lightsail-shared.yml
+      - apps/bff/**
+      - apps/cli/**
+      - packages/**
+      - scripts/**
+      - deploy/**
+      - docker-compose.lightsail.yml
+      - package.json
+      - bun.lock
   workflow_dispatch:
 
 permissions:
