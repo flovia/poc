@@ -12,6 +12,8 @@ import type {
   ReportSummaryDto,
   WalletUsageGraphDto,
 } from "./api/types";
+import { mergeStaticProviders } from "@/lib/providers/static-merge";
+import type { StaticProviderCapability } from "@/lib/providers/static-capabilities";
 import type { SdkExtras, SdkForceNetwork } from "./sdk-fixtures/types";
 
 // 主役 wallet の正規アドレス. wallet/[address]/page.tsx の redirect で使う.
@@ -21,10 +23,47 @@ async function sdkModule() {
   return import("./sdk-fixtures");
 }
 
+// Curated `static-` providers come from a frontend fixture, not from the BFF.
+// Merge them in here so server components see the same catalog the client-side
+// provider context shows; otherwise dynamic routes like
+// /providers/static-…/customers 404 because the lookup misses.
+const toServerStaticProvider = (
+  capability: StaticProviderCapability,
+  routeId: string,
+): ProviderCatalogItemDto => ({
+  providerId: routeId,
+  name: capability.name,
+  serviceId: capability.serviceId,
+  serviceName: capability.name,
+  network: capability.network,
+  asset: capability.asset,
+  payTo: capability.payTo,
+  catalogSource: capability.catalogSource,
+  transactionCount: capability.transactionCount,
+  uniqueSenderCount: capability.uniqueSenderCount,
+  totalVolumeAtomic: "0",
+  endpointCount: 0,
+  resourceCount: 0,
+  endpointAttributionStatus: "unresolved_payto",
+  attributionConfidence: 0,
+  hasCustomerFacts: false,
+  customerFactCount: 0,
+  provenance: "demo_label",
+  provenanceByField: {},
+  reasons: [
+    {
+      provenance: "demo_label",
+      label: "static_capability",
+      description: "Curated static provider capability — no live BFF row available.",
+    },
+  ],
+});
+
 export async function getProviders(): Promise<ProviderCatalogItemDto[]> {
   const mode = await getServerDashboardMode();
   if (mode === "sdkConnected") return [];
-  return live.getProviders();
+  const liveProviders = await live.getProviders();
+  return mergeStaticProviders(liveProviders, toServerStaticProvider);
 }
 
 export type GetCustomersFilter = { payTo?: string; serviceId?: string };

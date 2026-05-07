@@ -17,7 +17,17 @@ import { SDK_DEMO_PROVIDER_ID, SDK_DEMO_PROVIDER_NAME } from "@/lib/sdk-fixtures
 // "wallet" is intentionally treated as a child of "customers" for nav
 // highlighting — there's no top-level Wallet entry, the wallet detail page
 // is reached by drilling in from the customers list.
-type ActiveRoute = "customers" | "api-growth" | "geo-spec" | "macro-metrics" | "metrics-catalog" | "setup" | "wallet" | undefined;
+type ActiveRoute =
+  | "customers"
+  | "api-growth"
+  | "geo-spec"
+  | "machine-payment-routes"
+  | "macro-metrics"
+  | "metrics-catalog"
+  | "showcase"
+  | "setup"
+  | "wallet"
+  | undefined;
 
 type SidebarProps = {
   activeProviderId: string | undefined;
@@ -77,8 +87,11 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
   const coUsageHref = providerRouteId ? `/providers/${providerRouteId}/customers/co-usage-providers` : undefined;
   const customerOverviewActive = pathname === customerOverviewHref || activeRoute === "wallet";
   const customersSectionActive = customerOverviewActive || pathname === coUsageHref;
+  const showcaseSectionActive = pathname === "/showcase" || pathname.startsWith("/showcase/");
 
-  const navHrefFor = (segment: "api-growth" | "geo-spec" | "macro-metrics" | "metrics-catalog") => {
+  const navHrefFor = (
+    segment: "api-growth" | "geo-spec" | "machine-payment-routes" | "macro-metrics" | "metrics-catalog",
+  ) => {
     return providerRouteId ? `/providers/${providerRouteId}/${segment}` : "/setup";
   };
 
@@ -189,6 +202,29 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
             role="link"
             className="nav-item disabled"
             aria-disabled="true"
+            aria-label="Machine Payment Routes, setup required"
+          >
+            <Icon.bolt width={16} height={16} />
+            <span style={{ flex: 1 }}>Payment Routes</span>
+            <DemoNavBadge />
+          </span>
+        ) : (
+          <Link
+            href={navHrefFor("machine-payment-routes")}
+            className="nav-item"
+            aria-current={activeRoute === "machine-payment-routes"}
+          >
+            <Icon.bolt width={16} height={16} />
+            <span style={{ flex: 1 }}>Payment Routes</span>
+            <DemoNavBadge />
+          </Link>
+        )}
+
+        {navDisabled ? (
+          <span
+            role="link"
+            className="nav-item disabled"
+            aria-disabled="true"
             aria-label="API Growth (demo), setup required"
           >
             <Icon.spark width={16} height={16} />
@@ -227,6 +263,38 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
             <GeoNavLabel />
           </Link>
         )}
+
+        <div className="nav-label" style={{ marginTop: 18 }}>
+          Showcase
+        </div>
+        <div className="nav-row">
+          <span
+            className={`nav-item nav-item--with-toggle nav-item--category${showcaseSectionActive ? " nav-item--category-active" : ""}`}
+          >
+            <Icon.external width={16} height={16} />
+            <span style={{ flex: 1 }}>MPP Showcase</span>
+            <DemoNavBadge />
+          </span>
+        </div>
+        <div id="nav-sub-showcase" className="nav-sub">
+          <Link href="/showcase" className="nav-item nav-item--sub" aria-current={pathname === "/showcase"}>
+            Overview
+          </Link>
+          <Link
+            href="/showcase/stripe-mpp"
+            className="nav-item nav-item--sub"
+            aria-current={pathname === "/showcase/stripe-mpp"}
+          >
+            Stripe MPP
+          </Link>
+          <Link
+            href="/showcase/hitpay-mpp"
+            className="nav-item nav-item--sub"
+            aria-current={pathname === "/showcase/hitpay-mpp"}
+          >
+            HitPay MPP
+          </Link>
+        </div>
 
       </nav>
 

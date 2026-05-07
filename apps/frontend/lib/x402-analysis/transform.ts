@@ -129,13 +129,6 @@ const FIXTURE_STYLE_CATEGORY_ORDER = [
   "AI inference",
   "DEX execution & alerts",
 ] as const;
-const INTERMEDIARY_ORDER = [
-  "PayRouter A",
-  "PayRouter B",
-  "DataBridge X",
-  "AgentAPI Hub",
-  "Commerce Facilitator",
-] as const;
 
 const MIN_NODE_HEIGHT = 28;
 const NODE_GAP = 18;
@@ -368,6 +361,12 @@ function successIndicator(event: X402RequestEvent): number {
   return event.payment_status === "failed" ? 0 : 1;
 }
 
+function paymentRailLabel(event: X402RequestEvent): string {
+  if (event.api_intermediary.toLowerCase().includes("stripe")) return "Stripe MPP";
+  if (event.api_intermediary.toLowerCase().includes("hitpay")) return "HitPay MPP";
+  return "x402";
+}
+
 function formatIntentChartTargetCategory(event: X402RequestEvent): string {
   if (event.provider === "SignalPort" || event.endpoint.includes("/messages")) {
     return "DEX execution & alerts";
@@ -389,8 +388,9 @@ function buildIntentIntermediaryTargetCategoryRows(requestEvents: X402RequestEve
   return aggregateSankeyRows(
     targetEvents(requestEvents).map((event) => ({
       left_label: event.user_intent,
-      middle_label: event.api_intermediary,
+      middle_label: paymentRailLabel(event),
       right_label: formatIntentChartTargetCategory(event),
+      middle_detail: event.api_intermediary,
       right_detail: `${event.provider} · ${formatEndpointLabel(event.endpoint)}`,
       flow_count: 1,
       paid_count: paidIndicator(event),
@@ -788,17 +788,17 @@ function buildIntentIntermediaryCategoryChartModel(
   return {
     id: "intent_intermediary_target_category",
     eyebrow: "Pattern 1",
-    title: "User intent → middleman → target API category",
+    title: "Source route → payment rail → API workflow/paid endpoint",
     description:
-      "Shows which DeFi-style user intents routed through each intermediary and which target API family was ultimately called.",
+      "Shows which source routes routed through each payment rail and which API workflow or paid endpoint was ultimately called.",
     layer_labels: {
-      left: "Intent",
-      mid: "Middleman",
-      right: "Target category",
+      left: "source route",
+      mid: "payment rail",
+      right: "API workflow/paid endpoint",
     },
     layer_order: {
       left: layerOrderByTotals(flows, "left"),
-      mid: INTERMEDIARY_ORDER,
+      mid: ["x402", "Stripe MPP", "HitPay MPP"],
       right: FIXTURE_STYLE_CATEGORY_ORDER,
     },
     flows,

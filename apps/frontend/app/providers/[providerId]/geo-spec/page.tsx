@@ -4,6 +4,7 @@ import { findProviderByRouteId } from "@/lib/providers";
 import { TopBar } from "@/components/shell/TopBar";
 import { getGeoSpec } from "@/lib/geo-spec/source";
 import { getTopBarPageContext } from "@/lib/server/page-context";
+import type { ProviderCatalogItemDto } from "@/lib/api/types";
 
 export default async function GeoSpecPage({
   params,
@@ -12,9 +13,14 @@ export default async function GeoSpecPage({
 }) {
   const { providerId } = await params;
   const pageCtx = await getTopBarPageContext();
-  const liveProvider = await getProviders()
-    .then((providers) => findProviderByRouteId(providers, providerId) ?? null)
-    .catch(() => null);
+  // The live BFF row is only used as a hint for `getGeoSpec` so it can find
+  // the right entry in the baked GEO data file via serviceId / brandKey /
+  // payTo. baked JSON is the authoritative source for description, offers,
+  // observed endpoints, and MPP-registry endpoints. The hint is a graceful
+  // fallback when no baked entry is found (e.g. a fresh user-saved provider).
+  const allProviders = await getProviders().catch(() => [] as ProviderCatalogItemDto[]);
+  const liveProvider = findProviderByRouteId(allProviders, providerId) ?? null;
+
   const spec = getGeoSpec(
     providerId,
     liveProvider?.payTo
@@ -23,6 +29,7 @@ export default async function GeoSpecPage({
           name: liveProvider.name,
           title: liveProvider.title,
           description: liveProvider.description,
+          mppDescription: liveProvider.mppDescription,
           useCase: liveProvider.useCase,
           category: liveProvider.category,
           serviceId: liveProvider.serviceId,

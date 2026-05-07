@@ -54,7 +54,59 @@ const BRAND_BY_KEY: Record<string, BrandEntry> = {
   paysponge: { domain: "paysponge.com" },
 };
 
-const INFRA_PREFIXES = new Set(["x402", "api", "www", "pro-api"]);
+// MPP gateway brand map. Keyed by the leading subdomain label of an MPP
+// wrapper host (e.g. `openai.mpp.tempo.xyz` -> "openai") OR by the bare
+// MPP serviceId returned by `https://mpp.dev/api/services`. This map is
+// intentionally separate from BRAND_BY_KEY so generic fqn lookups
+// (e.g. `quicknode/rpc`) don't accidentally hit MPP-specific entries
+// like `rpc -> tempo.xyz`.
+const MPP_BRAND_BY_SERVICE: Record<string, BrandEntry> = {
+  agentmail: { domain: "agentmail.to" },
+  alchemy: { domain: "alchemy.com" },
+  allium: { domain: "allium.so" },
+  anthropic: { domain: "anthropic.com" },
+  aviationstack: { domain: "aviationstack.com" },
+  browserbase: { domain: "browserbase.com" },
+  codestorage: { domain: "tempo.xyz" }, // Tempo-internal service, no public homepage
+  deepl: { domain: "deepl.com" },
+  deepseek: { domain: "deepseek.com" },
+  doma: { domain: "doma.xyz" },
+  dune: { domain: "dune.com" },
+  exa: { domain: "exa.ai" },
+  fal: { domain: "fal.ai" },
+  firecrawl: { domain: "firecrawl.dev" },
+  flightapi: { domain: "flightapi.io" },
+  gemini: { domain: "gemini.google.com" },
+  goflightlabs: { domain: "goflightlabs.com" },
+  googlemaps: { domain: "maps.google.com" },
+  govlaws: { domain: "govlaws.ai" },
+  groq: { domain: "groq.com" },
+  hunter: { domain: "hunter.io" },
+  kicksdb: { domain: "kicks.dev" },
+  "martin-estate": { domain: "martinestate.com" },
+  modal: { domain: "modal.com" },
+  moltycash: { domain: "molty.cash" },
+  nansen: { domain: "nansen.ai" },
+  openai: { domain: "openai.com" },
+  openrouter: { domain: "openrouter.ai" },
+  oxylabs: { domain: "oxylabs.io" },
+  parallel: { domain: "parallel.ai" },
+  pinata: { domain: "pinata.cloud" },
+  rentcast: { domain: "rentcast.io" },
+  rpc: { domain: "tempo.xyz" }, // Tempo-internal RPC service
+  serpapi: { domain: "serpapi.com" },
+  spyfu: { domain: "spyfu.com" },
+  stableemail: { domain: "stableemail.dev" },
+  stableenrich: { domain: "stableenrich.dev" },
+  stablephone: { domain: "stablephone.dev" },
+  stablesocial: { domain: "stablesocial.dev" },
+  stabletravel: { domain: "stabletravel.dev" },
+  storage: { domain: "tempo.xyz" }, // Tempo-internal storage service
+  tako: { domain: "tako.com" },
+  twocaptcha: { domain: "2captcha.com" },
+};
+
+const INFRA_PREFIXES = new Set(["x402", "api", "www", "pro-api", "mpp"]);
 
 function brandKeyCandidatesFromFqn(fqn: string | undefined): string[] {
   if (!fqn) return [];
@@ -103,6 +155,37 @@ function isWrapperHost(host: string): boolean {
   );
 }
 
+// MPP gateway suffixes that wrap third-party brand APIs. The leading subdomain
+// label of the host is the brand id (e.g. `openai.mpp.tempo.xyz` -> `openai`).
+// The wrapper apex domain itself (tempo.xyz, paywithlocus.com) is NOT a useful
+// favicon target for the wrapped brand.
+const MPP_WRAPPER_SUFFIXES = [".mpp.tempo.xyz", ".mpp.paywithlocus.com"] as const;
+
+/**
+ * Resolve a `<brand>.mpp.<wrapper>` host to a favicon-bearing domain.
+ *
+ * Priority:
+ *   1. Curated `BRAND_BY_KEY[brand]` (preferred — Google's favicon resolver
+ *      reliably has the icon and we know the brand's true homepage).
+ *   2. `<brand>.com` as a best-effort guess for unmapped brands.
+ *
+ * Returns null when the host is not an MPP wrapper or has no brand label.
+ */
+function mppWrapperBrandHost(host: string): string | null {
+  const suffix = MPP_WRAPPER_SUFFIXES.find((s) => host.endsWith(s));
+  if (!suffix) return null;
+  const labels = host.slice(0, -suffix.length).split(".");
+  // For `<brand>.mpp.<wrapper>` we expect a single brand label here.
+  // For `<brand>.<sub>.mpp.<wrapper>` we still take the leading label.
+  const brand = labels[0]?.toLowerCase();
+  if (!brand) return null;
+  const mpp = MPP_BRAND_BY_SERVICE[brand];
+  if (mpp) return mpp.domain;
+  const curated = BRAND_BY_KEY[brand];
+  if (curated) return curated.domain;
+  return `${brand}.com`;
+}
+
 function stripInfraPrefix(host: string): string {
   const labels = host.split(".");
   while (labels.length > 2 && INFRA_PREFIXES.has(labels[0]!.toLowerCase())) {
@@ -132,6 +215,64 @@ export function inferBrandDisplayName({ fqn }: { fqn?: string }): string | null 
 }
 
 /**
+ * Reduce a Pay.sh / MPP-style serviceId down to a single "brand key" so that
+ * rows describing the same provider on different catalogs (or different
+ * networks) can be deduplicated for display.
+ *
+ * - `agentmail/email` → `agentmail`
+ * - `merit-systems/stablesocial/social-data` → `stablesocial`
+ * - `pro-api.coingecko.com` → `coingecko`
+ * - `api.nansen.ai` → `nansen`
+ * - `agentmail` → `agentmail`
+ *
+ * Returns null when no usable key can be extracted (undefined / empty input).
+ */
+export function extractBrandKey(serviceId: string | undefined | null): string | null {
+  if (!serviceId) return null;
+  const trimmed = serviceId.trim();
+  if (trimmed.length === 0) return null;
+  const segs = trimmed
+    .split("/")
+    .filter(Boolean)
+    .map((s) => s.toLowerCase());
+  if (segs.length === 0) {
+    return brandKeyCandidatesFromFqn(trimmed)[0] ?? null;
+  }
+
+  // Single-segment serviceIds (`agentmail`, `api.nansen.ai`, `rpc`) — defer
+  // to the fqn helper which knows how to peel hostname labels.
+  if (segs.length === 1) {
+    const candidates = brandKeyCandidatesFromFqn(trimmed);
+    for (const key of candidates) {
+      if (BRAND_BY_KEY[key] || MPP_BRAND_BY_SERVICE[key]) return key;
+    }
+    return candidates[0] ?? null;
+  }
+
+  // Multi-segment Pay.sh fqns: the brand position depends on whether the
+  // leading segment is a known publisher namespace (solana-foundation,
+  // merit-systems, paysponge → brand is the second segment) or the brand
+  // itself (agentmail/email, quicknode/rpc → brand is the first segment).
+  // We must NOT fall back to MPP_BRAND_BY_SERVICE on the trailing segment
+  // here — that map is keyed on single-segment MPP serviceIds (`rpc`,
+  // `email`, ...) and would wrongly collapse `quicknode/rpc` into the
+  // Tempo `rpc` brand, mixing unrelated catalog sources on the picker card.
+  const leading = segs[0]!;
+  if (segs.length >= 3) {
+    return segs[1] ?? leading;
+  }
+  if (KNOWN_PUBLISHERS.has(leading)) {
+    return segs[1] ?? leading;
+  }
+  return leading;
+}
+
+// Publisher namespaces whose leading fqn segment is metadata, not a brand.
+// Mirrors `bake-geo-providers.ts#KNOWN_PUBLISHERS` so the frontend lookup
+// keys agree with the baked GEO data.
+const KNOWN_PUBLISHERS = new Set(["solana-foundation", "merit-systems", "paysponge"]);
+
+/**
  * Best-effort favicon domain for a Pay.sh provider.
  *
  * Priority:
@@ -158,11 +299,29 @@ export function inferBrandDomain({
       return { domain: entry.domain, iconUrl: entry.iconUrl, reason: "curated" };
     }
   }
+  // MPP serviceId lookup. Done after BRAND_BY_KEY (so curated `quicknode/rpc`
+  // wins over MPP `rpc -> tempo.xyz`) but before serviceUrl host parsing (so
+  // `martin-estate` -> `martinestate.com` overrides `agents.martinestate.com`).
+  for (const key of candidates) {
+    const entry = MPP_BRAND_BY_SERVICE[key];
+    if (entry) {
+      return { domain: entry.domain, iconUrl: entry.iconUrl, reason: "curated" };
+    }
+  }
 
   if (serviceUrl) {
     const u = safeUrl(serviceUrl);
     if (u && u.hostname) {
       const host = u.hostname.toLowerCase();
+      // MPP gateway wrapper hosts (`<brand>.mpp.tempo.xyz`,
+      // `<brand>.mpp.paywithlocus.com`). Stripping infra prefixes alone would
+      // yield the wrapper apex (tempo.xyz / paywithlocus.com), whose favicon
+      // is the gateway's, not the wrapped brand's. Resolve via the leading
+      // brand label, preferring the curated map over a `<brand>.com` guess.
+      const wrapperBrand = mppWrapperBrandHost(host);
+      if (wrapperBrand) {
+        return { domain: wrapperBrand, reason: "direct-host" };
+      }
       if (!isWrapperHost(host)) {
         const stripped = stripInfraPrefix(host);
         if (stripped.includes(".")) {

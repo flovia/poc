@@ -4,6 +4,7 @@ import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { createBffHandler } from "../src/http";
 import {
+  applyMppCatalogOverlay,
   fixtureAnalyticsDataSource,
   isSolanaCustomer,
   loadGeneratedAnalyticsDataSource,
@@ -24,6 +25,7 @@ import transactionFixture from "../fixtures/phase-a/coingecko-transactions.json"
 import attributionFixture from "../fixtures/phase-b/mock-attribution.json";
 import { buildPhaseBProjections, joinTransactionAttribution } from "../src/data/projection-builder";
 import {
+  validatePhaseBCustomerWorkflowIntentResponse,
   validatePhaseBCustomerUpsellMetricsResponse,
   validatePhaseBCustomerUpsellExplanationResponse,
   validatePhaseBCustomerListResponse,
@@ -36,6 +38,8 @@ import {
   validateServiceAnalyticsComparisonResponse,
   validateServiceAnalyticsQuadrantResponse,
   validateServiceAnalyticsSummaryResponse,
+  validateRouteAnalyticsSankeyResponse,
+  validateRouteAnalyticsSummaryResponse,
 } from "contracts";
 
 const request = (path: string, init: RequestInit = {}) =>
@@ -52,6 +56,97 @@ const withTempFile = async (fn: (filePath: string) => Promise<void> | void) => {
     fs.rmSync(directory, { recursive: true, force: true });
   }
 };
+
+const workflowIntentAddress = "0x0000000000000000000000000000000000000abc";
+const workflowIntentProfile = validatePhaseBCustomerProfileResponse({
+  generatedAt: "2026-05-01T00:00:00Z",
+  generatedFrom: "workflow-intent-test",
+  provenance: "derived_insight",
+  reasons: [{ provenance: "derived_insight", label: "workflow intent fixture" }],
+  profile: {
+    identity: {
+      address: workflowIntentAddress,
+      label: null,
+      network: "base",
+      asset: "USDC",
+      role: "payer_wallet",
+      identityBasis: "wallet_address",
+      caveat: null,
+      provenance: "onchain_fact",
+      provenanceByField: { address: "onchain_fact" },
+    },
+    metrics: {
+      spendAtomic: "900",
+      activityGrowth: 0.4,
+      freeTierProgress: 0.3,
+      entryPointRatio: 0.5,
+      upsellOpportunity: "medium",
+      provenance: "derived_insight",
+      provenanceByField: { spendAtomic: "onchain_fact" },
+      reasons: [{ provenance: "derived_insight", label: "workflow intent metrics" }],
+    },
+    providers: [
+      {
+        providerId: "price-api",
+        name: "Price API",
+        payToWallet: "0x0000000000000000000000000000000000000011",
+        spendAtomic: "300",
+        transactionCount: 2,
+        confidence: 0.8,
+        provenance: "derived_insight",
+        provenanceByField: { payToWallet: "onchain_fact" },
+        reasons: [{ provenance: "derived_insight", label: "workflow intent provider" }],
+      },
+      {
+        providerId: "llm-api",
+        name: "LLM API",
+        payToWallet: "0x0000000000000000000000000000000000000022",
+        spendAtomic: "600",
+        transactionCount: 2,
+        confidence: 0.8,
+        provenance: "derived_insight",
+        provenanceByField: { payToWallet: "onchain_fact" },
+        reasons: [{ provenance: "derived_insight", label: "workflow intent provider" }],
+      },
+    ],
+    timeline: [
+      {
+        at: "2026-05-01T10:00:00Z",
+        eventType: "payment",
+        description: "Price refresh: GET /v1/price",
+        amountAtomic: "100",
+        relatedProviderId: "price-api",
+        provenance: "derived_insight",
+        provenanceByField: { amountAtomic: "onchain_fact" },
+        reasons: [{ provenance: "derived_insight", label: "workflow intent event" }],
+      },
+      {
+        at: "2026-05-01T10:02:00Z",
+        eventType: "payment",
+        description: "Strategy eval: POST /v1/responses",
+        amountAtomic: "200",
+        relatedProviderId: "llm-api",
+        provenance: "derived_insight",
+        provenanceByField: { amountAtomic: "onchain_fact" },
+        reasons: [{ provenance: "derived_insight", label: "workflow intent event" }],
+      },
+      {
+        at: "2026-05-01T10:04:00Z",
+        eventType: "payment",
+        description: "Execution check: GET /v1/quote",
+        amountAtomic: "300",
+        relatedProviderId: "price-api",
+        provenance: "derived_insight",
+        provenanceByField: { amountAtomic: "onchain_fact" },
+        reasons: [{ provenance: "derived_insight", label: "workflow intent event" }],
+      },
+    ],
+    insights: [],
+    provenance: "derived_insight",
+    provenanceByField: { timeline: "derived_insight" },
+    reasons: [{ provenance: "derived_insight", label: "workflow intent profile" }],
+  },
+});
 
 describe("BFF routes", () => {
   beforeAll(() => {
@@ -129,6 +224,139 @@ describe("BFF routes", () => {
     expect(response.status).toBe(200);
     expect(parsed.providerCount).toBe(parsed.providers.length);
     expect(parsed.providers.some((provider) => provider.hasCustomerFacts)).toBe(true);
+  });
+
+  test("serves machine payment route analytics summary and sankey", async () => {
+    const handler = createBffHandler(fixtureAnalyticsDataSource);
+
+    const summaryResponse = await handler(request("/analytics/routes/summary"));
+    const summary = validateRouteAnalyticsSummaryResponse(await summaryResponse.json());
+    const sankeyResponse = await handler(request("/analytics/routes/sankey"));
+    const sankey = validateRouteAnalyticsSankeyResponse(await sankeyResponse.json());
+
+    expect(summaryResponse.status).toBe(200);
+    expect(sankeyResponse.status).toBe(200);
+    expect(summary.rails.map((rail) => rail.rail)).toEqual(
+      expect.arrayContaining(["x402", "stripe_mpp", "hitpay_mpp"]),
+    );
+    expect(summary.rails.find((rail) => rail.rail === "x402")?.visibility).toBe("public_onchain");
+    expect(summary.rails.find((rail) => rail.rail === "stripe_mpp")?.visibility).toBe(
+      "provider_attested",
+    );
+    expect(sankey.layers).toEqual(["source_route", "payment_rail", "api_workflow"]);
+    expect(sankey.nodes.some((node) => node.label === "Stripe MPP")).toBe(true);
+    expect(sankey.nodes.some((node) => node.label === "HitPay MPP")).toBe(true);
+    expect(sankey.nodes.some((node) => node.label === "/v1/scrape")).toBe(true);
+  });
+
+  test("merges MPP catalog into providers when overlay path is provided", async () => {
+    const tempDir = path.join(process.cwd(), "tmp", `bff-mpp-${randomUUID()}`);
+    fs.mkdirSync(tempDir, { recursive: true });
+    const overlayPath = path.join(tempDir, "mpp-catalog.json");
+    try {
+      const mppCatalog = {
+        generatedAt: "2026-05-07T00:00:00.000Z",
+        generatedFrom: "mpp-registry-capture",
+        providers: [
+          {
+            providerId:
+              "mpp:test-only::tempo:4217::USDC::0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            name: "MPP Test Only",
+            serviceId: "test-only",
+            serviceName: "MPP Test Only",
+            network: "tempo:4217",
+            asset: "USDC",
+            payTo: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            catalogSource: "mpp_registry",
+            transactionCount: 0,
+            uniqueSenderCount: 0,
+            totalVolumeAtomic: "0",
+            endpointCount: 5,
+            resourceCount: 1,
+            mappingPattern: "one_payto_one_endpoint",
+            endpointAttributionStatus: "mpp_attributed_endpoint",
+            attributionConfidence: 1,
+            hasCustomerFacts: false,
+            customerFactCount: 0,
+            provenance: "registry_fact",
+            provenanceByField: { providerId: "registry_fact" },
+            reasons: [{ provenance: "registry_fact", label: "MPP" }],
+          },
+        ],
+        providerCount: 1,
+        provenance: "registry_fact",
+        provenanceByField: { providers: "registry_fact" },
+        reasons: [{ provenance: "registry_fact", label: "MPP overlay test" }],
+      };
+      fs.writeFileSync(overlayPath, JSON.stringify(mppCatalog));
+
+      const overlaid = applyMppCatalogOverlay(fixtureAnalyticsDataSource, overlayPath);
+      const handler = createBffHandler(overlaid);
+      const response = await handler(request("/providers"));
+      const parsed = validateProviderCatalogResponse(await response.json());
+
+      const mppRow = parsed.providers.find((p) => p.providerId.startsWith("mpp:test-only::"));
+      expect(mppRow).toBeDefined();
+      expect(mppRow?.catalogSource).toBe("mpp_registry");
+      expect(parsed.providerCount).toBe(fixtureAnalyticsDataSource.providers.providerCount + 1);
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  test("applyMppCatalogOverlay is a no-op when overlay path is undefined", () => {
+    const overlaid = applyMppCatalogOverlay(fixtureAnalyticsDataSource, undefined);
+    expect(overlaid).toBe(fixtureAnalyticsDataSource);
+  });
+
+  test("applyMppCatalogOverlay fails fast when overlay path is set but file is missing", () => {
+    expect(() =>
+      applyMppCatalogOverlay(
+        fixtureAnalyticsDataSource,
+        "/tmp/this-file-should-not-exist-bff-mpp-overlay.json",
+      ),
+    ).toThrow(/BFF_MPP_CATALOG_PATH is set but file does not exist/);
+  });
+
+  test("does not auto-load MPP overlay when NODE_ENV=production and BFF_MPP_CATALOG_PATH is unset", () => {
+    // Critical regression guard: even if tmp/mpp-provider-catalog.json physically
+    // exists at the repo-root location used by DEFAULT_MPP_CATALOG_PATH, production
+    // runs must require explicit opt-in via BFF_MPP_CATALOG_PATH.
+    const defaultMppPath = path.join(
+      import.meta.dir,
+      "..",
+      "..",
+      "..",
+      "tmp",
+      "mpp-provider-catalog.json",
+    );
+    let createdForTest = false;
+    if (!fs.existsSync(defaultMppPath)) {
+      fs.mkdirSync(path.dirname(defaultMppPath), { recursive: true });
+      fs.writeFileSync(
+        defaultMppPath,
+        JSON.stringify({
+          generatedAt: "2026-05-07T00:00:00.000Z",
+          generatedFrom: "test",
+          providers: [],
+          providerCount: 0,
+          provenance: "registry_fact",
+          provenanceByField: { providers: "registry_fact" },
+          reasons: [{ provenance: "registry_fact", label: "test" }],
+        }),
+      );
+      createdForTest = true;
+    }
+    try {
+      // Sanity: file must be in place for this regression test to be meaningful.
+      expect(fs.existsSync(defaultMppPath)).toBe(true);
+      const dataSource = resolveAnalyticsDataSource(undefined, {
+        env: { BFF_ANALYTICS_SOURCE: "fixture", NODE_ENV: "production" },
+      });
+      expect(dataSource).toBe(fixtureAnalyticsDataSource);
+    } finally {
+      if (createdForTest) fs.rmSync(defaultMppPath, { force: true });
+    }
   });
 
   test("aggregates customers across chains by serviceId", async () => {
@@ -304,6 +532,9 @@ describe("BFF routes", () => {
       async generateUpsellExplanation() {
         throw new Error("AccessDeniedException: missing model access");
       },
+      async generateWorkflowIntentExplanation() {
+        throw new Error("not used in upsell route test");
+      },
     };
     const handler = createBffHandler(undefined, llmService);
     const originalConsoleError = console.error;
@@ -366,6 +597,9 @@ describe("BFF routes", () => {
           ],
         };
       },
+      async generateWorkflowIntentExplanation() {
+        throw new Error("not used in upsell route test");
+      },
     };
     const handler = createBffHandler(undefined, llmService);
 
@@ -379,6 +613,90 @@ describe("BFF routes", () => {
     expect(parsed.address).toBe(knownCustomerIntelligenceAddress);
     expect(parsed.explanation.summary.length).toBeGreaterThan(0);
     expect(parsed.input.reasonCodes.length).toBeGreaterThan(0);
+  });
+
+  test("returns grouped workflow sessions even when workflow-intent llm is unavailable", async () => {
+    const handler = createBffHandler(
+      {
+        ...fixtureAnalyticsDataSource,
+        getCustomerProfile(address: string) {
+          return address === workflowIntentAddress ? workflowIntentProfile : undefined;
+        },
+      },
+      null,
+    );
+
+    const response = await handler(
+      request(`/customers/${workflowIntentAddress}/llm/workflow-intent`),
+    );
+    const parsed = validatePhaseBCustomerWorkflowIntentResponse(await response.json());
+
+    expect(response.status).toBe(200);
+    expect(parsed.analysisStatus).toBe("unavailable");
+    expect(parsed.sessions).toHaveLength(1);
+    expect(parsed.explanations).toEqual([]);
+    expect(parsed.sessions[0]).toMatchObject({
+      eventCount: 3,
+      distinctProviderCount: 2,
+      totalAmountAtomic: "600",
+    });
+  });
+
+  test("returns validated workflow intent explanations for a known customer wallet", async () => {
+    const llmService: BffLlmService = {
+      async generateUpsellExplanation() {
+        throw new Error("not used in workflow intent test");
+      },
+      async generateWorkflowIntentExplanation(request) {
+        return {
+          model: {
+            provider: "bedrock",
+            modelId: "anthropic.claude-3-5-sonnet-20241022-v2:0",
+            region: "ap-northeast-1",
+            promptVersion: "workflow-intent-v1",
+          },
+          explanations: request.input.sessions.map((session) => ({
+            sessionId: session.sessionId,
+            summary: "Automated market check",
+            intent:
+              "This short burst appears consistent with a bot checking market conditions, evaluating them with an LLM step, and preparing an execution decision.",
+            scenarios: [
+              "A bot deciding whether to execute a market action.",
+              "An automation loop checking whether conditions justify a next step.",
+            ],
+            evidence: [
+              "The calls happened within a single 5 minute window.",
+              "Price API and LLM API activity appeared in one ordered burst.",
+            ],
+            caution:
+              "This interpretation is inferred from payment-linked API activity and may not capture the wallet's full offchain logic.",
+          })),
+        };
+      },
+    };
+    const handler = createBffHandler(
+      {
+        ...fixtureAnalyticsDataSource,
+        getCustomerProfile(address: string) {
+          return address === workflowIntentAddress ? workflowIntentProfile : undefined;
+        },
+      },
+      llmService,
+    );
+
+    const response = await handler(
+      request(`/customers/${workflowIntentAddress}/llm/workflow-intent`),
+    );
+    const parsed = validatePhaseBCustomerWorkflowIntentResponse(await response.json());
+
+    expect(response.status).toBe(200);
+    expect(parsed.analysisStatus).toBe("ready");
+    expect(parsed.model?.promptVersion).toBe("workflow-intent-v1");
+    expect(parsed.explanations).toEqual([
+      expect.objectContaining({
+        summary: "Automated market check",
+      }),
+    ]);
   });
 
   test("returns not found for unknown customer intelligence", async () => {
@@ -530,7 +848,7 @@ describe("BFF routes", () => {
 
   test("resolves fixture analytics source when explicitly configured", () => {
     const dataSource = resolveAnalyticsDataSource(undefined, {
-      env: { BFF_ANALYTICS_SOURCE: "fixture" },
+      env: { BFF_ANALYTICS_SOURCE: "fixture", BFF_MPP_CATALOG_PATH: "" },
     });
 
     expect(dataSource).toBe(fixtureAnalyticsDataSource);
@@ -538,7 +856,7 @@ describe("BFF routes", () => {
 
   test("treats empty analytics source as unset", () => {
     const dataSource = resolveAnalyticsDataSource("/tmp/flovia-missing-bff-analytics.json", {
-      env: { BFF_ANALYTICS_SOURCE: "" },
+      env: { BFF_ANALYTICS_SOURCE: "", BFF_MPP_CATALOG_PATH: "" },
     });
 
     expect(dataSource).toBe(fixtureAnalyticsDataSource);
@@ -686,6 +1004,14 @@ describe("BFF routes", () => {
         env: { BFF_ANALYTICS_SOURCE: "postgres" },
       }),
     ).toThrow("BFF analytics postgres source requires");
+  });
+
+  test("does not treat a sqlite-style DATABASE_URL as a postgres analytics URL", () => {
+    expect(() =>
+      resolveAnalyticsDataSource(undefined, {
+        env: { BFF_ANALYTICS_SOURCE: "postgres", DATABASE_URL: "/data/flovia.db" },
+      }),
+    ).toThrow("postgres:// DATABASE_URL");
   });
 
   test("uses postgres live loader by default", async () => {
@@ -1425,6 +1751,7 @@ describe("BFF routes", () => {
       `/customers/${knownCustomerIntelligenceAddress}/intelligence`,
       `/customers/${knownCustomerIntelligenceAddress}/llm/upsell-metrics`,
       `/customers/${knownCustomerIntelligenceAddress}/llm/upsell-explanation`,
+      `/customers/${workflowIntentAddress}/llm/workflow-intent`,
       "/wallet-usage-graph",
       "/analytics/services/coingecko/summary",
       "/analytics/services/comparison",

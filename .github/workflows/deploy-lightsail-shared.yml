@@ -14,6 +14,15 @@ name: deploy-lightsail-shared
 # - MAIN_BFF_ANALYTICS_DATABASE_URL
 # - DEVELOP_BFF_ANALYTICS_DATABASE_URL
 # - BFF_ANALYTICS_DATABASE_URL
+# - MAIN_HITPAY_API_KEY
+# - MAIN_HITPAY_WEBHOOK_SALT
+# - MAIN_HITPAY_MPP_ENDPOINT
+# - DEVELOP_HITPAY_API_KEY
+# - DEVELOP_HITPAY_WEBHOOK_SALT
+# - DEVELOP_HITPAY_MPP_ENDPOINT
+# - HITPAY_API_KEY
+# - HITPAY_WEBHOOK_SALT
+# - HITPAY_MPP_ENDPOINT
 # Deploy layout on the instance:
 # - $HOME/apps/main/poc and $HOME/apps/main/data
 # - $HOME/apps/develop/poc and $HOME/apps/develop/data
@@ -141,6 +150,15 @@ jobs:
           MAIN_BFF_ANALYTICS_DATABASE_URL: ${{ secrets.MAIN_BFF_ANALYTICS_DATABASE_URL }}
           DEVELOP_BFF_ANALYTICS_DATABASE_URL: ${{ secrets.DEVELOP_BFF_ANALYTICS_DATABASE_URL }}
           BFF_ANALYTICS_DATABASE_URL: ${{ secrets.BFF_ANALYTICS_DATABASE_URL }}
+          MAIN_HITPAY_API_KEY: ${{ secrets.MAIN_HITPAY_API_KEY }}
+          MAIN_HITPAY_WEBHOOK_SALT: ${{ secrets.MAIN_HITPAY_WEBHOOK_SALT }}
+          MAIN_HITPAY_MPP_ENDPOINT: ${{ secrets.MAIN_HITPAY_MPP_ENDPOINT }}
+          DEVELOP_HITPAY_API_KEY: ${{ secrets.DEVELOP_HITPAY_API_KEY }}
+          DEVELOP_HITPAY_WEBHOOK_SALT: ${{ secrets.DEVELOP_HITPAY_WEBHOOK_SALT }}
+          DEVELOP_HITPAY_MPP_ENDPOINT: ${{ secrets.DEVELOP_HITPAY_MPP_ENDPOINT }}
+          HITPAY_API_KEY: ${{ secrets.HITPAY_API_KEY }}
+          HITPAY_WEBHOOK_SALT: ${{ secrets.HITPAY_WEBHOOK_SALT }}
+          HITPAY_MPP_ENDPOINT: ${{ secrets.HITPAY_MPP_ENDPOINT }}
         run: |
           set -euo pipefail
 
@@ -154,6 +172,15 @@ jobs:
           main_bff_analytics_database_url_b64="$(encode_env MAIN_BFF_ANALYTICS_DATABASE_URL)"
           develop_bff_analytics_database_url_b64="$(encode_env DEVELOP_BFF_ANALYTICS_DATABASE_URL)"
           bff_analytics_database_url_b64="$(encode_env BFF_ANALYTICS_DATABASE_URL)"
+          main_hitpay_api_key_b64="$(encode_env MAIN_HITPAY_API_KEY)"
+          main_hitpay_webhook_salt_b64="$(encode_env MAIN_HITPAY_WEBHOOK_SALT)"
+          main_hitpay_mpp_endpoint_b64="$(encode_env MAIN_HITPAY_MPP_ENDPOINT)"
+          develop_hitpay_api_key_b64="$(encode_env DEVELOP_HITPAY_API_KEY)"
+          develop_hitpay_webhook_salt_b64="$(encode_env DEVELOP_HITPAY_WEBHOOK_SALT)"
+          develop_hitpay_mpp_endpoint_b64="$(encode_env DEVELOP_HITPAY_MPP_ENDPOINT)"
+          hitpay_api_key_b64="$(encode_env HITPAY_API_KEY)"
+          hitpay_webhook_salt_b64="$(encode_env HITPAY_WEBHOOK_SALT)"
+          hitpay_mpp_endpoint_b64="$(encode_env HITPAY_MPP_ENDPOINT)"
 
           ssh \
             -i "${LIGHTSAIL_SSH_KEY_PATH}" \
@@ -176,6 +203,15 @@ jobs:
             MAIN_BFF_ANALYTICS_DATABASE_URL_B64="${main_bff_analytics_database_url_b64}" \
             DEVELOP_BFF_ANALYTICS_DATABASE_URL_B64="${develop_bff_analytics_database_url_b64}" \
             BFF_ANALYTICS_DATABASE_URL_B64="${bff_analytics_database_url_b64}" \
+            MAIN_HITPAY_API_KEY_B64="${main_hitpay_api_key_b64}" \
+            MAIN_HITPAY_WEBHOOK_SALT_B64="${main_hitpay_webhook_salt_b64}" \
+            MAIN_HITPAY_MPP_ENDPOINT_B64="${main_hitpay_mpp_endpoint_b64}" \
+            DEVELOP_HITPAY_API_KEY_B64="${develop_hitpay_api_key_b64}" \
+            DEVELOP_HITPAY_WEBHOOK_SALT_B64="${develop_hitpay_webhook_salt_b64}" \
+            DEVELOP_HITPAY_MPP_ENDPOINT_B64="${develop_hitpay_mpp_endpoint_b64}" \
+            HITPAY_API_KEY_B64="${hitpay_api_key_b64}" \
+            HITPAY_WEBHOOK_SALT_B64="${hitpay_webhook_salt_b64}" \
+            HITPAY_MPP_ENDPOINT_B64="${hitpay_mpp_endpoint_b64}" \
             "bash -s" <<'EOF'
           set -euo pipefail
 
@@ -196,6 +232,15 @@ jobs:
           decode_env MAIN_BFF_ANALYTICS_DATABASE_URL_B64 MAIN_BFF_ANALYTICS_DATABASE_URL
           decode_env DEVELOP_BFF_ANALYTICS_DATABASE_URL_B64 DEVELOP_BFF_ANALYTICS_DATABASE_URL
           decode_env BFF_ANALYTICS_DATABASE_URL_B64 BFF_ANALYTICS_DATABASE_URL
+          decode_env MAIN_HITPAY_API_KEY_B64 MAIN_HITPAY_API_KEY
+          decode_env MAIN_HITPAY_WEBHOOK_SALT_B64 MAIN_HITPAY_WEBHOOK_SALT
+          decode_env MAIN_HITPAY_MPP_ENDPOINT_B64 MAIN_HITPAY_MPP_ENDPOINT
+          decode_env DEVELOP_HITPAY_API_KEY_B64 DEVELOP_HITPAY_API_KEY
+          decode_env DEVELOP_HITPAY_WEBHOOK_SALT_B64 DEVELOP_HITPAY_WEBHOOK_SALT
+          decode_env DEVELOP_HITPAY_MPP_ENDPOINT_B64 DEVELOP_HITPAY_MPP_ENDPOINT
+          decode_env HITPAY_API_KEY_B64 HITPAY_API_KEY
+          decode_env HITPAY_WEBHOOK_SALT_B64 HITPAY_WEBHOOK_SALT
+          decode_env HITPAY_MPP_ENDPOINT_B64 HITPAY_MPP_ENDPOINT
 
           apps_root="$HOME/apps"
           branch_root="${apps_root}/${DEPLOY_BRANCH}"

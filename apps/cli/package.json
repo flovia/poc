@@ -15,6 +15,9 @@
     "coingecko:transactions": "dotenvx run --ignore=MISSING_ENV_FILE -f ../../.env -f .env -- bun scripts/analytics/capture-coingecko-transactions.ts",
     "analytics:capture-full": "dotenvx run --ignore=MISSING_ENV_FILE -f ../../.env -f .env -- bun scripts/analytics/capture-full.ts",
     "analytics:read-models": "bun scripts/analytics/read-models.ts",
+    "mpp:capture": "bun scripts/analytics/capture-mpp.ts",
+    "mpp:materialize": "bun scripts/analytics/materialize-mpp-catalog.ts",
+    "geo:bake": "bun scripts/analytics/bake-geo-providers.ts",
     "verify": "bun run typecheck && bun test"
   },
   "dependencies": {

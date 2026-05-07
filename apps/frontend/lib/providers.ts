@@ -86,6 +86,14 @@ function providerRouteAliases(provider: ProviderRouteLike): Set<string> {
     provider.serviceName,
   ].filter((value): value is string => typeof value === "string" && value.length > 0);
 
+  // `static-${slugify(serviceId)}` is the route id used when a static
+  // capability is the only source for a provider. The live BFF row may shadow
+  // that capability under a longer providerId — accept the static- alias too
+  // so links from older snapshots / shared URLs still resolve.
+  if (provider.serviceId) {
+    aliases.add(`static-${slugifyProviderName(provider.serviceId)}`);
+  }
+
   for (const payTo of candidatePayTos(provider)) {
     for (const identity of identityCandidates) {
       aliases.add(`${identity.toLowerCase()}--${payTo}`);
@@ -101,11 +109,27 @@ function providerRouteAliases(provider: ProviderRouteLike): Set<string> {
   return aliases;
 }
 
+function tryDecodeRouteId(value: string): string | null {
+  // Next.js dynamic route params can arrive percent-encoded (e.g. when the
+  // providerId contains `:` such as MPP rows: `mpp:agentmail::tempo:4217::...`).
+  // We try a single decode pass and tolerate malformed sequences.
+  if (!value.includes("%")) return null;
+  try {
+    const decoded = decodeURIComponent(value);
+    return decoded === value ? null : decoded;
+  } catch {
+    return null;
+  }
+}
+
 export function matchesProviderRouteId(
   provider: ProviderRouteLike,
   routeProviderId: string,
 ): boolean {
-  return providerRouteAliases(provider).has(routeProviderId.toLowerCase());
+  const aliases = providerRouteAliases(provider);
+  if (aliases.has(routeProviderId.toLowerCase())) return true;
+  const decoded = tryDecodeRouteId(routeProviderId);
+  return decoded !== null && aliases.has(decoded.toLowerCase());
 }
 
 export function findProviderByRouteId<T extends ProviderRouteLike>(

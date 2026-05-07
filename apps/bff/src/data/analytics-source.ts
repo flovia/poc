@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { SQL } from "bun";
+import { mergeProviderCatalogs } from "sources";
 import { loadPostgresLiveAnalyticsDataSource } from "./postgres-live-read-model";
 import {
   type PhaseBCustomerUpsellMetricsResponse,
@@ -8,8 +9,13 @@ import {
   type PhaseBCustomerProfileResponse,
   type ServiceAnalyticsComparisonResponse,
   type ServiceAnalyticsQuadrantResponse,
+  type MachinePaymentRail,
   type ServiceAnalyticsSummaryResponse,
   type ProviderCatalogResponse,
+  type RouteAnalyticsEvent,
+  type RouteAnalyticsSankeyResponse,
+  type RouteAnalyticsSummaryResponse,
+  type RouteAnalyticsVisibility,
   type WalletUsageGraphResponse,
   type CustomerIntelligenceResponse,
   normalizePaymentRecipientAddress,
@@ -22,6 +28,9 @@ import {
   validateServiceAnalyticsSummaryResponse,
   validateCustomerIntelligenceResponse,
   validateProviderCatalogResponse,
+  RouteAnalyticsEventSchema,
+  validateRouteAnalyticsSankeyResponse,
+  validateRouteAnalyticsSummaryResponse,
 } from "contracts";
 import {
   getPhaseBCustomerIntelligenceByAddress,
@@ -42,6 +51,8 @@ export type BffAnalyticsDataSource = {
   serviceSummary: ServiceAnalyticsSummaryResponse;
   serviceComparison: ServiceAnalyticsComparisonResponse;
   serviceQuadrants: ServiceAnalyticsQuadrantResponse;
+  routeSummary: RouteAnalyticsSummaryResponse;
+  routeSankey: RouteAnalyticsSankeyResponse;
   getCustomers(payTo?: string): PhaseBCustomerListResponse;
   getCustomersByServiceId(serviceId: string): PhaseBCustomerListResponse;
   getCustomerProfile(address: string): PhaseBCustomerProfileResponse | undefined;
@@ -55,6 +66,8 @@ export type GeneratedReadModelFile = Partial<{
   serviceSummary: unknown;
   serviceComparison: unknown;
   serviceQuadrants: unknown;
+  routeSummary: unknown;
+  routeSankey: unknown;
   providers: unknown;
   profilesByAddress: Record<string, unknown>;
   intelligenceByAddress: Record<string, unknown>;
@@ -72,6 +85,8 @@ type AnalyticsSourceEnv = Partial<
     | "DATABASE_URL"
     | "BFF_ANALYTICS_SNAPSHOT_ID"
     | "BFF_ANALYTICS_POSTGRES_MODE"
+    | "BFF_MPP_CATALOG_PATH"
+    | "NODE_ENV"
   >
 >;
 
@@ -91,6 +106,24 @@ const DEFAULT_GENERATED_ANALYTICS_PATH = path.join(
   "fixtures",
   "generated",
   "analytics.json",
+);
+
+const DEFAULT_MPP_CATALOG_PATH = path.join(
+  import.meta.dir,
+  "..",
+  "..",
+  "..",
+  "..",
+  "tmp",
+  "mpp-provider-catalog.json",
+);
+
+const DEFAULT_MACHINE_PAYMENT_ROUTES_FIXTURE_PATH = path.join(
+  import.meta.dir,
+  "..",
+  "..",
+  "fixtures",
+  "machine-payment-routes.json",
 );
 
 const fixtureProviderCatalog = validateProviderCatalogResponse({
@@ -142,6 +175,266 @@ const fixtureProviderCatalog = validateProviderCatalogResponse({
   reasons: [{ provenance: "derived_insight", label: "fixture provider catalog" }],
 });
 
+const ROUTE_ANALYTICS_GENERATED_FROM = "machine-payment-route-analytics-p0";
+
+const visibilityForRail = (rail: MachinePaymentRail): RouteAnalyticsVisibility =>
+  rail === "x402"
+    ? "public_onchain"
+    : rail === "stripe_mpp" || rail === "hitpay_mpp"
+      ? "provider_attested"
+      : "first_party";
+
+const railLabel = (rail: MachinePaymentRail): string => {
+  switch (rail) {
+    case "stripe_mpp":
+      return "Stripe MPP";
+    case "hitpay_mpp":
+      return "HitPay MPP";
+    case "api_key":
+      return "API key";
+    case "subscription":
+      return "Subscription";
+    case "x402":
+      return "x402";
+    default:
+      return "Other";
+  }
+};
+
+const routeIdPart = (value: string): string =>
+  value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "") || "unknown";
+
+const amountUsdFromProvider = (
+  provider: ProviderCatalogResponse["providers"][number],
+): number | undefined => {
+  const asset = provider.asset.toUpperCase();
+  if (asset !== "USDC" && asset !== "USDT" && asset !== "USD") return undefined;
+  return Number(BigInt(provider.totalVolumeAtomic)) / 1_000_000;
+};
+
+const routeRailForProvider = (
+  provider: ProviderCatalogResponse["providers"][number],
+): MachinePaymentRail => {
+  if (
+    provider.protocol === "MPP" ||
+    provider.catalogSource === "mpp_registry" ||
+    provider.network.toLowerCase().includes("mpp")
+  ) {
+    return "other";
+  }
+  return "x402";
+};
+
+const loadMachinePaymentRouteFixtureEvents = (timestamp: string): RouteAnalyticsEvent[] => {
+  const raw = JSON.parse(fs.readFileSync(DEFAULT_MACHINE_PAYMENT_ROUTES_FIXTURE_PATH, "utf8"));
+  if (!Array.isArray(raw)) {
+    throw new Error("machine-payment-routes fixture must be an array of route events");
+  }
+  return raw.map((event) =>
+    RouteAnalyticsEventSchema.parse({
+      ...(event as Record<string, unknown>),
+      timestamp,
+    }),
+  );
+};
+
+const buildRouteAnalytics = (
+  providers: ProviderCatalogResponse,
+): { routeSummary: RouteAnalyticsSummaryResponse; routeSankey: RouteAnalyticsSankeyResponse } => {
+  const generatedAt = providers.generatedAt;
+  const providerEvents: RouteAnalyticsEvent[] = providers.providers
+    .filter((provider) => provider.transactionCount > 0)
+    .map((provider, index) => {
+      const rail = routeRailForProvider(provider);
+      const visibility = visibilityForRail(rail);
+      const protocol = rail === "x402" ? "x402" : provider.protocol === "MPP" ? "mpp" : "other";
+      const endpointGroup = provider.serviceName ?? provider.category ?? provider.name;
+      const routePart = routeIdPart(endpointGroup);
+      return {
+        routeId: `route:${rail}:${routePart}:${index + 1}`,
+        workflowId: `workflow:${routePart}`,
+        rail,
+        protocol,
+        sourceRoute: index % 2 === 0 ? "Direct API client" : "MCP directory",
+        sourcePlatform: index % 2 === 0 ? "direct" : "mcp-directory",
+        router: rail === "x402" ? "x402 facilitator" : "MPP provider router",
+        providerId: provider.serviceId ?? provider.providerId,
+        endpointGroup,
+        useCase: provider.useCase ?? provider.category ?? "Paid API route",
+        payeeIdentity: provider.payTo,
+        amountUsd: amountUsdFromProvider(provider),
+        currency: provider.asset,
+        status: "settled",
+        visibility,
+        provenance: "derived_insight",
+        provenanceByField: {
+          rail: rail === "x402" ? "onchain_fact" : "registry_fact",
+          payeeIdentity: "onchain_fact",
+        },
+        timestamp: generatedAt,
+        reasons: [
+          {
+            provenance: "derived_insight",
+            label: "provider aggregate adapted to route analytics",
+            description:
+              "Aggregated provider/payment activity is projected as a route row; settlementRef is omitted when no transaction-level reference is available.",
+          },
+        ],
+      } satisfies RouteAnalyticsEvent;
+    });
+
+  const demoEvents = loadMachinePaymentRouteFixtureEvents(generatedAt);
+
+  const sampleRoutes = providerEvents.length > 0 ? [...providerEvents, ...demoEvents] : demoEvents;
+  const routeCount = sampleRoutes.length;
+  const workflowCount = new Set(sampleRoutes.map((route) => route.workflowId)).size;
+  const paidWorkflowCount = new Set(
+    sampleRoutes
+      .filter((route) => route.status === "paid" || route.status === "settled")
+      .map((route) => route.workflowId),
+  ).size;
+  const settledUsd = sampleRoutes.reduce((sum, route) => sum + (route.amountUsd ?? 0), 0);
+  const successCount = sampleRoutes.filter(
+    (route) => route.status === "paid" || route.status === "settled",
+  ).length;
+
+  const rails = Array.from(new Set(sampleRoutes.map((route) => route.rail))).map((rail) => {
+    const routes = sampleRoutes.filter((route) => route.rail === rail);
+    const paidRoutes = routes.filter(
+      (route) => route.status === "paid" || route.status === "settled",
+    );
+    return {
+      rail,
+      routeCount: routes.length,
+      workflowCount: new Set(routes.map((route) => route.workflowId)).size,
+      paidWorkflowCount: new Set(paidRoutes.map((route) => route.workflowId)).size,
+      settledUsd: routes.reduce((sum, route) => sum + (route.amountUsd ?? 0), 0),
+      successRate: routes.length === 0 ? 0 : paidRoutes.length / routes.length,
+      repeatUsage: Math.max(
+        0,
+        routes.length - new Set(routes.map((route) => route.workflowId)).size,
+      ),
+      visibility: visibilityForRail(rail),
+    };
+  });
+
+  const routeSummary = validateRouteAnalyticsSummaryResponse({
+    generatedAt,
+    generatedFrom: ROUTE_ANALYTICS_GENERATED_FROM,
+    routeCount,
+    workflowCount,
+    paidWorkflowCount,
+    settledUsd,
+    successRate: routeCount === 0 ? 0 : successCount / routeCount,
+    repeatUsage: Math.max(0, routeCount - workflowCount),
+    paymentToAccessConversion: routeCount === 0 ? 0 : successCount / routeCount,
+    rails,
+    sampleRoutes,
+    provenance: "derived_insight",
+    provenanceByField: { sampleRoutes: "derived_insight", rails: "derived_insight" },
+    reasons: [
+      { provenance: "derived_insight", label: "machine payment route analytics projection" },
+    ],
+  });
+
+  const nodes = new Map<
+    string,
+    {
+      id: string;
+      label: string;
+      layer: "source_route" | "payment_rail" | "api_workflow";
+      rail?: MachinePaymentRail;
+      visibility?: RouteAnalyticsVisibility;
+    }
+  >();
+  const links = new Map<
+    string,
+    {
+      source: string;
+      target: string;
+      routeCount: number;
+      workflowCount: number;
+      settledUsd: number;
+      rail: MachinePaymentRail;
+      visibility: RouteAnalyticsVisibility;
+    }
+  >();
+  const addNode = (node: {
+    id: string;
+    label: string;
+    layer: "source_route" | "payment_rail" | "api_workflow";
+    rail?: MachinePaymentRail;
+    visibility?: RouteAnalyticsVisibility;
+  }) => nodes.set(node.id, node);
+  const addLink = (source: string, target: string, route: RouteAnalyticsEvent) => {
+    const key = `${source}->${target}:${route.rail}`;
+    const existing = links.get(key);
+    if (existing) {
+      existing.routeCount += 1;
+      existing.workflowCount += 1;
+      existing.settledUsd += route.amountUsd ?? 0;
+      return;
+    }
+    links.set(key, {
+      source,
+      target,
+      routeCount: 1,
+      workflowCount: 1,
+      settledUsd: route.amountUsd ?? 0,
+      rail: route.rail,
+      visibility: route.visibility,
+    });
+  };
+
+  for (const route of sampleRoutes) {
+    const sourceId = `source:${routeIdPart(route.sourceRoute ?? "Direct API client")}`;
+    const railId = `rail:${route.rail}`;
+    const workflowId = `workflow:${routeIdPart(route.endpointGroup ?? route.workflowId)}`;
+    addNode({
+      id: sourceId,
+      label: route.sourceRoute ?? "Direct API client",
+      layer: "source_route",
+    });
+    addNode({
+      id: railId,
+      label: railLabel(route.rail),
+      layer: "payment_rail",
+      rail: route.rail,
+      visibility: route.visibility,
+    });
+    addNode({
+      id: workflowId,
+      label: route.endpointGroup ?? route.workflowId,
+      layer: "api_workflow",
+    });
+    addLink(sourceId, railId, route);
+    addLink(railId, workflowId, route);
+  }
+
+  const routeSankey = validateRouteAnalyticsSankeyResponse({
+    generatedAt,
+    generatedFrom: ROUTE_ANALYTICS_GENERATED_FROM,
+    layers: ["source_route", "payment_rail", "api_workflow"],
+    nodes: Array.from(nodes.values()),
+    links: Array.from(links.values()),
+    provenance: "derived_insight",
+    provenanceByField: { nodes: "derived_insight", links: "derived_insight" },
+    reasons: [
+      {
+        provenance: "derived_insight",
+        label: "source route to payment rail to API workflow projection",
+      },
+    ],
+  });
+
+  return { routeSummary, routeSankey };
+};
+
+const fixtureRouteAnalytics = buildRouteAnalytics(fixtureProviderCatalog);
+
 export const fixtureAnalyticsDataSource: BffAnalyticsDataSource = {
   customers: phaseBCustomerListResponse,
   walletUsageGraph: phaseBWalletUsageGraphResponse,
@@ -149,6 +442,8 @@ export const fixtureAnalyticsDataSource: BffAnalyticsDataSource = {
   serviceSummary: serviceAnalyticsSummaryResponse,
   serviceComparison: serviceAnalyticsComparisonResponse,
   serviceQuadrants: serviceAnalyticsQuadrantResponse,
+  routeSummary: fixtureRouteAnalytics.routeSummary,
+  routeSankey: fixtureRouteAnalytics.routeSankey,
   getCustomers: (payTo?: string) =>
     filterCustomersByPayTo(
       phaseBCustomerListResponse,
@@ -213,6 +508,7 @@ export const loadGeneratedAnalyticsDataSourceFromPayload = (
   const providers = validateProviderCatalogResponse(
     payload.providers ?? fixtureAnalyticsDataSource.providers,
   );
+  const fallbackRouteAnalytics = buildRouteAnalytics(providers);
 
   return {
     customers,
@@ -226,6 +522,12 @@ export const loadGeneratedAnalyticsDataSourceFromPayload = (
     ),
     serviceQuadrants: validateServiceAnalyticsQuadrantResponse(
       payload.serviceQuadrants ?? serviceAnalyticsQuadrantResponse,
+    ),
+    routeSummary: validateRouteAnalyticsSummaryResponse(
+      payload.routeSummary ?? fallbackRouteAnalytics.routeSummary,
+    ),
+    routeSankey: validateRouteAnalyticsSankeyResponse(
+      payload.routeSankey ?? fallbackRouteAnalytics.routeSankey,
     ),
     getCustomers: (payTo?: string) => filterCustomersByPayTo(customers, profilesByPayTo, payTo),
     getCustomersByServiceId: (serviceId: string) =>
@@ -244,11 +546,50 @@ export const loadGeneratedAnalyticsDataSource = (filePath: string): BffAnalytics
   return loadGeneratedAnalyticsDataSourceFromPayload(payload);
 };
 
+// Merge an MPP-derived ProviderCatalogResponse on top of an existing data source's
+// providers. The data source identity is preserved (only the providers field is replaced),
+// so customers/profiles/wallet graph etc. continue to work unchanged.
+//
+// Behavior:
+// - overlayPath is undefined/empty -> no-op (overlay disabled)
+// - overlayPath is set but file missing/unreadable -> throw (fail-fast on misconfig)
+export const applyMppCatalogOverlay = (
+  dataSource: BffAnalyticsDataSource,
+  overlayPath: string | undefined,
+): BffAnalyticsDataSource => {
+  const trimmed = overlayPath?.trim();
+  if (!trimmed) return dataSource;
+  if (!fs.existsSync(trimmed)) {
+    throw new Error(
+      `BFF_MPP_CATALOG_PATH is set but file does not exist: ${trimmed}. ` +
+        "Either unset BFF_MPP_CATALOG_PATH or point it to a readable mpp-provider-catalog.json.",
+    );
+  }
+  const raw = JSON.parse(fs.readFileSync(trimmed, "utf8"));
+  const mppCatalog = validateProviderCatalogResponse(raw);
+  const merged = mergeProviderCatalogs(dataSource.providers, mppCatalog);
+  if (merged === dataSource.providers) return dataSource;
+  const routeAnalytics = buildRouteAnalytics(merged);
+  return { ...dataSource, providers: merged, ...routeAnalytics };
+};
+
 const createBunPostgresClient = (url: string): PostgresAnalyticsClient => {
   const sql = new SQL(url);
   return {
     query: (query, params = []) => sql.unsafe(query, params) as Promise<Record<string, unknown>[]>,
   };
+};
+
+const isPostgresConnectionString = (value: string | undefined): value is string => {
+  const trimmed = value?.trim();
+  return !!trimmed && /^postgres(?:ql)?:\/\//i.test(trimmed);
+};
+
+const resolvePostgresDatabaseUrl = (env: AnalyticsSourceEnv): string | undefined => {
+  const explicit = env.BFF_ANALYTICS_DATABASE_URL?.trim();
+  if (explicit) return explicit;
+  const databaseUrl = env.DATABASE_URL?.trim();
+  return isPostgresConnectionString(databaseUrl) ? databaseUrl : undefined;
 };
 
 export const loadPostgresAnalyticsDataSource = async (
@@ -545,28 +886,48 @@ export const resolveAnalyticsDataSource = (
   const env = options.env ?? process.env;
   const source = (env.BFF_ANALYTICS_SOURCE?.trim() || undefined) as AnalyticsSourceKind | undefined;
   const readModelPath = env.BFF_ANALYTICS_READ_MODEL_PATH ?? filePath;
+  // Overlay resolution:
+  // - BFF_MPP_CATALOG_PATH explicitly set (any value, including ""):
+  //     non-empty path -> use it (fail-fast if file missing)
+  //     empty string   -> overlay disabled
+  // - BFF_MPP_CATALOG_PATH undefined:
+  //     non-production: auto-load tmp/mpp-provider-catalog.json if it exists (dev convenience)
+  //     production:     no auto-load (must be opt-in via BFF_MPP_CATALOG_PATH)
+  const isProduction = (env.NODE_ENV ?? "").toLowerCase() === "production";
+  const mppOverlayPath =
+    env.BFF_MPP_CATALOG_PATH !== undefined
+      ? env.BFF_MPP_CATALOG_PATH
+      : !isProduction && fs.existsSync(DEFAULT_MPP_CATALOG_PATH)
+        ? DEFAULT_MPP_CATALOG_PATH
+        : undefined;
 
-  if (source === "fixture") return fixtureAnalyticsDataSource;
+  const overlay = (resolved: BffAnalyticsDataSource): BffAnalyticsDataSource =>
+    applyMppCatalogOverlay(resolved, mppOverlayPath);
+
+  if (source === "fixture") return overlay(fixtureAnalyticsDataSource);
 
   if (source === "json") {
     if (!readModelPath || !fs.existsSync(readModelPath)) {
       throw new Error(`BFF analytics JSON read model not found: ${readModelPath}`);
     }
-    return loadGeneratedAnalyticsDataSource(readModelPath);
+    return overlay(loadGeneratedAnalyticsDataSource(readModelPath));
   }
 
   if (source === "postgres") {
-    const databaseUrl = env.BFF_ANALYTICS_DATABASE_URL ?? env.DATABASE_URL;
+    const databaseUrl = resolvePostgresDatabaseUrl(env);
     if (!databaseUrl && !options.postgresClient) {
       throw new Error(
-        "BFF analytics postgres source requires BFF_ANALYTICS_DATABASE_URL or DATABASE_URL.",
+        "BFF analytics postgres source requires BFF_ANALYTICS_DATABASE_URL or a postgres:// DATABASE_URL.",
       );
     }
     const client = options.postgresClient ?? createBunPostgresClient(databaseUrl as string);
     if ((env.BFF_ANALYTICS_POSTGRES_MODE ?? "live") === "snapshot") {
-      return loadPostgresAnalyticsDataSource(client, env.BFF_ANALYTICS_SNAPSHOT_ID ?? "latest");
+      return loadPostgresAnalyticsDataSource(
+        client,
+        env.BFF_ANALYTICS_SNAPSHOT_ID ?? "latest",
+      ).then(overlay);
     }
-    return loadPostgresLiveAnalyticsDataSource(client);
+    return loadPostgresLiveAnalyticsDataSource(client).then(overlay);
   }
 
   if (source !== undefined) {
@@ -574,6 +935,6 @@ export const resolveAnalyticsDataSource = (
   }
 
   if (readModelPath && fs.existsSync(readModelPath))
-    return loadGeneratedAnalyticsDataSource(readModelPath);
-  return fixtureAnalyticsDataSource;
+    return overlay(loadGeneratedAnalyticsDataSource(readModelPath));
+  return overlay(fixtureAnalyticsDataSource);
 };

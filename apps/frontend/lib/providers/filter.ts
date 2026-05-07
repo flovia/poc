@@ -36,6 +36,9 @@ export type ProviderClassifierContext = {
 };
 
 function isPaySh(p: StoredProvider): boolean {
+  // Aggregated cards may carry the catalog source list rather than a single
+  // value; treat the row as Pay.sh when ANY contributing row was Pay.sh-curated.
+  if (p.catalogSources?.includes("pay_sh_curated")) return true;
   return p.catalogSource === "pay_sh_curated";
 }
 
@@ -82,12 +85,37 @@ export function collectAvailableChains(providers: StoredProvider[]): CustomerCha
   return Array.from(seen);
 }
 
+// Display order for protocol badges. MPP first, then x402.
+const PROTOCOL_DISPLAY_ORDER: ReadonlyArray<"x402" | "MPP"> = ["MPP", "x402"];
+
+function sortProtocolsForDisplay(
+  protocols: readonly ("x402" | "MPP")[],
+): ("x402" | "MPP")[] {
+  const seen = new Set<"x402" | "MPP">();
+  const ordered: ("x402" | "MPP")[] = [];
+  for (const proto of PROTOCOL_DISPLAY_ORDER) {
+    if (protocols.includes(proto) && !seen.has(proto)) {
+      ordered.push(proto);
+      seen.add(proto);
+    }
+  }
+  // Preserve any unknown values that appear in the input (defensive — schema
+  // currently only allows x402/MPP but this keeps the function lossless).
+  for (const proto of protocols) {
+    if (!seen.has(proto)) {
+      ordered.push(proto);
+      seen.add(proto);
+    }
+  }
+  return ordered;
+}
+
 export function protocolsOfProvider(p: StoredProvider): ("x402" | "MPP")[] {
-  if (p.protocols && p.protocols.length > 0) return p.protocols;
+  if (p.protocols && p.protocols.length > 0) return sortProtocolsForDisplay(p.protocols);
   const capability = p.serviceId
     ? STATIC_PROVIDER_CAPABILITY_BY_SERVICE_ID.get(p.serviceId)
     : undefined;
-  if (capability) return capability.protocols;
+  if (capability) return sortProtocolsForDisplay(capability.protocols);
   return isPreservedBaseProvider(p.serviceId) ? ["x402"] : [];
 }
 

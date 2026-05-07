@@ -32,6 +32,8 @@ apps/*/reports/customer-intelligence/
 apps/*/reports/service-read-models/
 apps/*/fixtures/generated-analytics/
 
+tmp/
+
 data/analytics/
 reports/analytics/
 reports/raw-transfer-facts/

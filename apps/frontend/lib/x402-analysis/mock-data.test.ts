@@ -85,7 +85,8 @@ describe("buildX402AnalysisViewModel", () => {
       intentPattern?.flows.some(
         (flow) =>
           flow.left_label === "Monitor hourly market loop" &&
-          flow.middle_label === "PayRouter A" &&
+          flow.middle_label === "x402" &&
+          flow.middle_detail === "PayRouter A" &&
           flow.right_label === "AI inference" &&
           flow.right_detail?.includes("VectorMind AI"),
       ),
