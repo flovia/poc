@@ -1,5 +1,6 @@
 import { formatAtomic, shortAddr } from "@/lib/format";
 import type { GeoSpec, MppRegistryEndpoint } from "@/lib/geo-spec/source";
+import { TrafficComparisonChart } from "./TrafficComparisonChart";
 
 type Props = {
   providerId: string;
@@ -40,6 +41,11 @@ export function GeoSpecScreen({ providerId, spec }: Props) {
         ) : (
           <>
             <ProviderDetailsSection spec={spec} />
+            <TrafficComparisonChart
+              providerId={providerId}
+              hasMpp={hasMppContent(spec)}
+              hasPaySh={hasPayShContent(spec)}
+            />
             <MppOfficialRegistrySection spec={spec} />
             <PayShSection spec={spec} />
           </>
@@ -406,6 +412,14 @@ function MetaTile({
       </div>
     </div>
   );
+}
+
+function hasPayShContent(spec: GeoSpec): boolean {
+  return !!(spec.description || spec.useCase) || spec.offers.length > 0 || spec.observedEndpoints.length > 0;
+}
+
+function hasMppContent(spec: GeoSpec): boolean {
+  return !!spec.mppDescription || spec.mppEndpoints.length > 0;
 }
 
 function pathOf(resource: string): string {
