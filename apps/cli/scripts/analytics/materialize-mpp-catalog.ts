@@ -6,8 +6,12 @@ import {
 } from "sources";
 import { writeAtomically } from "./io";
 
+// Capture intermediate stays in tmp/ (it's only useful while iterating on the
+// catalog shape). The materialized provider catalog goes into a tracked
+// fixture so `bun run geo:bake` (and Docker builds) can read it without a
+// live mpp.dev capture step.
 const DEFAULT_INPUT = path.join(process.cwd(), "../../tmp/mpp-capture.json");
-const DEFAULT_OUTPUT = path.join(process.cwd(), "../../tmp/mpp-provider-catalog.json");
+const DEFAULT_OUTPUT = path.join(process.cwd(), "fixtures/mpp-provider-catalog.json");
 
 type CliOptions = {
   inputPath: string;

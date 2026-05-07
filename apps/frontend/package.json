@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "next dev",
     "bake:geo": "cd ../cli && bun run geo:bake",
-    "build": "bun run bake:geo && next build",
+    "build": "next build",
     "start": "next start",
     "test": "bun test",
     "typecheck": "tsc --noEmit",
