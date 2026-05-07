@@ -135,7 +135,8 @@ export function ShowcaseProviderScreen({ provider }: ShowcaseProviderScreenProps
         },
       });
       const body = await readResponseBody(response);
-      setResult({ status: response.status, body });
+      const receipt = parsePaymentReceiptHeader(response.headers.get("Payment-Receipt"));
+      setResult({ status: response.status, body: attachReceiptToBody(body, receipt) });
       const nextChallengeId = getChallengeId(body);
       if (nextChallengeId) setChallengeId(nextChallengeId);
       if (response.ok) setChallengeId(null);
@@ -373,6 +374,27 @@ async function readResponseBody(response: Response): Promise<unknown> {
   } catch {
     return text;
   }
+}
+
+export function parsePaymentReceiptHeader(header: string | null): Record<string, unknown> | null {
+  if (!header) return null;
+
+  try {
+    const normalized = header.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = normalized.padEnd(normalized.length + (4 - normalized.length % 4) % 4, "=");
+    const bytes = Uint8Array.from(atob(padded), (char) => char.charCodeAt(0));
+    const receipt = JSON.parse(new TextDecoder().decode(bytes)) as unknown;
+    return asRecord(receipt);
+  } catch {
+    return null;
+  }
+}
+
+function attachReceiptToBody(body: unknown, receipt: Record<string, unknown> | null) {
+  if (!receipt) return body;
+  const bodyRecord = asRecord(body);
+  if (bodyRecord) return { ...bodyRecord, receipt };
+  return { response: body, receipt };
 }
 
 const codeStyle = {
@@ -839,7 +861,7 @@ function LiveResultPanel({
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 10, marginTop: 14 }}>
           {summary.items.map((item) => (
-            <SummaryItem key={item.label} label={item.label} value={item.value} />
+            <SummaryItem key={item.label} label={item.label} value={item.value} href={"href" in item ? item.href : undefined} />
           ))}
         </div>
       </div>
@@ -864,11 +886,17 @@ function LiveResultPanel({
   );
 }
 
-function SummaryItem({ label, value }: { label: string; value: string }) {
+function SummaryItem({ label, value, href }: { label: string; value: string; href?: string }) {
   return (
     <div style={{ border: "1px solid var(--line-strong)", borderRadius: 6, padding: 10, background: "var(--surface-card)", minWidth: 0 }}>
       <div className="eyebrow" style={{ fontSize: 10, marginBottom: 5 }}>{label}</div>
-      <div className="mono" style={{ fontSize: 12, color: "var(--text-1)", overflowWrap: "anywhere" }}>{value}</div>
+      {href ? (
+        <a className="mono" href={href} target="_blank" rel="noreferrer" style={{ fontSize: 12, color: "var(--mesh-blue)", overflowWrap: "anywhere" }}>
+          {value}
+        </a>
+      ) : (
+        <div className="mono" style={{ fontSize: 12, color: "var(--text-1)", overflowWrap: "anywhere" }}>{value}</div>
+      )}
     </div>
   );
 }
@@ -903,6 +931,7 @@ function summarizeLiveResult(result: LiveResult, provider: ProviderKey, state: L
   const floviaEvent = asRecord(body?.floviaEvent) ?? asRecord(response?.floviaEvent);
   const payment = asRecord(floviaEvent?.payment);
   const receipt = asRecord(body?.receipt);
+  const receiptReference = stringValue(receipt?.reference);
   const error = stringValue(body?.error) ?? stringValue(response?.error);
 
   if (result.status === 402 || state === "challenge") {
@@ -938,9 +967,17 @@ function summarizeLiveResult(result: LiveResult, provider: ProviderKey, state: L
     items: [
       { label: "Provider", value: provider === "hitpay" ? "HitPay MPP" : "Stripe MPP" },
       { label: "API response", value: stringValue(response?.foo) ?? stringValue(body?.foo) ?? "ok" },
-      { label: "Receipt", value: receipt ? "verified" : stringValue(body?.receiptJws) ? "JWS received" : "—" },
+      {
+        label: receiptReference ? "Tx hash" : "Receipt",
+        value: receiptReference ?? (receipt ? "verified" : stringValue(body?.receiptJws) ? "JWS received" : "—"),
+        href: receiptReference ? tempoReceiptExplorerUrl(receiptReference) : undefined,
+      },
     ],
   };
+}
+
+export function tempoReceiptExplorerUrl(txHash: string) {
+  return `https://explore.testnet.tempo.xyz/receipt/${encodeURIComponent(txHash)}`;
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
