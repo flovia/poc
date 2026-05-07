@@ -93,6 +93,7 @@ describe("extractLiveResultFacts", () => {
     ).toEqual({
       paymentId: "pi_live_123",
       txHash,
+      receiptId: null,
       requestId: "req_live_123",
       status: "paid_api_delivered",
       rail: "mpp",
@@ -102,6 +103,44 @@ describe("extractLiveResultFacts", () => {
       method: "GET",
       responseStatus: "200",
       latencyMs: "42",
+    });
+  });
+
+  test("treats HitPay receipt references as receipt ids, not Tempo tx hashes", () => {
+    expect(
+      extractLiveResultFacts(
+        {
+          status: 200,
+          body: {
+            response: { foo: "bar" },
+            receipt: {
+              reference: "hp_receipt_123",
+              chargeId: "hp_charge_123",
+            },
+            floviaEvent: {
+              requestId: "req_hitpay_123",
+              provider: "hitpay",
+              rail: "mpp",
+              amount: "1.00",
+              currency: "sgd",
+              status: "paid_api_delivered",
+              apiUsage: {
+                endpoint: "/showcase/hitpay-mpp/paid",
+                method: "GET",
+                responseStatus: 200,
+                latencyMs: 65,
+              },
+            },
+          },
+        },
+        "hitpay",
+      ),
+    ).toMatchObject({
+      paymentId: "hp_charge_123",
+      receiptId: "hp_receipt_123",
+      txHash: null,
+      requestId: "req_hitpay_123",
+      latencyMs: "65",
     });
   });
 });

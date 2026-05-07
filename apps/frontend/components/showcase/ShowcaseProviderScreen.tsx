@@ -989,6 +989,7 @@ function summarizeLiveResult(result: LiveResult, provider: ProviderKey, state: L
   const payment = asRecord(floviaEvent?.payment);
   const receipt = asRecord(body?.receipt);
   const receiptReference = stringValue(receipt?.reference);
+  const receiptLabel = provider === "stripe" && receiptReference ? "Tx hash" : receiptReference ? "Receipt id" : "Receipt";
   const error = stringValue(body?.error) ?? stringValue(response?.error);
 
   if (result.status === 402 || state === "challenge") {
@@ -1025,9 +1026,9 @@ function summarizeLiveResult(result: LiveResult, provider: ProviderKey, state: L
       { label: "Provider", value: provider === "hitpay" ? "HitPay MPP" : "Stripe MPP" },
       { label: "API response", value: stringValue(response?.foo) ?? stringValue(body?.foo) ?? "ok" },
       {
-        label: receiptReference ? "Tx hash" : "Receipt",
+        label: receiptLabel,
         value: receiptReference ?? (receipt ? "verified" : stringValue(body?.receiptJws) ? "JWS received" : "—"),
-        href: receiptReference ? tempoReceiptExplorerUrl(receiptReference) : undefined,
+        href: provider === "stripe" && receiptReference ? tempoReceiptExplorerUrl(receiptReference) : undefined,
       },
     ],
   };
@@ -1037,17 +1038,26 @@ export function tempoReceiptExplorerUrl(txHash: string) {
   return `https://explore.testnet.tempo.xyz/receipt/${encodeURIComponent(txHash)}`;
 }
 
-export function extractLiveResultFacts(result: LiveResult | null) {
+export function extractLiveResultFacts(result: LiveResult | null, provider: ProviderKey = "stripe") {
   const body = asRecord(result?.body);
   const response = asRecord(body?.response);
   const floviaEvent = asRecord(body?.floviaEvent) ?? asRecord(response?.floviaEvent);
   const apiUsage = asRecord(floviaEvent?.apiUsage);
   const payment = asRecord(floviaEvent?.payment);
   const receipt = asRecord(body?.receipt);
+  const receiptReference = stringValue(receipt?.reference);
+  const hitPayPaymentId = firstNestedString(
+    [receipt, payment, body, response],
+    ["chargeId", "charge_id", "paymentId", "payment_id", "checkoutId", "checkout_id", "id"],
+  );
 
   return {
-    paymentId: stringValue(payment?.paymentIntentId) ?? stringValue(payment?.paymentId),
-    txHash: stringValue(receipt?.reference),
+    paymentId:
+      provider === "hitpay"
+        ? hitPayPaymentId
+        : stringValue(payment?.paymentIntentId) ?? stringValue(payment?.paymentId),
+    txHash: provider === "stripe" ? receiptReference : null,
+    receiptId: provider === "hitpay" ? receiptReference : null,
     requestId: stringValue(floviaEvent?.requestId),
     status: stringValue(floviaEvent?.status),
     rail: stringValue(floviaEvent?.rail) ?? stringValue(payment?.rail),
@@ -1062,6 +1072,41 @@ export function extractLiveResultFacts(result: LiveResult | null) {
 
 function compactItems(items: Array<{ label: string; value: string; href?: string } | null>) {
   return items.filter((item): item is { label: string; value: string; href?: string } => item !== null);
+}
+
+function firstNestedString(records: Array<Record<string, unknown> | null>, keys: readonly string[]) {
+  for (const record of records) {
+    const value = nestedString(record, keys, 0);
+    if (value) return value;
+  }
+  return null;
+}
+
+function nestedString(value: unknown, keys: readonly string[], depth: number): string | null {
+  if (!value || depth > 3) return null;
+
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const found = nestedString(item, keys, depth + 1);
+      if (found) return found;
+    }
+    return null;
+  }
+
+  const record = asRecord(value);
+  if (!record) return null;
+
+  for (const key of keys) {
+    const direct = stringValue(record[key]);
+    if (direct) return direct;
+  }
+
+  for (const nested of Object.values(record)) {
+    const found = nestedString(nested, keys, depth + 1);
+    if (found) return found;
+  }
+
+  return null;
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -1128,7 +1173,7 @@ function ProviderVsFloviaPanel({
   const providerName = provider === "stripe" ? "Stripe dashboard" : "HitPay dashboard";
   const providerEyebrow = provider === "stripe" ? "What you see in Stripe Dashboard" : "What you see in HitPay Dashboard";
   const paymentLabel = provider === "stripe" ? "PaymentIntent" : "Charge / checkout";
-  const liveFacts = extractLiveResultFacts(result);
+  const liveFacts = extractLiveResultFacts(result, provider);
   const joinedPaymentId = liveFacts.paymentId ?? paymentId;
   const paymentStatus = result?.status === 200 ? "paid" : result?.status === 402 ? "pending payment" : "demo-ready";
   const apiStatus = result?.status ? `HTTP ${result.status}` : "not called yet";
@@ -1141,6 +1186,7 @@ function ProviderVsFloviaPanel({
           href: tempoReceiptExplorerUrl(liveFacts.txHash),
         }
       : null,
+    liveFacts.receiptId ? { label: "Receipt id", value: liveFacts.receiptId } : null,
     { label: "Payment rail", value: liveFacts.rail ?? rail },
     liveFacts.amount
       ? { label: "Amount", value: liveFacts.currency ? `${liveFacts.amount} ${liveFacts.currency}` : liveFacts.amount }
