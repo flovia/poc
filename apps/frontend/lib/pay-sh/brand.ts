@@ -231,24 +231,46 @@ export function extractBrandKey(serviceId: string | undefined | null): string | 
   if (!serviceId) return null;
   const trimmed = serviceId.trim();
   if (trimmed.length === 0) return null;
-  const candidates = brandKeyCandidatesFromFqn(trimmed);
-  if (candidates.length === 0) return null;
-  // Prefer a candidate that hits a curated brand map — that's a strong signal
-  // it actually represents a known brand (handles `paysponge/fal`,
-  // `solana-foundation/google/...` etc.).
-  for (const key of candidates) {
-    if (BRAND_BY_KEY[key] || MPP_BRAND_BY_SERVICE[key]) return key;
-  }
-  // No curated hit: for `<a>/<b>` fall back to the leading segment because in
-  // practice it's the brand for atlas-style fqns (`agentmail/email` → agentmail).
-  // For single-segment / hostname-style ids `candidates[0]` already matches.
   const segs = trimmed
     .split("/")
     .filter(Boolean)
     .map((s) => s.toLowerCase());
-  if (segs.length >= 2) return segs[0]!;
-  return candidates[0]!;
+  if (segs.length === 0) {
+    return brandKeyCandidatesFromFqn(trimmed)[0] ?? null;
+  }
+
+  // Single-segment serviceIds (`agentmail`, `api.nansen.ai`, `rpc`) — defer
+  // to the fqn helper which knows how to peel hostname labels.
+  if (segs.length === 1) {
+    const candidates = brandKeyCandidatesFromFqn(trimmed);
+    for (const key of candidates) {
+      if (BRAND_BY_KEY[key] || MPP_BRAND_BY_SERVICE[key]) return key;
+    }
+    return candidates[0] ?? null;
+  }
+
+  // Multi-segment Pay.sh fqns: the brand position depends on whether the
+  // leading segment is a known publisher namespace (solana-foundation,
+  // merit-systems, paysponge → brand is the second segment) or the brand
+  // itself (agentmail/email, quicknode/rpc → brand is the first segment).
+  // We must NOT fall back to MPP_BRAND_BY_SERVICE on the trailing segment
+  // here — that map is keyed on single-segment MPP serviceIds (`rpc`,
+  // `email`, ...) and would wrongly collapse `quicknode/rpc` into the
+  // Tempo `rpc` brand, mixing unrelated catalog sources on the picker card.
+  const leading = segs[0]!;
+  if (segs.length >= 3) {
+    return segs[1] ?? leading;
+  }
+  if (KNOWN_PUBLISHERS.has(leading)) {
+    return segs[1] ?? leading;
+  }
+  return leading;
 }
+
+// Publisher namespaces whose leading fqn segment is metadata, not a brand.
+// Mirrors `bake-geo-providers.ts#KNOWN_PUBLISHERS` so the frontend lookup
+// keys agree with the baked GEO data.
+const KNOWN_PUBLISHERS = new Set(["solana-foundation", "merit-systems", "paysponge"]);
 
 /**
  * Best-effort favicon domain for a Pay.sh provider.

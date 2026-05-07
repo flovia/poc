@@ -123,6 +123,14 @@ describe("inferBrandDomain", () => {
       expect(extractBrandKey("pro-api.coingecko.com")).toBe("coingecko");
     });
 
+    test("two-segment fqns favor the leading brand segment over the trailing service noun", () => {
+      // Regression: `quicknode/rpc` used to collapse into the Tempo `rpc` brand
+      // because MPP_BRAND_BY_SERVICE has an `rpc` entry. That mixed Tempo's
+      // mpp_registry catalogSource into the QuickNode picker card, which then
+      // showed an "MPP Official" badge despite QuickNode being x402-only.
+      expect(extractBrandKey("quicknode/rpc")).toBe("quicknode");
+    });
+
     test("undefined / empty input returns null", () => {
       expect(extractBrandKey(undefined)).toBeNull();
       expect(extractBrandKey("")).toBeNull();
