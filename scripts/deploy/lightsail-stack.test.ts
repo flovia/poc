@@ -142,4 +142,32 @@ describe("lightsail shared stack", () => {
       'sync_optional_env_var "$stack_env_file" MPPX_PRIVATE_KEY "${MPPX_PRIVATE_KEY:-}"',
     );
   });
+
+  test("compose lets both branches share the common Stripe secret", () => {
+    const compose = read("../../docker-compose.lightsail.yml");
+
+    expect(compose).toContain(
+      "STRIPE_SECRET_KEY: ${MAIN_STRIPE_SECRET_KEY:-${STRIPE_SECRET_KEY:-}}",
+    );
+    expect(compose).toContain(
+      "STRIPE_SECRET_KEY: ${DEVELOP_STRIPE_SECRET_KEY:-${STRIPE_SECRET_KEY:-}}",
+    );
+  });
+
+  test("deployment passes common Stripe secret to stack sync", () => {
+    const workflow = read("../../.github/workflows/deploy-lightsail-shared.yml");
+    const syncScript = read("./lightsail-sync-stack.sh");
+
+    expect(workflow).toContain("STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}");
+    expect(workflow).toContain("MAIN_STRIPE_SECRET_KEY: ${{ secrets.MAIN_STRIPE_SECRET_KEY }}");
+    expect(workflow).toContain('stripe_secret_key_b64="$(encode_env STRIPE_SECRET_KEY)"');
+    expect(workflow).toContain('main_stripe_secret_key_b64="$(encode_env MAIN_STRIPE_SECRET_KEY)"');
+    expect(workflow).toContain('STRIPE_SECRET_KEY_B64="${stripe_secret_key_b64}"');
+    expect(workflow).toContain('MAIN_STRIPE_SECRET_KEY_B64="${main_stripe_secret_key_b64}"');
+    expect(workflow).toContain("decode_env STRIPE_SECRET_KEY_B64 STRIPE_SECRET_KEY");
+    expect(workflow).toContain("decode_env MAIN_STRIPE_SECRET_KEY_B64 MAIN_STRIPE_SECRET_KEY");
+    expect(syncScript).toContain(
+      'sync_optional_env_var "$stack_env_file" STRIPE_SECRET_KEY "${STRIPE_SECRET_KEY:-}"',
+    );
+  });
 });

@@ -126,6 +126,7 @@ sync_optional_env_var "$stack_env_file" BFF_ANALYTICS_SOURCE "${BFF_ANALYTICS_SO
 sync_optional_env_var "$stack_env_file" HITPAY_API_KEY "${HITPAY_API_KEY:-}"
 sync_optional_env_var "$stack_env_file" HITPAY_WEBHOOK_SALT "${HITPAY_WEBHOOK_SALT:-}"
 sync_optional_env_var "$stack_env_file" HITPAY_MPP_ENDPOINT "${HITPAY_MPP_ENDPOINT:-}"
+sync_optional_env_var "$stack_env_file" STRIPE_SECRET_KEY "${STRIPE_SECRET_KEY:-}"
 sync_optional_env_var "$stack_env_file" MPPX_PRIVATE_KEY "${MPPX_PRIVATE_KEY:-}"
 
 hitpay_api_key_key="${analytics_prefix}_HITPAY_API_KEY"
