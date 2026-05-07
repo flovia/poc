@@ -1,5 +1,6 @@
 import {
   type PhaseBCustomerListResponse,
+  type PhaseBCustomerWorkflowIntentResponse,
   type PhaseBCustomerUpsellExplanationResponse,
   type PhaseBCustomerProfileResponse,
   type ProviderCatalogResponse,
@@ -10,6 +11,7 @@ import type {
   CustomerInsightSeverity,
   CustomerListItemDto,
   CustomerProfileDto,
+  CustomerWorkflowIntentDto,
   CustomerProviderUsageDto,
   CustomerUpsellExplanationDto,
   CustomerTimelineEventType,
@@ -235,6 +237,56 @@ export function adaptCustomerUpsellExplanation(
     reasons: response.explanation.reasons,
     recommendedAction: response.explanation.recommendedAction,
     caution: response.explanation.caution,
+  };
+}
+
+export function adaptCustomerWorkflowIntent(
+  response: PhaseBCustomerWorkflowIntentResponse,
+): CustomerWorkflowIntentDto {
+  return {
+    generatedAt: response.generatedAt,
+    address: response.address,
+    sessionWindowSeconds: response.sessionWindowSeconds,
+    sessionCount: response.sessionCount,
+    remainingSessionCount: response.remainingSessionCount,
+    analysisStatus: response.analysisStatus,
+    failureMessage: response.failureMessage ?? null,
+    modelId: response.model?.modelId ?? null,
+    sessions: response.sessions.map((session) => ({
+      sessionId: session.sessionId,
+      startedAt: toTimestamp(session.startedAt),
+      endedAt: toTimestamp(session.endedAt),
+      durationSeconds: session.durationSeconds,
+      eventCount: session.eventCount,
+      distinctProviderCount: session.distinctProviderCount,
+      distinctActivityCount: session.distinctActivityCount,
+      totalAmountAtomic: session.totalAmountAtomic,
+      providers: session.providers.map((provider) => ({
+        ...(provider.providerId ? { providerId: provider.providerId } : {}),
+        providerName: provider.providerName,
+        ...(provider.payToWallet ? { payToWallet: provider.payToWallet } : {}),
+        eventCount: provider.eventCount,
+        totalAmountAtomic: provider.totalAmountAtomic,
+        activityLabels: provider.activityLabels,
+      })),
+      events: session.events.map((event) => ({
+        timestamp: toTimestamp(event.at),
+        ...(event.providerId ? { providerId: event.providerId } : {}),
+        providerName: event.providerName,
+        ...(event.payToWallet ? { payToWallet: event.payToWallet } : {}),
+        activityLabel: event.activityLabel,
+        description: event.description,
+        ...(event.amountAtomic ? { amountAtomic: event.amountAtomic } : {}),
+      })),
+    })),
+    explanations: response.explanations.map((explanation) => ({
+      sessionId: explanation.sessionId,
+      summary: explanation.summary,
+      intent: explanation.intent,
+      scenarios: explanation.scenarios,
+      evidence: explanation.evidence,
+      caution: explanation.caution,
+    })),
   };
 }
 

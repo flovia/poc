@@ -2,6 +2,7 @@ import {
   type PhaseBCustomerProfileResponse,
   type RouteAnalyticsSankeyResponse,
   type RouteAnalyticsSummaryResponse,
+  validatePhaseBCustomerWorkflowIntentResponse,
   type WalletUsageGraphResponse,
   validatePhaseBCustomerListResponse,
   validatePhaseBCustomerUpsellExplanationResponse,
@@ -13,6 +14,7 @@ import {
 } from "contracts";
 import {
   adaptCustomerList,
+  adaptCustomerWorkflowIntent,
   adaptCustomerProfile,
   adaptCustomerUpsellExplanation,
   adaptObservationsFromGraph,
@@ -23,6 +25,7 @@ import {
 import type {
   CustomerListItemDto,
   CustomerProfileDto,
+  CustomerWorkflowIntentDto,
   CustomerUpsellExplanationDto,
   PaymentObservationDto,
   ProviderCatalogItemDto,
@@ -104,6 +107,29 @@ export async function getCustomerUpsellExplanation(
 
   return adaptCustomerUpsellExplanation(
     validatePhaseBCustomerUpsellExplanationResponse(await response.json()),
+  );
+}
+
+export async function getCustomerWorkflowIntent(
+  address: string,
+): Promise<CustomerWorkflowIntentDto | null> {
+  const response = await fetch(
+    `${bffBaseUrl()}/customers/${encodeURIComponent(address)}/llm/workflow-intent`,
+    {
+      cache: "no-store",
+      headers: { accept: "application/json" },
+    },
+  );
+
+  if (response.status === 404) return null;
+  if (!response.ok) {
+    throw new Error(
+      `Data request failed: ${response.status} ${response.statusText} (/customers/${address}/llm/workflow-intent)`,
+    );
+  }
+
+  return adaptCustomerWorkflowIntent(
+    validatePhaseBCustomerWorkflowIntentResponse(await response.json()),
   );
 }
 
