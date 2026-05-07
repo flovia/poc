@@ -99,7 +99,7 @@ function buildRouteSankeyFlows(summary: RouteAnalyticsSummaryResponse): Endpoint
 
   for (const route of selectedRoutes) {
     const source = route.sourceRoute ?? "Direct API client";
-    const rail = railLabel(route.rail);
+    const rail = paymentRailLabel(route);
     const workflow = route.endpointGroup ?? route.workflowId;
     const amountScore = Math.round(((route.amountUsd ?? 0) / maxAmountUsd) * 5);
     const occurrences = Math.max(1, amountScore);
@@ -128,6 +128,11 @@ function buildRouteSankeyFlows(summary: RouteAnalyticsSummaryResponse): Endpoint
 }
 
 function selectSankeyRouteRows(summary: RouteAnalyticsSummaryResponse) {
+  const machineFlowRows = summary.sampleRoutes.filter(
+    (route) => route.provenance === "demo_label" && route.endpointGroup?.startsWith("/v1/"),
+  );
+  if (machineFlowRows.length > 0) return machineFlowRows;
+
   const demoRails = new Set<MachinePaymentRail>(["stripe_mpp", "hitpay_mpp"]);
   const demoRoutes = summary.sampleRoutes.filter((route) => demoRails.has(route.rail));
   const x402Routes = summary.sampleRoutes
@@ -138,6 +143,13 @@ function selectSankeyRouteRows(summary: RouteAnalyticsSummaryResponse) {
   // Keep the original response-row semantics, but cap noisy x402 fanout so the
   // Nivo Sankey still reads as a diagram instead of a dense table substitute.
   return [...x402Routes, ...demoRoutes].slice(0, 12);
+}
+
+function paymentRailLabel(route: RouteAnalyticsSummaryResponse["sampleRoutes"][number]): string {
+  if (route.router && ["Solana", "Base", "Tempo", "STP"].includes(route.router)) {
+    return `${railLabel(route.rail)} · ${route.router}`;
+  }
+  return railLabel(route.rail);
 }
 
 function addEndpointSankeyFlow(
