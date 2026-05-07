@@ -11,7 +11,15 @@ const PINNED_BASE_RANK = 1;
 const DEFAULT_RANK = PINNED_BASE_RANK + PINNED_PROVIDER_MARKS.length;
 
 function pinnedProviderRank(provider: StoredProvider): number {
-  if (provider.catalogSource === "mpp_registry") return MPP_RANK;
+  // Aggregated cards (brand-key dedup) carry every contributing catalog source
+  // in `catalogSources`. The winner row may be Pay.sh (so URLs stay stable),
+  // but the card still represents an MPP-listed brand and should be ranked
+  // accordingly. Fall back to the single `catalogSource` for non-aggregated
+  // rows.
+  const aggregated = provider.catalogSources ?? [];
+  const isMpp =
+    aggregated.includes("mpp_registry") || provider.catalogSource === "mpp_registry";
+  if (isMpp) return MPP_RANK;
   const identity = `${provider.providerId} ${provider.serviceId ?? ""} ${provider.name} ${
     provider.serviceName ?? ""
   }`.toLowerCase();

@@ -244,6 +244,45 @@ describe("orderProvidersPinnedFirst", () => {
     ]);
   });
 
+  test("ranks aggregated cards (catalogSources includes mpp_registry) at MPP rank, even if winner is Pay.sh", () => {
+    // brand-key dedup picks a Pay.sh row as winner (so the URL stays stable),
+    // but the card represents both Pay.sh + MPP because they were merged.
+    // The pin order must reflect the aggregated catalogSources, not just the
+    // winner's single catalogSource.
+    const providers: StoredProvider[] = [
+      make({ providerId: "quicknode", name: "QuickNode", serviceId: "quicknode/rpc" }),
+      make({
+        providerId: "agentmail-paysh",
+        name: "AgentMail",
+        serviceId: "agentmail/email",
+        // winner is Pay.sh, but the dedup also folded in an MPP sibling row.
+        catalogSource: "pay_sh_curated",
+        catalogSources: ["pay_sh_curated", "mpp_registry"],
+      }),
+      make({
+        providerId: "anthropic-mpp",
+        name: "Anthropic",
+        serviceId: "anthropic",
+        catalogSource: "mpp_registry",
+      }),
+      make({
+        providerId: "static-pro-api-coingecko-com",
+        name: "CoinGecko Pro",
+        serviceId: "pro-api.coingecko.com",
+      }),
+    ];
+
+    expect(orderProvidersPinnedFirst(providers).map((p) => p.providerId)).toEqual([
+      // Both MPP-aggregated and pure MPP rows share rank 0 (MPP first), in
+      // their original input order.
+      "agentmail-paysh",
+      "anthropic-mpp",
+      // Then CoinGecko / Nansen, then the rest.
+      "static-pro-api-coingecko-com",
+      "quicknode",
+    ]);
+  });
+
   test("preserves CoinGecko/Nansen pin when no MPP rows are present", () => {
     const providers: StoredProvider[] = [
       make({ providerId: "quicknode", name: "QuickNode", serviceId: "quicknode/rpc" }),
