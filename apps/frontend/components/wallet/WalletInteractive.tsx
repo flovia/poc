@@ -46,29 +46,53 @@ export function WalletInteractive({
 
   const isSdkProtagonist =
     dataMode === "sdkConnected" && sdkExtras !== null && sdkExtras.upsell !== null;
+  const showWorkflowSummary =
+    dataMode === "sdkConnected" && timeline.some((event) => event.type === "payment");
+  const showCoUsage = providers.length > 0;
+  const timelineClass = "wallet-screen-span-12 wallet-grid-item wallet-evidence-timeline";
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-      <WorkflowSummaryStrip
-        timeline={timeline}
-        providers={providers}
-        payToByProviderId={payToByProviderId}
-        storedProviders={stored}
-        dataMode={dataMode}
-        sdkExtras={sdkExtras}
-      />
-      <ActivityTimeline
-        timeline={timeline}
-        providers={providers}
-        payToByProviderId={payToByProviderId}
-        storedProviders={stored}
-        dataMode={dataMode}
-        sdkExtras={sdkExtras}
-      />
-      <CoUsageRanking address={address} providers={providers} />
-      {isSdkProtagonist && sdkForceNetwork && (
-        <SdkForceNetworkChart network={sdkForceNetwork} />
+    <>
+      {showCoUsage && (
+        <section
+          aria-label="Co-usage evidence"
+          data-testid="wallet-evidence-co-usage"
+          className="wallet-screen-span-12 wallet-grid-item wallet-evidence-co-usage"
+        >
+          <CoUsageRanking address={address} providers={providers} />
+        </section>
       )}
-    </div>
+      <section
+        aria-label="Activity timeline evidence"
+        data-testid="wallet-evidence-timeline"
+        className={timelineClass}
+      >
+        <ActivityTimeline
+          timeline={timeline}
+          providers={providers}
+          payToByProviderId={payToByProviderId}
+          storedProviders={stored}
+          dataMode={dataMode}
+          sdkExtras={sdkExtras}
+        />
+      </section>
+      {showWorkflowSummary && (
+        <section className="wallet-screen-span-12 wallet-grid-item">
+          <WorkflowSummaryStrip
+            timeline={timeline}
+            providers={providers}
+            payToByProviderId={payToByProviderId}
+            storedProviders={stored}
+            dataMode={dataMode}
+            sdkExtras={sdkExtras}
+          />
+        </section>
+      )}
+      {isSdkProtagonist && sdkForceNetwork && (
+        <section className="wallet-screen-span-12 wallet-grid-item">
+          <SdkForceNetworkChart network={sdkForceNetwork} />
+        </section>
+      )}
+    </>
   );
 }

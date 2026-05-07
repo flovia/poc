@@ -13,6 +13,9 @@ COPY packages/sources/package.json packages/sources/package.json
 RUN bun install --frozen-lockfile
 
 COPY apps/frontend ./apps/frontend
+COPY apps/cli/scripts/analytics ./apps/cli/scripts/analytics
+COPY apps/bff/fixtures/generated ./apps/bff/fixtures/generated
+COPY docs/research/pay-skills-payment-atlas.md ./docs/research/pay-skills-payment-atlas.md
 COPY packages/contracts ./packages/contracts
 
 WORKDIR /app/apps/frontend

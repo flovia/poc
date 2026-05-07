@@ -17,7 +17,16 @@ import { SDK_DEMO_PROVIDER_ID, SDK_DEMO_PROVIDER_NAME } from "@/lib/sdk-fixtures
 // "wallet" is intentionally treated as a child of "customers" for nav
 // highlighting — there's no top-level Wallet entry, the wallet detail page
 // is reached by drilling in from the customers list.
-type ActiveRoute = "customers" | "api-growth" | "geo-spec" | "macro-metrics" | "metrics-catalog" | "setup" | "wallet" | undefined;
+type ActiveRoute =
+  | "customers"
+  | "api-growth"
+  | "geo-spec"
+  | "machine-payment-routes"
+  | "macro-metrics"
+  | "metrics-catalog"
+  | "setup"
+  | "wallet"
+  | undefined;
 
 type SidebarProps = {
   activeProviderId: string | undefined;
@@ -78,7 +87,9 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
   const customerOverviewActive = pathname === customerOverviewHref || activeRoute === "wallet";
   const customersSectionActive = customerOverviewActive || pathname === coUsageHref;
 
-  const navHrefFor = (segment: "api-growth" | "geo-spec" | "macro-metrics" | "metrics-catalog") => {
+  const navHrefFor = (
+    segment: "api-growth" | "geo-spec" | "machine-payment-routes" | "macro-metrics" | "metrics-catalog",
+  ) => {
     return providerRouteId ? `/providers/${providerRouteId}/${segment}` : "/setup";
   };
 
@@ -182,6 +193,29 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
               </div>
             ) : null}
           </>
+        )}
+
+        {navDisabled ? (
+          <span
+            role="link"
+            className="nav-item disabled"
+            aria-disabled="true"
+            aria-label="Machine Payment Routes, setup required"
+          >
+            <Icon.bolt width={16} height={16} />
+            <span style={{ flex: 1 }}>Payment Routes</span>
+            <DemoNavBadge />
+          </span>
+        ) : (
+          <Link
+            href={navHrefFor("machine-payment-routes")}
+            className="nav-item"
+            aria-current={activeRoute === "machine-payment-routes"}
+          >
+            <Icon.bolt width={16} height={16} />
+            <span style={{ flex: 1 }}>Payment Routes</span>
+            <DemoNavBadge />
+          </Link>
         )}
 
         {navDisabled ? (

@@ -15,9 +15,10 @@ import {
   setDemoOptedIn as storageSetDemoOptedIn,
   setSeedVersion,
 } from "@/lib/storage";
-import { findProviderByRouteId, SEED_IDS, seedProviders, slugifyProviderName } from "@/lib/providers";
+import { findProviderByRouteId, SEED_IDS, seedProviders } from "@/lib/providers";
 import { orderProvidersPinnedFirst } from "@/lib/providers/order";
 import { STATIC_PROVIDER_CAPABILITIES } from "@/lib/providers/static-capabilities";
+import { mergeStaticProviders } from "@/lib/providers/static-merge";
 import { extractBrandKey } from "@/lib/pay-sh/brand";
 
 type Ctx = {
@@ -239,28 +240,25 @@ export function ProvidersContextProvider({ children }: { children: React.ReactNo
             hasCustomerFacts: winner.hasCustomerFacts,
           };
         });
-        const existingServiceIds = new Set(generated.map((provider) => provider.serviceId));
-        const staticOnly = STATIC_PROVIDER_CAPABILITIES.filter(
-          (provider) => !existingServiceIds.has(provider.serviceId),
-        ).map((provider) => ({
-          providerId: `static-${slugifyProviderName(provider.serviceId)}`,
-          name: provider.name,
+        const merged = mergeStaticProviders<StoredProvider>(generated, (capability, routeId) => ({
+          providerId: routeId,
+          name: capability.name,
           mode: "simple" as const,
-          payTo: provider.payTo,
+          payTo: capability.payTo,
           createdAt: Date.now(),
           source: "generated" as const,
-          network: provider.network,
-          networks: provider.networks,
-          catalogSource: provider.catalogSource,
-          protocols: provider.protocols,
-          asset: provider.asset,
-          serviceId: provider.serviceId,
-          serviceName: provider.name,
-          transactionCount: provider.transactionCount,
-          uniqueSenderCount: provider.uniqueSenderCount,
-          hasCustomerFacts: provider.transactionCount > 0,
+          network: capability.network,
+          networks: capability.networks,
+          catalogSource: capability.catalogSource,
+          protocols: capability.protocols,
+          asset: capability.asset,
+          serviceId: capability.serviceId,
+          serviceName: capability.name,
+          transactionCount: capability.transactionCount,
+          uniqueSenderCount: capability.uniqueSenderCount,
+          hasCustomerFacts: capability.transactionCount > 0,
         }));
-        setGeneratedProviders(orderProvidersPinnedFirst([...generated, ...staticOnly]));
+        setGeneratedProviders(orderProvidersPinnedFirst(merged));
       })
       .catch(() => {
         if (!cancelled) setGeneratedProviders([]);
