@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-05-06T23:54:05.666Z",
+  "generatedAt": "2026-05-07T00:27:11.794Z",
   "providers": [
     {
       "id": "brand:coingecko",
@@ -1088,8 +1088,7 @@
           "29xqfrpqrrxs8ujssznscqw3ctxndy84qfaa9bgo3y4j"
         ],
         "nameTokens": [
-          "stableemail",
-          "merit systems"
+          "stableemail"
         ]
       },
       "title": "StableEmail",
@@ -1306,8 +1305,7 @@
           "6cvgmdrsvxyiupzqmcsbns7fama5mk2vg4bcfvhc8jdc"
         ],
         "nameTokens": [
-          "stableenrich",
-          "merit systems"
+          "stableenrich"
         ]
       },
       "title": "StableEnrich",
@@ -1657,8 +1655,7 @@
           "hgztbsqe7mdpcuipeuiinemulbydaxe4x9qrh1w6lddz"
         ],
         "nameTokens": [
-          "stablephone",
-          "merit systems"
+          "stablephone"
         ]
       },
       "title": "StablePhone",
@@ -1778,8 +1775,7 @@
           "ab4tootiv5twj5tiyhnw2t2p4qhcyjemd4zbob8jpf5q"
         ],
         "nameTokens": [
-          "stablesocial",
-          "merit systems"
+          "stablesocial"
         ]
       },
       "title": "StableSocial",
@@ -3915,7 +3911,6 @@
           "0xca4e835f803cb0b7c428222b3a3b98518d4779fe"
         ],
         "nameTokens": [
-          "google",
           "google gemini"
         ]
       },
@@ -4393,7 +4388,6 @@
           "0xca4e835f803cb0b7c428222b3a3b98518d4779fe"
         ],
         "nameTokens": [
-          "tempo",
           "tempo rpc"
         ]
       },
@@ -4441,7 +4435,6 @@
           "0xca4e835f803cb0b7c428222b3a3b98518d4779fe"
         ],
         "nameTokens": [
-          "tempo",
           "object storage"
         ]
       },
@@ -4528,7 +4521,6 @@
           "0x80534805ec231010d1058e1404379c079e8b0ab5"
         ],
         "nameTokens": [
-          "pinata",
           "pinata ipfs"
         ]
       },
@@ -4586,7 +4578,6 @@
           "0xdd257723b86b4947483905cdacbbbc70facf2ec0"
         ],
         "nameTokens": [
-          "merit systems",
           "stabletravel"
         ]
       },
@@ -6015,7 +6006,6 @@
           "0xca4e835f803cb0b7c428222b3a3b98518d4779fe"
         ],
         "nameTokens": [
-          "google",
           "google maps"
         ]
       },

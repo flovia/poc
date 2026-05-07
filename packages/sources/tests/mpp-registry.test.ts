@@ -442,6 +442,23 @@ describe("toProviderCatalogRowFromMpp", () => {
     expect(row.protocol).toBe("MPP");
   });
 
+  test("uses serviceName (not publisher) as `name` so siblings don't collide on the publisher", () => {
+    // MPP registry returns provider.name = the publisher (e.g. "Merit
+    // Systems") while serviceName is the actual service ("StableTravel").
+    // The picker groups by display name, so falling back to the publisher
+    // would collapse every Merit Systems product onto a single "Merit
+    // Systems" card. Prefer serviceName.
+    const record: MppCaptureRecord = {
+      ...baseRecord,
+      providerName: "Merit Systems",
+      serviceName: "StableTravel",
+      serviceId: "stabletravel",
+    };
+    const row = toProviderCatalogRowFromMpp(record);
+    if (!row) throw new Error("expected row");
+    expect(row.name).toBe("StableTravel");
+  });
+
   test("normalizes 'USD Coin' display name to USDC", () => {
     const record: MppCaptureRecord = {
       ...baseRecord,
