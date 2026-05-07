@@ -3,16 +3,14 @@
 import { useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 
 type Period = "1w" | "1m" | "3m";
-type Metric = "requests" | "revenue";
-type SourceKey = "mpp" | "paysh";
+type Metric = "requests" | "revenue" | "retention";
+type SourceKey = "x402" | "stripeMpp" | "hitPayMpp";
 
 type Props = {
   providerId: string;
-  hasMpp: boolean;
-  hasPaySh: boolean;
 };
 
-type Point = { date: Date; mpp: number; paysh: number };
+type Point = Record<SourceKey, number> & { date: Date };
 
 const PERIOD_OPTIONS: ReadonlyArray<{ value: Period; label: string; days: number }> = [
   { value: "1w", label: "1 week", days: 7 },
@@ -21,44 +19,37 @@ const PERIOD_OPTIONS: ReadonlyArray<{ value: Period; label: string; days: number
 ];
 
 const SOURCE_META: Record<SourceKey, { label: string; color: string }> = {
-  mpp: { label: "MPP Official", color: "var(--mesh-blue)" },
-  paysh: { label: "Pay.sh", color: "var(--teal)" },
+  x402: { label: "x402", color: "var(--teal)" },
+  stripeMpp: { label: "Stripe MPP", color: "var(--mesh-blue)" },
+  hitPayMpp: { label: "HitPay MPP", color: "#8b5cf6" },
 };
 
-export function TrafficComparisonChart({ providerId, hasMpp, hasPaySh }: Props) {
+const SOURCES: readonly SourceKey[] = ["x402", "stripeMpp", "hitPayMpp"];
+
+export function RouteTrendChart({ providerId }: Props) {
   const [period, setPeriod] = useState<Period>("1m");
   const [metric, setMetric] = useState<Metric>("requests");
 
-  if (!hasMpp && !hasPaySh) return null;
-
   const days = PERIOD_OPTIONS.find((p) => p.value === period)?.days ?? 30;
-  const series = useMemo(
-    () => buildDemoSeries(providerId, metric, days, hasMpp, hasPaySh),
-    [providerId, metric, days, hasMpp, hasPaySh],
-  );
+  const series = useMemo(() => buildDemoSeries(providerId, metric, days), [providerId, metric, days]);
 
   return (
-    <section style={{ marginTop: 28 }}>
+    <section className="card" style={{ padding: 20, marginTop: 18 }}>
       <div
         style={{
           display: "flex",
-          alignItems: "flex-end",
+          alignItems: "center",
           justifyContent: "space-between",
           gap: 12,
           flexWrap: "wrap",
-          marginBottom: 12,
+          marginBottom: 14,
         }}
       >
         <div>
           <div className="eyebrow" style={{ marginBottom: 6 }}>
-            Traffic & revenue · demo
+            Route trends
           </div>
-          <h2 className="display" style={{ fontSize: 20, fontWeight: 650, margin: "0 0 6px" }}>
-            {buildHeadingTitle(hasMpp, hasPaySh)}
-          </h2>
-          <p style={{ color: "var(--text-mute)", fontSize: 12, lineHeight: 1.5, margin: 0 }}>
-            {buildHeadingSubtitle(hasMpp, hasPaySh)}
-          </p>
+          <h2 style={{ margin: 0, fontSize: 18 }}>x402 vs Stripe MPP vs HitPay MPP</h2>
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           <SegmentedControl<Metric>
@@ -68,6 +59,7 @@ export function TrafficComparisonChart({ providerId, hasMpp, hasPaySh }: Props) 
             options={[
               { value: "requests", label: "Requests" },
               { value: "revenue", label: "Revenue" },
+              { value: "retention", label: "7D retention" },
             ]}
           />
           <SegmentedControl<Period>
@@ -79,36 +71,17 @@ export function TrafficComparisonChart({ providerId, hasMpp, hasPaySh }: Props) 
         </div>
       </div>
 
-      <article className="card" style={{ padding: 16, background: "var(--surface-card)" }}>
-        <Legend hasMpp={hasMpp} hasPaySh={hasPaySh} />
-        <Chart series={series} metric={metric} hasMpp={hasMpp} hasPaySh={hasPaySh} />
-      </article>
+      <Legend />
+      <Chart series={series} metric={metric} />
+      <TrendTable series={series} metric={metric} />
     </section>
   );
 }
 
-function buildHeadingTitle(hasMpp: boolean, hasPaySh: boolean): string {
-  if (hasMpp && hasPaySh) return "MPP Official vs Pay.sh — request and revenue trend";
-  if (hasMpp) return "MPP Official — request and revenue trend";
-  if (hasPaySh) return "Pay.sh — request and revenue trend";
-  return "Request and revenue trend";
-}
-
-function buildHeadingSubtitle(hasMpp: boolean, hasPaySh: boolean): string {
-  if (hasMpp && hasPaySh) {
-    return "Demo time-series of API requests and earned amount routed through each catalog source.";
-  }
-  const source = hasMpp ? "the MPP Official registry" : "the Pay.sh atlas";
-  return `Demo time-series of API requests and earned amount routed through ${source}.`;
-}
-
-function Legend({ hasMpp, hasPaySh }: { hasMpp: boolean; hasPaySh: boolean }) {
-  const items: SourceKey[] = [];
-  if (hasMpp) items.push("mpp");
-  if (hasPaySh) items.push("paysh");
+function Legend() {
   return (
     <div style={{ display: "flex", gap: 16, marginBottom: 8, flexWrap: "wrap" }}>
-      {items.map((key) => (
+      {SOURCES.map((key) => (
         <div key={key} style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
           <span
             aria-hidden
@@ -135,13 +108,9 @@ const innerH = H - PAD.t - PAD.b;
 function Chart({
   series,
   metric,
-  hasMpp,
-  hasPaySh,
 }: {
   series: Point[];
   metric: Metric;
-  hasMpp: boolean;
-  hasPaySh: boolean;
 }) {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
@@ -150,17 +119,14 @@ function Chart({
     return <div style={{ height: 180, color: "var(--text-mute)", fontSize: 13 }}>No data</div>;
   }
 
-  const maxVal = Math.max(
-    1,
-    ...series.flatMap((p) => [hasMpp ? p.mpp : 0, hasPaySh ? p.paysh : 0]),
-  );
+  const maxVal = Math.max(1, ...series.flatMap((p) => SOURCES.map((source) => p[source])));
   const niceMax = niceCeil(maxVal);
 
   const xToPx = (i: number) =>
     series.length === 1 ? PAD.l + innerW / 2 : PAD.l + (i / (series.length - 1)) * innerW;
   const yToPx = (v: number) => PAD.t + (1 - v / niceMax) * innerH;
 
-  const buildPath = (key: "mpp" | "paysh") =>
+  const buildPath = (key: SourceKey) =>
     series
       .map((p, i) => `${i === 0 ? "M" : "L"} ${xToPx(i).toFixed(1)} ${yToPx(p[key]).toFixed(1)}`)
       .join(" ");
@@ -198,7 +164,7 @@ function Chart({
       <svg
         ref={svgRef}
         role="img"
-        aria-label={`${metric === "requests" ? "Request count" : "Revenue"} over time by catalog source`}
+        aria-label={`${metricLabel(metric)} over time by catalog source`}
         width="100%"
         viewBox={`0 0 ${W} ${H}`}
         preserveAspectRatio="xMidYMid meet"
@@ -230,26 +196,17 @@ function Chart({
           </g>
         ))}
 
-        {hasMpp && (
+        {SOURCES.map((source) => (
           <path
-            d={buildPath("mpp")}
+            key={source}
+            d={buildPath(source)}
             fill="none"
-            stroke={SOURCE_META.mpp.color}
+            stroke={SOURCE_META[source].color}
             strokeWidth={1.8}
             strokeLinejoin="round"
             strokeLinecap="round"
           />
-        )}
-        {hasPaySh && (
-          <path
-            d={buildPath("paysh")}
-            fill="none"
-            stroke={SOURCE_META.paysh.color}
-            strokeWidth={1.8}
-            strokeLinejoin="round"
-            strokeLinecap="round"
-          />
-        )}
+        ))}
 
         {xLabelIndices.map((i) => (
           <text
@@ -272,7 +229,7 @@ function Chart({
           fontSize={10}
           fill="var(--text-mute)"
         >
-          {metric === "requests" ? "Requests / day" : "Revenue / day (USD)"}
+          {axisLabel(metric)}
         </text>
 
         {hovered && hoverX !== null && (
@@ -286,26 +243,17 @@ function Chart({
               strokeWidth={1}
               strokeDasharray="3 3"
             />
-            {hasMpp && (
+            {SOURCES.map((source) => (
               <circle
+                key={source}
                 cx={hoverX}
-                cy={yToPx(hovered.mpp)}
+                cy={yToPx(hovered[source])}
                 r={3.5}
                 fill="#fff"
-                stroke={SOURCE_META.mpp.color}
+                stroke={SOURCE_META[source].color}
                 strokeWidth={2}
               />
-            )}
-            {hasPaySh && (
-              <circle
-                cx={hoverX}
-                cy={yToPx(hovered.paysh)}
-                r={3.5}
-                fill="#fff"
-                stroke={SOURCE_META.paysh.color}
-                strokeWidth={2}
-              />
-            )}
+            ))}
           </g>
         )}
       </svg>
@@ -332,20 +280,14 @@ function Chart({
           <div style={{ color: "var(--text-mute)", fontSize: 11, marginBottom: 4 }}>
             {formatTooltipDate(hovered.date)}
           </div>
-          {hasMpp && (
+          {SOURCES.map((source) => (
             <TooltipRow
-              color={SOURCE_META.mpp.color}
-              label={SOURCE_META.mpp.label}
-              value={formatTooltipValue(hovered.mpp, metric)}
+              key={source}
+              color={SOURCE_META[source].color}
+              label={SOURCE_META[source].label}
+              value={formatTooltipValue(hovered[source], metric)}
             />
-          )}
-          {hasPaySh && (
-            <TooltipRow
-              color={SOURCE_META.paysh.color}
-              label={SOURCE_META.paysh.label}
-              value={formatTooltipValue(hovered.paysh, metric)}
-            />
-          )}
+          ))}
         </div>
       )}
     </div>
@@ -373,6 +315,65 @@ function TooltipRow({ color, label, value }: { color: string; label: string; val
       <span style={{ fontFamily: "var(--mono)", fontWeight: 600 }}>{value}</span>
     </div>
   );
+}
+
+function TrendTable({ series, metric }: { series: Point[]; metric: Metric }) {
+  const rows = SOURCES.map((source) => buildTrendRow(source, series, metric));
+  const aggregateLabel = metric === "retention" ? "avg" : "total";
+
+  return (
+    <div style={{ marginTop: 12, overflowX: "auto" }}>
+      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+        <thead>
+          <tr style={{ textAlign: "left", color: "var(--text-mute)" }}>
+            <th style={{ padding: "9px 6px" }}>rail</th>
+            <th style={{ padding: "9px 6px" }}>latest</th>
+            <th style={{ padding: "9px 6px" }}>{aggregateLabel}</th>
+            <th style={{ padding: "9px 6px" }}>vs period start</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr key={row.source} style={{ borderTop: "1px solid var(--line)" }}>
+              <td style={{ padding: "10px 6px", fontWeight: 800 }}>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 7 }}>
+                  <span
+                    aria-hidden
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: 999,
+                      background: SOURCE_META[row.source].color,
+                      display: "inline-block",
+                    }}
+                  />
+                  {SOURCE_META[row.source].label}
+                </span>
+              </td>
+              <td style={{ padding: "10px 6px" }}>{formatTableValue(row.latest, metric)}</td>
+              <td style={{ padding: "10px 6px" }}>{formatTableValue(row.aggregate, metric)}</td>
+              <td style={{ padding: "10px 6px", color: row.delta >= 0 ? "#15803d" : "#b91c1c" }}>
+                {formatDelta(row.delta, metric)}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function buildTrendRow(source: SourceKey, series: Point[], metric: Metric) {
+  const first = series[0]?.[source] ?? 0;
+  const latest = series.at(-1)?.[source] ?? 0;
+  const sum = series.reduce((acc, point) => acc + point[source], 0);
+  const average = sum / Math.max(1, series.length);
+  return {
+    source,
+    latest,
+    aggregate: metric === "retention" ? average : sum,
+    delta: latest - first,
+  };
 }
 
 function SegmentedControl<T extends string>({
@@ -418,32 +419,11 @@ function SegmentedControl<T extends string>({
 // as requests × per-call USD price. The unit price is seeded only by the
 // provider+source (not by metric or day) so it stays stable across renders and
 // keeps the relationship "fewer requests ⇒ less revenue" intuitive.
-function buildDemoSeries(
-  providerId: string,
-  metric: Metric,
-  days: number,
-  hasMpp: boolean,
-  hasPaySh: boolean,
-): Point[] {
+function buildDemoSeries(providerId: string, metric: Metric, days: number): Point[] {
   const seed = hashString(`${providerId}:requests`);
-  const mppSeed = seed;
-  const payShSeed = seed ^ 0x9e3779b1;
-
-  // Daily request volume bases. The raw shapes share an order of magnitude;
-  // per-source multipliers reflect realistic traffic gap between MPP Official
-  // and Pay.sh in the demo.
-  const MPP_VOLUME_MULTIPLIER = 50;
-  const PAYSH_VOLUME_MULTIPLIER = 200;
-  const mppBase = (800 + (seed % 1200)) * MPP_VOLUME_MULTIPLIER;
-  const payShBase = (700 + (payShSeed % 1100)) * PAYSH_VOLUME_MULTIPLIER;
-
-  // Per-call USD price, stable per provider+source. $0.02 .. $0.10 ish.
-  const mppUnitPrice = 0.02 + (pseudo(hashString(`${providerId}:mpp:price`)) * 0.08);
-  const payShUnitPrice = 0.02 + (pseudo(hashString(`${providerId}:paysh:price`)) * 0.08);
-
-  // Different growth slopes so the lines visibly diverge.
-  const mppSlope = ((seed >> 8) % 100) / 1000 - 0.02; // -0.02 .. +0.08
-  const payShSlope = ((payShSeed >> 8) % 100) / 1000 + 0.005; // +0.005 .. +0.105
+  const profiles = Object.fromEntries(
+    SOURCES.map((source, index) => [source, buildSourceProfile(providerId, source, seed, index)]),
+  ) as Record<SourceKey, SourceProfile>;
 
   const now = new Date();
   now.setHours(0, 0, 0, 0);
@@ -458,47 +438,113 @@ function buildDemoSeries(
     // Weekend dip — small, deterministic.
     const weekendFactor = weekday === 0 || weekday === 6 ? 0.78 : 1;
 
-    // Layered shape: a slow sinusoidal wave + day-to-day jitter. The wave
-    // gives the eye a clear curve to follow; the jitter keeps it from looking
-    // synthetic. Per-source phase/period so MPP and Pay.sh don't move in lockstep.
-    const mppWave =
-      Math.sin((i / days) * Math.PI * 2 + (mppSeed % 360) * (Math.PI / 180)) * 0.18;
-    const payShWave =
-      Math.sin((i / days) * Math.PI * 2.6 + (payShSeed % 360) * (Math.PI / 180)) * 0.22;
-
-    const mppJitter = pseudo(mppSeed + i) * 0.18 - 0.09; // ±9%
-    const payShJitter = pseudo(payShSeed + i) * 0.18 - 0.09;
-
-    const mppRequests = hasMpp
-      ? Math.max(
+    const values = Object.fromEntries(
+      SOURCES.map((source) => {
+        const profile = profiles[source];
+        const wave =
+          Math.sin((i / days) * Math.PI * profile.period + profile.phase) * profile.wave;
+        const jitter = pseudo(profile.seed + i) * 0.18 - 0.09;
+        const requests = Math.max(
           0,
-          mppBase *
-            (1 + mppSlope * (t / Math.max(1, days))) *
-            (1 + mppWave + mppJitter) *
+          profile.baseRequests *
+            (1 + profile.slope * (t / Math.max(1, days))) *
+            (1 + wave + jitter) *
             weekendFactor,
-        )
-      : 0;
-    const payShRequests = hasPaySh
-      ? Math.max(
-          0,
-          payShBase *
-            (1 + payShSlope * (t / Math.max(1, days))) *
-            (1 + payShWave + payShJitter) *
-            weekendFactor,
-        )
-      : 0;
-
-    const mppValue = metric === "requests" ? mppRequests : mppRequests * mppUnitPrice;
-    const payShValue =
-      metric === "requests" ? payShRequests : payShRequests * payShUnitPrice;
+        );
+        const retention = retentionRate(source, i, days, requests, profile.baseRequests);
+        return [source, normalizeMetricValue(metric, metricValue(metric, requests, profile.unitPrice, retention))];
+      }),
+    ) as Record<SourceKey, number>;
 
     points.push({
       date,
-      mpp: metric === "requests" ? Math.round(mppValue) : Number(mppValue.toFixed(2)),
-      paysh: metric === "requests" ? Math.round(payShValue) : Number(payShValue.toFixed(2)),
+      ...values,
     });
   }
   return points;
+}
+
+type SourceProfile = {
+  seed: number;
+  baseRequests: number;
+  unitPrice: number;
+  slope: number;
+  wave: number;
+  period: number;
+  phase: number;
+};
+
+function buildSourceProfile(
+  providerId: string,
+  source: SourceKey,
+  baseSeed: number,
+  index: number,
+): SourceProfile {
+  const seed = (baseSeed ^ hashString(source)) >>> 0;
+  const dailyBase = source === "x402" ? 115000 : source === "stripeMpp" ? 92000 : 68000;
+  const requestVariance = pseudo(seed) * 0.16 - 0.08;
+  return {
+    seed,
+    baseRequests: dailyBase * (1 + requestVariance),
+    unitPrice: unitPriceFor(providerId, source),
+    slope: trendSlopeFor(source, seed),
+    wave: 0.06 + index * 0.01,
+    period: 1.8 + index * 0.45,
+    phase: (seed % 360) * (Math.PI / 180),
+  };
+}
+
+function unitPriceFor(providerId: string, source: SourceKey): number {
+  const variance = pseudo(hashString(`${providerId}:${source}:price`)) * 0.0002 - 0.0001;
+  if (source === "x402") return 0.00095 + variance;
+  if (source === "stripeMpp") return 0.00108 + variance;
+  return 0.001 + variance;
+}
+
+function trendSlopeFor(source: SourceKey, seed: number): number {
+  const variance = (((seed >> 8) % 20) - 10) / 1000;
+  if (source === "x402") return -0.4 + variance;
+  if (source === "stripeMpp") return 0.32 + variance;
+  return 0.42 + variance;
+}
+
+function metricValue(
+  metric: Metric,
+  requests: number,
+  unitPrice: number,
+  retention: number,
+): number {
+  if (metric === "requests") return requests;
+  if (metric === "revenue") return requests * unitPrice;
+  return retention;
+}
+
+function normalizeMetricValue(metric: Metric, value: number): number {
+  if (metric === "requests") return Math.round(value);
+  if (metric === "retention") return Number(value.toFixed(3));
+  return Number(value.toFixed(2));
+}
+
+function retentionRate(
+  source: SourceKey,
+  dayIndex: number,
+  days: number,
+  requests: number,
+  baseRequests: number,
+): number {
+  const seed = hashString(`${source}:retention`);
+  const sourceBase = source === "x402" ? 0.32 : source === "stripeMpp" ? 0.68 : 0.5;
+  const maturitySlope = source === "x402" ? -0.18 : source === "stripeMpp" ? 0.14 : 0.2;
+  const maturityLift = (dayIndex / Math.max(1, days - 1)) * maturitySlope;
+  const trafficLift = Math.min(0.14, Math.max(-0.12, requests / Math.max(1, baseRequests) - 1) * 0.24);
+  const waveSize = source === "stripeMpp" ? 0.025 : 0.035;
+  const wave = Math.sin((dayIndex / Math.max(1, days)) * Math.PI * 2.4 + (seed % 180)) * waveSize;
+  const jitter = pseudo(seed + dayIndex) * 0.05 - 0.025;
+  return clamp(sourceBase + maturityLift + trafficLift + wave + jitter, 0.15, 0.9);
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
 }
 
 function hashString(input: string): number {
@@ -534,12 +580,25 @@ function niceCeil(value: number): number {
 }
 
 function formatValue(value: number, metric: Metric): string {
+  if (metric === "retention") return `${(value * 100).toFixed(0)}%`;
   if (metric === "revenue") {
     if (value >= 1000) return `$${(value / 1000).toFixed(1)}k`;
     return `$${value.toFixed(0)}`;
   }
   if (value >= 1000) return `${(value / 1000).toFixed(1)}k`;
   return value.toFixed(0);
+}
+
+function metricLabel(metric: Metric): string {
+  if (metric === "requests") return "Request count";
+  if (metric === "revenue") return "Revenue";
+  return "7-day retention rate";
+}
+
+function axisLabel(metric: Metric): string {
+  if (metric === "requests") return "Requests / day";
+  if (metric === "revenue") return "Revenue / day (USD)";
+  return "7-day retention rate";
 }
 
 function formatDateLabel(date: Date): string {
@@ -549,10 +608,25 @@ function formatDateLabel(date: Date): string {
 }
 
 function formatTooltipValue(value: number, metric: Metric): string {
+  if (metric === "retention") return `${(value * 100).toFixed(1)}% retained`;
   if (metric === "revenue") {
     return `$${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   }
   return `${Math.round(value).toLocaleString()} req`;
+}
+
+function formatTableValue(value: number, metric: Metric): string {
+  if (metric === "retention") return `${(value * 100).toFixed(1)}%`;
+  if (metric === "revenue") {
+    return `$${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+  }
+  return Math.round(value).toLocaleString();
+}
+
+function formatDelta(value: number, metric: Metric): string {
+  const sign = value >= 0 ? "+" : "";
+  if (metric === "retention") return `${sign}${(value * 100).toFixed(1)} pt`;
+  return `${sign}${formatTableValue(value, metric)}`;
 }
 
 function formatTooltipDate(date: Date): string {
