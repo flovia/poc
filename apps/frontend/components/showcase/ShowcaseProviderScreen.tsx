@@ -66,7 +66,7 @@ const providerConfig = {
     challengeArtifact: "402 challenge + checkout URL",
     paymentArtifact: "checkout session + QR payment",
     accessArtifact: "paid retry + API response",
-    dashboardHref: "https://dashboard.hit-pay.com/",
+    dashboardHref: "https://dashboard.sandbox.hit-pay.com",
     providerOnlyLabel: "HitPay MPP route",
     providerOnlySnippet: `app.get("/showcase/hitpay-mpp/paid", (c) =>
   protectedPaid(c.req.raw, undefined),
