@@ -31,6 +31,8 @@ const PROTOCOL_OPTIONS: ReadonlyArray<{ value: ProviderProtocolFilter; label: st
   { value: "x402", label: "x402" },
 ];
 
+const preferedServices = new Set(["api.nansen.ai", "pro-api.coingecko.com"]);
+
 
 export function ProvidersPicker() {
   const { stored, userProviders, hydrated, demoOpted } = useProviders();
@@ -47,7 +49,20 @@ export function ProvidersPicker() {
   const [filter, setFilter] = useState<ProviderFilterState>(DEFAULT_PROVIDER_FILTER);
   const availableChains = useMemo(() => collectAvailableChains(stored), [stored]);
   const filtered = useMemo(
-    () => filterProviders(stored, filter, { demoOpted, userIds, demoIds }),
+    () => {
+      const filtered = filterProviders(stored, filter, { demoOpted, userIds, demoIds });
+
+      // XXX: Bring CoinGecko and Nansen up
+      return filtered.sort((a: any, b: any) => {
+        const aIsTarget = preferedServices.has(a.serviceName);
+        const bIsTarget = preferedServices.has(b.serviceName);
+
+        if (aIsTarget && !bIsTarget) return -1;
+        if (!aIsTarget && bIsTarget) return 1;
+
+        return 0;
+      });
+    },
     [stored, filter, demoOpted, userIds, demoIds],
   );
 
@@ -155,162 +170,162 @@ export function ProvidersPicker() {
           }}
         >
           {filtered.map((p) => {
-        const isDemo = isDemoProvider(p, demoOpted, userIds);
-        // Aggregated catalog sources from the brand-key dedup (e.g.
-        // ["pay_sh_curated", "mpp_registry"] for AgentMail). Falls back to the
-        // single `catalogSource` when no aggregation happened.
-        const allCatalogSources = p.catalogSources ?? (p.catalogSource ? [p.catalogSource] : []);
-        const isPaySh = allCatalogSources.includes("pay_sh_curated");
-        const isMpp = allCatalogSources.includes("mpp_registry");
-        const chains = visibleProviderChains(chainsOfProvider(p));
-        const protocols = protocolsOfProvider(p);
-        const skill = resolvePaySkill(skills, p.serviceId);
-        const displayName = skill?.title || inferBrandDisplayName({ fqn: p.serviceId }) || p.name;
-        const brand = inferBrandDomain({
-          fqn: skill?.fqn ?? p.serviceId,
-          serviceUrl: skill?.service_url ?? p.serviceUrl,
-        });
-        return (
-          <Link
-            key={p.providerId}
-            href={`/providers/${p.providerId}/customers`}
-            className="card"
-            style={{
-              padding: 18,
-              background: "var(--surface-card)",
-              color: "inherit",
-              textDecoration: "none",
-              display: "flex",
-              flexDirection: "column",
-              gap: 12,
-              transition: "border-color 140ms ease, transform 140ms ease, box-shadow 140ms ease",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "flex-start", gap: 12, minWidth: 0 }}>
-              <ProviderAvatar
-                name={displayName}
-                serviceId={p.serviceId}
-                brandDomain={brand.domain}
-                brandIconUrl={brand.iconUrl}
-                size={40}
-              />
-              <div style={{ minWidth: 0, flex: 1 }}>
-                <div
-                  style={{
-                    fontSize: 15,
-                    fontWeight: 600,
-                    color: "var(--text-1)",
-                    whiteSpace: "nowrap",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                  }}
-                  title={displayName}
-                >
-                  {displayName}
-                </div>
-                {p.serviceId ? (
-                  <div
-                    className="mono"
-                    style={{
-                      fontSize: 11,
-                      color: "var(--text-mute)",
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      marginTop: 2,
-                    }}
-                    title={p.serviceId}
-                  >
-                    {p.serviceId}
-                  </div>
-                ) : null}
-              </div>
-              {(isDemo || isPaySh || isMpp || p.source !== "generated") && (
-                <div
-                  style={{
-                    flexShrink: 0,
-                    marginTop: 1,
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 4,
-                    alignItems: "flex-end",
-                  }}
-                >
-                  {isDemo ? (
-                    <CardBadge tone="muted">demo</CardBadge>
-                  ) : (
-                    <>
-                      {isMpp ? <CardBadge tone="muted">MPP official</CardBadge> : null}
-                      {isPaySh ? <CardBadge tone="muted">Pay.sh</CardBadge> : null}
-                      {!isPaySh && !isMpp ? <CardBadge tone="blue">real</CardBadge> : null}
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
-
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: 8,
-                paddingTop: 10,
-                borderTop: "1px solid var(--border-subtle, #eef0f3)",
-                marginTop: "auto",
-              }}
-            >
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
-                {protocols.length > 0 ? (
-                  protocols.map((proto) => (
-                    <span
-                      key={proto}
+            const isDemo = isDemoProvider(p, demoOpted, userIds);
+            // Aggregated catalog sources from the brand-key dedup (e.g.
+            // ["pay_sh_curated", "mpp_registry"] for AgentMail). Falls back to the
+            // single `catalogSource` when no aggregation happened.
+            const allCatalogSources = p.catalogSources ?? (p.catalogSource ? [p.catalogSource] : []);
+            const isPaySh = allCatalogSources.includes("pay_sh_curated");
+            const isMpp = allCatalogSources.includes("mpp_registry");
+            const chains = visibleProviderChains(chainsOfProvider(p));
+            const protocols = protocolsOfProvider(p);
+            const skill = resolvePaySkill(skills, p.serviceId);
+            const displayName = skill?.title || inferBrandDisplayName({ fqn: p.serviceId }) || p.name;
+            const brand = inferBrandDomain({
+              fqn: skill?.fqn ?? p.serviceId,
+              serviceUrl: skill?.service_url ?? p.serviceUrl,
+            });
+            return (
+              <Link
+                key={p.providerId}
+                href={`/providers/${p.providerId}/customers`}
+                className="card"
+                style={{
+                  padding: 18,
+                  background: "var(--surface-card)",
+                  color: "inherit",
+                  textDecoration: "none",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 12,
+                  transition: "border-color 140ms ease, transform 140ms ease, box-shadow 140ms ease",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 12, minWidth: 0 }}>
+                  <ProviderAvatar
+                    name={displayName}
+                    serviceId={p.serviceId}
+                    brandDomain={brand.domain}
+                    brandIconUrl={brand.iconUrl}
+                    size={40}
+                  />
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div
                       style={{
-                        fontSize: 10,
-                        fontWeight: 700,
-                        letterSpacing: "0.06em",
-                        color: "#fff",
-                        background:
-                          proto === "x402" ? "var(--mesh-blue)" : "var(--sdk-purple)",
-                        borderRadius: 999,
-                        padding: "1px 7px",
+                        fontSize: 15,
+                        fontWeight: 600,
+                        color: "var(--text-1)",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}
+                      title={displayName}
+                    >
+                      {displayName}
+                    </div>
+                    {p.serviceId ? (
+                      <div
+                        className="mono"
+                        style={{
+                          fontSize: 11,
+                          color: "var(--text-mute)",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          marginTop: 2,
+                        }}
+                        title={p.serviceId}
+                      >
+                        {p.serviceId}
+                      </div>
+                    ) : null}
+                  </div>
+                  {(isDemo || isPaySh || isMpp || p.source !== "generated") && (
+                    <div
+                      style={{
+                        flexShrink: 0,
+                        marginTop: 1,
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 4,
+                        alignItems: "flex-end",
                       }}
                     >
-                      {proto}
-                    </span>
-                  ))
-                ) : (
-                  <span style={{ fontSize: 11, color: "var(--text-mute)" }}>—</span>
-                )}
-              </div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
-                {chains.length > 0 ? (
-                  chains.map((c) => {
-                    const v = describeChain(c);
-                    return (
-                      <span
-                        key={c}
-                        style={{
-                          fontSize: 10,
-                          fontWeight: 700,
-                          letterSpacing: "0.06em",
-                          color: v.color,
-                          border: `1px solid ${v.color}`,
-                          borderRadius: 999,
-                          padding: "1px 6px",
-                        }}
-                      >
-                        {v.short}
-                      </span>
-                    );
-                  })
-                ) : (
-                  <span style={{ fontSize: 11, color: "var(--text-mute)" }}>—</span>
-                )}
-              </div>
-            </div>
-          </Link>
-        );
-      })}
+                      {isDemo ? (
+                        <CardBadge tone="muted">demo</CardBadge>
+                      ) : (
+                        <>
+                          {isMpp ? <CardBadge tone="muted">MPP official</CardBadge> : null}
+                          {isPaySh ? <CardBadge tone="muted">Pay.sh</CardBadge> : null}
+                          {!isPaySh && !isMpp ? <CardBadge tone="blue">real</CardBadge> : null}
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 8,
+                    paddingTop: 10,
+                    borderTop: "1px solid var(--border-subtle, #eef0f3)",
+                    marginTop: "auto",
+                  }}
+                >
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
+                    {protocols.length > 0 ? (
+                      protocols.map((proto) => (
+                        <span
+                          key={proto}
+                          style={{
+                            fontSize: 10,
+                            fontWeight: 700,
+                            letterSpacing: "0.06em",
+                            color: "#fff",
+                            background:
+                              proto === "x402" ? "var(--mesh-blue)" : "var(--sdk-purple)",
+                            borderRadius: 999,
+                            padding: "1px 7px",
+                          }}
+                        >
+                          {proto}
+                        </span>
+                      ))
+                    ) : (
+                      <span style={{ fontSize: 11, color: "var(--text-mute)" }}>—</span>
+                    )}
+                  </div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
+                    {chains.length > 0 ? (
+                      chains.map((c) => {
+                        const v = describeChain(c);
+                        return (
+                          <span
+                            key={c}
+                            style={{
+                              fontSize: 10,
+                              fontWeight: 700,
+                              letterSpacing: "0.06em",
+                              color: v.color,
+                              border: `1px solid ${v.color}`,
+                              borderRadius: 999,
+                              padding: "1px 6px",
+                            }}
+                          >
+                            {v.short}
+                          </span>
+                        );
+                      })
+                    ) : (
+                      <span style={{ fontSize: 11, color: "var(--text-mute)" }}>—</span>
+                    )}
+                  </div>
+                </div>
+              </Link>
+            );
+          })}
         </div>
       )}
     </div>
@@ -524,13 +539,13 @@ function CardBadge({ children, tone }: { children: React.ReactNode; tone: "muted
   const styles =
     tone === "blue"
       ? {
-          background: "rgba(45,127,249,0.14)",
-          color: "var(--mesh-blue)",
-        }
+        background: "rgba(45,127,249,0.14)",
+        color: "var(--mesh-blue)",
+      }
       : {
-          background: "rgba(148,163,184,0.18)",
-          color: "var(--text-3)",
-        };
+        background: "rgba(148,163,184,0.18)",
+        color: "var(--text-3)",
+      };
   return (
     <span
       style={{
