@@ -36,18 +36,11 @@ export function IdentityBar({ customer, metrics, dataMode, sdkExtras }: Identity
         borderColor: "var(--line)",
         position: "relative",
         overflow: "hidden",
+        minWidth: 0,
       }}
     >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "flex-start",
-          justifyContent: "space-between",
-          gap: 24,
-          minWidth: 0,
-        }}
-      >
-        <div style={{ minWidth: 0, flex: 1 }}>
+      <div className="wallet-identity-grid">
+        <div className="wallet-identity-main">
           <div
             style={{
               display: "flex",
@@ -132,16 +125,7 @@ export function IdentityBar({ customer, metrics, dataMode, sdkExtras }: Identity
           </div>
         </div>
 
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "flex-end",
-            gap: 4,
-            flexShrink: 0,
-            minWidth: 0,
-          }}
-        >
+        <div className="wallet-identity-spend">
           <div
             style={{
               fontSize: 11,

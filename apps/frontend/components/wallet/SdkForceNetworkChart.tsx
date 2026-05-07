@@ -19,6 +19,7 @@ export function SdkForceNetworkChart({ network }: Props) {
         border: "1px solid var(--line)",
         borderRadius: 6,
         padding: "14px 18px 6px",
+        minWidth: 0,
       }}
     >
       <div

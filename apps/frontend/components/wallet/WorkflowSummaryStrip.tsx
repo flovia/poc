@@ -123,7 +123,7 @@ export function WorkflowSummaryStrip({
   if (cycles.length === 0) return null;
 
   return (
-    <div className="card" style={{ padding: 0, overflow: "hidden", background: "#FFFFFF" }}>
+    <div className="card" style={{ padding: 0, overflow: "hidden", background: "#FFFFFF", minWidth: 0 }}>
       <div style={{ padding: "14px 20px 10px", borderBottom: "1px solid var(--line)" }}>
         <div
           style={{
