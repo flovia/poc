@@ -17,7 +17,10 @@
     "@aws-sdk/client-bedrock-runtime": "^3.1040.0",
     "@hit-pay/mpp": "beta",
     "contracts": "workspace:*",
-    "sources": "workspace:*"
+    "mppx": "^0.6.15",
+    "sources": "workspace:*",
+    "stripe": "^22.1.0",
+    "viem": "^2.48.8"
   },
   "devDependencies": {
     "@types/bun": "^1.3.13",

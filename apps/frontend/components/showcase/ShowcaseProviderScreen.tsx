@@ -21,6 +21,7 @@ const providerConfig = {
     title: "Stripe MPP showcase",
     endpoint: "/showcase/stripe-mpp/paid",
     publicEndpoint: "/api/showcase/stripe-mpp/paid",
+    publicPayEndpoint: "/api/showcase/stripe-mpp/pay",
     amount: "$1.00 USD",
     rail: "Tempo token payment",
     accent: "var(--mesh-blue)",
@@ -29,7 +30,7 @@ const providerConfig = {
     simulatedId: "pi_demo_stripe_mpp_001",
     challengeArtifact: "402 challenge + Tempo recipient",
     paymentArtifact: "PaymentIntent + token transfer",
-    accessArtifact: "credential retry + receipt",
+    accessArtifact: "MPP credential retry + receipt",
     dashboardHref: "https://dashboard.stripe.com/test/payments",
     providerOnlyLabel: "Stripe MPP route",
     providerOnlySnippet: `app.get("/showcase/stripe-mpp/paid", async (c) => {
@@ -57,6 +58,7 @@ const providerConfig = {
     title: "HitPay MPP showcase",
     endpoint: "/showcase/hitpay-mpp/paid",
     publicEndpoint: "/api/showcase/hitpay-mpp/paid",
+    publicPayEndpoint: null,
     amount: "S$1.00 SGD",
     rail: "Checkout URL / QR",
     accent: "var(--teal)",
@@ -124,14 +126,15 @@ export function ShowcaseProviderScreen({ provider }: ShowcaseProviderScreenProps
     setResult(null);
 
     try {
-      const params = new URLSearchParams();
-      if (withCredential) params.set("credential", "demo-paid");
-      if (withCredential && challengeId) params.set("challengeId", challengeId);
-      const response = await fetch(`${config.publicEndpoint}${params.size > 0 ? `?${params}` : ""}`, {
+      const response = await fetch(withCredential && config.publicPayEndpoint ? config.publicPayEndpoint : config.publicEndpoint, {
         cache: "no-store",
-        headers: { accept: "application/json" },
+        method: withCredential && config.publicPayEndpoint ? "POST" : "GET",
+        headers: {
+          accept: "application/json",
+          ...(withCredential && config.publicPayEndpoint ? { "x-flovia-showcase-pay": "stripe-mpp" } : {}),
+        },
       });
-      const body = await response.json();
+      const body = await readResponseBody(response);
       setResult({ status: response.status, body });
       const nextChallengeId = getChallengeId(body);
       if (nextChallengeId) setChallengeId(nextChallengeId);
@@ -243,7 +246,7 @@ export function ShowcaseProviderScreen({ provider }: ShowcaseProviderScreenProps
         <div style={{ marginTop: 24 }}>
           <Card
             eyebrow="Live flow"
-            title={provider === "hitpay" ? "Call the real HitPay MPP endpoint" : "Call the BFF-hosted demo endpoint"}
+            title={provider === "hitpay" ? "Call the real HitPay MPP endpoint" : "Call the real Stripe MPP challenge endpoint"}
             action={provider === "hitpay" ? <CheatCodeButton onClick={showHitPayFallbackSuccess} /> : null}
           >
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 16 }}>
@@ -254,9 +257,9 @@ export function ShowcaseProviderScreen({ provider }: ShowcaseProviderScreenProps
                 type="button"
                 onClick={() => void callPaidApi(true)}
                 style={secondaryButtonStyle}
-                disabled={state === "calling" || (provider === "stripe" ? !challengeId : !hitPayCheckoutUrl)}
+                disabled={state === "calling" || (provider === "hitpay" && !hitPayCheckoutUrl)}
               >
-                {provider === "stripe" ? "Simulate Tempo payment" : "I paid. Continue."}
+                {provider === "stripe" ? "Pay with MPPX wallet" : "I paid. Continue."}
               </button>
               <a href={config.dashboardHref} target="_blank" rel="noreferrer" className="ghost" style={{ alignSelf: "center", fontSize: 13 }}>
                 Provider dashboard ↗
@@ -347,8 +350,9 @@ export function ShowcaseProviderScreen({ provider }: ShowcaseProviderScreenProps
 function getChallengeId(body: unknown): string | null {
   if (typeof body !== "object" || body === null || !("challenge" in body)) return null;
   const challenge = (body as { challenge?: unknown }).challenge;
-  if (typeof challenge !== "object" || challenge === null || !("challengeId" in challenge)) return null;
-  const challengeId = (challenge as { challengeId?: unknown }).challengeId;
+  if (typeof challenge !== "object" || challenge === null) return null;
+  const challengeId = (challenge as { challengeId?: unknown; id?: unknown }).challengeId
+    ?? (challenge as { id?: unknown }).id;
   return typeof challengeId === "string" ? challengeId : null;
 }
 
@@ -748,13 +752,17 @@ function LiveStatus({
   hasChallenge: boolean;
 }) {
   const copy = {
-    idle: "This PoC does not take a real payment here. First call returns a 402 challenge; then simulate payment completion.",
+    idle: provider === "stripe"
+      ? "Call the endpoint to inspect the MPP 402 challenge, or pay from the server-side MPPX demo wallet with one button."
+      : "This PoC does not take a real payment here. First call returns a 402 challenge; then complete the sandbox checkout.",
     calling: "Calling the paid API endpoint…",
     challenge:
       provider === "stripe"
-        ? "402 challenge issued. In a real Stripe MPP flow, the wallet pays the Tempo recipient; in this PoC, click Simulate Tempo payment."
+        ? "402 challenge issued. Click Pay with MPPX wallet to pay and retry with a Payment credential from the BFF demo wallet."
         : "402 challenge issued with checkout URL. Open the HitPay sandbox checkout, pay, then click I paid. Continue.",
-    paid: "Demo payment completion accepted. Paid API response delivered and joined by Flovia.",
+    paid: provider === "stripe"
+      ? "MPP credential accepted. Paid API response delivered and joined by Flovia."
+      : "Demo payment completion accepted. Paid API response delivered and joined by Flovia.",
     error: "Request failed. Check BFF availability and endpoint response.",
   }[state];
 
@@ -904,7 +912,7 @@ function summarizeLiveResult(result: LiveResult, provider: ProviderKey, state: L
       title: provider === "hitpay" ? "Checkout URL issued" : "Payment required",
       items: [
         { label: "Provider", value: provider === "hitpay" ? "HitPay MPP" : "Stripe MPP" },
-        { label: "Next action", value: provider === "hitpay" ? "Open checkout" : "Complete Tempo payment" },
+        { label: "Next action", value: provider === "hitpay" ? "Open checkout" : "Pay with MPPX wallet" },
         { label: "Checkout", value: extractHitPayCheckoutUrl(challenge) ?? stringValue(payment?.checkoutUrl) ?? "—" },
       ],
     };
