@@ -93,51 +93,64 @@ function Badge({ children, tone = "neutral" }: { children: React.ReactNode; tone
 }
 
 function buildRouteSankeyFlows(summary: RouteAnalyticsSummaryResponse): EndpointSankeyFlow[] {
-  const railSummary = new Map(summary.rails.map((rail) => [rail.rail, rail]));
-  const maxSettledUsd = Math.max(...summary.rails.map((rail) => rail.settledUsd), 1);
-  const maxRouteCount = Math.max(...summary.rails.map((rail) => rail.routeCount), 1);
+  const selectedRoutes = selectSankeyRouteRows(summary);
+  const maxAmountUsd = Math.max(...selectedRoutes.map((route) => route.amountUsd ?? 0), 1);
+  const grouped = new Map<string, EndpointSankeyFlow>();
 
-  const routeFor = (
-    rail: MachinePaymentRail,
-    source: string,
-    workflow: string,
-  ): EndpointSankeyFlow[] => {
-    const railRow = railSummary.get(rail);
-    if (!railRow) return [];
-    const railName = railLabel(rail);
-    // This chart is a presentation layer, not raw row-count rendering. A direct
-    // sample-row Sankey fragments into too many 1× links, so normalize each rail
-    // into a compact 3-path narrative and size by combined route/revenue signal.
-    const revenueScore = Math.round((railRow.settledUsd / maxSettledUsd) * 6);
-    const routeScore = Math.round((railRow.routeCount / maxRouteCount) * 6);
-    const occurrences = Math.max(2, revenueScore, routeScore);
-    return [
-      {
-        from: source,
-        to: railName,
-        fromStep: 0,
-        toStep: 1,
-        occurrences,
-        fromLabel: source,
-        toLabel: railName,
-      },
-      {
-        from: railName,
-        to: workflow,
-        fromStep: 1,
-        toStep: 2,
-        occurrences,
-        fromLabel: railName,
-        toLabel: workflow,
-      },
-    ];
-  };
+  for (const route of selectedRoutes) {
+    const source = route.sourceRoute ?? "Direct API client";
+    const rail = railLabel(route.rail);
+    const workflow = route.endpointGroup ?? route.workflowId;
+    const amountScore = Math.round(((route.amountUsd ?? 0) / maxAmountUsd) * 5);
+    const occurrences = Math.max(1, amountScore);
 
-  return [
-    ...routeFor("x402", "Direct API clients", "Paid API routes"),
-    ...routeFor("stripe_mpp", "Marketplace", "Enrichment API"),
-    ...routeFor("hitpay_mpp", "MCP directory", "Research workflow"),
-  ];
+    addEndpointSankeyFlow(grouped, {
+      from: source,
+      to: rail,
+      fromStep: 0,
+      toStep: 1,
+      occurrences,
+      fromLabel: source,
+      toLabel: rail,
+    });
+    addEndpointSankeyFlow(grouped, {
+      from: rail,
+      to: workflow,
+      fromStep: 1,
+      toStep: 2,
+      occurrences,
+      fromLabel: rail,
+      toLabel: workflow,
+    });
+  }
+
+  return Array.from(grouped.values()).sort((left, right) => right.occurrences - left.occurrences);
+}
+
+function selectSankeyRouteRows(summary: RouteAnalyticsSummaryResponse) {
+  const demoRails = new Set<MachinePaymentRail>(["stripe_mpp", "hitpay_mpp"]);
+  const demoRoutes = summary.sampleRoutes.filter((route) => demoRails.has(route.rail));
+  const x402Routes = summary.sampleRoutes
+    .filter((route) => route.rail === "x402")
+    .sort((left, right) => (right.amountUsd ?? 0) - (left.amountUsd ?? 0))
+    .slice(0, 8);
+
+  // Keep the original response-row semantics, but cap noisy x402 fanout so the
+  // Nivo Sankey still reads as a diagram instead of a dense table substitute.
+  return [...x402Routes, ...demoRoutes].slice(0, 12);
+}
+
+function addEndpointSankeyFlow(
+  grouped: Map<string, EndpointSankeyFlow>,
+  flow: EndpointSankeyFlow,
+) {
+  const key = `${flow.fromStep}:${flow.from}->${flow.toStep}:${flow.to}`;
+  const existing = grouped.get(key);
+  if (existing) {
+    existing.occurrences += flow.occurrences;
+    return;
+  }
+  grouped.set(key, { ...flow });
 }
 
 export function MachinePaymentRoutesScreen({ summary, sankey }: MachinePaymentRoutesScreenProps) {
@@ -264,7 +277,7 @@ export function MachinePaymentRoutesScreen({ summary, sankey }: MachinePaymentRo
             <h2 style={{ margin: 0, fontSize: 18 }}>Source route → payment rail → API workflow</h2>
           </div>
           <span className="mono" style={{ color: "var(--text-3)", fontSize: 11 }}>
-            Nivo Sankey · normalized rail signal
+            Nivo Sankey · capped response rows
           </span>
         </div>
         <div style={{ overflow: "visible", display: "flex", justifyContent: "center", minWidth: 0 }}>
@@ -279,8 +292,8 @@ export function MachinePaymentRoutesScreen({ summary, sankey }: MachinePaymentRo
           />
         </div>
         <div style={{ color: "var(--text-mute)", fontSize: 12, marginTop: 8 }}>
-          To keep the diagram legible, raw route rows are collapsed into the three P0 narrative
-          paths. Wider links indicate stronger combined route-count and settled-USD signal.
+          Built from the route analytics response rows with noisy x402 fanout capped for legibility.
+          Wider links indicate stronger per-route settled-USD signal.
         </div>
       </section>
 
