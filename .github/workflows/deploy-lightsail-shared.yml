@@ -23,6 +23,10 @@ name: deploy-lightsail-shared
 # - HITPAY_API_KEY
 # - HITPAY_WEBHOOK_SALT
 # - HITPAY_MPP_ENDPOINT
+# - MPPX_PRIVATE_KEY
+# - DEVELOP_STRIPE_SECRET_KEY
+# - DEVELOP_MPPX_PRIVATE_KEY
+# - DEVELOP_MPP_SECRET_KEY
 # Deploy layout on the instance:
 # - $HOME/apps/main/poc and $HOME/apps/main/data
 # - $HOME/apps/develop/poc and $HOME/apps/develop/data
@@ -159,6 +163,10 @@ jobs:
           HITPAY_API_KEY: ${{ secrets.HITPAY_API_KEY }}
           HITPAY_WEBHOOK_SALT: ${{ secrets.HITPAY_WEBHOOK_SALT }}
           HITPAY_MPP_ENDPOINT: ${{ secrets.HITPAY_MPP_ENDPOINT }}
+          MPPX_PRIVATE_KEY: ${{ secrets.MPPX_PRIVATE_KEY }}
+          DEVELOP_STRIPE_SECRET_KEY: ${{ secrets.DEVELOP_STRIPE_SECRET_KEY }}
+          DEVELOP_MPPX_PRIVATE_KEY: ${{ secrets.DEVELOP_MPPX_PRIVATE_KEY }}
+          DEVELOP_MPP_SECRET_KEY: ${{ secrets.DEVELOP_MPP_SECRET_KEY }}
         run: |
           set -euo pipefail
 
@@ -181,6 +189,10 @@ jobs:
           hitpay_api_key_b64="$(encode_env HITPAY_API_KEY)"
           hitpay_webhook_salt_b64="$(encode_env HITPAY_WEBHOOK_SALT)"
           hitpay_mpp_endpoint_b64="$(encode_env HITPAY_MPP_ENDPOINT)"
+          mppx_private_key_b64="$(encode_env MPPX_PRIVATE_KEY)"
+          develop_stripe_secret_key_b64="$(encode_env DEVELOP_STRIPE_SECRET_KEY)"
+          develop_mppx_private_key_b64="$(encode_env DEVELOP_MPPX_PRIVATE_KEY)"
+          develop_mpp_secret_key_b64="$(encode_env DEVELOP_MPP_SECRET_KEY)"
 
           ssh \
             -i "${LIGHTSAIL_SSH_KEY_PATH}" \
@@ -212,6 +224,10 @@ jobs:
             HITPAY_API_KEY_B64="${hitpay_api_key_b64}" \
             HITPAY_WEBHOOK_SALT_B64="${hitpay_webhook_salt_b64}" \
             HITPAY_MPP_ENDPOINT_B64="${hitpay_mpp_endpoint_b64}" \
+            MPPX_PRIVATE_KEY_B64="${mppx_private_key_b64}" \
+            DEVELOP_STRIPE_SECRET_KEY_B64="${develop_stripe_secret_key_b64}" \
+            DEVELOP_MPPX_PRIVATE_KEY_B64="${develop_mppx_private_key_b64}" \
+            DEVELOP_MPP_SECRET_KEY_B64="${develop_mpp_secret_key_b64}" \
             "bash -s" <<'EOF'
           set -euo pipefail
 
@@ -241,6 +257,10 @@ jobs:
           decode_env HITPAY_API_KEY_B64 HITPAY_API_KEY
           decode_env HITPAY_WEBHOOK_SALT_B64 HITPAY_WEBHOOK_SALT
           decode_env HITPAY_MPP_ENDPOINT_B64 HITPAY_MPP_ENDPOINT
+          decode_env MPPX_PRIVATE_KEY_B64 MPPX_PRIVATE_KEY
+          decode_env DEVELOP_STRIPE_SECRET_KEY_B64 DEVELOP_STRIPE_SECRET_KEY
+          decode_env DEVELOP_MPPX_PRIVATE_KEY_B64 DEVELOP_MPPX_PRIVATE_KEY
+          decode_env DEVELOP_MPP_SECRET_KEY_B64 DEVELOP_MPP_SECRET_KEY
 
           apps_root="$HOME/apps"
           branch_root="${apps_root}/${DEPLOY_BRANCH}"

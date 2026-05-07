@@ -16,11 +16,14 @@ type LiveResult = {
   body: unknown;
 };
 
+const demoTempoTxHash = "0xdb82e47e27fa089ba92edd5b6f7a1c9c1fe007820e2ede449c1c1698720d6b05";
+
 const providerConfig = {
   stripe: {
     title: "Stripe MPP showcase",
     endpoint: "/showcase/stripe-mpp/paid",
     publicEndpoint: "/api/showcase/stripe-mpp/paid",
+    publicPayEndpoint: "/api/showcase/stripe-mpp/pay",
     amount: "$1.00 USD",
     rail: "Tempo token payment",
     accent: "var(--mesh-blue)",
@@ -29,7 +32,7 @@ const providerConfig = {
     simulatedId: "pi_demo_stripe_mpp_001",
     challengeArtifact: "402 challenge + Tempo recipient",
     paymentArtifact: "PaymentIntent + token transfer",
-    accessArtifact: "credential retry + receipt",
+    accessArtifact: "MPP credential retry + receipt",
     dashboardHref: "https://dashboard.stripe.com/test/payments",
     providerOnlyLabel: "Stripe MPP route",
     providerOnlySnippet: `app.get("/showcase/stripe-mpp/paid", async (c) => {
@@ -57,6 +60,7 @@ const providerConfig = {
     title: "HitPay MPP showcase",
     endpoint: "/showcase/hitpay-mpp/paid",
     publicEndpoint: "/api/showcase/hitpay-mpp/paid",
+    publicPayEndpoint: null,
     amount: "S$1.00 SGD",
     rail: "Checkout URL / QR",
     accent: "var(--teal)",
@@ -124,15 +128,17 @@ export function ShowcaseProviderScreen({ provider }: ShowcaseProviderScreenProps
     setResult(null);
 
     try {
-      const params = new URLSearchParams();
-      if (withCredential) params.set("credential", "demo-paid");
-      if (withCredential && challengeId) params.set("challengeId", challengeId);
-      const response = await fetch(`${config.publicEndpoint}${params.size > 0 ? `?${params}` : ""}`, {
+      const response = await fetch(withCredential && config.publicPayEndpoint ? config.publicPayEndpoint : config.publicEndpoint, {
         cache: "no-store",
-        headers: { accept: "application/json" },
+        method: withCredential && config.publicPayEndpoint ? "POST" : "GET",
+        headers: {
+          accept: "application/json",
+          ...(withCredential && config.publicPayEndpoint ? { "x-flovia-showcase-pay": "stripe-mpp" } : {}),
+        },
       });
-      const body = await response.json();
-      setResult({ status: response.status, body });
+      const body = await readResponseBody(response);
+      const receipt = parsePaymentReceiptHeader(response.headers.get("Payment-Receipt"));
+      setResult({ status: response.status, body: attachReceiptToBody(body, receipt) });
       const nextChallengeId = getChallengeId(body);
       if (nextChallengeId) setChallengeId(nextChallengeId);
       if (response.ok) setChallengeId(null);
@@ -223,6 +229,57 @@ export function ShowcaseProviderScreen({ provider }: ShowcaseProviderScreenProps
     setState("paid");
   }
 
+  function showStripeFallbackSuccess() {
+    setChallengeId(null);
+    setResult({
+      status: 200,
+      body: {
+        ok: true,
+        foo: "bar",
+        provider: "stripe",
+        paidApi: {
+          endpoint: config.endpoint,
+          message: "Stripe MPP showcase paid response",
+          generatedAt: new Date().toISOString(),
+        },
+        receipt: {
+          method: "tempo",
+          reference: demoTempoTxHash,
+          status: "success",
+          timestamp: new Date().toISOString(),
+          mode: "demo_fallback",
+        },
+        floviaEvent: {
+          requestId: "req_demo_stripe_mpp",
+          provider: "stripe",
+          rail: "mpp",
+          endpoint: config.endpoint,
+          amount: "1.00",
+          currency: "usd",
+          method: "GET",
+          responseStatus: 200,
+          latencyMs: 47,
+          status: "paid_api_delivered",
+          payment: {
+            paymentIntentId: config.simulatedId,
+            recipient: "0x0000000000000000000000000000000000000000",
+            network: "tempo",
+            amount: "1.00",
+            currency: "usd",
+          },
+          apiUsage: {
+            endpoint: config.endpoint,
+            method: "GET",
+            responseStatus: 200,
+            latencyMs: 47,
+          },
+          joinedInsight: "Stripe Tempo payment context converted into retained paid API demand.",
+        },
+      },
+    });
+    setState("paid");
+  }
+
   return (
     <div className="scroll">
       <div style={{ padding: "32px 40px 80px", maxWidth: 1440, margin: "0 auto" }}>
@@ -243,8 +300,8 @@ export function ShowcaseProviderScreen({ provider }: ShowcaseProviderScreenProps
         <div style={{ marginTop: 24 }}>
           <Card
             eyebrow="Live flow"
-            title={provider === "hitpay" ? "Call the real HitPay MPP endpoint" : "Call the BFF-hosted demo endpoint"}
-            action={provider === "hitpay" ? <CheatCodeButton onClick={showHitPayFallbackSuccess} /> : null}
+            title={provider === "hitpay" ? "Call the real HitPay MPP endpoint" : "Call the real Stripe MPP challenge endpoint"}
+            action={<CheatCodeButton provider={provider} onClick={provider === "hitpay" ? showHitPayFallbackSuccess : showStripeFallbackSuccess} />}
           >
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 16 }}>
               <button type="button" onClick={() => void callPaidApi(false)} style={buttonStyle(provider)} disabled={state === "calling"}>
@@ -254,9 +311,9 @@ export function ShowcaseProviderScreen({ provider }: ShowcaseProviderScreenProps
                 type="button"
                 onClick={() => void callPaidApi(true)}
                 style={secondaryButtonStyle}
-                disabled={state === "calling" || (provider === "stripe" ? !challengeId : !hitPayCheckoutUrl)}
+                disabled={state === "calling" || (provider === "hitpay" && !hitPayCheckoutUrl)}
               >
-                {provider === "stripe" ? "Simulate Tempo payment" : "I paid. Continue."}
+                {provider === "stripe" ? "Pay with MPPX wallet" : "I paid. Continue."}
               </button>
               <a href={config.dashboardHref} target="_blank" rel="noreferrer" className="ghost" style={{ alignSelf: "center", fontSize: 13 }}>
                 Provider dashboard ↗
@@ -347,8 +404,9 @@ export function ShowcaseProviderScreen({ provider }: ShowcaseProviderScreenProps
 function getChallengeId(body: unknown): string | null {
   if (typeof body !== "object" || body === null || !("challenge" in body)) return null;
   const challenge = (body as { challenge?: unknown }).challenge;
-  if (typeof challenge !== "object" || challenge === null || !("challengeId" in challenge)) return null;
-  const challengeId = (challenge as { challengeId?: unknown }).challengeId;
+  if (typeof challenge !== "object" || challenge === null) return null;
+  const challengeId = (challenge as { challengeId?: unknown; id?: unknown }).challengeId
+    ?? (challenge as { id?: unknown }).id;
   return typeof challengeId === "string" ? challengeId : null;
 }
 
@@ -369,6 +427,27 @@ async function readResponseBody(response: Response): Promise<unknown> {
   } catch {
     return text;
   }
+}
+
+export function parsePaymentReceiptHeader(header: string | null): Record<string, unknown> | null {
+  if (!header) return null;
+
+  try {
+    const normalized = header.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = normalized.padEnd(normalized.length + (4 - normalized.length % 4) % 4, "=");
+    const bytes = Uint8Array.from(atob(padded), (char) => char.charCodeAt(0));
+    const receipt = JSON.parse(new TextDecoder().decode(bytes)) as unknown;
+    return asRecord(receipt);
+  } catch {
+    return null;
+  }
+}
+
+function attachReceiptToBody(body: unknown, receipt: Record<string, unknown> | null) {
+  if (!receipt) return body;
+  const bodyRecord = asRecord(body);
+  if (bodyRecord) return { ...bodyRecord, receipt };
+  return { response: body, receipt };
 }
 
 const codeStyle = {
@@ -415,21 +494,25 @@ function Card({
   );
 }
 
-function CheatCodeButton({ onClick }: { onClick: () => void }) {
+function CheatCodeButton({ provider, onClick }: { provider: ProviderKey; onClick: () => void }) {
+  const color = provider === "stripe" ? "var(--mesh-blue)" : "var(--teal)";
+  const border = provider === "stripe" ? "var(--mesh-blue-soft)" : "var(--teal-soft)";
+  const background = provider === "stripe" ? "var(--mesh-blue-dim)" : "var(--teal-dim)";
+
   return (
     <button
       type="button"
       onClick={onClick}
-      title="Show the successful Flovia result when checkout cannot be completed."
+      title="Show the successful Flovia result when payment cannot be completed."
       style={{
         display: "inline-flex",
         alignItems: "center",
         gap: 6,
-        border: "1px solid var(--teal-soft)",
+        border: `1px solid ${border}`,
         borderRadius: 999,
         padding: "5px 10px",
-        background: "var(--teal-dim)",
-        color: "var(--teal)",
+        background,
+        color,
         fontSize: 12,
         fontWeight: 700,
         cursor: "pointer",
@@ -748,13 +831,17 @@ function LiveStatus({
   hasChallenge: boolean;
 }) {
   const copy = {
-    idle: "This PoC does not take a real payment here. First call returns a 402 challenge; then simulate payment completion.",
+    idle: provider === "stripe"
+      ? "Call the endpoint to inspect the MPP 402 challenge, or pay from the server-side MPPX demo wallet with one button."
+      : "This PoC does not take a real payment here. First call returns a 402 challenge; then complete the sandbox checkout.",
     calling: "Calling the paid API endpoint…",
     challenge:
       provider === "stripe"
-        ? "402 challenge issued. In a real Stripe MPP flow, the wallet pays the Tempo recipient; in this PoC, click Simulate Tempo payment."
+        ? "402 challenge issued. Click Pay with MPPX wallet to pay and retry with a Payment credential from the BFF demo wallet."
         : "402 challenge issued with checkout URL. Open the HitPay sandbox checkout, pay, then click I paid. Continue.",
-    paid: "Demo payment completion accepted. Paid API response delivered and joined by Flovia.",
+    paid: provider === "stripe"
+      ? "MPP credential accepted. Paid API response delivered and joined by Flovia."
+      : "Demo payment completion accepted. Paid API response delivered and joined by Flovia.",
     error: "Request failed. Check BFF availability and endpoint response.",
   }[state];
 
@@ -831,7 +918,7 @@ function LiveResultPanel({
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 10, marginTop: 14 }}>
           {summary.items.map((item) => (
-            <SummaryItem key={item.label} label={item.label} value={item.value} />
+            <SummaryItem key={item.label} label={item.label} value={item.value} href={"href" in item ? item.href : undefined} />
           ))}
         </div>
       </div>
@@ -856,11 +943,17 @@ function LiveResultPanel({
   );
 }
 
-function SummaryItem({ label, value }: { label: string; value: string }) {
+function SummaryItem({ label, value, href }: { label: string; value: string; href?: string }) {
   return (
     <div style={{ border: "1px solid var(--line-strong)", borderRadius: 6, padding: 10, background: "var(--surface-card)", minWidth: 0 }}>
       <div className="eyebrow" style={{ fontSize: 10, marginBottom: 5 }}>{label}</div>
-      <div className="mono" style={{ fontSize: 12, color: "var(--text-1)", overflowWrap: "anywhere" }}>{value}</div>
+      {href ? (
+        <a className="mono" href={href} target="_blank" rel="noreferrer" style={{ fontSize: 12, color: "var(--mesh-blue)", overflowWrap: "anywhere" }}>
+          {value}
+        </a>
+      ) : (
+        <div className="mono" style={{ fontSize: 12, color: "var(--text-1)", overflowWrap: "anywhere" }}>{value}</div>
+      )}
     </div>
   );
 }
@@ -895,6 +988,7 @@ function summarizeLiveResult(result: LiveResult, provider: ProviderKey, state: L
   const floviaEvent = asRecord(body?.floviaEvent) ?? asRecord(response?.floviaEvent);
   const payment = asRecord(floviaEvent?.payment);
   const receipt = asRecord(body?.receipt);
+  const receiptReference = stringValue(receipt?.reference);
   const error = stringValue(body?.error) ?? stringValue(response?.error);
 
   if (result.status === 402 || state === "challenge") {
@@ -904,7 +998,7 @@ function summarizeLiveResult(result: LiveResult, provider: ProviderKey, state: L
       title: provider === "hitpay" ? "Checkout URL issued" : "Payment required",
       items: [
         { label: "Provider", value: provider === "hitpay" ? "HitPay MPP" : "Stripe MPP" },
-        { label: "Next action", value: provider === "hitpay" ? "Open checkout" : "Complete Tempo payment" },
+        { label: "Next action", value: provider === "hitpay" ? "Open checkout" : "Pay with MPPX wallet" },
         { label: "Checkout", value: extractHitPayCheckoutUrl(challenge) ?? stringValue(payment?.checkoutUrl) ?? "—" },
       ],
     };
@@ -930,9 +1024,44 @@ function summarizeLiveResult(result: LiveResult, provider: ProviderKey, state: L
     items: [
       { label: "Provider", value: provider === "hitpay" ? "HitPay MPP" : "Stripe MPP" },
       { label: "API response", value: stringValue(response?.foo) ?? stringValue(body?.foo) ?? "ok" },
-      { label: "Receipt", value: receipt ? "verified" : stringValue(body?.receiptJws) ? "JWS received" : "—" },
+      {
+        label: receiptReference ? "Tx hash" : "Receipt",
+        value: receiptReference ?? (receipt ? "verified" : stringValue(body?.receiptJws) ? "JWS received" : "—"),
+        href: receiptReference ? tempoReceiptExplorerUrl(receiptReference) : undefined,
+      },
     ],
   };
+}
+
+export function tempoReceiptExplorerUrl(txHash: string) {
+  return `https://explore.testnet.tempo.xyz/receipt/${encodeURIComponent(txHash)}`;
+}
+
+export function extractLiveResultFacts(result: LiveResult | null) {
+  const body = asRecord(result?.body);
+  const response = asRecord(body?.response);
+  const floviaEvent = asRecord(body?.floviaEvent) ?? asRecord(response?.floviaEvent);
+  const apiUsage = asRecord(floviaEvent?.apiUsage);
+  const payment = asRecord(floviaEvent?.payment);
+  const receipt = asRecord(body?.receipt);
+
+  return {
+    paymentId: stringValue(payment?.paymentIntentId) ?? stringValue(payment?.paymentId),
+    txHash: stringValue(receipt?.reference),
+    requestId: stringValue(floviaEvent?.requestId),
+    status: stringValue(floviaEvent?.status),
+    rail: stringValue(floviaEvent?.rail) ?? stringValue(payment?.rail),
+    amount: stringValue(floviaEvent?.amount) ?? stringValue(payment?.amount),
+    currency: stringValue(floviaEvent?.currency) ?? stringValue(payment?.currency),
+    endpoint: stringValue(apiUsage?.endpoint) ?? stringValue(floviaEvent?.endpoint),
+    method: stringValue(apiUsage?.method) ?? stringValue(floviaEvent?.method),
+    responseStatus: stringValue(apiUsage?.responseStatus) ?? stringValue(floviaEvent?.responseStatus),
+    latencyMs: stringValue(apiUsage?.latencyMs) ?? stringValue(floviaEvent?.latencyMs),
+  };
+}
+
+function compactItems(items: Array<{ label: string; value: string; href?: string } | null>) {
+  return items.filter((item): item is { label: string; value: string; href?: string } => item !== null);
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -999,8 +1128,32 @@ function ProviderVsFloviaPanel({
   const providerName = provider === "stripe" ? "Stripe dashboard" : "HitPay dashboard";
   const providerEyebrow = provider === "stripe" ? "What you see in Stripe Dashboard" : "What you see in HitPay Dashboard";
   const paymentLabel = provider === "stripe" ? "PaymentIntent" : "Charge / checkout";
+  const liveFacts = extractLiveResultFacts(result);
+  const joinedPaymentId = liveFacts.paymentId ?? paymentId;
   const paymentStatus = result?.status === 200 ? "paid" : result?.status === 402 ? "pending payment" : "demo-ready";
   const apiStatus = result?.status ? `HTTP ${result.status}` : "not called yet";
+  const floviaItems = compactItems([
+    { label: "Payment id", value: joinedPaymentId },
+    liveFacts.txHash
+      ? {
+          label: "Tx hash",
+          value: liveFacts.txHash,
+          href: tempoReceiptExplorerUrl(liveFacts.txHash),
+        }
+      : null,
+    { label: "Payment rail", value: liveFacts.rail ?? rail },
+    liveFacts.amount
+      ? { label: "Amount", value: liveFacts.currency ? `${liveFacts.amount} ${liveFacts.currency}` : liveFacts.amount }
+      : null,
+    { label: "Endpoint", value: `${liveFacts.method ?? "GET"} ${liveFacts.endpoint ?? endpoint}` },
+    { label: "API status", value: liveFacts.responseStatus ? `HTTP ${liveFacts.responseStatus}` : apiStatus },
+    liveFacts.latencyMs ? { label: "Latency", value: `${liveFacts.latencyMs}ms` } : null,
+    liveFacts.requestId ? { label: "Request id", value: liveFacts.requestId } : null,
+    { label: "API response", value: result?.status === 200 ? "paid access granted" : "pending paid access" },
+    liveFacts.status ? { label: "Event status", value: liveFacts.status } : null,
+    { label: "Workflow", value: "agent paid API request" },
+    { label: "Decision signal", value: "conversion + retained demand" },
+  ]);
 
   return (
     <div style={{ display: "grid", gap: 14 }}>
@@ -1009,7 +1162,7 @@ function ProviderVsFloviaPanel({
           eyebrow={providerEyebrow}
           title={providerName}
           items={[
-            { label: paymentLabel, value: paymentId },
+            { label: paymentLabel, value: joinedPaymentId },
             { label: "Amount", value: amount },
             { label: "Payment status", value: paymentStatus },
             { label: "Payment rail", value: rail },
@@ -1020,17 +1173,7 @@ function ProviderVsFloviaPanel({
           title="Joined payment + API usage"
           accent={accent}
           highlighted
-          items={[
-            { label: "Payment id", value: paymentId },
-            { label: "Payment rail", value: rail },
-            { label: "Endpoint", value: `GET ${endpoint}` },
-            { label: "API status", value: apiStatus },
-            { label: "Latency", value: result ? "captured from response" : "captured on call" },
-            { label: "Request id", value: result ? "captured by SDK" : "created on call" },
-            { label: "API response", value: result?.status === 200 ? "paid access granted" : "pending paid access" },
-            { label: "Workflow", value: "agent paid API request" },
-            { label: "Decision signal", value: "conversion + retained demand" },
-          ]}
+          items={floviaItems}
         />
       </div>
 
@@ -1044,7 +1187,7 @@ function ProviderVsFloviaPanel({
       >
         <div className="eyebrow" style={{ marginBottom: 6, color: accent }}>Joined by Flovia</div>
         <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr)", gap: 10, alignItems: "center" }}>
-          <JoinPill label="payment" value={paymentId} />
+          <JoinPill label="payment" value={joinedPaymentId} />
           <span className="mono" style={{ color: "var(--text-3)", fontSize: 18 }}>×</span>
           <JoinPill label="endpoint" value={endpoint} />
           <span className="mono" style={{ color: "var(--text-3)", fontSize: 18 }}>→</span>
@@ -1064,7 +1207,7 @@ function ComparisonColumn({
 }: {
   eyebrow: string;
   title: string;
-  items: Array<{ label: string; value: string }>;
+  items: Array<{ label: string; value: string; href?: string }>;
   accent?: string;
   highlighted?: boolean;
 }) {
@@ -1084,7 +1227,13 @@ function ComparisonColumn({
         {items.map((item) => (
           <div key={item.label} style={{ display: "grid", gridTemplateColumns: "120px minmax(0, 1fr)", gap: 10, alignItems: "baseline" }}>
             <span style={{ color: "var(--text-3)", fontSize: 12 }}>{item.label}</span>
-            <span className="mono" style={{ color: "var(--text-1)", fontSize: 12, overflowWrap: "anywhere" }}>{item.value}</span>
+            {item.href ? (
+              <a className="mono" href={item.href} target="_blank" rel="noreferrer" style={{ color: accent, fontSize: 12, overflowWrap: "anywhere" }}>
+                {item.value}
+              </a>
+            ) : (
+              <span className="mono" style={{ color: "var(--text-1)", fontSize: 12, overflowWrap: "anywhere" }}>{item.value}</span>
+            )}
           </div>
         ))}
       </div>

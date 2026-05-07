@@ -126,6 +126,7 @@ sync_optional_env_var "$stack_env_file" BFF_ANALYTICS_SOURCE "${BFF_ANALYTICS_SO
 sync_optional_env_var "$stack_env_file" HITPAY_API_KEY "${HITPAY_API_KEY:-}"
 sync_optional_env_var "$stack_env_file" HITPAY_WEBHOOK_SALT "${HITPAY_WEBHOOK_SALT:-}"
 sync_optional_env_var "$stack_env_file" HITPAY_MPP_ENDPOINT "${HITPAY_MPP_ENDPOINT:-}"
+sync_optional_env_var "$stack_env_file" MPPX_PRIVATE_KEY "${MPPX_PRIVATE_KEY:-}"
 
 hitpay_api_key_key="${analytics_prefix}_HITPAY_API_KEY"
 hitpay_webhook_salt_key="${analytics_prefix}_HITPAY_WEBHOOK_SALT"
@@ -133,6 +134,13 @@ hitpay_mpp_endpoint_key="${analytics_prefix}_HITPAY_MPP_ENDPOINT"
 sync_optional_env_var "$stack_env_file" "$hitpay_api_key_key" "${!hitpay_api_key_key:-}"
 sync_optional_env_var "$stack_env_file" "$hitpay_webhook_salt_key" "${!hitpay_webhook_salt_key:-}"
 sync_optional_env_var "$stack_env_file" "$hitpay_mpp_endpoint_key" "${!hitpay_mpp_endpoint_key:-}"
+
+stripe_secret_key_key="${analytics_prefix}_STRIPE_SECRET_KEY"
+mppx_private_key_key="${analytics_prefix}_MPPX_PRIVATE_KEY"
+mpp_secret_key_key="${analytics_prefix}_MPP_SECRET_KEY"
+sync_optional_env_var "$stack_env_file" "$stripe_secret_key_key" "${!stripe_secret_key_key:-}"
+sync_optional_env_var "$stack_env_file" "$mppx_private_key_key" "${!mppx_private_key_key:-}"
+sync_optional_env_var "$stack_env_file" "$mpp_secret_key_key" "${!mpp_secret_key_key:-}"
 
 analytics_database_url_key="${analytics_prefix}_BFF_ANALYTICS_DATABASE_URL"
 analytics_source_key="${analytics_prefix}_BFF_ANALYTICS_SOURCE"

@@ -120,4 +120,26 @@ describe("lightsail shared stack", () => {
       "BFF_ANALYTICS_POSTGRES_MODE: ${DEVELOP_BFF_ANALYTICS_POSTGRES_MODE:-${BFF_ANALYTICS_POSTGRES_MODE:-live}}",
     );
   });
+
+  test("compose lets both branches share the common MPPX payer key", () => {
+    const compose = read("../../docker-compose.lightsail.yml");
+
+    expect(compose).toContain("MPPX_PRIVATE_KEY: ${MAIN_MPPX_PRIVATE_KEY:-${MPPX_PRIVATE_KEY:-}}");
+    expect(compose).toContain(
+      "MPPX_PRIVATE_KEY: ${DEVELOP_MPPX_PRIVATE_KEY:-${MPPX_PRIVATE_KEY:-}}",
+    );
+  });
+
+  test("deployment passes common MPPX payer key to stack sync", () => {
+    const workflow = read("../../.github/workflows/deploy-lightsail-shared.yml");
+    const syncScript = read("./lightsail-sync-stack.sh");
+
+    expect(workflow).toContain("MPPX_PRIVATE_KEY: ${{ secrets.MPPX_PRIVATE_KEY }}");
+    expect(workflow).toContain('mppx_private_key_b64="$(encode_env MPPX_PRIVATE_KEY)"');
+    expect(workflow).toContain('MPPX_PRIVATE_KEY_B64="${mppx_private_key_b64}"');
+    expect(workflow).toContain("decode_env MPPX_PRIVATE_KEY_B64 MPPX_PRIVATE_KEY");
+    expect(syncScript).toContain(
+      'sync_optional_env_var "$stack_env_file" MPPX_PRIVATE_KEY "${MPPX_PRIVATE_KEY:-}"',
+    );
+  });
 });
