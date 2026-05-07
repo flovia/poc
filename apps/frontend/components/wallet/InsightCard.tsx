@@ -13,8 +13,8 @@ type InsightCardProps = {
 
 const TONES: Record<Tone, { border: string }> = {
   default: { border: "var(--line)" },
-  upsell: { border: "var(--line)" },
-  blue: { border: "var(--line)" },
+  upsell: { border: "var(--signal-priority)" },
+  blue: { border: "rgba(47, 93, 154, 0.28)" },
 };
 
 const LABEL_COLOR: Record<Tone, string> = {
@@ -39,7 +39,6 @@ export function InsightCard({
         padding: 18,
         borderColor: t.border,
         animationDelay: delay + "ms",
-        minWidth: 0,
       }}
     >
       {label && (

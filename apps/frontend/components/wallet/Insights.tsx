@@ -347,7 +347,7 @@ export function InsightsList({ insights }: { insights: CustomerInsightDto[] }) {
   const actionable = insights.filter((insight) => insight.severity !== "info");
   if (actionable.length === 0) return null;
   return (
-    <div className="wallet-insight-stack">
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
       {actionable.map((insight, i) => (
         <InsightCard
           key={i}

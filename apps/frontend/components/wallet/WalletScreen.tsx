@@ -29,7 +29,7 @@ export function WalletScreen({
 }: WalletScreenProps) {
   return (
     <div style={{ position: "relative", background: "var(--bg-shell)", minHeight: "100%" }}>
-      <div className="wallet-screen-frame">
+      <div style={{ position: "relative", padding: "28px 40px 80px", maxWidth: 1500, margin: "0 auto" }}>
         <Link
           href={`/providers/${providerId}/customers`}
           style={{
@@ -44,68 +44,43 @@ export function WalletScreen({
           <Icon.back width="13" height="13" /> All customers
         </Link>
 
-        <section
-          className="wallet-screen-grid"
-          data-testid="wallet-screen-grid"
-          style={{ marginTop: 18 }}
+        <IdentityBar
+          customer={profile.customer}
+          metrics={profile.metrics}
+          dataMode={dataMode}
+          sdkExtras={sdkExtras}
+        />
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))", gap: 14, marginTop: 18 }}>
+          <UpsellCard
+            address={profile.customer.address}
+            metrics={profile.metrics}
+            dataMode={dataMode}
+            sdkExtras={sdkExtras}
+          />
+          <EntryPointInsight metrics={profile.metrics} dataMode={dataMode} sdkExtras={sdkExtras} />
+          <RecentActivityInsight metrics={profile.metrics} providers={profile.providers} />
+          <InsightsList insights={profile.insights} />
+        </div>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr",
+            gap: 18,
+            marginTop: 18,
+          }}
         >
-          <div className="wallet-screen-span-12 wallet-grid-item">
-            <IdentityBar
-              customer={profile.customer}
-              metrics={profile.metrics}
-              dataMode={dataMode}
-              sdkExtras={sdkExtras}
-            />
-          </div>
+          <WalletInteractive
+            address={profile.customer.address}
+            timeline={profile.timeline}
+            providers={profile.providers}
+            dataMode={dataMode}
+            sdkExtras={sdkExtras}
+            sdkForceNetwork={sdkForceNetwork}
+          />
 
-          <section
-            aria-label="Wallet supporting summaries"
-            className="wallet-screen-span-12 wallet-support-grid"
-          >
-            <div className="wallet-grid-item">
-              <EntryPointInsight
-                metrics={profile.metrics}
-                dataMode={dataMode}
-                sdkExtras={sdkExtras}
-              />
-            </div>
-            <div className="wallet-grid-item">
-              <RecentActivityInsight
-                metrics={profile.metrics}
-                providers={profile.providers}
-              />
-            </div>
-            <div className="wallet-grid-item">
-              <InsightsList insights={profile.insights} />
-            </div>
-          </section>
-
-          <section
-            aria-label="Wallet evidence area"
-            className="wallet-screen-span-12 wallet-evidence-grid"
-          >
-            <section
-              aria-label="Wallet upsell opportunity"
-              className="wallet-screen-span-12 wallet-grid-item wallet-evidence-upsell"
-            >
-              <UpsellCard
-                address={profile.customer.address}
-                metrics={profile.metrics}
-                dataMode={dataMode}
-                sdkExtras={sdkExtras}
-              />
-            </section>
-
-            <WalletInteractive
-              address={profile.customer.address}
-              timeline={profile.timeline}
-              providers={profile.providers}
-              dataMode={dataMode}
-              sdkExtras={sdkExtras}
-              sdkForceNetwork={sdkForceNetwork}
-            />
-          </section>
-        </section>
+        </div>
       </div>
     </div>
   );

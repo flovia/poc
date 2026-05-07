@@ -72,7 +72,7 @@ export function ActivityTimeline({
     dataMode === "sdkConnected" && sdkExtras?.upsell !== null && sdkExtrasByTxHash !== null;
 
   return (
-    <div className="card" style={{ padding: 0, overflow: "hidden", background: "#FFFFFF", minWidth: 0 }}>
+    <div className="card" style={{ padding: 0, overflow: "hidden", background: "#FFFFFF" }}>
       <div style={{ padding: "16px 20px 12px", borderBottom: "1px solid var(--line)" }}>
         <div
           style={{
