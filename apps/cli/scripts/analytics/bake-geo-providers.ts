@@ -1,6 +1,10 @@
 // Bake a single GEO data file by fusing the Pay.sh atlas snapshot already
 // embedded in `apps/bff/fixtures/generated/analytics.json` with the MPP
-// services registry capture at `tmp/mpp-provider-catalog.json`.
+// services registry catalog committed at
+// `apps/cli/fixtures/mpp-provider-catalog.json`. The fixture is regenerated
+// via `bun run mpp:capture && bun run mpp:materialize` and refreshed in
+// place; keeping it in version control means CI/Docker builds bake the MPP
+// data without depending on a live mpp.dev capture at build time.
 //
 // The output (`apps/frontend/data/geo-providers.json`) is the only data file
 // the GEO page reads at runtime. Frontend looks up the active provider via
@@ -22,7 +26,13 @@ const DEFAULT_ANALYTICS_PATH = path.join(
   "analytics.json",
 );
 const DEFAULT_ATLAS_PATH = path.join(REPO_ROOT, "docs", "research", "pay-skills-payment-atlas.md");
-const DEFAULT_MPP_PATH = path.join(REPO_ROOT, "tmp", "mpp-provider-catalog.json");
+const DEFAULT_MPP_PATH = path.join(
+  REPO_ROOT,
+  "apps",
+  "cli",
+  "fixtures",
+  "mpp-provider-catalog.json",
+);
 const DEFAULT_OUTPUT_PATH = path.join(REPO_ROOT, "apps", "frontend", "data", "geo-providers.json");
 
 type CliOptions = {
