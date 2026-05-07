@@ -196,7 +196,7 @@ export function ShowcaseProviderScreen({ provider }: ShowcaseProviderScreenProps
   return (
     <div className="scroll">
       <div style={{ padding: "32px 40px 80px", maxWidth: 1440, margin: "0 auto" }}>
-        <header style={{ marginBottom: 18 }}>
+        <header style={{ marginBottom: 24 }}>
           <div>
             <div className="eyebrow" style={{ marginBottom: 8 }}>Integration → Live → Flovia result → Simulate</div>
             <h1 className="display" style={{ margin: 0, fontSize: 34, letterSpacing: "-0.03em" }}>{config.title}</h1>
@@ -206,14 +206,14 @@ export function ShowcaseProviderScreen({ provider }: ShowcaseProviderScreenProps
         <Card eyebrow="Integration">
           <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 12 }}>
             <CodeCompareColumn label={config.providerOnlyLabel} tone="muted" code={config.providerOnlySnippet} />
-            <CodeCompareColumn label="With Flovia SDK" tone="accent" accent={config.accent} code={config.floviaSnippet} />
+            <CodeCompareColumn label="With Flovia SDK" tone="accent" accent={config.accent} accentDim={config.accentDim} code={config.floviaSnippet} />
           </div>
         </Card>
 
-        <div style={{ marginTop: 18 }}>
+        <div style={{ marginTop: 24 }}>
           <Card eyebrow="Live flow" title={provider === "hitpay" ? "Call the real HitPay MPP endpoint" : "Call the BFF-hosted demo endpoint"}>
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 14 }}>
-              <button type="button" onClick={() => void callPaidApi(false)} style={buttonStyle(config.accent)} disabled={state === "calling"}>
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 16 }}>
+              <button type="button" onClick={() => void callPaidApi(false)} style={buttonStyle(provider)} disabled={state === "calling"}>
                 Call paid API
               </button>
               <button
@@ -237,8 +237,8 @@ export function ShowcaseProviderScreen({ provider }: ShowcaseProviderScreenProps
             {provider === "hitpay" && state === "challenge" ? <QrPlaceholder checkoutUrl={hitPayCheckoutUrl} /> : null}
             <LiveResultPanel result={result} state={state} provider={provider} accent={config.accent} />
             {state === "paid" && result ? (
-              <div style={{ marginTop: 16 }}>
-                <div className="eyebrow" style={{ marginBottom: 8, color: config.accent }}>
+              <div style={{ marginTop: 24, paddingTop: 20, borderTop: "1px dashed var(--line-strong)" }}>
+                <div className="eyebrow" style={{ marginBottom: 12, color: config.accent }}>
                   Flovia result
                 </div>
                 <ProviderVsFloviaPanel
@@ -255,9 +255,9 @@ export function ShowcaseProviderScreen({ provider }: ShowcaseProviderScreenProps
           </Card>
         </div>
 
-        <section className="card" style={{ marginTop: 18, padding: 22 }}>
-          <div className="eyebrow" style={{ marginBottom: 8 }}>What Flovia joins</div>
-          <h2 style={{ margin: "0 0 14px", fontSize: 18 }}>
+        <section className="card" style={{ marginTop: 24, padding: 24 }}>
+          <div className="eyebrow" style={{ marginBottom: 16 }}>What Flovia joins</div>
+          <h2 style={{ margin: "0 0 20px", fontSize: 18, fontWeight: 600 }}>
             Payment dashboards know who paid. API logs know what was used. Flovia connects them.
           </h2>
           <div
@@ -294,7 +294,7 @@ export function ShowcaseProviderScreen({ provider }: ShowcaseProviderScreenProps
           </div>
         </section>
 
-        <div style={{ marginTop: 18 }}>
+        <div style={{ marginTop: 24 }}>
           <Card eyebrow="Simulated flow" title="What happens before a live wallet or checkout is involved">
             <SimulatedFlowDiagram
               accent={config.accent}
@@ -355,9 +355,9 @@ const codeStyle = {
 
 function Card({ eyebrow, title, children }: { eyebrow: string; title?: string; children: ReactNode }) {
   return (
-    <section className="card" style={{ padding: 20 }}>
-      <div className="eyebrow" style={{ marginBottom: 5 }}>{eyebrow}</div>
-      {title ? <h2 style={{ margin: "0 0 14px", fontSize: 18 }}>{title}</h2> : null}
+    <section className="card" style={{ padding: 24 }}>
+      <div className="eyebrow" style={{ marginBottom: 8 }}>{eyebrow}</div>
+      {title ? <h2 style={{ margin: "0 0 16px", fontSize: 18, fontWeight: 600 }}>{title}</h2> : null}
       {children}
     </section>
   );
@@ -368,11 +368,13 @@ function CodeCompareColumn({
   code,
   tone,
   accent = "var(--text-2)",
+  accentDim,
 }: {
   label: string;
   code: string;
   tone: "muted" | "accent";
   accent?: string;
+  accentDim?: string;
 }) {
   return (
     <div style={{ minWidth: 0 }}>
@@ -386,7 +388,7 @@ function CodeCompareColumn({
         {label}
       </div>
       <pre style={codeStyle}>
-        <code>{highlightTypeScript(code, tone === "accent" ? accent : undefined)}</code>
+        <code>{highlightTypeScript(code, tone, accentDim)}</code>
       </pre>
     </div>
   );
@@ -405,9 +407,9 @@ const syntaxColors = {
 const tsTokenPattern =
   /(\/\/.*|\/\*[\s\S]*?\*\/|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`|\b(?:import|from|const|async|await|return|undefined|process|provider|rail|endpoint|amount|currency|handler)\b|\b\d+(?:\.\d+)?\b|\b[A-Za-z_$][\w$]*(?=\()|\b[A-Za-z_$][\w$]*(?=\s*:)|[{}()[\].,:;=>])/g;
 
-function highlightTypeScript(code: string, markerColor?: string) {
+function highlightTypeScript(code: string, tone?: "muted" | "accent", accentDim?: string) {
   return code.split("\n").map((line, index, lines) => {
-    const marked = markerColor && line.includes("flovia.paidApi");
+    const marked = tone === "accent" && line.includes("flovia.paidApi");
     return (
       <span
         key={`${index}-${line}`}
@@ -415,10 +417,9 @@ function highlightTypeScript(code: string, markerColor?: string) {
           display: "block",
           margin: marked ? "0 -6px" : undefined,
           padding: marked ? "1px 6px" : undefined,
-          borderLeft: marked ? `3px solid ${markerColor}` : "3px solid transparent",
-          borderRadius: marked ? 7 : undefined,
-          background: marked ? `${markerColor}26` : undefined,
-          boxShadow: marked ? `inset 0 0 0 1px ${markerColor}33` : undefined,
+          borderLeft: marked ? `3px solid var(--mesh-blue)` : "3px solid transparent",
+          borderRadius: marked ? 4 : undefined,
+          background: marked ? "var(--mesh-blue-soft)" : undefined,
         }}
       >
         {line ? highlightTypeScriptLine(line) : "\u00A0"}
@@ -489,12 +490,12 @@ function SimulatedFlowDiagram({
   const paymentProvider = provider === "stripe" ? "Stripe MPP" : "HitPay MPP";
 
   return (
-    <div style={{ display: "grid", gap: 16 }}>
+    <div style={{ display: "grid", gap: 24 }}>
       <div
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(5, minmax(0, 1fr))",
-          gap: 10,
+          gap: 12,
           alignItems: "stretch",
         }}
       >
@@ -535,7 +536,7 @@ function SimulatedFlowDiagram({
         style={{
           display: "grid",
           gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr)",
-          gap: 12,
+          gap: 16,
         }}
       >
         <LaneCard
@@ -559,7 +560,10 @@ function SimulatedFlowDiagram({
         />
       </div>
 
-      <pre style={codeStyle}><code>{JSON.stringify(event, null, 2)}</code></pre>
+      <div style={{ marginTop: -8 }}>
+        <div className="eyebrow" style={{ marginBottom: 8, color: "var(--text-mute)" }}>Event payload preview</div>
+        <pre style={codeStyle}><code>{JSON.stringify(event, null, 2)}</code></pre>
+      </div>
     </div>
   );
 }
@@ -580,10 +584,11 @@ function FlowStepCard({
   return (
     <div
       style={{
-        border: `1px solid ${emphasized ? `${accent}55` : "var(--line)"}`,
-        borderRadius: 14,
-        padding: 13,
-        background: emphasized ? `${accent}10` : "#fff",
+        border: `1px solid ${emphasized ? "transparent" : "var(--line-strong)"}`,
+        borderRadius: 12,
+        padding: 14,
+        background: emphasized ? "var(--surface-subtle)" : "var(--surface-card)",
+        boxShadow: emphasized ? `inset 0 0 0 1px ${accent}` : "none",
         minHeight: 158,
       }}
     >
@@ -595,8 +600,8 @@ function FlowStepCard({
           width: 24,
           height: 24,
           borderRadius: 999,
-          background: `${accent}18`,
-          color: accent,
+          background: emphasized ? accent : "var(--surface-muted)",
+          color: emphasized ? "#fff" : "var(--text-2)",
           fontSize: 11,
           fontWeight: 800,
           marginBottom: 10,
@@ -632,19 +637,20 @@ function LaneCard({
   return (
     <div
       style={{
-        border: `1px solid ${highlighted ? `${accent}55` : "var(--line)"}`,
-        borderRadius: 14,
-        padding: 14,
-        background: highlighted ? `linear-gradient(180deg, ${accent}12, #fff)` : "rgba(248,250,252,0.7)",
+        border: `1px solid ${highlighted ? "transparent" : "var(--line-strong)"}`,
+        borderRadius: 12,
+        padding: 16,
+        background: highlighted ? "var(--surface-subtle)" : "var(--surface-card)",
+        boxShadow: highlighted ? `inset 0 0 0 1px ${accent}` : "none",
       }}
     >
       <div className="eyebrow" style={{ marginBottom: 6, color: highlighted ? accent : "var(--text-mute)" }}>
         {label}
       </div>
-      <h3 style={{ margin: 0, fontSize: 15 }}>{title}</h3>
-      <div style={{ display: "flex", gap: 7, flexWrap: "wrap", marginTop: 12 }}>
+      <h3 style={{ margin: 0, fontSize: 15, fontWeight: 600 }}>{title}</h3>
+      <div style={{ display: "flex", gap: 7, flexWrap: "wrap", marginTop: 14 }}>
         {lines.map((line) => (
-          <span key={line} className="badge" style={{ background: highlighted ? `${accent}14` : undefined }}>
+          <span key={line} className="chip mute" style={{ background: highlighted ? "var(--surface-card)" : "var(--surface-muted)" }}>
             {line}
           </span>
         ))}
@@ -676,11 +682,11 @@ function LiveStatus({
   return (
     <div
       style={{
-        border: "1px solid var(--line)",
-        borderRadius: 12,
-        padding: 12,
-        background: hasChallenge ? "rgba(59,130,246,0.07)" : "rgba(248,250,252,0.72)",
-        color: "var(--text-2)",
+        border: `1px solid ${hasChallenge ? (provider === "stripe" ? "var(--mesh-blue-soft)" : "var(--teal-soft)") : "var(--line-strong)"}`,
+        borderRadius: 8,
+        padding: "10px 14px",
+        background: hasChallenge ? (provider === "stripe" ? "var(--mesh-blue-dim)" : "var(--teal-dim)") : "var(--surface-card)",
+        color: "var(--text-1)",
         fontSize: 13,
         lineHeight: 1.5,
       }}
@@ -706,12 +712,12 @@ function LiveResultPanel({
       <div
         style={{
           marginTop: 14,
-          border: "1px dashed var(--line)",
-          borderRadius: 12,
+          border: "1px dashed var(--line-strong)",
+          borderRadius: 8,
           padding: 16,
           color: "var(--text-3)",
           fontSize: 13,
-          background: "rgba(248,250,252,0.56)",
+          background: "var(--surface-subtle)",
         }}
       >
         Response summary appears here.
@@ -720,14 +726,14 @@ function LiveResultPanel({
   }
 
   const summary = summarizeLiveResult(result, provider, state);
-  const summaryTone = liveSummaryTone(summary.kind, accent);
+  const summaryTone = liveSummaryTone(summary.kind, accent, provider);
 
   return (
     <div style={{ marginTop: 14, display: "grid", gap: 12 }}>
       <div
         style={{
           border: `1px solid ${summaryTone.border}`,
-          borderRadius: 14,
+          borderRadius: 8,
           padding: 16,
           background: summaryTone.background,
         }}
@@ -751,19 +757,19 @@ function LiveResultPanel({
         </div>
       </div>
 
-      <details style={{ border: "1px solid var(--line)", borderRadius: 12, background: "#fff" }}>
+      <details style={{ border: "1px solid var(--line-strong)", borderRadius: 8, background: "var(--surface-card)" }}>
         <summary
           style={{
             cursor: "pointer",
             padding: "10px 12px",
             color: "var(--text-2)",
             fontSize: 12,
-            fontWeight: 750,
+            fontWeight: 600,
           }}
         >
           Raw JSON
         </summary>
-        <pre style={{ ...codeStyle, borderRadius: "0 0 12px 12px", minHeight: 180 }}>
+        <pre style={{ ...codeStyle, borderRadius: "0 0 8px 8px", minHeight: 180, borderTop: "1px solid var(--line-strong)" }}>
           <code>{JSON.stringify(result, null, 2)}</code>
         </pre>
       </details>
@@ -773,32 +779,32 @@ function LiveResultPanel({
 
 function SummaryItem({ label, value }: { label: string; value: string }) {
   return (
-    <div style={{ border: "1px solid rgba(148,163,184,0.22)", borderRadius: 10, padding: 10, background: "rgba(255,255,255,0.7)", minWidth: 0 }}>
+    <div style={{ border: "1px solid var(--line-strong)", borderRadius: 6, padding: 10, background: "var(--surface-card)", minWidth: 0 }}>
       <div className="eyebrow" style={{ fontSize: 10, marginBottom: 5 }}>{label}</div>
       <div className="mono" style={{ fontSize: 12, color: "var(--text-1)", overflowWrap: "anywhere" }}>{value}</div>
     </div>
   );
 }
 
-function liveSummaryTone(kind: "challenge" | "paid" | "error", accent: string) {
+function liveSummaryTone(kind: "challenge" | "paid" | "error", accent: string, provider: ProviderKey) {
   switch (kind) {
     case "challenge":
       return {
-        border: "rgba(245,158,11,0.34)",
+        border: "var(--warn-soft)",
         background: "rgba(255,251,235,0.92)",
-        color: "#b45309",
+        color: "var(--warn)",
       };
     case "error":
       return {
         border: "rgba(239,68,68,0.28)",
         background: "rgba(254,242,242,0.9)",
-        color: "#dc2626",
+        color: "var(--danger)",
       };
     case "paid":
       return {
-        border: `${accent}3d`,
-        background: "rgba(240,253,244,0.72)",
-        color: "#15803d",
+        border: provider === "stripe" ? "var(--mesh-blue-soft)" : "var(--teal-soft)",
+        background: "var(--surface-subtle)",
+        color: provider === "stripe" ? "var(--mesh-blue)" : "var(--teal)",
       };
   }
 }
@@ -871,24 +877,23 @@ function QrPlaceholder({ checkoutUrl }: { checkoutUrl: string | null }) {
       style={{
         display: "block",
         marginTop: 12,
-        border: "1px solid rgba(15,118,110,0.28)",
-        borderRadius: 12,
+        border: "1px solid var(--teal-soft)",
+        borderRadius: 8,
         padding: "12px 14px",
-        background: "linear-gradient(180deg, rgba(15,118,110,0.11), rgba(255,255,255,0.96))",
-        color: "#0f766e",
+        background: "var(--teal-dim)",
+        color: "var(--teal)",
         fontSize: 12,
-        fontWeight: 800,
+        fontWeight: 600,
         overflowWrap: "anywhere",
         textDecoration: "underline",
         textUnderlineOffset: 3,
         textDecorationThickness: 1.5,
-        boxShadow: "inset 0 0 0 1px rgba(15,118,110,0.08)",
       }}
     >
-      <span className="mono" style={{ color: "var(--text-2)", fontWeight: 600 }}>
+      <span className="mono" style={{ color: "var(--text-1)", fontWeight: 600 }}>
         {checkoutUrl}
       </span>
-      <span aria-hidden style={{ marginLeft: 6, color: "#0f766e", fontWeight: 900 }}>
+      <span aria-hidden style={{ marginLeft: 6, color: "var(--teal)", fontWeight: 900 }}>
         ↗
       </span>
     </a>
@@ -947,10 +952,10 @@ function ProviderVsFloviaPanel({
 
       <div
         style={{
-          border: `1px solid ${accent}3d`,
+          border: `1px solid ${provider === "stripe" ? "var(--mesh-blue-soft)" : "var(--teal-soft)"}`,
           borderRadius: 14,
           padding: 16,
-          background: `linear-gradient(180deg, ${accent}10, rgba(255,255,255,0.94))`,
+          background: provider === "stripe" ? "var(--mesh-blue-dim)" : "var(--teal-dim)",
         }}
       >
         <div className="eyebrow" style={{ marginBottom: 6, color: accent }}>Joined by Flovia</div>
@@ -982,10 +987,11 @@ function ComparisonColumn({
   return (
     <div
       style={{
-        border: `1px solid ${highlighted ? `${accent}44` : "var(--line)"}`,
+        border: `1px solid ${highlighted ? "transparent" : "var(--line)"}`,
         borderRadius: 14,
         padding: 16,
-        background: highlighted ? `${accent}0d` : "#fff",
+        background: highlighted ? "var(--surface-subtle)" : "var(--surface-card)",
+        boxShadow: highlighted ? `inset 0 0 0 1px ${accent}` : "none",
       }}
     >
       <div className="eyebrow" style={{ marginBottom: 6, color: highlighted ? accent : "var(--text-mute)" }}>{eyebrow}</div>
@@ -1006,7 +1012,7 @@ function JoinPill({ label, value }: { label: string; value: string }) {
   return (
     <div style={{ minWidth: 0 }}>
       <div className="eyebrow" style={{ fontSize: 10, marginBottom: 5 }}>{label}</div>
-      <div className="mono" style={{ border: "1px solid rgba(148,163,184,0.24)", borderRadius: 10, padding: "8px 10px", background: "rgba(255,255,255,0.75)", fontSize: 12, overflowWrap: "anywhere" }}>
+      <div className="mono" style={{ border: "1px solid var(--line-strong)", borderRadius: 8, padding: "8px 10px", background: "var(--surface-card)", fontSize: 12, overflowWrap: "anywhere", color: "var(--text-1)" }}>
         {value}
       </div>
     </div>
@@ -1025,11 +1031,11 @@ function EvidenceCard({
   accent: string;
 }) {
   return (
-    <div style={{ border: "1px solid var(--line)", borderRadius: 14, padding: 16, background: "#fff" }}>
+    <div style={{ border: "1px solid var(--line-strong)", borderRadius: 12, padding: 18, background: "var(--surface-subtle)" }}>
       <div className="eyebrow" style={{ marginBottom: 6, color: accent }}>{label}</div>
-      <h3 style={{ margin: 0, fontSize: 15 }}>{title}</h3>
+      <h3 style={{ margin: 0, fontSize: 15, fontWeight: 600 }}>{title}</h3>
       <div style={{ display: "grid", gap: 7, marginTop: 12 }}>
-        {lines.map((line) => <span key={line} className="badge" style={{ width: "fit-content", background: `${accent}12` }}>{line}</span>)}
+        {lines.map((line) => <span key={line} className="chip mute" style={{ width: "fit-content", background: "var(--surface-card)" }}>{line}</span>)}
       </div>
     </div>
   );
@@ -1039,15 +1045,15 @@ function JoinCard({ accent }: { accent: string }) {
   return (
     <div
       style={{
-        border: `1px solid ${accent}44`,
-        borderRadius: 18,
-        padding: 18,
-        background: `linear-gradient(180deg, ${accent}14, rgba(255,255,255,0.92))`,
-        boxShadow: `inset 0 0 0 1px ${accent}18`,
+        border: "1px solid transparent",
+        borderRadius: 16,
+        padding: 20,
+        background: "var(--surface-card)",
+        boxShadow: `inset 0 0 0 1px ${accent}, var(--shadow-2)`,
       }}
     >
       <div className="eyebrow" style={{ marginBottom: 8, color: accent }}>Flovia join layer</div>
-      <h3 style={{ margin: 0, fontSize: 17 }}>Joined paid API event</h3>
+      <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>Joined paid API event</h3>
       <div style={{ display: "grid", gap: 8, marginTop: 14 }}>
         <JoinLine left="payment id" right="request id" />
         <JoinLine left="payer / recipient" right="endpoint" />
@@ -1082,21 +1088,23 @@ function Arrow() {
 }
 
 const secondaryButtonStyle = {
-  border: "1px solid var(--line)",
-  borderRadius: 10,
-  padding: "9px 13px",
-  background: "#fff",
+  border: "1px solid var(--line-strong)",
+  borderRadius: 4,
+  padding: "7px 13px",
+  background: "var(--surface-card)",
   color: "var(--text-1)",
-  fontWeight: 750,
+  fontWeight: 600,
+  fontSize: 14,
   cursor: "pointer",
 } satisfies CSSProperties;
 
-const buttonStyle = (accent: string) => ({
+const buttonStyle = (provider: ProviderKey) => ({
   border: "1px solid transparent",
-  borderRadius: 10,
-  padding: "9px 13px",
-  background: accent,
+  borderRadius: 4,
+  padding: "7px 13px",
+  background: provider === "stripe" ? "var(--mesh-blue)" : "var(--teal)",
   color: "#fff",
-  fontWeight: 800,
+  fontWeight: 600,
+  fontSize: 14,
   cursor: "pointer",
 });

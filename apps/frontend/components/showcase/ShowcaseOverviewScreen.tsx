@@ -26,20 +26,20 @@ export function ShowcaseOverviewScreen() {
   return (
     <div className="scroll">
       <div style={{ padding: "32px 40px 80px", maxWidth: 1440, margin: "0 auto" }}>
-        <header style={{ marginBottom: 24 }}>
-          <div className="eyebrow" style={{ marginBottom: 8 }}>
+        <header style={{ marginBottom: 32 }}>
+          <div className="eyebrow" style={{ marginBottom: 12 }}>
             Paid API analytics showcase
           </div>
           <h1 className="display" style={{ margin: 0, fontSize: 34, letterSpacing: "-0.03em" }}>
             Connect MPP payment context to API provider usage.
           </h1>
-          <p style={{ margin: "10px 0 0", maxWidth: 820, color: "var(--text-2)", lineHeight: 1.6 }}>
+          <p style={{ margin: "14px 0 0", maxWidth: 820, color: "var(--text-2)", lineHeight: 1.6, fontSize: 16 }}>
             Stripe MPP and HitPay MPP still handle payment. Flovia wraps the paid route once and joins payment
             challenges, paid responses, endpoint usage, and retained demand signals.
           </p>
         </header>
 
-        <section style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 14 }}>
+        <section style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 16 }}>
           {providers.map((provider) => (
             <Link
               key={provider.href}
@@ -59,7 +59,7 @@ export function ShowcaseOverviewScreen() {
           ))}
         </section>
 
-        <section className="card" style={{ marginTop: 18, padding: 0, overflow: "hidden" }}>
+        <section className="card" style={{ marginTop: 24, padding: 0, overflow: "hidden" }}>
           <div style={{ padding: "20px 20px 14px", background: "var(--surface-subtle)", borderBottom: "1px solid var(--line)" }}>
             <div className="eyebrow" style={{ marginBottom: 0 }}>
               Comparison
@@ -81,7 +81,7 @@ export function ShowcaseOverviewScreen() {
           </table>
         </section>
 
-        <section className="card" style={{ marginTop: 18, padding: 24 }}>
+        <section className="card" style={{ marginTop: 24, padding: 24 }}>
           <div className="eyebrow" style={{ marginBottom: 16 }}>
             Joined analytics preview
           </div>
@@ -100,9 +100,9 @@ export function ShowcaseOverviewScreen() {
 
 function MiniStat({ label, value }: { label: string; value: string }) {
   return (
-    <div style={{ border: "1px solid var(--line)", borderRadius: 12, padding: 12, background: "rgba(248,250,252,0.72)" }}>
+    <div style={{ border: "1px solid var(--line-strong)", borderRadius: 8, padding: 12, background: "var(--surface-subtle)" }}>
       <div className="eyebrow" style={{ fontSize: 10 }}>{label}</div>
-      <div style={{ marginTop: 5, fontWeight: 800, color: "var(--text-1)" }}>{value}</div>
+      <div style={{ marginTop: 5, fontWeight: 600, color: "var(--text-1)" }}>{value}</div>
     </div>
   );
 }
