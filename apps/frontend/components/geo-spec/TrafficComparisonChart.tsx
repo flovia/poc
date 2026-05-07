@@ -54,11 +54,10 @@ export function TrafficComparisonChart({ providerId, hasMpp, hasPaySh }: Props) 
             Traffic & revenue · demo
           </div>
           <h2 className="display" style={{ fontSize: 20, fontWeight: 650, margin: "0 0 6px" }}>
-            MPP Official vs Pay.sh — request and revenue trend
+            {buildHeadingTitle(hasMpp, hasPaySh)}
           </h2>
           <p style={{ color: "var(--text-mute)", fontSize: 12, lineHeight: 1.5, margin: 0 }}>
-            Demo time-series of API requests and earned amount routed through each catalog source.
-            Lines are only drawn for sources this provider exposes.
+            {buildHeadingSubtitle(hasMpp, hasPaySh)}
           </p>
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -86,6 +85,21 @@ export function TrafficComparisonChart({ providerId, hasMpp, hasPaySh }: Props) 
       </article>
     </section>
   );
+}
+
+function buildHeadingTitle(hasMpp: boolean, hasPaySh: boolean): string {
+  if (hasMpp && hasPaySh) return "MPP Official vs Pay.sh — request and revenue trend";
+  if (hasMpp) return "MPP Official — request and revenue trend";
+  if (hasPaySh) return "Pay.sh — request and revenue trend";
+  return "Request and revenue trend";
+}
+
+function buildHeadingSubtitle(hasMpp: boolean, hasPaySh: boolean): string {
+  if (hasMpp && hasPaySh) {
+    return "Demo time-series of API requests and earned amount routed through each catalog source.";
+  }
+  const source = hasMpp ? "the MPP Official registry" : "the Pay.sh atlas";
+  return `Demo time-series of API requests and earned amount routed through ${source}.`;
 }
 
 function Legend({ hasMpp, hasPaySh }: { hasMpp: boolean; hasPaySh: boolean }) {
