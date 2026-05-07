@@ -73,6 +73,7 @@ export function RouteTrendChart({ providerId }: Props) {
 
       <Legend />
       <Chart series={series} metric={metric} />
+      <TrendTable series={series} metric={metric} />
     </section>
   );
 }
@@ -316,6 +317,65 @@ function TooltipRow({ color, label, value }: { color: string; label: string; val
   );
 }
 
+function TrendTable({ series, metric }: { series: Point[]; metric: Metric }) {
+  const rows = SOURCES.map((source) => buildTrendRow(source, series, metric));
+  const aggregateLabel = metric === "retention" ? "avg" : "total";
+
+  return (
+    <div style={{ marginTop: 12, overflowX: "auto" }}>
+      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+        <thead>
+          <tr style={{ textAlign: "left", color: "var(--text-mute)" }}>
+            <th style={{ padding: "9px 6px" }}>rail</th>
+            <th style={{ padding: "9px 6px" }}>latest</th>
+            <th style={{ padding: "9px 6px" }}>{aggregateLabel}</th>
+            <th style={{ padding: "9px 6px" }}>vs period start</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr key={row.source} style={{ borderTop: "1px solid var(--line)" }}>
+              <td style={{ padding: "10px 6px", fontWeight: 800 }}>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 7 }}>
+                  <span
+                    aria-hidden
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: 999,
+                      background: SOURCE_META[row.source].color,
+                      display: "inline-block",
+                    }}
+                  />
+                  {SOURCE_META[row.source].label}
+                </span>
+              </td>
+              <td style={{ padding: "10px 6px" }}>{formatTableValue(row.latest, metric)}</td>
+              <td style={{ padding: "10px 6px" }}>{formatTableValue(row.aggregate, metric)}</td>
+              <td style={{ padding: "10px 6px", color: row.delta >= 0 ? "#15803d" : "#b91c1c" }}>
+                {formatDelta(row.delta, metric)}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function buildTrendRow(source: SourceKey, series: Point[], metric: Metric) {
+  const first = series[0]?.[source] ?? 0;
+  const latest = series.at(-1)?.[source] ?? 0;
+  const sum = series.reduce((acc, point) => acc + point[source], 0);
+  const average = sum / Math.max(1, series.length);
+  return {
+    source,
+    latest,
+    aggregate: metric === "retention" ? average : sum,
+    delta: latest - first,
+  };
+}
+
 function SegmentedControl<T extends string>({
   label,
   value,
@@ -421,16 +481,31 @@ function buildSourceProfile(
   index: number,
 ): SourceProfile {
   const seed = (baseSeed ^ hashString(source)) >>> 0;
-  const volumeMultiplier = source === "x402" ? 170 : source === "stripeMpp" ? 120 : 90;
+  const dailyBase = source === "x402" ? 115000 : source === "stripeMpp" ? 92000 : 68000;
+  const requestVariance = pseudo(seed) * 0.16 - 0.08;
   return {
     seed,
-    baseRequests: (650 + (seed % 1300)) * volumeMultiplier,
-    unitPrice: 0.02 + pseudo(hashString(`${providerId}:${source}:price`)) * 0.08,
-    slope: ((seed >> 8) % 100) / 1000 - 0.015 + index * 0.008,
-    wave: 0.16 + index * 0.025,
+    baseRequests: dailyBase * (1 + requestVariance),
+    unitPrice: unitPriceFor(providerId, source),
+    slope: trendSlopeFor(source, seed),
+    wave: 0.06 + index * 0.01,
     period: 1.8 + index * 0.45,
     phase: (seed % 360) * (Math.PI / 180),
   };
+}
+
+function unitPriceFor(providerId: string, source: SourceKey): number {
+  const variance = pseudo(hashString(`${providerId}:${source}:price`)) * 0.0002 - 0.0001;
+  if (source === "x402") return 0.00095 + variance;
+  if (source === "stripeMpp") return 0.00108 + variance;
+  return 0.001 + variance;
+}
+
+function trendSlopeFor(source: SourceKey, seed: number): number {
+  const variance = (((seed >> 8) % 20) - 10) / 1000;
+  if (source === "x402") return -0.4 + variance;
+  if (source === "stripeMpp") return 0.32 + variance;
+  return 0.42 + variance;
 }
 
 function metricValue(
@@ -459,9 +534,10 @@ function retentionRate(
 ): number {
   const seed = hashString(`${source}:retention`);
   const sourceBase = source === "x402" ? 0.32 : source === "stripeMpp" ? 0.68 : 0.5;
-  const maturityLift = (dayIndex / Math.max(1, days - 1)) * (source === "x402" ? 0.1 : 0.14);
+  const maturitySlope = source === "x402" ? -0.18 : source === "stripeMpp" ? 0.14 : 0.2;
+  const maturityLift = (dayIndex / Math.max(1, days - 1)) * maturitySlope;
   const trafficLift = Math.min(0.14, Math.max(-0.12, requests / Math.max(1, baseRequests) - 1) * 0.24);
-  const waveSize = source === "stripeMpp" ? 0.045 : 0.07;
+  const waveSize = source === "stripeMpp" ? 0.025 : 0.035;
   const wave = Math.sin((dayIndex / Math.max(1, days)) * Math.PI * 2.4 + (seed % 180)) * waveSize;
   const jitter = pseudo(seed + dayIndex) * 0.05 - 0.025;
   return clamp(sourceBase + maturityLift + trafficLift + wave + jitter, 0.15, 0.9);
@@ -537,6 +613,20 @@ function formatTooltipValue(value: number, metric: Metric): string {
     return `$${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   }
   return `${Math.round(value).toLocaleString()} req`;
+}
+
+function formatTableValue(value: number, metric: Metric): string {
+  if (metric === "retention") return `${(value * 100).toFixed(1)}%`;
+  if (metric === "revenue") {
+    return `$${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+  }
+  return Math.round(value).toLocaleString();
+}
+
+function formatDelta(value: number, metric: Metric): string {
+  const sign = value >= 0 ? "+" : "";
+  if (metric === "retention") return `${sign}${(value * 100).toFixed(1)} pt`;
+  return `${sign}${formatTableValue(value, metric)}`;
 }
 
 function formatTooltipDate(date: Date): string {

@@ -1,6 +1,6 @@
 import { MachinePaymentRoutesScreen } from "@/components/machine-payment-routes/MachinePaymentRoutesScreen";
 import { TopBar } from "@/components/shell/TopBar";
-import { getRouteAnalyticsSankey, getRouteAnalyticsSummary } from "@/lib/api/client";
+import { getRouteAnalyticsSummary } from "@/lib/api/client";
 import { getTopBarPageContext } from "@/lib/server/page-context";
 
 export default async function MachinePaymentRoutesPage({
@@ -10,10 +10,7 @@ export default async function MachinePaymentRoutesPage({
 }) {
   const { providerId } = await params;
   const pageCtx = await getTopBarPageContext();
-  const [summary, sankey] = await Promise.all([
-    getRouteAnalyticsSummary(),
-    getRouteAnalyticsSankey(),
-  ]);
+  const summary = await getRouteAnalyticsSummary();
 
   return (
     <>
@@ -47,7 +44,7 @@ export default async function MachinePaymentRoutesPage({
         }}
       />
       <div className="scroll">
-        <MachinePaymentRoutesScreen providerId={providerId} summary={summary} sankey={sankey} />
+        <MachinePaymentRoutesScreen providerId={providerId} summary={summary} />
       </div>
     </>
   );
