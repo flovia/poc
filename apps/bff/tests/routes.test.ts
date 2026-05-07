@@ -823,6 +823,14 @@ describe("BFF routes", () => {
     ).toThrow("BFF analytics postgres source requires");
   });
 
+  test("does not treat a sqlite-style DATABASE_URL as a postgres analytics URL", () => {
+    expect(() =>
+      resolveAnalyticsDataSource(undefined, {
+        env: { BFF_ANALYTICS_SOURCE: "postgres", DATABASE_URL: "/data/flovia.db" },
+      }),
+    ).toThrow("postgres:// DATABASE_URL");
+  });
+
   test("uses postgres live loader by default", async () => {
     const dataSource = await resolveAnalyticsDataSource(undefined, {
       env: { BFF_ANALYTICS_SOURCE: "postgres" },

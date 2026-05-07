@@ -609,6 +609,18 @@ const createBunPostgresClient = (url: string): PostgresAnalyticsClient => {
   };
 };
 
+const isPostgresConnectionString = (value: string | undefined): value is string => {
+  const trimmed = value?.trim();
+  return !!trimmed && /^postgres(?:ql)?:\/\//i.test(trimmed);
+};
+
+const resolvePostgresDatabaseUrl = (env: AnalyticsSourceEnv): string | undefined => {
+  const explicit = env.BFF_ANALYTICS_DATABASE_URL?.trim();
+  if (explicit) return explicit;
+  const databaseUrl = env.DATABASE_URL?.trim();
+  return isPostgresConnectionString(databaseUrl) ? databaseUrl : undefined;
+};
+
 export const loadPostgresAnalyticsDataSource = async (
   client: PostgresAnalyticsClient,
   snapshotId = "latest",
@@ -931,10 +943,10 @@ export const resolveAnalyticsDataSource = (
   }
 
   if (source === "postgres") {
-    const databaseUrl = env.BFF_ANALYTICS_DATABASE_URL ?? env.DATABASE_URL;
+    const databaseUrl = resolvePostgresDatabaseUrl(env);
     if (!databaseUrl && !options.postgresClient) {
       throw new Error(
-        "BFF analytics postgres source requires BFF_ANALYTICS_DATABASE_URL or DATABASE_URL.",
+        "BFF analytics postgres source requires BFF_ANALYTICS_DATABASE_URL or a postgres:// DATABASE_URL.",
       );
     }
     const client = options.postgresClient ?? createBunPostgresClient(databaseUrl as string);
