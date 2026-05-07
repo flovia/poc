@@ -5,6 +5,7 @@ import {
 import { type BffAnalyticsDataSource, resolveAnalyticsDataSource } from "./data/analytics-source";
 import { BffLlmInferenceError, type BffLlmService, resolveBffLlmService } from "./data/llm";
 import { buildWorkflowIntentInputFromProfile, toWorkflowIntentInput } from "./data/workflow-intent";
+import { handleShowcaseRoute, showcaseRoutes } from "./showcase";
 
 type JsonValue = unknown;
 const GENERIC_BEDROCK_INFERENCE_ERROR_MESSAGE = "Bedrock upsell explanation inference failed.";
@@ -107,6 +108,7 @@ export const createBffHandler =
     if (request.method !== "GET") {
       if (
         readonlyRoutes.has(path) ||
+        showcaseRoutes.has(path) ||
         toProfileAddress(path) !== null ||
         toIntelligenceAddress(path) !== null ||
         toUpsellMetricsAddress(path) !== null ||
@@ -127,6 +129,9 @@ export const createBffHandler =
       default:
         break;
     }
+
+    const showcaseResponse = handleShowcaseRoute(request, path);
+    if (showcaseResponse) return showcaseResponse;
 
     const resolvedDataSource = await dataSource;
 
