@@ -25,6 +25,7 @@ import transactionFixture from "../fixtures/phase-a/coingecko-transactions.json"
 import attributionFixture from "../fixtures/phase-b/mock-attribution.json";
 import { buildPhaseBProjections, joinTransactionAttribution } from "../src/data/projection-builder";
 import {
+  validatePhaseBCustomerWorkflowIntentResponse,
   validatePhaseBCustomerUpsellMetricsResponse,
   validatePhaseBCustomerUpsellExplanationResponse,
   validatePhaseBCustomerListResponse,
@@ -53,6 +54,97 @@ const withTempFile = async (fn: (filePath: string) => Promise<void> | void) => {
     fs.rmSync(directory, { recursive: true, force: true });
   }
 };
+
+const workflowIntentAddress = "0x0000000000000000000000000000000000000abc";
+const workflowIntentProfile = validatePhaseBCustomerProfileResponse({
+  generatedAt: "2026-05-01T00:00:00Z",
+  generatedFrom: "workflow-intent-test",
+  provenance: "derived_insight",
+  reasons: [{ provenance: "derived_insight", label: "workflow intent fixture" }],
+  profile: {
+    identity: {
+      address: workflowIntentAddress,
+      label: null,
+      network: "base",
+      asset: "USDC",
+      role: "payer_wallet",
+      identityBasis: "wallet_address",
+      caveat: null,
+      provenance: "onchain_fact",
+      provenanceByField: { address: "onchain_fact" },
+    },
+    metrics: {
+      spendAtomic: "900",
+      activityGrowth: 0.4,
+      freeTierProgress: 0.3,
+      entryPointRatio: 0.5,
+      upsellOpportunity: "medium",
+      provenance: "derived_insight",
+      provenanceByField: { spendAtomic: "onchain_fact" },
+      reasons: [{ provenance: "derived_insight", label: "workflow intent metrics" }],
+    },
+    providers: [
+      {
+        providerId: "price-api",
+        name: "Price API",
+        payToWallet: "0x0000000000000000000000000000000000000011",
+        spendAtomic: "300",
+        transactionCount: 2,
+        confidence: 0.8,
+        provenance: "derived_insight",
+        provenanceByField: { payToWallet: "onchain_fact" },
+        reasons: [{ provenance: "derived_insight", label: "workflow intent provider" }],
+      },
+      {
+        providerId: "llm-api",
+        name: "LLM API",
+        payToWallet: "0x0000000000000000000000000000000000000022",
+        spendAtomic: "600",
+        transactionCount: 2,
+        confidence: 0.8,
+        provenance: "derived_insight",
+        provenanceByField: { payToWallet: "onchain_fact" },
+        reasons: [{ provenance: "derived_insight", label: "workflow intent provider" }],
+      },
+    ],
+    timeline: [
+      {
+        at: "2026-05-01T10:00:00Z",
+        eventType: "payment",
+        description: "Price refresh: GET /v1/price",
+        amountAtomic: "100",
+        relatedProviderId: "price-api",
+        provenance: "derived_insight",
+        provenanceByField: { amountAtomic: "onchain_fact" },
+        reasons: [{ provenance: "derived_insight", label: "workflow intent event" }],
+      },
+      {
+        at: "2026-05-01T10:02:00Z",
+        eventType: "payment",
+        description: "Strategy eval: POST /v1/responses",
+        amountAtomic: "200",
+        relatedProviderId: "llm-api",
+        provenance: "derived_insight",
+        provenanceByField: { amountAtomic: "onchain_fact" },
+        reasons: [{ provenance: "derived_insight", label: "workflow intent event" }],
+      },
+      {
+        at: "2026-05-01T10:04:00Z",
+        eventType: "payment",
+        description: "Execution check: GET /v1/quote",
+        amountAtomic: "300",
+        relatedProviderId: "price-api",
+        provenance: "derived_insight",
+        provenanceByField: { amountAtomic: "onchain_fact" },
+        reasons: [{ provenance: "derived_insight", label: "workflow intent event" }],
+      },
+    ],
+    insights: [],
+    provenance: "derived_insight",
+    provenanceByField: { timeline: "derived_insight" },
+    reasons: [{ provenance: "derived_insight", label: "workflow intent profile" }],
+  },
+});
 
 describe("BFF routes", () => {
   beforeAll(() => {
@@ -414,6 +506,9 @@ describe("BFF routes", () => {
       async generateUpsellExplanation() {
         throw new Error("AccessDeniedException: missing model access");
       },
+      async generateWorkflowIntentExplanation() {
+        throw new Error("not used in upsell route test");
+      },
     };
     const handler = createBffHandler(undefined, llmService);
     const originalConsoleError = console.error;
@@ -476,6 +571,9 @@ describe("BFF routes", () => {
           ],
         };
       },
+      async generateWorkflowIntentExplanation() {
+        throw new Error("not used in upsell route test");
+      },
     };
     const handler = createBffHandler(undefined, llmService);
 
@@ -489,6 +587,86 @@ describe("BFF routes", () => {
     expect(parsed.address).toBe(knownCustomerIntelligenceAddress);
     expect(parsed.explanation.summary.length).toBeGreaterThan(0);
     expect(parsed.input.reasonCodes.length).toBeGreaterThan(0);
+  });
+
+  test("returns grouped workflow sessions even when workflow-intent llm is unavailable", async () => {
+    const handler = createBffHandler(
+      {
+        ...fixtureAnalyticsDataSource,
+        getCustomerProfile(address: string) {
+          return address === workflowIntentAddress ? workflowIntentProfile : undefined;
+        },
+      },
+      null,
+    );
+
+    const response = await handler(
+      request(`/customers/${workflowIntentAddress}/llm/workflow-intent`),
+    );
+    const parsed = validatePhaseBCustomerWorkflowIntentResponse(await response.json());
+
+    expect(response.status).toBe(200);
+    expect(parsed.analysisStatus).toBe("unavailable");
+    expect(parsed.sessions).toHaveLength(1);
+    expect(parsed.explanations).toEqual([]);
+    expect(parsed.sessions[0]).toMatchObject({
+      eventCount: 3,
+      distinctProviderCount: 2,
+      totalAmountAtomic: "600",
+    });
+  });
+
+  test("returns validated workflow intent explanations for a known customer wallet", async () => {
+    const llmService: BffLlmService = {
+      async generateUpsellExplanation() {
+        throw new Error("not used in workflow intent test");
+      },
+      async generateWorkflowIntentExplanation(request) {
+        return {
+          model: {
+            provider: "bedrock",
+            modelId: "anthropic.claude-3-5-sonnet-20241022-v2:0",
+            region: "ap-northeast-1",
+            promptVersion: "workflow-intent-v1",
+          },
+          explanations: request.input.sessions.map((session) => ({
+            sessionId: session.sessionId,
+            summary: "Automated market check",
+            intent:
+              "This short burst appears consistent with a bot checking market conditions, evaluating them with an LLM step, and preparing an execution decision.",
+            evidence: [
+              "The calls happened within a single 5 minute window.",
+              "Price API and LLM API activity appeared in one ordered burst.",
+            ],
+            caution:
+              "This interpretation is inferred from payment-linked API activity and may not capture the wallet's full offchain logic.",
+          })),
+        };
+      },
+    };
+    const handler = createBffHandler(
+      {
+        ...fixtureAnalyticsDataSource,
+        getCustomerProfile(address: string) {
+          return address === workflowIntentAddress ? workflowIntentProfile : undefined;
+        },
+      },
+      llmService,
+    );
+
+    const response = await handler(
+      request(`/customers/${workflowIntentAddress}/llm/workflow-intent`),
+    );
+    const parsed = validatePhaseBCustomerWorkflowIntentResponse(await response.json());
+
+    expect(response.status).toBe(200);
+    expect(parsed.analysisStatus).toBe("ready");
+    expect(parsed.model?.promptVersion).toBe("workflow-intent-v1");
+    expect(parsed.explanations).toEqual([
+      expect.objectContaining({
+        summary: "Automated market check",
+      }),
+    ]);
   });
 
   test("returns not found for unknown customer intelligence", async () => {
@@ -1535,6 +1713,7 @@ describe("BFF routes", () => {
       `/customers/${knownCustomerIntelligenceAddress}/intelligence`,
       `/customers/${knownCustomerIntelligenceAddress}/llm/upsell-metrics`,
       `/customers/${knownCustomerIntelligenceAddress}/llm/upsell-explanation`,
+      `/customers/${workflowIntentAddress}/llm/workflow-intent`,
       "/wallet-usage-graph",
       "/analytics/services/coingecko/summary",
       "/analytics/services/comparison",

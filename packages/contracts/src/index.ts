@@ -965,6 +965,126 @@ export type PhaseBCustomerUpsellExplanationResponse = z.infer<
 export const validatePhaseBCustomerUpsellExplanationResponse = (value: unknown) =>
   PhaseBCustomerUpsellExplanationResponseSchema.parse(value);
 
+export const PhaseBCustomerWorkflowIntentSessionProviderSchema = z
+  .object({
+    providerId: z.string().min(1).optional(),
+    providerName: z.string().min(1),
+    payToWallet: PaymentRecipientAddressSchema.optional(),
+    eventCount: z.number().int().positive(),
+    totalAmountAtomic: AtomicAmountSchema,
+    activityLabels: z.array(z.string().min(1)).min(1),
+  })
+  .strict();
+
+export type PhaseBCustomerWorkflowIntentSessionProvider = z.infer<
+  typeof PhaseBCustomerWorkflowIntentSessionProviderSchema
+>;
+
+export const PhaseBCustomerWorkflowIntentSessionEventSchema = z
+  .object({
+    at: z.string().datetime(),
+    providerId: z.string().min(1).optional(),
+    providerName: z.string().min(1),
+    payToWallet: PaymentRecipientAddressSchema.optional(),
+    activityLabel: z.string().min(1),
+    description: z.string().min(1),
+    amountAtomic: AtomicAmountSchema.optional(),
+  })
+  .strict();
+
+export type PhaseBCustomerWorkflowIntentSessionEvent = z.infer<
+  typeof PhaseBCustomerWorkflowIntentSessionEventSchema
+>;
+
+export const PhaseBCustomerWorkflowIntentSessionSchema = z
+  .object({
+    sessionId: z.string().min(1),
+    startedAt: z.string().datetime(),
+    endedAt: z.string().datetime(),
+    durationSeconds: z.number().int().nonnegative(),
+    eventCount: z.number().int().positive(),
+    distinctProviderCount: z.number().int().positive(),
+    distinctActivityCount: z.number().int().positive(),
+    totalAmountAtomic: AtomicAmountSchema,
+    providers: z.array(PhaseBCustomerWorkflowIntentSessionProviderSchema).min(1),
+    events: z.array(PhaseBCustomerWorkflowIntentSessionEventSchema).min(2),
+  })
+  .strict();
+
+export type PhaseBCustomerWorkflowIntentSession = z.infer<
+  typeof PhaseBCustomerWorkflowIntentSessionSchema
+>;
+
+export const PhaseBCustomerWorkflowIntentInputSchema = z
+  .object({
+    sessionWindowSeconds: z.number().int().positive(),
+    sessions: z.array(PhaseBCustomerWorkflowIntentSessionSchema).min(1),
+  })
+  .strict();
+
+export type PhaseBCustomerWorkflowIntentInput = z.infer<
+  typeof PhaseBCustomerWorkflowIntentInputSchema
+>;
+
+export const validatePhaseBCustomerWorkflowIntentInput = (value: unknown) =>
+  PhaseBCustomerWorkflowIntentInputSchema.parse(value);
+
+export const PhaseBCustomerWorkflowIntentExplanationSchema = z
+  .object({
+    sessionId: z.string().min(1),
+    summary: z.string().min(1),
+    intent: z.string().min(1),
+    evidence: z.array(z.string().min(1)).min(1),
+    caution: z.string().min(1),
+  })
+  .strict();
+
+export type PhaseBCustomerWorkflowIntentExplanation = z.infer<
+  typeof PhaseBCustomerWorkflowIntentExplanationSchema
+>;
+
+export const PhaseBCustomerWorkflowIntentAnalysisStatusSchema = z.enum([
+  "ready",
+  "no_candidate_sessions",
+  "unavailable",
+  "failed",
+]);
+
+export type PhaseBCustomerWorkflowIntentAnalysisStatus = z.infer<
+  typeof PhaseBCustomerWorkflowIntentAnalysisStatusSchema
+>;
+
+export const PhaseBCustomerWorkflowIntentResponseSchema = withDerivedInsightReasons(
+  z
+    .object({
+      generatedAt: z.string().datetime(),
+      generatedFrom: z.string().min(1),
+      address: PaymentRecipientAddressSchema,
+      sourceGeneratedAt: z.string().datetime(),
+      sessionWindowSeconds: z.number().int().positive(),
+      sessionCount: z.number().int().nonnegative(),
+      remainingSessionCount: z.number().int().nonnegative(),
+      analysisStatus: PhaseBCustomerWorkflowIntentAnalysisStatusSchema,
+      model: PhaseBCustomerUpsellExplanationModelSchema.nullable(),
+      input: PhaseBCustomerWorkflowIntentInputSchema.nullable(),
+      explanations: z.array(PhaseBCustomerWorkflowIntentExplanationSchema).min(0),
+      sessions: z.array(PhaseBCustomerWorkflowIntentSessionSchema).min(0),
+      failureMessage: z.string().min(1).nullable().optional(),
+      provenance: DataProvenanceSchema,
+      provenanceByField: ProvenanceByFieldSchema,
+      evidence: z.array(EvidenceLabelSchema).optional(),
+      reasons: z.array(EvidenceLabelSchema).min(1),
+    })
+    .strict(),
+);
+
+export type PhaseBCustomerWorkflowIntentResponse = z.infer<
+  typeof PhaseBCustomerWorkflowIntentResponseSchema
+>;
+
+export const validatePhaseBCustomerWorkflowIntentResponse = (value: unknown) =>
+  PhaseBCustomerWorkflowIntentResponseSchema.parse(value);
+
 export const PhaseBWalletUsageGraphObservationSchema = withDerivedInsightReasons(
   z
     .object({

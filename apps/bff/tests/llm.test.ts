@@ -19,6 +19,117 @@ const withTempDir = async (prefix: string, fn: (directory: string) => Promise<vo
 };
 
 describe("BFF llm service", () => {
+  test("reuses cached Bedrock workflow intent explanations for the same input", async () =>
+    withTempDir("workflow-intent-cache-hit", async (cacheDirectory) => {
+      let sendCalls = 0;
+      const client = {
+        async send() {
+          sendCalls += 1;
+          return {
+            output: {
+              message: {
+                content: [
+                  {
+                    text: JSON.stringify({
+                      explanations: [
+                        {
+                          sessionId: "session-1",
+                          summary: "Automated market check",
+                          intent:
+                            "This burst appears consistent with a wallet checking price conditions, evaluating the result, and preparing an execution decision.",
+                          evidence: [
+                            "Multiple API calls happened inside one short burst.",
+                            "The sequence mixed price lookup and inference activity.",
+                          ],
+                          caution:
+                            "This interpretation is inferred from payment-linked API activity.",
+                        },
+                      ],
+                    }),
+                  },
+                ],
+              },
+            },
+          };
+        },
+      } as unknown as BedrockRuntimeClient;
+      const service = resolveBffLlmService({
+        client,
+        modelId: "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+        region: "ap-northeast-1",
+        branchName: "develop",
+        cacheDirectory,
+      });
+
+      if (!service) {
+        throw new Error("Expected Bedrock llm service to resolve.");
+      }
+
+      const request = {
+        address: knownCustomerIntelligenceAddress,
+        sourceGeneratedAt: "2026-05-01T00:00:00Z",
+        input: {
+          sessionWindowSeconds: 300,
+          sessions: [
+            {
+              sessionId: "session-1",
+              startedAt: "2026-05-01T10:00:00Z",
+              endedAt: "2026-05-01T10:04:00Z",
+              durationSeconds: 240,
+              eventCount: 3,
+              distinctProviderCount: 2,
+              distinctActivityCount: 3,
+              totalAmountAtomic: "600",
+              providers: [
+                {
+                  providerId: "price-api",
+                  providerName: "Price API",
+                  payToWallet: "0x0000000000000000000000000000000000000011",
+                  eventCount: 2,
+                  totalAmountAtomic: "400",
+                  activityLabels: ["GET /v1/price", "GET /v1/quote"],
+                },
+                {
+                  providerId: "llm-api",
+                  providerName: "LLM API",
+                  payToWallet: "0x0000000000000000000000000000000000000022",
+                  eventCount: 1,
+                  totalAmountAtomic: "200",
+                  activityLabels: ["POST /v1/responses"],
+                },
+              ],
+              events: [
+                {
+                  at: "2026-05-01T10:00:00Z",
+                  providerId: "price-api",
+                  providerName: "Price API",
+                  payToWallet: "0x0000000000000000000000000000000000000011",
+                  activityLabel: "GET /v1/price",
+                  description: "Price refresh: GET /v1/price",
+                  amountAtomic: "100",
+                },
+                {
+                  at: "2026-05-01T10:02:00Z",
+                  providerId: "llm-api",
+                  providerName: "LLM API",
+                  payToWallet: "0x0000000000000000000000000000000000000022",
+                  activityLabel: "POST /v1/responses",
+                  description: "Strategy eval: POST /v1/responses",
+                  amountAtomic: "200",
+                },
+              ],
+            },
+          ],
+        },
+      };
+
+      const first = await service.generateWorkflowIntentExplanation(request);
+      const second = await service.generateWorkflowIntentExplanation(request);
+
+      expect(sendCalls).toBe(1);
+      expect(second).toEqual(first);
+    }));
+
   test("reuses cached Bedrock explanations for the same branch, model, and input", async () =>
     withTempDir("cache-hit", async (cacheDirectory) => {
       const metrics = fixtureAnalyticsDataSource.getCustomerUpsellMetrics(

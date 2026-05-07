@@ -1,9 +1,18 @@
-import { normalizePaymentRecipientAddress } from "contracts";
+import {
+  normalizePaymentRecipientAddress,
+  validatePhaseBCustomerWorkflowIntentResponse,
+} from "contracts";
 import { type BffAnalyticsDataSource, resolveAnalyticsDataSource } from "./data/analytics-source";
 import { BffLlmInferenceError, type BffLlmService, resolveBffLlmService } from "./data/llm";
+import { buildWorkflowIntentInputFromProfile, toWorkflowIntentInput } from "./data/workflow-intent";
 
 type JsonValue = unknown;
 const GENERIC_BEDROCK_INFERENCE_ERROR_MESSAGE = "Bedrock upsell explanation inference failed.";
+const WORKFLOW_INTENT_GENERATED_FROM = "phase-b-wallet-workflow-intent-v1";
+const workflowIntentReason = {
+  provenance: "derived_insight" as const,
+  label: "BFF workflow intent session analysis",
+};
 
 const json = (body: JsonValue, init: ResponseInit = {}) =>
   Response.json(body, {
@@ -42,6 +51,11 @@ const toUpsellMetricsAddress = (path: string) => {
 
 const toUpsellExplanationAddress = (path: string) => {
   const match = path.match(/^\/customers\/([^/]+)\/llm\/upsell-explanation$/);
+  return match?.[1] ?? null;
+};
+
+const toWorkflowIntentAddress = (path: string) => {
+  const match = path.match(/^\/customers\/([^/]+)\/llm\/workflow-intent$/);
   return match?.[1] ?? null;
 };
 
@@ -94,7 +108,8 @@ export const createBffHandler =
         toProfileAddress(path) !== null ||
         toIntelligenceAddress(path) !== null ||
         toUpsellMetricsAddress(path) !== null ||
-        toUpsellExplanationAddress(path) !== null
+        toUpsellExplanationAddress(path) !== null ||
+        toWorkflowIntentAddress(path) !== null
       ) {
         return methodNotAllowed();
       }
@@ -189,6 +204,139 @@ export const createBffHandler =
       } catch (error) {
         console.error("Bedrock upsell explanation request failed.", error);
         return llmFailed(error);
+      }
+    }
+
+    const workflowIntentAddress = toWorkflowIntentAddress(path);
+    if (workflowIntentAddress !== null) {
+      const normalizedAddress = normalizePaymentRecipientAddress(workflowIntentAddress);
+      const profile = resolvedDataSource.getCustomerProfile(normalizedAddress);
+
+      if (!profile) {
+        return notFound(path);
+      }
+
+      const selection = buildWorkflowIntentInputFromProfile(profile);
+      const input = toWorkflowIntentInput(selection);
+
+      if (!input) {
+        return json(
+          validatePhaseBCustomerWorkflowIntentResponse({
+            generatedAt: new Date().toISOString(),
+            generatedFrom: WORKFLOW_INTENT_GENERATED_FROM,
+            address: normalizedAddress,
+            sourceGeneratedAt: profile.generatedAt,
+            sessionWindowSeconds: selection.sessionWindowSeconds,
+            sessionCount: selection.sessionCount,
+            remainingSessionCount: selection.remainingSessionCount,
+            analysisStatus: "no_candidate_sessions",
+            model: null,
+            input: null,
+            explanations: [],
+            sessions: selection.sessions,
+            failureMessage: null,
+            provenance: "derived_insight",
+            provenanceByField: {
+              address: "onchain_fact",
+              input: "derived_insight",
+              sessions: "derived_insight",
+            },
+            reasons: [workflowIntentReason],
+          }),
+        );
+      }
+
+      if (!llmService) {
+        return json(
+          validatePhaseBCustomerWorkflowIntentResponse({
+            generatedAt: new Date().toISOString(),
+            generatedFrom: WORKFLOW_INTENT_GENERATED_FROM,
+            address: normalizedAddress,
+            sourceGeneratedAt: profile.generatedAt,
+            sessionWindowSeconds: selection.sessionWindowSeconds,
+            sessionCount: selection.sessionCount,
+            remainingSessionCount: selection.remainingSessionCount,
+            analysisStatus: "unavailable",
+            model: null,
+            input,
+            explanations: [],
+            sessions: selection.sessions,
+            failureMessage: null,
+            provenance: "derived_insight",
+            provenanceByField: {
+              address: "onchain_fact",
+              input: "derived_insight",
+              sessions: "derived_insight",
+            },
+            reasons: [workflowIntentReason],
+          }),
+        );
+      }
+
+      try {
+        const result = await llmService.generateWorkflowIntentExplanation({
+          address: normalizedAddress,
+          sourceGeneratedAt: profile.generatedAt,
+          input,
+        });
+
+        return json(
+          validatePhaseBCustomerWorkflowIntentResponse({
+            generatedAt: new Date().toISOString(),
+            generatedFrom: WORKFLOW_INTENT_GENERATED_FROM,
+            address: normalizedAddress,
+            sourceGeneratedAt: profile.generatedAt,
+            sessionWindowSeconds: selection.sessionWindowSeconds,
+            sessionCount: selection.sessionCount,
+            remainingSessionCount: selection.remainingSessionCount,
+            analysisStatus: "ready",
+            model: result.model,
+            input,
+            explanations: result.explanations,
+            sessions: selection.sessions,
+            failureMessage: null,
+            provenance: "derived_insight",
+            provenanceByField: {
+              address: "onchain_fact",
+              model: "derived_insight",
+              input: "derived_insight",
+              explanations: "derived_insight",
+              sessions: "derived_insight",
+            },
+            reasons: [workflowIntentReason],
+          }),
+        );
+      } catch (error) {
+        console.error("Workflow intent request failed.", error);
+        return json(
+          validatePhaseBCustomerWorkflowIntentResponse({
+            generatedAt: new Date().toISOString(),
+            generatedFrom: WORKFLOW_INTENT_GENERATED_FROM,
+            address: normalizedAddress,
+            sourceGeneratedAt: profile.generatedAt,
+            sessionWindowSeconds: selection.sessionWindowSeconds,
+            sessionCount: selection.sessionCount,
+            remainingSessionCount: selection.remainingSessionCount,
+            analysisStatus: "failed",
+            model: null,
+            input,
+            explanations: [],
+            sessions: selection.sessions,
+            failureMessage:
+              error instanceof BffLlmInferenceError
+                ? error.message
+                : error instanceof Error && error.message
+                  ? error.message
+                  : "Workflow intent explanation inference failed.",
+            provenance: "derived_insight",
+            provenanceByField: {
+              address: "onchain_fact",
+              input: "derived_insight",
+              sessions: "derived_insight",
+            },
+            reasons: [workflowIntentReason],
+          }),
+        );
       }
     }
 
