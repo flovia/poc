@@ -24,6 +24,7 @@ type ActiveRoute =
   | "machine-payment-routes"
   | "macro-metrics"
   | "metrics-catalog"
+  | "showcase"
   | "setup"
   | "wallet"
   | undefined;
@@ -86,6 +87,7 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
   const coUsageHref = providerRouteId ? `/providers/${providerRouteId}/customers/co-usage-providers` : undefined;
   const customerOverviewActive = pathname === customerOverviewHref || activeRoute === "wallet";
   const customersSectionActive = customerOverviewActive || pathname === coUsageHref;
+  const showcaseSectionActive = pathname === "/showcase" || pathname.startsWith("/showcase/");
 
   const navHrefFor = (
     segment: "api-growth" | "geo-spec" | "machine-payment-routes" | "macro-metrics" | "metrics-catalog",
@@ -261,6 +263,38 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
             <GeoNavLabel />
           </Link>
         )}
+
+        <div className="nav-label" style={{ marginTop: 18 }}>
+          Showcase
+        </div>
+        <div className="nav-row">
+          <span
+            className={`nav-item nav-item--with-toggle nav-item--category${showcaseSectionActive ? " nav-item--category-active" : ""}`}
+          >
+            <Icon.external width={16} height={16} />
+            <span style={{ flex: 1 }}>MPP Showcase</span>
+            <DemoNavBadge />
+          </span>
+        </div>
+        <div id="nav-sub-showcase" className="nav-sub">
+          <Link href="/showcase" className="nav-item nav-item--sub" aria-current={pathname === "/showcase"}>
+            Overview
+          </Link>
+          <Link
+            href="/showcase/stripe-mpp"
+            className="nav-item nav-item--sub"
+            aria-current={pathname === "/showcase/stripe-mpp"}
+          >
+            Stripe MPP
+          </Link>
+          <Link
+            href="/showcase/hitpay-mpp"
+            className="nav-item nav-item--sub"
+            aria-current={pathname === "/showcase/hitpay-mpp"}
+          >
+            HitPay MPP
+          </Link>
+        </div>
 
       </nav>
 

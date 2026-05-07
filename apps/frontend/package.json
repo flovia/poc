@@ -17,6 +17,7 @@
     "verify": "bun run verify:geo-bake-fresh && bun run typecheck && bun test"
   },
   "dependencies": {
+    "@hit-pay/mpp-client": "beta",
     "@nivo/sankey": "^0.99.0",
     "contracts": "workspace:*",
     "next": "^16.2.4",
