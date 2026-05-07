@@ -37,6 +37,10 @@ describe("BFF llm service", () => {
                           summary: "Automated market check",
                           intent:
                             "This burst appears consistent with a wallet checking price conditions, evaluating the result, and preparing an execution decision.",
+                          scenarios: [
+                            "A bot deciding whether to place a trade.",
+                            "An automation loop checking whether a trigger condition was met.",
+                          ],
                           evidence: [
                             "Multiple API calls happened inside one short burst.",
                             "The sequence mixed price lookup and inference activity.",
@@ -128,6 +132,126 @@ describe("BFF llm service", () => {
 
       expect(sendCalls).toBe(1);
       expect(second).toEqual(first);
+    }));
+
+  test("normalizes workflow intent explanations and requests short scenario candidates", async () =>
+    withTempDir("workflow-intent-normalize", async (cacheDirectory) => {
+      let capturedCommandInput: { system?: Array<{ text?: string }> } | undefined;
+      const client = {
+        async send(command: { input: { system?: Array<{ text?: string }> } }) {
+          capturedCommandInput = command.input;
+          return {
+            output: {
+              message: {
+                content: [
+                  {
+                    text: JSON.stringify({
+                      explanations: [
+                        {
+                          sessionId: "session-1",
+                          summary: "Automated market check",
+                          intent:
+                            "This burst appears consistent with a wallet checking price conditions. The input does not specify the exact downstream action.",
+                          scenarios: [
+                            "A bot deciding whether to place a trade.",
+                            "The input does not specify whether this was manual or automated.",
+                            "An automation loop checking whether a trigger condition was met.",
+                          ],
+                          evidence: [
+                            "Multiple API calls happened inside one short burst.",
+                            "The input does not specify whether an order was ultimately placed.",
+                          ],
+                          caution:
+                            "The input does not specify the user's exact offchain objective.",
+                        },
+                      ],
+                    }),
+                  },
+                ],
+              },
+            },
+          };
+        },
+      } as unknown as BedrockRuntimeClient;
+      const service = resolveBffLlmService({
+        client,
+        modelId: "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+        region: "ap-northeast-1",
+        cacheDirectory,
+      });
+
+      if (!service) {
+        throw new Error("Expected Bedrock llm service to resolve.");
+      }
+
+      const result = await service.generateWorkflowIntentExplanation({
+        address: knownCustomerIntelligenceAddress,
+        sourceGeneratedAt: "2026-05-01T00:00:00Z",
+        input: {
+          sessionWindowSeconds: 300,
+          sessions: [
+            {
+              sessionId: "session-1",
+              startedAt: "2026-05-01T10:00:00Z",
+              endedAt: "2026-05-01T10:04:00Z",
+              durationSeconds: 240,
+              eventCount: 3,
+              distinctProviderCount: 2,
+              distinctActivityCount: 3,
+              totalAmountAtomic: "600",
+              providers: [
+                {
+                  providerId: "price-api",
+                  providerName: "Price API",
+                  payToWallet: "0x0000000000000000000000000000000000000011",
+                  eventCount: 2,
+                  totalAmountAtomic: "400",
+                  activityLabels: ["GET /v1/price", "GET /v1/quote"],
+                },
+              ],
+              events: [
+                {
+                  at: "2026-05-01T10:00:00Z",
+                  providerId: "price-api",
+                  providerName: "Price API",
+                  payToWallet: "0x0000000000000000000000000000000000000011",
+                  activityLabel: "GET /v1/price",
+                  description: "Price refresh: GET /v1/price",
+                  amountAtomic: "100",
+                },
+                {
+                  at: "2026-05-01T10:02:00Z",
+                  providerId: "llm-api",
+                  providerName: "LLM API",
+                  payToWallet: "0x0000000000000000000000000000000000000022",
+                  activityLabel: "POST /v1/responses",
+                  description: "Strategy eval: POST /v1/responses",
+                  amountAtomic: "200",
+                },
+              ],
+            },
+          ],
+        },
+      });
+
+      const systemPrompt = capturedCommandInput?.system?.[0]?.text;
+      expect(systemPrompt).toContain('"scenarios" must be an array of 2 or 3 short possible user-goal hypotheses.');
+      expect(systemPrompt).toContain('Do not use phrases such as "the input does not specify"');
+      expect(result.model.promptVersion).toBe("workflow-intent-v2");
+      expect(result.explanations).toEqual([
+        expect.objectContaining({
+          sessionId: "session-1",
+          intent:
+            "This burst appears consistent with a wallet checking price conditions.",
+          scenarios: [
+            "A bot deciding whether to place a trade.",
+            "An automation loop checking whether a trigger condition was met.",
+          ],
+          evidence: ["Multiple API calls happened inside one short burst."],
+          caution:
+            "This is inferred from payment-linked API activity and may miss offchain context.",
+        }),
+      ]);
     }));
 
   test("reuses cached Bedrock explanations for the same branch, model, and input", async () =>

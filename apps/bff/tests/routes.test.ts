@@ -660,6 +660,10 @@ describe("BFF routes", () => {
             summary: "Automated market check",
             intent:
               "This short burst appears consistent with a bot checking market conditions, evaluating them with an LLM step, and preparing an execution decision.",
+            scenarios: [
+              "A bot deciding whether to execute a market action.",
+              "An automation loop checking whether conditions justify a next step.",
+            ],
             evidence: [
               "The calls happened within a single 5 minute window.",
               "Price API and LLM API activity appeared in one ordered burst.",

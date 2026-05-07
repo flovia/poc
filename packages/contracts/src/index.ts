@@ -1194,6 +1194,7 @@ export const PhaseBCustomerWorkflowIntentExplanationSchema = z
     sessionId: z.string().min(1),
     summary: z.string().min(1),
     intent: z.string().min(1),
+    scenarios: z.array(z.string().min(1)).min(2).max(3),
     evidence: z.array(z.string().min(1)).min(1),
     caution: z.string().min(1),
   })

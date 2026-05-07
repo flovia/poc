@@ -24,7 +24,7 @@ const GENERATED_FROM = "phase-b-llm-upsell-metrics-v1";
 const UPSSELL_EXPLANATION_GENERATED_FROM = "phase-b-bedrock-upsell-explanation-v1";
 const WORKFLOW_INTENT_GENERATED_FROM = "phase-b-bedrock-workflow-intent-v1";
 const DEFAULT_BEDROCK_PROMPT_VERSION = "upsell-explanation-v1";
-const DEFAULT_WORKFLOW_INTENT_PROMPT_VERSION = "workflow-intent-v1";
+const DEFAULT_WORKFLOW_INTENT_PROMPT_VERSION = "workflow-intent-v2";
 const DEFAULT_BEDROCK_MAX_TOKENS = 500;
 const DEFAULT_BEDROCK_TEMPERATURE = 0.2;
 const DEFAULT_BEDROCK_BRANCH_NAME = "unknown-branch";
@@ -64,6 +64,11 @@ const workflowIntentReason: EvidenceLabel = {
   label: "bedrock explanation from workflow sessions",
   sourceFields: ["sessions", "events", "providers"],
 };
+
+const GENERIC_WORKFLOW_DISCLAIMER_PATTERN =
+  /\b(?:the\s+input|the\s+data)\s+does\s+not\s+specify\b/i;
+const DEFAULT_WORKFLOW_INTENT_CAUTION =
+  "This is inferred from payment-linked API activity and may miss offchain context.";
 
 const heuristicCaveats = [
   "activityGrowth is a PoC heuristic and not a strict live growth metric.",
@@ -136,16 +141,19 @@ const buildWorkflowIntentSystemPrompt = (promptVersion: string) =>
     `Prompt version: ${promptVersion}.`,
     "Return strict JSON only.",
     'Use exactly one top-level key: "explanations".',
-    '"explanations" must be an array of objects with exactly these keys: "sessionId", "summary", "intent", "evidence", "caution".',
+    '"explanations" must be an array of objects with exactly these keys: "sessionId", "summary", "intent", "scenarios", "evidence", "caution".',
     '"summary" must be a short title of 3 to 6 words.',
     '"intent" must be 1 or 2 sentences explaining the likely operational goal of the burst.',
+    '"scenarios" must be an array of 2 or 3 short possible user-goal hypotheses.',
     '"evidence" must be an array of 2 or 3 short evidence-based sentences.',
-    '"caution" must mention uncertainty or interpretation limits.',
+    '"caution" must be one short sentence about uncertainty or interpretation limits.',
     "Base every claim only on the ordered provider names, activity labels, descriptions, timing, and amounts in the input.",
     "Use cautious language such as suggests, appears consistent with, may indicate, or looks like.",
     "Do not claim a precise business objective, trade, or user plan as fact when the input is ambiguous.",
     "Do not invent tokens, strategies, counterparties, offchain context, or missing workflow steps.",
-    "If the sequence is ambiguous, describe it as monitoring, orchestration, or evaluation rather than a specific action.",
+    "If the sequence is ambiguous, describe it as monitoring, orchestration, evaluation, or readiness checking rather than a specific action.",
+    'Do not use phrases such as "the input does not specify", "the data does not specify", or similar boilerplate refusals.',
+    "Prefer concrete short scenario candidates such as threshold checking, pre-trade evaluation, monitoring, or workflow orchestration when supported by the sequence.",
     "Write the output in English for an internal product user.",
   ].join("\n");
 
@@ -165,6 +173,162 @@ const buildWorkflowIntentUserPrompt = (
     null,
     2,
   );
+
+const normalizeWorkflowExplanationText = (value: string | undefined) => {
+  if (!value) return "";
+
+  const normalized = value.replace(/\s+/g, " ").trim();
+  if (!normalized) return "";
+
+  const kept = normalized
+    .split(/(?<=[.!?])\s+/)
+    .map((part) => part.trim())
+    .filter((part) => part.length > 0 && !GENERIC_WORKFLOW_DISCLAIMER_PATTERN.test(part));
+
+  return kept.join(" ").trim();
+};
+
+const uniqueNonEmpty = (values: string[]) => {
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const value of values) {
+    const normalized = value.trim();
+    if (!normalized || seen.has(normalized)) continue;
+    seen.add(normalized);
+    result.push(normalized);
+  }
+  return result;
+};
+
+const buildFallbackWorkflowIntentSummary = (
+  session: PhaseBCustomerWorkflowIntentInput["sessions"][number],
+) => {
+  if (session.distinctProviderCount >= 3) return "Cross-provider workflow check";
+  if (session.distinctProviderCount === 2) return "Multi-step API evaluation";
+  return "Short automated API loop";
+};
+
+const buildFallbackWorkflowIntent = (
+  session: PhaseBCustomerWorkflowIntentInput["sessions"][number],
+) =>
+  session.distinctProviderCount >= 2
+    ? "This burst appears consistent with a wallet evaluating multiple API results before deciding the next operational step."
+    : "This burst appears consistent with a wallet running a short automated check before deciding whether to continue.";
+
+const buildFallbackWorkflowScenarios = (
+  session: PhaseBCustomerWorkflowIntentInput["sessions"][number],
+) => {
+  const rawText = [
+    ...session.providers.map((provider) => provider.providerName),
+    ...session.providers.flatMap((provider) => provider.activityLabels),
+    ...session.events.map((event) => event.description),
+  ]
+    .join(" ")
+    .toLowerCase();
+
+  const scenarios: string[] = [];
+
+  if (/(price|quote|market|swap|liquidity|trade|token)/.test(rawText)) {
+    scenarios.push(
+      "A bot checking market or quote conditions before deciding whether to execute.",
+    );
+  }
+
+  if (/(llm|response|completion|inference|model|prompt|agent)/.test(rawText)) {
+    scenarios.push(
+      "An agent evaluating retrieved results before choosing the next API step.",
+    );
+  }
+
+  if (/(search|query|lookup|fetch|scan|discover)/.test(rawText)) {
+    scenarios.push(
+      "A lookup workflow gathering enough context for a downstream decision.",
+    );
+  }
+
+  scenarios.push(
+    "An automated workflow validating whether current conditions justify another action.",
+  );
+  scenarios.push(
+    "A monitoring or orchestration loop checking state before continuing the session.",
+  );
+
+  return uniqueNonEmpty(scenarios).slice(0, 3);
+};
+
+const buildFallbackWorkflowEvidence = (
+  session: PhaseBCustomerWorkflowIntentInput["sessions"][number],
+) => {
+  const lines = [
+    `The burst completed within ${Math.max(1, Math.floor(session.durationSeconds / 60))} minutes.`,
+    `${session.eventCount} paid API calls appeared in one ordered session.`,
+  ];
+
+  if (session.distinctProviderCount >= 2) {
+    lines.push(
+      `${session.distinctProviderCount} distinct APIs appeared in the same short workflow burst.`,
+    );
+  }
+
+  return lines;
+};
+
+const normalizeWorkflowIntentExplanation = (
+  raw: unknown,
+  sessionById: Map<string, PhaseBCustomerWorkflowIntentInput["sessions"][number]>,
+) => {
+  const candidate =
+    typeof raw === "object" && raw !== null ? (raw as Record<string, unknown>) : {};
+  const sessionId =
+    typeof candidate.sessionId === "string" ? candidate.sessionId.trim() : "";
+  if (!sessionId) {
+    throw new BffLlmInferenceError("Workflow intent explanation is missing sessionId.");
+  }
+
+  const session = sessionById.get(sessionId);
+  if (!session) {
+    throw new BffLlmInferenceError(
+      `Workflow intent explanation references unknown sessionId: ${sessionId}.`,
+    );
+  }
+
+  const summary =
+    normalizeWorkflowExplanationText(
+      typeof candidate.summary === "string" ? candidate.summary : undefined,
+    ) || buildFallbackWorkflowIntentSummary(session);
+  const intent =
+    normalizeWorkflowExplanationText(
+      typeof candidate.intent === "string" ? candidate.intent : undefined,
+    ) || buildFallbackWorkflowIntent(session);
+  const scenarios = uniqueNonEmpty(
+    (Array.isArray(candidate.scenarios) ? candidate.scenarios : [])
+      .map((item) =>
+        normalizeWorkflowExplanationText(typeof item === "string" ? item : undefined),
+      )
+      .filter(Boolean),
+  );
+  const evidence = uniqueNonEmpty(
+    (Array.isArray(candidate.evidence) ? candidate.evidence : [])
+      .map((item) =>
+        normalizeWorkflowExplanationText(typeof item === "string" ? item : undefined),
+      )
+      .filter(Boolean),
+  );
+  const caution =
+    normalizeWorkflowExplanationText(
+      typeof candidate.caution === "string" ? candidate.caution : undefined,
+    ) || DEFAULT_WORKFLOW_INTENT_CAUTION;
+
+  return PhaseBCustomerWorkflowIntentExplanationSchema.parse({
+    sessionId,
+    summary,
+    intent,
+    scenarios:
+      scenarios.length >= 2 ? scenarios.slice(0, 3) : buildFallbackWorkflowScenarios(session),
+    evidence: evidence.length > 0 ? evidence : buildFallbackWorkflowEvidence(session),
+    caution,
+  });
+};
 
 const extractTextFromBedrockResponse = (response: {
   output?: { message?: { content?: Array<{ text?: string } | undefined> } };
@@ -797,9 +961,12 @@ class BedrockUpsellExplanationService implements BffLlmService {
       const response = await this.#client.send(command);
       const text = extractTextFromBedrockResponse(response);
       const payload = JSON.parse(extractJsonObject(text)) as { explanations?: unknown[] };
+      const sessionById = new Map(
+        request.input.sessions.map((session) => [session.sessionId, session] as const),
+      );
       explanations = Array.isArray(payload.explanations)
         ? payload.explanations.map((item) =>
-            PhaseBCustomerWorkflowIntentExplanationSchema.parse(item),
+            normalizeWorkflowIntentExplanation(item, sessionById),
           )
         : [];
     } catch (error) {
