@@ -157,6 +157,60 @@ export type CustomerUpsellExplanationDto = {
   caution: string;
 };
 
+export type CustomerWorkflowIntentSessionProviderDto = {
+  providerId?: string;
+  providerName: string;
+  payToWallet?: string;
+  eventCount: number;
+  totalAmountAtomic: string;
+  activityLabels: string[];
+};
+
+export type CustomerWorkflowIntentSessionEventDto = {
+  timestamp: number;
+  providerId?: string;
+  providerName: string;
+  payToWallet?: string;
+  activityLabel: string;
+  description: string;
+  amountAtomic?: string;
+};
+
+export type CustomerWorkflowIntentSessionDto = {
+  sessionId: string;
+  startedAt: number;
+  endedAt: number;
+  durationSeconds: number;
+  eventCount: number;
+  distinctProviderCount: number;
+  distinctActivityCount: number;
+  totalAmountAtomic: string;
+  providers: CustomerWorkflowIntentSessionProviderDto[];
+  events: CustomerWorkflowIntentSessionEventDto[];
+};
+
+export type CustomerWorkflowIntentExplanationDto = {
+  sessionId: string;
+  summary: string;
+  intent: string;
+  scenarios: string[];
+  evidence: string[];
+  caution: string;
+};
+
+export type CustomerWorkflowIntentDto = {
+  generatedAt: string;
+  address: string;
+  sessionWindowSeconds: number;
+  sessionCount: number;
+  remainingSessionCount: number;
+  analysisStatus: "ready" | "no_candidate_sessions" | "unavailable" | "failed";
+  failureMessage: string | null;
+  modelId: string | null;
+  sessions: CustomerWorkflowIntentSessionDto[];
+  explanations: CustomerWorkflowIntentExplanationDto[];
+};
+
 export type WalletUsageGraphDto = {
   generatedFrom: "payment_observations+provider_endpoint_claims+attribution_candidates";
   payerWalletLanguage: true;

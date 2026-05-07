@@ -11,6 +11,7 @@ import type { SdkExtras, SdkForceNetwork } from "@/lib/sdk-fixtures/types";
 import { ActivityTimeline } from "./ActivityTimeline";
 import { CoUsageRanking } from "./CoUsageRanking";
 import { SdkForceNetworkChart } from "./SdkForceNetworkChart";
+import { WorkflowIntentPanel } from "./WorkflowIntentPanel";
 import { WorkflowSummaryStrip } from "./WorkflowSummaryStrip";
 
 type Props = {
@@ -53,6 +54,24 @@ export function WalletInteractive({
 
   return (
     <>
+      <section
+        data-testid="wallet-evidence-workflow-intent"
+        className="wallet-screen-span-6 wallet-grid-item wallet-evidence-workflow-intent"
+      >
+        <WorkflowIntentPanel address={address} />
+      </section>
+      {showWorkflowSummary && (
+        <section className="wallet-screen-span-12 wallet-grid-item">
+          <WorkflowSummaryStrip
+            timeline={timeline}
+            providers={providers}
+            payToByProviderId={payToByProviderId}
+            storedProviders={stored}
+            dataMode={dataMode}
+            sdkExtras={sdkExtras}
+          />
+        </section>
+      )}
       {showCoUsage && (
         <section
           aria-label="Co-usage evidence"
@@ -76,18 +95,6 @@ export function WalletInteractive({
           sdkExtras={sdkExtras}
         />
       </section>
-      {showWorkflowSummary && (
-        <section className="wallet-screen-span-12 wallet-grid-item">
-          <WorkflowSummaryStrip
-            timeline={timeline}
-            providers={providers}
-            payToByProviderId={payToByProviderId}
-            storedProviders={stored}
-            dataMode={dataMode}
-            sdkExtras={sdkExtras}
-          />
-        </section>
-      )}
       {isSdkProtagonist && sdkForceNetwork && (
         <section className="wallet-screen-span-12 wallet-grid-item">
           <SdkForceNetworkChart network={sdkForceNetwork} />

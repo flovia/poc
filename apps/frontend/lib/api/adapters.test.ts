@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import type {
   PhaseBCustomerListResponse,
+  PhaseBCustomerWorkflowIntentResponse,
   PhaseBCustomerUpsellExplanationResponse,
   PhaseBCustomerProfileResponse,
   ProviderCatalogResponse,
@@ -8,6 +9,7 @@ import type {
 } from "contracts";
 import {
   adaptCustomerList,
+  adaptCustomerWorkflowIntent,
   adaptCustomerUpsellExplanation,
   adaptCustomerProfile,
   adaptProviderCatalog,
@@ -423,6 +425,180 @@ describe("BFF canonical adapters", () => {
       recommendedAction:
         "Review whether the observed usage pattern matches a higher-support offering.",
       caution: "Some inputs are PoC heuristics.",
+    });
+  });
+
+  test("adapts workflow intent envelope to wallet detail view model", () => {
+    const response: PhaseBCustomerWorkflowIntentResponse = {
+      generatedAt: "2026-05-02T02:50:45.838Z",
+      generatedFrom: "phase-b-bedrock-workflow-intent-v1",
+      address: "0x0000000000000000000000000000000000000001",
+      sourceGeneratedAt: "2026-05-02T00:00:00.000Z",
+      sessionWindowSeconds: 300,
+      sessionCount: 2,
+      remainingSessionCount: 1,
+      analysisStatus: "ready",
+      model: {
+        provider: "bedrock",
+        modelId: "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+        region: "ap-northeast-1",
+        promptVersion: "workflow-intent-v1",
+      },
+      input: {
+        sessionWindowSeconds: 300,
+        sessions: [
+          {
+            sessionId: "session-1",
+            startedAt: "2026-05-01T10:00:00Z",
+            endedAt: "2026-05-01T10:04:00Z",
+            durationSeconds: 240,
+            eventCount: 3,
+            distinctProviderCount: 2,
+            distinctActivityCount: 3,
+            totalAmountAtomic: "600",
+            providers: [
+              {
+                providerId: "price-api",
+                providerName: "Price API",
+                payToWallet: "0x0000000000000000000000000000000000000011",
+                eventCount: 2,
+                totalAmountAtomic: "400",
+                activityLabels: ["GET /v1/price", "GET /v1/quote"],
+              },
+            ],
+            events: [
+              {
+                at: "2026-05-01T10:00:00Z",
+                providerId: "price-api",
+                providerName: "Price API",
+                payToWallet: "0x0000000000000000000000000000000000000011",
+                activityLabel: "GET /v1/price",
+                description: "Price refresh: GET /v1/price",
+                amountAtomic: "100",
+              },
+            ],
+          },
+        ],
+      },
+      sessions: [
+        {
+          sessionId: "session-1",
+          startedAt: "2026-05-01T10:00:00Z",
+          endedAt: "2026-05-01T10:04:00Z",
+          durationSeconds: 240,
+          eventCount: 3,
+          distinctProviderCount: 2,
+          distinctActivityCount: 3,
+          totalAmountAtomic: "600",
+          providers: [
+            {
+              providerId: "price-api",
+              providerName: "Price API",
+              payToWallet: "0x0000000000000000000000000000000000000011",
+              eventCount: 2,
+              totalAmountAtomic: "400",
+              activityLabels: ["GET /v1/price", "GET /v1/quote"],
+            },
+          ],
+          events: [
+            {
+              at: "2026-05-01T10:00:00Z",
+              providerId: "price-api",
+              providerName: "Price API",
+              payToWallet: "0x0000000000000000000000000000000000000011",
+              activityLabel: "GET /v1/price",
+              description: "Price refresh: GET /v1/price",
+              amountAtomic: "100",
+            },
+          ],
+        },
+      ],
+      explanations: [
+        {
+          sessionId: "session-1",
+          summary: "Automated market check",
+          intent:
+            "This burst appears consistent with a wallet checking price conditions before an execution decision.",
+          scenarios: [
+            "A trading bot refreshing price data before placing an order.",
+            "An automation job evaluating whether a threshold or alert was hit.",
+          ],
+          evidence: [
+            "Price and inference calls appeared in one burst.",
+            "The burst finished within five minutes.",
+          ],
+          caution: "This is inferred from payment-linked API activity.",
+        },
+      ],
+      provenance: "derived_insight",
+      provenanceByField: {
+        address: "onchain_fact",
+        model: "derived_insight",
+        input: "derived_insight",
+        explanations: "derived_insight",
+      },
+      reasons: [evidence],
+    };
+
+    expect(adaptCustomerWorkflowIntent(response)).toEqual({
+      generatedAt: "2026-05-02T02:50:45.838Z",
+      address: "0x0000000000000000000000000000000000000001",
+      sessionWindowSeconds: 300,
+      sessionCount: 2,
+      remainingSessionCount: 1,
+      analysisStatus: "ready",
+      failureMessage: null,
+      modelId: "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      sessions: [
+        {
+          sessionId: "session-1",
+          startedAt: Date.parse("2026-05-01T10:00:00Z") / 1000,
+          endedAt: Date.parse("2026-05-01T10:04:00Z") / 1000,
+          durationSeconds: 240,
+          eventCount: 3,
+          distinctProviderCount: 2,
+          distinctActivityCount: 3,
+          totalAmountAtomic: "600",
+          providers: [
+            {
+              providerId: "price-api",
+              providerName: "Price API",
+              payToWallet: "0x0000000000000000000000000000000000000011",
+              eventCount: 2,
+              totalAmountAtomic: "400",
+              activityLabels: ["GET /v1/price", "GET /v1/quote"],
+            },
+          ],
+          events: [
+            {
+              timestamp: Date.parse("2026-05-01T10:00:00Z") / 1000,
+              providerId: "price-api",
+              providerName: "Price API",
+              payToWallet: "0x0000000000000000000000000000000000000011",
+              activityLabel: "GET /v1/price",
+              description: "Price refresh: GET /v1/price",
+              amountAtomic: "100",
+            },
+          ],
+        },
+      ],
+      explanations: [
+        {
+          sessionId: "session-1",
+          summary: "Automated market check",
+          intent:
+            "This burst appears consistent with a wallet checking price conditions before an execution decision.",
+          scenarios: [
+            "A trading bot refreshing price data before placing an order.",
+            "An automation job evaluating whether a threshold or alert was hit.",
+          ],
+          evidence: [
+            "Price and inference calls appeared in one burst.",
+            "The burst finished within five minutes.",
+          ],
+          caution: "This is inferred from payment-linked API activity.",
+        },
+      ],
     });
   });
 

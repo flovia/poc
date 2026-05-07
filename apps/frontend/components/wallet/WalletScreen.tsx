@@ -86,7 +86,7 @@ export function WalletScreen({
           >
             <section
               aria-label="Wallet upsell opportunity"
-              className="wallet-screen-span-12 wallet-grid-item wallet-evidence-upsell"
+              className="wallet-screen-span-6 wallet-grid-item wallet-evidence-upsell"
             >
               <UpsellCard
                 address={profile.customer.address}

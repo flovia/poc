@@ -977,6 +977,18 @@ a { color: inherit; text-decoration: none; }
   gap: 18px;
   align-items: start;
 }
+.wallet-evidence-grid > * {
+  display: flex;
+  min-width: 0;
+}
+.wallet-evidence-grid > * > * {
+  flex: 1;
+  min-width: 0;
+}
+.wallet-evidence-upsell,
+.wallet-evidence-workflow-intent {
+  align-self: stretch;
+}
 .wallet-support-grid > * {
   display: flex;
   min-width: 0;
@@ -1043,6 +1055,9 @@ a { color: inherit; text-decoration: none; }
   }
   .wallet-screen-span-7 {
     grid-column: span 7 / span 7;
+  }
+  .wallet-screen-span-6 {
+    grid-column: span 6 / span 6;
   }
   .wallet-screen-span-5 {
     grid-column: span 5 / span 5;

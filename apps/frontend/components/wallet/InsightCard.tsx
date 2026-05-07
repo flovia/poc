@@ -40,6 +40,9 @@ export function InsightCard({
         borderColor: t.border,
         animationDelay: delay + "ms",
         minWidth: 0,
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
       }}
     >
       {label && (
@@ -59,7 +62,7 @@ export function InsightCard({
           {icon} {label}
         </div>
       )}
-      {children}
+      <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
       {footer && (
         <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid var(--line)" }}>{footer}</div>
       )}
