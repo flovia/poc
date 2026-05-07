@@ -5,6 +5,10 @@ import type {
   RouteAnalyticsVisibility,
 } from "contracts";
 import type React from "react";
+import {
+  EndpointSankey,
+  type EndpointSankeyFlow,
+} from "@/components/macro-metrics/EndpointSankey";
 
 type MachinePaymentRoutesScreenProps = {
   summary: RouteAnalyticsSummaryResponse;
@@ -88,9 +92,58 @@ function Badge({ children, tone = "neutral" }: { children: React.ReactNode; tone
   );
 }
 
+function buildRouteSankeyFlows(summary: RouteAnalyticsSummaryResponse): EndpointSankeyFlow[] {
+  const railSummary = new Map(summary.rails.map((rail) => [rail.rail, rail]));
+  const maxSettledUsd = Math.max(...summary.rails.map((rail) => rail.settledUsd), 1);
+  const maxRouteCount = Math.max(...summary.rails.map((rail) => rail.routeCount), 1);
+
+  const routeFor = (
+    rail: MachinePaymentRail,
+    source: string,
+    workflow: string,
+  ): EndpointSankeyFlow[] => {
+    const railRow = railSummary.get(rail);
+    if (!railRow) return [];
+    const railName = railLabel(rail);
+    // This chart is a presentation layer, not raw row-count rendering. A direct
+    // sample-row Sankey fragments into too many 1× links, so normalize each rail
+    // into a compact 3-path narrative and size by combined route/revenue signal.
+    const revenueScore = Math.round((railRow.settledUsd / maxSettledUsd) * 6);
+    const routeScore = Math.round((railRow.routeCount / maxRouteCount) * 6);
+    const occurrences = Math.max(2, revenueScore, routeScore);
+    return [
+      {
+        from: source,
+        to: railName,
+        fromStep: 0,
+        toStep: 1,
+        occurrences,
+        fromLabel: source,
+        toLabel: railName,
+      },
+      {
+        from: railName,
+        to: workflow,
+        fromStep: 1,
+        toStep: 2,
+        occurrences,
+        fromLabel: railName,
+        toLabel: workflow,
+      },
+    ];
+  };
+
+  return [
+    ...routeFor("x402", "Direct API clients", "Paid API routes"),
+    ...routeFor("stripe_mpp", "Marketplace", "Enrichment API"),
+    ...routeFor("hitpay_mpp", "MCP directory", "Research workflow"),
+  ];
+}
+
 export function MachinePaymentRoutesScreen({ summary, sankey }: MachinePaymentRoutesScreenProps) {
   const railNodes = sankey.nodes.filter((node) => node.layer === "payment_rail");
   const workflowNodes = sankey.nodes.filter((node) => node.layer === "api_workflow");
+  const routeSankeyFlows = buildRouteSankeyFlows(summary);
   const topLinks = [...sankey.links]
     .sort((left, right) => right.settledUsd - left.settledUsd || right.routeCount - left.routeCount)
     .slice(0, 8);
@@ -180,20 +233,10 @@ export function MachinePaymentRoutesScreen({ summary, sankey }: MachinePaymentRo
         </section>
 
         <section className="card" style={{ padding: 20 }}>
-          <h2 style={{ margin: 0, fontSize: 18 }}>Sankey layers</h2>
+          <h2 style={{ margin: 0, fontSize: 18 }}>Payment rails</h2>
           <p style={{ margin: "6px 0 0", color: "var(--text-2)", fontSize: 13 }}>
-            BFF response structure for source route → payment rail → API workflow.
+            Rail nodes carried by the BFF route Sankey response.
           </p>
-          <div style={{ marginTop: 16, display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
-            {sankey.layers.map((layer, index) => (
-              <div key={layer} style={{ border: "1px solid var(--line)", borderRadius: 12, padding: 12 }}>
-                <div style={{ color: "var(--text-mute)", fontSize: 11, textTransform: "uppercase" }}>
-                  layer {index + 1}
-                </div>
-                <div style={{ marginTop: 6, fontWeight: 800 }}>{layer.replaceAll("_", " ")}</div>
-              </div>
-            ))}
-          </div>
           <div style={{ marginTop: 16, display: "flex", flexWrap: "wrap", gap: 8 }}>
             {railNodes.map((node) => (
               <Badge key={node.id} tone={node.visibility === "public_onchain" ? "green" : "blue"}>
@@ -203,6 +246,43 @@ export function MachinePaymentRoutesScreen({ summary, sankey }: MachinePaymentRo
           </div>
         </section>
       </div>
+
+      <section className="card" style={{ padding: 20, marginTop: 18 }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            gap: 12,
+            alignItems: "baseline",
+            marginBottom: 10,
+          }}
+        >
+          <div>
+            <div className="eyebrow" style={{ marginBottom: 4 }}>
+              Repeated route transitions
+            </div>
+            <h2 style={{ margin: 0, fontSize: 18 }}>Source route → payment rail → API workflow</h2>
+          </div>
+          <span className="mono" style={{ color: "var(--text-3)", fontSize: 11 }}>
+            Nivo Sankey · normalized rail signal
+          </span>
+        </div>
+        <div style={{ overflow: "visible", display: "flex", justifyContent: "center", minWidth: 0 }}>
+          <EndpointSankey
+            flows={routeSankeyFlows}
+            ariaLabel="Machine payment route Sankey diagram"
+            emptyMessage="No route flow detected."
+            height={340}
+            minWidth={0}
+            margin={{ top: 16, right: 160, bottom: 16, left: 160 }}
+            labelFontSize={12}
+          />
+        </div>
+        <div style={{ color: "var(--text-mute)", fontSize: 12, marginTop: 8 }}>
+          To keep the diagram legible, raw route rows are collapsed into the three P0 narrative
+          paths. Wider links indicate stronger combined route-count and settled-USD signal.
+        </div>
+      </section>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18, marginTop: 18 }}>
         <section className="card" style={{ padding: 20 }}>
