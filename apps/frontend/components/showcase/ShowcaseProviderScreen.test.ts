@@ -36,6 +36,35 @@ describe("tempoReceiptExplorerUrl", () => {
   });
 });
 
+describe("demo fallback facts", () => {
+  test("extracts Stripe cheat-code facts", () => {
+    const txHash = "0xdb82e47e27fa089ba92edd5b6f7a1c9c1fe007820e2ede449c1c1698720d6b05";
+
+    expect(
+      extractLiveResultFacts({
+        status: 200,
+        body: {
+          receipt: { reference: txHash },
+          floviaEvent: {
+            requestId: "req_demo_stripe_mpp",
+            rail: "mpp",
+            amount: "1.00",
+            currency: "usd",
+            status: "paid_api_delivered",
+            payment: { paymentIntentId: "pi_demo_stripe_mpp_001" },
+            apiUsage: { endpoint: "/showcase/stripe-mpp/paid", method: "GET", responseStatus: 200, latencyMs: 47 },
+          },
+        },
+      }),
+    ).toMatchObject({
+      paymentId: "pi_demo_stripe_mpp_001",
+      txHash,
+      requestId: "req_demo_stripe_mpp",
+      latencyMs: "47",
+    });
+  });
+});
+
 describe("extractLiveResultFacts", () => {
   test("extracts joined PaymentIntent and receipt tx hash", () => {
     const txHash = "0xdb82e47e27fa089ba92edd5b6f7a1c9c1fe007820e2ede449c1c1698720d6b05";

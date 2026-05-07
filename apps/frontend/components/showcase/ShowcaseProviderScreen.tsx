@@ -16,6 +16,8 @@ type LiveResult = {
   body: unknown;
 };
 
+const demoTempoTxHash = "0xdb82e47e27fa089ba92edd5b6f7a1c9c1fe007820e2ede449c1c1698720d6b05";
+
 const providerConfig = {
   stripe: {
     title: "Stripe MPP showcase",
@@ -227,6 +229,57 @@ export function ShowcaseProviderScreen({ provider }: ShowcaseProviderScreenProps
     setState("paid");
   }
 
+  function showStripeFallbackSuccess() {
+    setChallengeId(null);
+    setResult({
+      status: 200,
+      body: {
+        ok: true,
+        foo: "bar",
+        provider: "stripe",
+        paidApi: {
+          endpoint: config.endpoint,
+          message: "Stripe MPP showcase paid response",
+          generatedAt: new Date().toISOString(),
+        },
+        receipt: {
+          method: "tempo",
+          reference: demoTempoTxHash,
+          status: "success",
+          timestamp: new Date().toISOString(),
+          mode: "demo_fallback",
+        },
+        floviaEvent: {
+          requestId: "req_demo_stripe_mpp",
+          provider: "stripe",
+          rail: "mpp",
+          endpoint: config.endpoint,
+          amount: "1.00",
+          currency: "usd",
+          method: "GET",
+          responseStatus: 200,
+          latencyMs: 47,
+          status: "paid_api_delivered",
+          payment: {
+            paymentIntentId: config.simulatedId,
+            recipient: "0x0000000000000000000000000000000000000000",
+            network: "tempo",
+            amount: "1.00",
+            currency: "usd",
+          },
+          apiUsage: {
+            endpoint: config.endpoint,
+            method: "GET",
+            responseStatus: 200,
+            latencyMs: 47,
+          },
+          joinedInsight: "Stripe Tempo payment context converted into retained paid API demand.",
+        },
+      },
+    });
+    setState("paid");
+  }
+
   return (
     <div className="scroll">
       <div style={{ padding: "32px 40px 80px", maxWidth: 1440, margin: "0 auto" }}>
@@ -248,7 +301,7 @@ export function ShowcaseProviderScreen({ provider }: ShowcaseProviderScreenProps
           <Card
             eyebrow="Live flow"
             title={provider === "hitpay" ? "Call the real HitPay MPP endpoint" : "Call the real Stripe MPP challenge endpoint"}
-            action={provider === "hitpay" ? <CheatCodeButton onClick={showHitPayFallbackSuccess} /> : null}
+            action={<CheatCodeButton provider={provider} onClick={provider === "hitpay" ? showHitPayFallbackSuccess : showStripeFallbackSuccess} />}
           >
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 16 }}>
               <button type="button" onClick={() => void callPaidApi(false)} style={buttonStyle(provider)} disabled={state === "calling"}>
@@ -441,21 +494,25 @@ function Card({
   );
 }
 
-function CheatCodeButton({ onClick }: { onClick: () => void }) {
+function CheatCodeButton({ provider, onClick }: { provider: ProviderKey; onClick: () => void }) {
+  const color = provider === "stripe" ? "var(--mesh-blue)" : "var(--teal)";
+  const border = provider === "stripe" ? "var(--mesh-blue-soft)" : "var(--teal-soft)";
+  const background = provider === "stripe" ? "var(--mesh-blue-dim)" : "var(--teal-dim)";
+
   return (
     <button
       type="button"
       onClick={onClick}
-      title="Show the successful Flovia result when checkout cannot be completed."
+      title="Show the successful Flovia result when payment cannot be completed."
       style={{
         display: "inline-flex",
         alignItems: "center",
         gap: 6,
-        border: "1px solid var(--teal-soft)",
+        border: `1px solid ${border}`,
         borderRadius: 999,
         padding: "5px 10px",
-        background: "var(--teal-dim)",
-        color: "var(--teal)",
+        background,
+        color,
         fontSize: 12,
         fontWeight: 700,
         cursor: "pointer",
