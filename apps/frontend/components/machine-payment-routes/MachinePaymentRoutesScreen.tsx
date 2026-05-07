@@ -146,6 +146,7 @@ function selectSankeyRouteRows(summary: RouteAnalyticsSummaryResponse) {
 }
 
 function paymentRailLabel(route: RouteAnalyticsSummaryResponse["sampleRoutes"][number]): string {
+  if (route.rail === "hitpay_mpp") return "HitPay MPP";
   if (route.router && ["Solana", "Base", "Tempo", "STP"].includes(route.router)) {
     return `${railLabel(route.rail)} · ${route.router}`;
   }
@@ -158,8 +159,7 @@ const MIDDLE_NODE_ORDER = [
   "Stripe MPP · Tempo",
   "Stripe MPP · Solana",
   "Stripe MPP · STP",
-  "HitPay MPP · Solana",
-  "HitPay MPP · STP",
+  "HitPay MPP",
 ] as const;
 
 const SOURCE_NODE_ORDER = ["Direct", "pay.sh", "dexter", "agentcash", "agents.market"] as const;
