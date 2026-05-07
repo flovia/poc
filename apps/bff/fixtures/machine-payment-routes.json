@@ -16,12 +16,23 @@
     "amountUsd": 34,
     "currency": "USD",
     "status": "settled",
-    "settlementRef": { "type": "onchain_tx", "value": "demo_base_x402_scrape" },
+    "settlementRef": {
+      "type": "onchain_tx",
+      "value": "demo_base_x402_scrape"
+    },
     "visibility": "public_onchain",
     "provenance": "demo_label",
-    "provenanceByField": { "rail": "demo_label", "router": "demo_label" },
+    "provenanceByField": {
+      "rail": "demo_label",
+      "router": "demo_label"
+    },
     "latencyMs": 310,
-    "reasons": [{ "provenance": "demo_label", "label": "machine flow sankey demo row" }]
+    "reasons": [
+      {
+        "provenance": "demo_label",
+        "label": "machine flow sankey demo row"
+      }
+    ]
   },
   {
     "routeId": "route:x402:direct-solana-crawl",
@@ -40,12 +51,23 @@
     "amountUsd": 30,
     "currency": "USD",
     "status": "settled",
-    "settlementRef": { "type": "onchain_tx", "value": "demo_solana_x402_direct_crawl" },
+    "settlementRef": {
+      "type": "onchain_tx",
+      "value": "demo_solana_x402_direct_crawl"
+    },
     "visibility": "public_onchain",
     "provenance": "demo_label",
-    "provenanceByField": { "rail": "demo_label", "router": "demo_label" },
+    "provenanceByField": {
+      "rail": "demo_label",
+      "router": "demo_label"
+    },
     "latencyMs": 340,
-    "reasons": [{ "provenance": "demo_label", "label": "machine flow sankey demo row" }]
+    "reasons": [
+      {
+        "provenance": "demo_label",
+        "label": "machine flow sankey demo row"
+      }
+    ]
   },
   {
     "routeId": "route:x402:paysh-solana-crawl",
@@ -64,12 +86,23 @@
     "amountUsd": 27,
     "currency": "USD",
     "status": "settled",
-    "settlementRef": { "type": "onchain_tx", "value": "demo_solana_x402_crawl" },
+    "settlementRef": {
+      "type": "onchain_tx",
+      "value": "demo_solana_x402_crawl"
+    },
     "visibility": "public_onchain",
     "provenance": "demo_label",
-    "provenanceByField": { "rail": "demo_label", "router": "demo_label" },
+    "provenanceByField": {
+      "rail": "demo_label",
+      "router": "demo_label"
+    },
     "latencyMs": 360,
-    "reasons": [{ "provenance": "demo_label", "label": "machine flow sankey demo row" }]
+    "reasons": [
+      {
+        "provenance": "demo_label",
+        "label": "machine flow sankey demo row"
+      }
+    ]
   },
   {
     "routeId": "route:x402:dexter-base-map",
@@ -88,12 +121,23 @@
     "amountUsd": 21,
     "currency": "USD",
     "status": "paid",
-    "settlementRef": { "type": "onchain_tx", "value": "demo_base_x402_map" },
+    "settlementRef": {
+      "type": "onchain_tx",
+      "value": "demo_base_x402_map"
+    },
     "visibility": "public_onchain",
     "provenance": "demo_label",
-    "provenanceByField": { "rail": "demo_label", "router": "demo_label" },
+    "provenanceByField": {
+      "rail": "demo_label",
+      "router": "demo_label"
+    },
     "latencyMs": 420,
-    "reasons": [{ "provenance": "demo_label", "label": "machine flow sankey demo row" }]
+    "reasons": [
+      {
+        "provenance": "demo_label",
+        "label": "machine flow sankey demo row"
+      }
+    ]
   },
   {
     "routeId": "route:x402:agentcash-solana-search",
@@ -112,12 +156,23 @@
     "amountUsd": 19,
     "currency": "USD",
     "status": "settled",
-    "settlementRef": { "type": "onchain_tx", "value": "demo_solana_x402_search" },
+    "settlementRef": {
+      "type": "onchain_tx",
+      "value": "demo_solana_x402_search"
+    },
     "visibility": "public_onchain",
     "provenance": "demo_label",
-    "provenanceByField": { "rail": "demo_label", "router": "demo_label" },
+    "provenanceByField": {
+      "rail": "demo_label",
+      "router": "demo_label"
+    },
     "latencyMs": 390,
-    "reasons": [{ "provenance": "demo_label", "label": "machine flow sankey demo row" }]
+    "reasons": [
+      {
+        "provenance": "demo_label",
+        "label": "machine flow sankey demo row"
+      }
+    ]
   },
   {
     "routeId": "route:x402:agentcash-base-extract",
@@ -136,12 +191,23 @@
     "amountUsd": 26,
     "currency": "USD",
     "status": "settled",
-    "settlementRef": { "type": "onchain_tx", "value": "demo_base_x402_agentcash_extract" },
+    "settlementRef": {
+      "type": "onchain_tx",
+      "value": "demo_base_x402_agentcash_extract"
+    },
     "visibility": "public_onchain",
     "provenance": "demo_label",
-    "provenanceByField": { "rail": "demo_label", "router": "demo_label" },
+    "provenanceByField": {
+      "rail": "demo_label",
+      "router": "demo_label"
+    },
     "latencyMs": 370,
-    "reasons": [{ "provenance": "demo_label", "label": "machine flow sankey demo row" }]
+    "reasons": [
+      {
+        "provenance": "demo_label",
+        "label": "machine flow sankey demo row"
+      }
+    ]
   },
   {
     "routeId": "route:x402:agentsmarket-base-scrape",
@@ -160,12 +226,23 @@
     "amountUsd": 24,
     "currency": "USD",
     "status": "settled",
-    "settlementRef": { "type": "onchain_tx", "value": "demo_base_x402_agentsmarket_scrape" },
+    "settlementRef": {
+      "type": "onchain_tx",
+      "value": "demo_base_x402_agentsmarket_scrape"
+    },
     "visibility": "public_onchain",
     "provenance": "demo_label",
-    "provenanceByField": { "rail": "demo_label", "router": "demo_label" },
+    "provenanceByField": {
+      "rail": "demo_label",
+      "router": "demo_label"
+    },
     "latencyMs": 380,
-    "reasons": [{ "provenance": "demo_label", "label": "machine flow sankey demo row" }]
+    "reasons": [
+      {
+        "provenance": "demo_label",
+        "label": "machine flow sankey demo row"
+      }
+    ]
   },
   {
     "routeId": "route:stripe-mpp:direct-tempo-search",
@@ -184,12 +261,23 @@
     "amountUsd": 31,
     "currency": "USD",
     "status": "settled",
-    "settlementRef": { "type": "stripe_payment_intent", "value": "pi_demo_tempo_search" },
+    "settlementRef": {
+      "type": "stripe_payment_intent",
+      "value": "pi_demo_tempo_search"
+    },
     "visibility": "provider_attested",
     "provenance": "demo_label",
-    "provenanceByField": { "rail": "demo_label", "router": "demo_label" },
+    "provenanceByField": {
+      "rail": "demo_label",
+      "router": "demo_label"
+    },
     "latencyMs": 430,
-    "reasons": [{ "provenance": "demo_label", "label": "machine flow sankey demo row" }]
+    "reasons": [
+      {
+        "provenance": "demo_label",
+        "label": "machine flow sankey demo row"
+      }
+    ]
   },
   {
     "routeId": "route:stripe-mpp:direct-solana-extract",
@@ -208,12 +296,23 @@
     "amountUsd": 28,
     "currency": "USD",
     "status": "settled",
-    "settlementRef": { "type": "stripe_payment_intent", "value": "pi_demo_solana_direct_extract" },
+    "settlementRef": {
+      "type": "stripe_payment_intent",
+      "value": "pi_demo_solana_direct_extract"
+    },
     "visibility": "provider_attested",
     "provenance": "demo_label",
-    "provenanceByField": { "rail": "demo_label", "router": "demo_label" },
+    "provenanceByField": {
+      "rail": "demo_label",
+      "router": "demo_label"
+    },
     "latencyMs": 450,
-    "reasons": [{ "provenance": "demo_label", "label": "machine flow sankey demo row" }]
+    "reasons": [
+      {
+        "provenance": "demo_label",
+        "label": "machine flow sankey demo row"
+      }
+    ]
   },
   {
     "routeId": "route:stripe-mpp:paysh-solana-extract",
@@ -232,12 +331,23 @@
     "amountUsd": 29,
     "currency": "USD",
     "status": "paid",
-    "settlementRef": { "type": "stripe_payment_intent", "value": "pi_demo_solana_extract" },
+    "settlementRef": {
+      "type": "stripe_payment_intent",
+      "value": "pi_demo_solana_extract"
+    },
     "visibility": "provider_attested",
     "provenance": "demo_label",
-    "provenanceByField": { "rail": "demo_label", "router": "demo_label" },
+    "provenanceByField": {
+      "rail": "demo_label",
+      "router": "demo_label"
+    },
     "latencyMs": 460,
-    "reasons": [{ "provenance": "demo_label", "label": "machine flow sankey demo row" }]
+    "reasons": [
+      {
+        "provenance": "demo_label",
+        "label": "machine flow sankey demo row"
+      }
+    ]
   },
   {
     "routeId": "route:stripe-mpp:dexter-stp-crawl",
@@ -256,12 +366,23 @@
     "amountUsd": 23,
     "currency": "USD",
     "status": "settled",
-    "settlementRef": { "type": "stripe_payment_intent", "value": "pi_demo_stp_crawl" },
+    "settlementRef": {
+      "type": "stripe_payment_intent",
+      "value": "pi_demo_stp_crawl"
+    },
     "visibility": "provider_attested",
     "provenance": "demo_label",
-    "provenanceByField": { "rail": "demo_label", "router": "demo_label" },
+    "provenanceByField": {
+      "rail": "demo_label",
+      "router": "demo_label"
+    },
     "latencyMs": 500,
-    "reasons": [{ "provenance": "demo_label", "label": "machine flow sankey demo row" }]
+    "reasons": [
+      {
+        "provenance": "demo_label",
+        "label": "machine flow sankey demo row"
+      }
+    ]
   },
   {
     "routeId": "route:stripe-mpp:agentcash-tempo-map",
@@ -280,12 +401,23 @@
     "amountUsd": 25,
     "currency": "USD",
     "status": "settled",
-    "settlementRef": { "type": "stripe_payment_intent", "value": "pi_demo_tempo_map" },
+    "settlementRef": {
+      "type": "stripe_payment_intent",
+      "value": "pi_demo_tempo_map"
+    },
     "visibility": "provider_attested",
     "provenance": "demo_label",
-    "provenanceByField": { "rail": "demo_label", "router": "demo_label" },
+    "provenanceByField": {
+      "rail": "demo_label",
+      "router": "demo_label"
+    },
     "latencyMs": 440,
-    "reasons": [{ "provenance": "demo_label", "label": "machine flow sankey demo row" }]
+    "reasons": [
+      {
+        "provenance": "demo_label",
+        "label": "machine flow sankey demo row"
+      }
+    ]
   },
   {
     "routeId": "route:stripe-mpp:agentsmarket-solana-scrape",
@@ -304,12 +436,23 @@
     "amountUsd": 22,
     "currency": "USD",
     "status": "paid",
-    "settlementRef": { "type": "stripe_payment_intent", "value": "pi_demo_solana_scrape" },
+    "settlementRef": {
+      "type": "stripe_payment_intent",
+      "value": "pi_demo_solana_scrape"
+    },
     "visibility": "provider_attested",
     "provenance": "demo_label",
-    "provenanceByField": { "rail": "demo_label", "router": "demo_label" },
+    "provenanceByField": {
+      "rail": "demo_label",
+      "router": "demo_label"
+    },
     "latencyMs": 470,
-    "reasons": [{ "provenance": "demo_label", "label": "machine flow sankey demo row" }]
+    "reasons": [
+      {
+        "provenance": "demo_label",
+        "label": "machine flow sankey demo row"
+      }
+    ]
   },
   {
     "routeId": "route:stripe-mpp:agentsmarket-stp-extract",
@@ -328,12 +471,23 @@
     "amountUsd": 20,
     "currency": "USD",
     "status": "settled",
-    "settlementRef": { "type": "stripe_payment_intent", "value": "pi_demo_stp_extract" },
+    "settlementRef": {
+      "type": "stripe_payment_intent",
+      "value": "pi_demo_stp_extract"
+    },
     "visibility": "provider_attested",
     "provenance": "demo_label",
-    "provenanceByField": { "rail": "demo_label", "router": "demo_label" },
+    "provenanceByField": {
+      "rail": "demo_label",
+      "router": "demo_label"
+    },
     "latencyMs": 520,
-    "reasons": [{ "provenance": "demo_label", "label": "machine flow sankey demo row" }]
+    "reasons": [
+      {
+        "provenance": "demo_label",
+        "label": "machine flow sankey demo row"
+      }
+    ]
   },
   {
     "routeId": "route:hitpay-mpp:paysh-solana-map",
@@ -352,12 +506,23 @@
     "amountUsd": 24,
     "currency": "USD",
     "status": "paid",
-    "settlementRef": { "type": "hitpay_charge", "value": "hitpay_charge_demo_solana_map" },
+    "settlementRef": {
+      "type": "hitpay_charge",
+      "value": "hitpay_charge_demo_solana_map"
+    },
     "visibility": "provider_attested",
     "provenance": "demo_label",
-    "provenanceByField": { "rail": "demo_label", "router": "demo_label" },
+    "provenanceByField": {
+      "rail": "demo_label",
+      "router": "demo_label"
+    },
     "latencyMs": 510,
-    "reasons": [{ "provenance": "demo_label", "label": "machine flow sankey demo row" }]
+    "reasons": [
+      {
+        "provenance": "demo_label",
+        "label": "machine flow sankey demo row"
+      }
+    ]
   },
   {
     "routeId": "route:hitpay-mpp:direct-scrape",
@@ -376,12 +541,23 @@
     "amountUsd": 21,
     "currency": "USD",
     "status": "settled",
-    "settlementRef": { "type": "hitpay_charge", "value": "hitpay_charge_demo_scrape" },
+    "settlementRef": {
+      "type": "hitpay_charge",
+      "value": "hitpay_charge_demo_scrape"
+    },
     "visibility": "provider_attested",
     "provenance": "demo_label",
-    "provenanceByField": { "rail": "demo_label", "router": "demo_label" },
+    "provenanceByField": {
+      "rail": "demo_label",
+      "router": "demo_label"
+    },
     "latencyMs": 500,
-    "reasons": [{ "provenance": "demo_label", "label": "machine flow sankey demo row" }]
+    "reasons": [
+      {
+        "provenance": "demo_label",
+        "label": "machine flow sankey demo row"
+      }
+    ]
   },
   {
     "routeId": "route:hitpay-mpp:dexter-crawl",
@@ -400,12 +576,23 @@
     "amountUsd": 19,
     "currency": "USD",
     "status": "paid",
-    "settlementRef": { "type": "hitpay_charge", "value": "hitpay_charge_demo_crawl" },
+    "settlementRef": {
+      "type": "hitpay_charge",
+      "value": "hitpay_charge_demo_crawl"
+    },
     "visibility": "provider_attested",
     "provenance": "demo_label",
-    "provenanceByField": { "rail": "demo_label", "router": "demo_label" },
+    "provenanceByField": {
+      "rail": "demo_label",
+      "router": "demo_label"
+    },
     "latencyMs": 530,
-    "reasons": [{ "provenance": "demo_label", "label": "machine flow sankey demo row" }]
+    "reasons": [
+      {
+        "provenance": "demo_label",
+        "label": "machine flow sankey demo row"
+      }
+    ]
   },
   {
     "routeId": "route:hitpay-mpp:agentsmarket-stp-search",
@@ -424,12 +611,23 @@
     "amountUsd": 18,
     "currency": "USD",
     "status": "settled",
-    "settlementRef": { "type": "hitpay_charge", "value": "hitpay_charge_demo_stp_search" },
+    "settlementRef": {
+      "type": "hitpay_charge",
+      "value": "hitpay_charge_demo_stp_search"
+    },
     "visibility": "provider_attested",
     "provenance": "demo_label",
-    "provenanceByField": { "rail": "demo_label", "router": "demo_label" },
+    "provenanceByField": {
+      "rail": "demo_label",
+      "router": "demo_label"
+    },
     "latencyMs": 560,
-    "reasons": [{ "provenance": "demo_label", "label": "machine flow sankey demo row" }]
+    "reasons": [
+      {
+        "provenance": "demo_label",
+        "label": "machine flow sankey demo row"
+      }
+    ]
   },
   {
     "routeId": "route:hitpay-mpp:agentcash-extract",
@@ -448,11 +646,582 @@
     "amountUsd": 17,
     "currency": "USD",
     "status": "settled",
-    "settlementRef": { "type": "hitpay_charge", "value": "hitpay_charge_demo_extract" },
+    "settlementRef": {
+      "type": "hitpay_charge",
+      "value": "hitpay_charge_demo_extract"
+    },
     "visibility": "provider_attested",
     "provenance": "demo_label",
-    "provenanceByField": { "rail": "demo_label", "router": "demo_label" },
+    "provenanceByField": {
+      "rail": "demo_label",
+      "router": "demo_label"
+    },
     "latencyMs": 550,
-    "reasons": [{ "provenance": "demo_label", "label": "machine flow sankey demo row" }]
+    "reasons": [
+      {
+        "provenance": "demo_label",
+        "label": "machine flow sankey demo row"
+      }
+    ]
+  },
+  {
+    "routeId": "route:x402:dexter-base-crawl",
+    "workflowId": "workflow:crawl",
+    "sessionId": "session:x402:dexter-base-crawl",
+    "rail": "x402",
+    "protocol": "x402",
+    "sourceRoute": "dexter",
+    "sourcePlatform": "dexter",
+    "router": "Base",
+    "providerId": "demo-crawl-api",
+    "endpointGroup": "/v1/crawl",
+    "useCase": "crawl endpoint",
+    "payerIdentity": "demo:dexter:agent",
+    "payeeIdentity": "base:x402:crawl-provider",
+    "amountUsd": 18,
+    "currency": "USD",
+    "status": "settled",
+    "settlementRef": {
+      "type": "onchain_tx",
+      "value": "demo_base_crawl_dexter"
+    },
+    "visibility": "public_onchain",
+    "provenance": "demo_label",
+    "provenanceByField": {
+      "rail": "demo_label",
+      "router": "demo_label"
+    },
+    "latencyMs": 410,
+    "reasons": [
+      {
+        "provenance": "demo_label",
+        "label": "machine flow sankey demo row"
+      }
+    ]
+  },
+  {
+    "routeId": "route:x402:agentsmarket-base-search",
+    "workflowId": "workflow:search",
+    "sessionId": "session:x402:agentsmarket-base-search",
+    "rail": "x402",
+    "protocol": "x402",
+    "sourceRoute": "agents.market",
+    "sourcePlatform": "agents.market",
+    "router": "Base",
+    "providerId": "demo-search-api",
+    "endpointGroup": "/v1/search",
+    "useCase": "search endpoint",
+    "payerIdentity": "demo:agentsmarket:agent",
+    "payeeIdentity": "base:x402:search-provider",
+    "amountUsd": 20,
+    "currency": "USD",
+    "status": "settled",
+    "settlementRef": {
+      "type": "onchain_tx",
+      "value": "demo_base_search_agentsmarket"
+    },
+    "visibility": "public_onchain",
+    "provenance": "demo_label",
+    "provenanceByField": {
+      "rail": "demo_label",
+      "router": "demo_label"
+    },
+    "latencyMs": 460,
+    "reasons": [
+      {
+        "provenance": "demo_label",
+        "label": "machine flow sankey demo row"
+      }
+    ]
+  },
+  {
+    "routeId": "route:x402:paysh-solana-scrape",
+    "workflowId": "workflow:scrape",
+    "sessionId": "session:x402:paysh-solana-scrape",
+    "rail": "x402",
+    "protocol": "x402",
+    "sourceRoute": "pay.sh",
+    "sourcePlatform": "pay.sh",
+    "router": "Solana",
+    "providerId": "demo-scrape-api",
+    "endpointGroup": "/v1/scrape",
+    "useCase": "scrape endpoint",
+    "payerIdentity": "demo:paysh:agent",
+    "payeeIdentity": "solana:x402:scrape-provider",
+    "amountUsd": 17,
+    "currency": "USD",
+    "status": "settled",
+    "settlementRef": {
+      "type": "onchain_tx",
+      "value": "demo_solana_scrape_paysh"
+    },
+    "visibility": "public_onchain",
+    "provenance": "demo_label",
+    "provenanceByField": {
+      "rail": "demo_label",
+      "router": "demo_label"
+    },
+    "latencyMs": 385,
+    "reasons": [
+      {
+        "provenance": "demo_label",
+        "label": "machine flow sankey demo row"
+      }
+    ]
+  },
+  {
+    "routeId": "route:x402:agentcash-solana-map",
+    "workflowId": "workflow:map",
+    "sessionId": "session:x402:agentcash-solana-map",
+    "rail": "x402",
+    "protocol": "x402",
+    "sourceRoute": "agentcash",
+    "sourcePlatform": "agentcash",
+    "router": "Solana",
+    "providerId": "demo-map-api",
+    "endpointGroup": "/v1/map",
+    "useCase": "map endpoint",
+    "payerIdentity": "demo:agentcash:agent",
+    "payeeIdentity": "solana:x402:map-provider",
+    "amountUsd": 19,
+    "currency": "USD",
+    "status": "settled",
+    "settlementRef": {
+      "type": "onchain_tx",
+      "value": "demo_solana_map_agentcash"
+    },
+    "visibility": "public_onchain",
+    "provenance": "demo_label",
+    "provenanceByField": {
+      "rail": "demo_label",
+      "router": "demo_label"
+    },
+    "latencyMs": 435,
+    "reasons": [
+      {
+        "provenance": "demo_label",
+        "label": "machine flow sankey demo row"
+      }
+    ]
+  },
+  {
+    "routeId": "route:x402:dexter-solana-extract",
+    "workflowId": "workflow:extract",
+    "sessionId": "session:x402:dexter-solana-extract",
+    "rail": "x402",
+    "protocol": "x402",
+    "sourceRoute": "dexter",
+    "sourcePlatform": "dexter",
+    "router": "Solana",
+    "providerId": "demo-extract-api",
+    "endpointGroup": "/v1/extract",
+    "useCase": "extract endpoint",
+    "payerIdentity": "demo:dexter:agent",
+    "payeeIdentity": "solana:x402:extract-provider",
+    "amountUsd": 21,
+    "currency": "USD",
+    "status": "settled",
+    "settlementRef": {
+      "type": "onchain_tx",
+      "value": "demo_solana_extract_dexter"
+    },
+    "visibility": "public_onchain",
+    "provenance": "demo_label",
+    "provenanceByField": {
+      "rail": "demo_label",
+      "router": "demo_label"
+    },
+    "latencyMs": 485,
+    "reasons": [
+      {
+        "provenance": "demo_label",
+        "label": "machine flow sankey demo row"
+      }
+    ]
+  },
+  {
+    "routeId": "route:stripe_mpp:direct-tempo-scrape",
+    "workflowId": "workflow:scrape",
+    "sessionId": "session:stripe_mpp:direct-tempo-scrape",
+    "rail": "stripe_mpp",
+    "protocol": "mpp",
+    "sourceRoute": "Direct",
+    "sourcePlatform": "Direct",
+    "router": "Tempo",
+    "providerId": "demo-scrape-api",
+    "endpointGroup": "/v1/scrape",
+    "useCase": "Provider-attested scrape endpoint",
+    "payerIdentity": "demo:direct:agent",
+    "payeeIdentity": "tempo:stripe_mpp:scrape-provider",
+    "amountUsd": 19,
+    "currency": "USD",
+    "status": "settled",
+    "settlementRef": {
+      "type": "stripe_payment_intent",
+      "value": "pi_demo_tempo_scrape_direct"
+    },
+    "visibility": "provider_attested",
+    "provenance": "demo_label",
+    "provenanceByField": {
+      "rail": "demo_label",
+      "router": "demo_label"
+    },
+    "latencyMs": 385,
+    "reasons": [
+      {
+        "provenance": "demo_label",
+        "label": "machine flow sankey demo row"
+      }
+    ]
+  },
+  {
+    "routeId": "route:stripe_mpp:agentcash-tempo-crawl",
+    "workflowId": "workflow:crawl",
+    "sessionId": "session:stripe_mpp:agentcash-tempo-crawl",
+    "rail": "stripe_mpp",
+    "protocol": "mpp",
+    "sourceRoute": "agentcash",
+    "sourcePlatform": "agentcash",
+    "router": "Tempo",
+    "providerId": "demo-crawl-api",
+    "endpointGroup": "/v1/crawl",
+    "useCase": "Provider-attested crawl endpoint",
+    "payerIdentity": "demo:agentcash:agent",
+    "payeeIdentity": "tempo:stripe_mpp:crawl-provider",
+    "amountUsd": 20,
+    "currency": "USD",
+    "status": "settled",
+    "settlementRef": {
+      "type": "stripe_payment_intent",
+      "value": "pi_demo_tempo_crawl_agentcash"
+    },
+    "visibility": "provider_attested",
+    "provenance": "demo_label",
+    "provenanceByField": {
+      "rail": "demo_label",
+      "router": "demo_label"
+    },
+    "latencyMs": 410,
+    "reasons": [
+      {
+        "provenance": "demo_label",
+        "label": "machine flow sankey demo row"
+      }
+    ]
+  },
+  {
+    "routeId": "route:stripe_mpp:agentsmarket-tempo-extract",
+    "workflowId": "workflow:extract",
+    "sessionId": "session:stripe_mpp:agentsmarket-tempo-extract",
+    "rail": "stripe_mpp",
+    "protocol": "mpp",
+    "sourceRoute": "agents.market",
+    "sourcePlatform": "agents.market",
+    "router": "Tempo",
+    "providerId": "demo-extract-api",
+    "endpointGroup": "/v1/extract",
+    "useCase": "Provider-attested extract endpoint",
+    "payerIdentity": "demo:agentsmarket:agent",
+    "payeeIdentity": "tempo:stripe_mpp:extract-provider",
+    "amountUsd": 23,
+    "currency": "USD",
+    "status": "settled",
+    "settlementRef": {
+      "type": "stripe_payment_intent",
+      "value": "pi_demo_tempo_extract_agentsmarket"
+    },
+    "visibility": "provider_attested",
+    "provenance": "demo_label",
+    "provenanceByField": {
+      "rail": "demo_label",
+      "router": "demo_label"
+    },
+    "latencyMs": 485,
+    "reasons": [
+      {
+        "provenance": "demo_label",
+        "label": "machine flow sankey demo row"
+      }
+    ]
+  },
+  {
+    "routeId": "route:stripe_mpp:direct-solana-crawl",
+    "workflowId": "workflow:crawl",
+    "sessionId": "session:stripe_mpp:direct-solana-crawl",
+    "rail": "stripe_mpp",
+    "protocol": "mpp",
+    "sourceRoute": "Direct",
+    "sourcePlatform": "Direct",
+    "router": "Solana",
+    "providerId": "demo-crawl-api",
+    "endpointGroup": "/v1/crawl",
+    "useCase": "Provider-attested crawl endpoint",
+    "payerIdentity": "demo:direct:agent",
+    "payeeIdentity": "solana:stripe_mpp:crawl-provider",
+    "amountUsd": 20,
+    "currency": "USD",
+    "status": "settled",
+    "settlementRef": {
+      "type": "stripe_payment_intent",
+      "value": "pi_demo_solana_crawl_direct"
+    },
+    "visibility": "provider_attested",
+    "provenance": "demo_label",
+    "provenanceByField": {
+      "rail": "demo_label",
+      "router": "demo_label"
+    },
+    "latencyMs": 410,
+    "reasons": [
+      {
+        "provenance": "demo_label",
+        "label": "machine flow sankey demo row"
+      }
+    ]
+  },
+  {
+    "routeId": "route:stripe_mpp:agentsmarket-solana-map",
+    "workflowId": "workflow:map",
+    "sessionId": "session:stripe_mpp:agentsmarket-solana-map",
+    "rail": "stripe_mpp",
+    "protocol": "mpp",
+    "sourceRoute": "agents.market",
+    "sourcePlatform": "agents.market",
+    "router": "Solana",
+    "providerId": "demo-map-api",
+    "endpointGroup": "/v1/map",
+    "useCase": "Provider-attested map endpoint",
+    "payerIdentity": "demo:agentsmarket:agent",
+    "payeeIdentity": "solana:stripe_mpp:map-provider",
+    "amountUsd": 21,
+    "currency": "USD",
+    "status": "settled",
+    "settlementRef": {
+      "type": "stripe_payment_intent",
+      "value": "pi_demo_solana_map_agentsmarket"
+    },
+    "visibility": "provider_attested",
+    "provenance": "demo_label",
+    "provenanceByField": {
+      "rail": "demo_label",
+      "router": "demo_label"
+    },
+    "latencyMs": 435,
+    "reasons": [
+      {
+        "provenance": "demo_label",
+        "label": "machine flow sankey demo row"
+      }
+    ]
+  },
+  {
+    "routeId": "route:stripe_mpp:dexter-solana-search",
+    "workflowId": "workflow:search",
+    "sessionId": "session:stripe_mpp:dexter-solana-search",
+    "rail": "stripe_mpp",
+    "protocol": "mpp",
+    "sourceRoute": "dexter",
+    "sourcePlatform": "dexter",
+    "router": "Solana",
+    "providerId": "demo-search-api",
+    "endpointGroup": "/v1/search",
+    "useCase": "Provider-attested search endpoint",
+    "payerIdentity": "demo:dexter:agent",
+    "payeeIdentity": "solana:stripe_mpp:search-provider",
+    "amountUsd": 22,
+    "currency": "USD",
+    "status": "settled",
+    "settlementRef": {
+      "type": "stripe_payment_intent",
+      "value": "pi_demo_solana_search_dexter"
+    },
+    "visibility": "provider_attested",
+    "provenance": "demo_label",
+    "provenanceByField": {
+      "rail": "demo_label",
+      "router": "demo_label"
+    },
+    "latencyMs": 460,
+    "reasons": [
+      {
+        "provenance": "demo_label",
+        "label": "machine flow sankey demo row"
+      }
+    ]
+  },
+  {
+    "routeId": "route:stripe_mpp:dexter-stp-scrape",
+    "workflowId": "workflow:scrape",
+    "sessionId": "session:stripe_mpp:dexter-stp-scrape",
+    "rail": "stripe_mpp",
+    "protocol": "mpp",
+    "sourceRoute": "dexter",
+    "sourcePlatform": "dexter",
+    "router": "STP",
+    "providerId": "demo-scrape-api",
+    "endpointGroup": "/v1/scrape",
+    "useCase": "Provider-attested scrape endpoint",
+    "payerIdentity": "demo:dexter:agent",
+    "payeeIdentity": "stp:stripe_mpp:scrape-provider",
+    "amountUsd": 19,
+    "currency": "USD",
+    "status": "settled",
+    "settlementRef": {
+      "type": "stripe_payment_intent",
+      "value": "pi_demo_stp_scrape_dexter"
+    },
+    "visibility": "provider_attested",
+    "provenance": "demo_label",
+    "provenanceByField": {
+      "rail": "demo_label",
+      "router": "demo_label"
+    },
+    "latencyMs": 385,
+    "reasons": [
+      {
+        "provenance": "demo_label",
+        "label": "machine flow sankey demo row"
+      }
+    ]
+  },
+  {
+    "routeId": "route:stripe_mpp:direct-stp-map",
+    "workflowId": "workflow:map",
+    "sessionId": "session:stripe_mpp:direct-stp-map",
+    "rail": "stripe_mpp",
+    "protocol": "mpp",
+    "sourceRoute": "Direct",
+    "sourcePlatform": "Direct",
+    "router": "STP",
+    "providerId": "demo-map-api",
+    "endpointGroup": "/v1/map",
+    "useCase": "Provider-attested map endpoint",
+    "payerIdentity": "demo:direct:agent",
+    "payeeIdentity": "stp:stripe_mpp:map-provider",
+    "amountUsd": 21,
+    "currency": "USD",
+    "status": "settled",
+    "settlementRef": {
+      "type": "stripe_payment_intent",
+      "value": "pi_demo_stp_map_direct"
+    },
+    "visibility": "provider_attested",
+    "provenance": "demo_label",
+    "provenanceByField": {
+      "rail": "demo_label",
+      "router": "demo_label"
+    },
+    "latencyMs": 435,
+    "reasons": [
+      {
+        "provenance": "demo_label",
+        "label": "machine flow sankey demo row"
+      }
+    ]
+  },
+  {
+    "routeId": "route:stripe_mpp:agentcash-stp-search",
+    "workflowId": "workflow:search",
+    "sessionId": "session:stripe_mpp:agentcash-stp-search",
+    "rail": "stripe_mpp",
+    "protocol": "mpp",
+    "sourceRoute": "agentcash",
+    "sourcePlatform": "agentcash",
+    "router": "STP",
+    "providerId": "demo-search-api",
+    "endpointGroup": "/v1/search",
+    "useCase": "Provider-attested search endpoint",
+    "payerIdentity": "demo:agentcash:agent",
+    "payeeIdentity": "stp:stripe_mpp:search-provider",
+    "amountUsd": 22,
+    "currency": "USD",
+    "status": "settled",
+    "settlementRef": {
+      "type": "stripe_payment_intent",
+      "value": "pi_demo_stp_search_agentcash"
+    },
+    "visibility": "provider_attested",
+    "provenance": "demo_label",
+    "provenanceByField": {
+      "rail": "demo_label",
+      "router": "demo_label"
+    },
+    "latencyMs": 460,
+    "reasons": [
+      {
+        "provenance": "demo_label",
+        "label": "machine flow sankey demo row"
+      }
+    ]
+  },
+  {
+    "routeId": "route:hitpay_mpp:paysh-hitpay-map",
+    "workflowId": "workflow:map",
+    "sessionId": "session:hitpay_mpp:paysh-hitpay-map",
+    "rail": "hitpay_mpp",
+    "protocol": "mpp",
+    "sourceRoute": "pay.sh",
+    "sourcePlatform": "pay.sh",
+    "router": "HitPay",
+    "providerId": "demo-map-api",
+    "endpointGroup": "/v1/map",
+    "useCase": "Provider-attested map endpoint",
+    "payerIdentity": "demo:paysh:agent",
+    "payeeIdentity": "hitpay:hitpay_mpp:map-provider",
+    "amountUsd": 18,
+    "currency": "USD",
+    "status": "settled",
+    "settlementRef": {
+      "type": "hitpay_charge",
+      "value": "hitpay_charge_demo_hitpay_map_paysh"
+    },
+    "visibility": "provider_attested",
+    "provenance": "demo_label",
+    "provenanceByField": {
+      "rail": "demo_label",
+      "router": "demo_label"
+    },
+    "latencyMs": 435,
+    "reasons": [
+      {
+        "provenance": "demo_label",
+        "label": "machine flow sankey demo row"
+      }
+    ]
+  },
+  {
+    "routeId": "route:hitpay_mpp:agentsmarket-hitpay-search",
+    "workflowId": "workflow:search",
+    "sessionId": "session:hitpay_mpp:agentsmarket-hitpay-search",
+    "rail": "hitpay_mpp",
+    "protocol": "mpp",
+    "sourceRoute": "agents.market",
+    "sourcePlatform": "agents.market",
+    "router": "HitPay",
+    "providerId": "demo-search-api",
+    "endpointGroup": "/v1/search",
+    "useCase": "Provider-attested search endpoint",
+    "payerIdentity": "demo:agentsmarket:agent",
+    "payeeIdentity": "hitpay:hitpay_mpp:search-provider",
+    "amountUsd": 19,
+    "currency": "USD",
+    "status": "settled",
+    "settlementRef": {
+      "type": "hitpay_charge",
+      "value": "hitpay_charge_demo_hitpay_search_agentsmarket"
+    },
+    "visibility": "provider_attested",
+    "provenance": "demo_label",
+    "provenanceByField": {
+      "rail": "demo_label",
+      "router": "demo_label"
+    },
+    "latencyMs": 460,
+    "reasons": [
+      {
+        "provenance": "demo_label",
+        "label": "machine flow sankey demo row"
+      }
+    ]
   }
 ]
