@@ -47,7 +47,7 @@ export default async function MachinePaymentRoutesPage({
         }}
       />
       <div className="scroll">
-        <MachinePaymentRoutesScreen summary={summary} sankey={sankey} />
+        <MachinePaymentRoutesScreen providerId={providerId} summary={summary} sankey={sankey} />
       </div>
     </>
   );

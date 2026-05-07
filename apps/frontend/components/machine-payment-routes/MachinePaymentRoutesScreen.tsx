@@ -9,8 +9,10 @@ import {
   EndpointSankey,
   type EndpointSankeyFlow,
 } from "@/components/macro-metrics/EndpointSankey";
+import { RouteTrendChart } from "./RouteTrendChart";
 
 type MachinePaymentRoutesScreenProps = {
+  providerId: string;
   summary: RouteAnalyticsSummaryResponse;
   sankey: RouteAnalyticsSankeyResponse;
 };
@@ -204,7 +206,7 @@ function addEndpointSankeyFlow(
   grouped.set(key, { ...flow });
 }
 
-export function MachinePaymentRoutesScreen({ summary, sankey }: MachinePaymentRoutesScreenProps) {
+export function MachinePaymentRoutesScreen({ providerId, summary, sankey }: MachinePaymentRoutesScreenProps) {
   const routeSankeyFlows = buildRouteSankeyFlows(summary);
   const topLinks = [...sankey.links]
     .sort((left, right) => right.settledUsd - left.settledUsd || right.routeCount - left.routeCount)
@@ -324,6 +326,8 @@ export function MachinePaymentRoutesScreen({ summary, sankey }: MachinePaymentRo
           Wider links indicate stronger per-route settled-USD signal.
         </div>
       </section>
+
+      <RouteTrendChart providerId={providerId} />
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18, marginTop: 18 }}>
         <section className="card" style={{ padding: 20 }}>
