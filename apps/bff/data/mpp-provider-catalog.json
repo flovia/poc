@@ -1430,7 +1430,7 @@
     },
     {
       "providerId": "mpp:gemini::tempo:4217::USDC::0xca4e835f803cb0b7c428222b3a3b98518d4779fe",
-      "name": "Google",
+      "name": "Google Gemini",
       "serviceId": "gemini",
       "serviceName": "Google Gemini",
       "network": "tempo:4217",
@@ -2697,7 +2697,7 @@
     },
     {
       "providerId": "mpp:rpc::tempo:4217::USDC::0xca4e835f803cb0b7c428222b3a3b98518d4779fe",
-      "name": "Tempo",
+      "name": "Tempo RPC",
       "serviceId": "rpc",
       "serviceName": "Tempo RPC",
       "network": "tempo:4217",
@@ -2782,7 +2782,7 @@
     },
     {
       "providerId": "mpp:storage::tempo:4217::USDC::0xca4e835f803cb0b7c428222b3a3b98518d4779fe",
-      "name": "Tempo",
+      "name": "Object Storage",
       "serviceId": "storage",
       "serviceName": "Object Storage",
       "network": "tempo:4217",
@@ -2906,7 +2906,7 @@
     },
     {
       "providerId": "mpp:pinata::tempo:4217::USDC::0x80534805ec231010d1058e1404379c079e8b0ab5",
-      "name": "Pinata",
+      "name": "Pinata IPFS",
       "serviceId": "pinata",
       "serviceName": "Pinata IPFS",
       "network": "tempo:4217",
@@ -3001,7 +3001,7 @@
     },
     {
       "providerId": "mpp:stableemail::tempo:4217::USDC::0xdb5aa553feeb2c3e3d03e8360b36fb0f7e480671",
-      "name": "Merit Systems",
+      "name": "StableEmail",
       "serviceId": "stableemail",
       "serviceName": "StableEmail",
       "network": "tempo:4217",
@@ -3205,7 +3205,7 @@
     },
     {
       "providerId": "mpp:stableenrich::tempo:4217::USDC::0x325bdf6f7efab24a2210c48c1b64cab2eae1d430",
-      "name": "Merit Systems",
+      "name": "StableEnrich",
       "serviceId": "stableenrich",
       "serviceName": "StableEnrich",
       "network": "tempo:4217",
@@ -3549,7 +3549,7 @@
     },
     {
       "providerId": "mpp:stabletravel::tempo:4217::USDC::0xdd257723b86b4947483905cdacbbbc70facf2ec0",
-      "name": "Merit Systems",
+      "name": "StableTravel",
       "serviceId": "stabletravel",
       "serviceName": "StableTravel",
       "network": "tempo:4217",
@@ -4303,7 +4303,7 @@
     },
     {
       "providerId": "mpp:stablephone::tempo:4217::USDC::0xd219db8179bb9c1899ef87f39eeba9d1070c6801",
-      "name": "Merit Systems",
+      "name": "StablePhone",
       "serviceId": "stablephone",
       "serviceName": "StablePhone",
       "network": "tempo:4217",
@@ -4417,7 +4417,7 @@
     },
     {
       "providerId": "mpp:stablesocial::tempo:4217::USDC::0xcfa26f13c6c18307033ece13bbb8f470da5b4dbe",
-      "name": "Merit Systems",
+      "name": "StableSocial",
       "serviceId": "stablesocial",
       "serviceName": "StableSocial",
       "network": "tempo:4217",
@@ -5829,7 +5829,7 @@
     },
     {
       "providerId": "mpp:googlemaps::tempo:4217::USDC::0xca4e835f803cb0b7c428222b3a3b98518d4779fe",
-      "name": "Google",
+      "name": "Google Maps",
       "serviceId": "googlemaps",
       "serviceName": "Google Maps",
       "network": "tempo:4217",

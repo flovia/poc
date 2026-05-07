@@ -801,7 +801,11 @@ export const toProviderCatalogRowFromMpp = (
 
   return {
     providerId: buildProviderId(record.serviceId, network, asset, payTo),
-    name: record.providerName ?? record.serviceName,
+    // Prefer the service's own name (e.g. "StableTravel") over the publisher
+    // (e.g. "Merit Systems"). The MPP registry returns both — using the
+    // publisher would put every Merit Systems / Solana Foundation service
+    // under one display name on the picker.
+    name: record.serviceName ?? record.providerName ?? record.serviceId,
     serviceId: record.serviceId,
     serviceName: record.serviceName,
     network,
