@@ -1,0 +1,62 @@
+[
+  {
+    "routeId": "route:stripe-mpp:marketplace-enrichment",
+    "workflowId": "workflow:enrichment-api",
+    "sessionId": "session:stripe-mpp:demo-001",
+    "rail": "stripe_mpp",
+    "protocol": "mpp",
+    "sourceRoute": "Marketplace",
+    "sourcePlatform": "stripe-demo",
+    "router": "Stripe MPP session",
+    "providerId": "stripe-mpp-demo-provider",
+    "endpointGroup": "Enrichment API",
+    "useCase": "Provider-attested enrichment workflow",
+    "payerIdentity": "stripe:customer:demo",
+    "payeeIdentity": "stripe:acct:provider-demo",
+    "amountUsd": 18.5,
+    "currency": "USD",
+    "status": "settled",
+    "settlementRef": {
+      "type": "stripe_payment_intent",
+      "value": "pi_demo_machine_payment_route"
+    },
+    "visibility": "provider_attested",
+    "provenance": "demo_label",
+    "provenanceByField": {
+      "rail": "demo_label",
+      "settlementRef": "demo_label"
+    },
+    "latencyMs": 410,
+    "reasons": [{ "provenance": "demo_label", "label": "Stripe MPP demo route" }]
+  },
+  {
+    "routeId": "route:hitpay-mpp:mcp-research",
+    "workflowId": "workflow:research-workflow",
+    "sessionId": "session:hitpay-mpp:demo-001",
+    "rail": "hitpay_mpp",
+    "protocol": "mpp",
+    "sourceRoute": "MCP directory",
+    "sourcePlatform": "hitpay-demo",
+    "router": "HitPay MPP receipt",
+    "providerId": "hitpay-mpp-demo-provider",
+    "endpointGroup": "Research workflow",
+    "useCase": "Provider-attested research workflow",
+    "payerIdentity": "hitpay:payer:demo",
+    "payeeIdentity": "hitpay:merchant:provider-demo",
+    "amountUsd": 24,
+    "currency": "USD",
+    "status": "paid",
+    "settlementRef": {
+      "type": "hitpay_charge",
+      "value": "hitpay_charge_demo_machine_route"
+    },
+    "visibility": "provider_attested",
+    "provenance": "demo_label",
+    "provenanceByField": {
+      "rail": "demo_label",
+      "settlementRef": "demo_label"
+    },
+    "latencyMs": 540,
+    "reasons": [{ "provenance": "demo_label", "label": "HitPay MPP demo route" }]
+  }
+]

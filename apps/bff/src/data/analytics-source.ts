@@ -28,6 +28,7 @@ import {
   validateServiceAnalyticsSummaryResponse,
   validateCustomerIntelligenceResponse,
   validateProviderCatalogResponse,
+  RouteAnalyticsEventSchema,
   validateRouteAnalyticsSankeyResponse,
   validateRouteAnalyticsSummaryResponse,
 } from "contracts";
@@ -115,6 +116,14 @@ const DEFAULT_MPP_CATALOG_PATH = path.join(
   "..",
   "tmp",
   "mpp-provider-catalog.json",
+);
+
+const DEFAULT_MACHINE_PAYMENT_ROUTES_FIXTURE_PATH = path.join(
+  import.meta.dir,
+  "..",
+  "..",
+  "fixtures",
+  "machine-payment-routes.json",
 );
 
 const fixtureProviderCatalog = validateProviderCatalogResponse({
@@ -219,6 +228,19 @@ const routeRailForProvider = (
   return "x402";
 };
 
+const loadMachinePaymentRouteFixtureEvents = (timestamp: string): RouteAnalyticsEvent[] => {
+  const raw = JSON.parse(fs.readFileSync(DEFAULT_MACHINE_PAYMENT_ROUTES_FIXTURE_PATH, "utf8"));
+  if (!Array.isArray(raw)) {
+    throw new Error("machine-payment-routes fixture must be an array of route events");
+  }
+  return raw.map((event) =>
+    RouteAnalyticsEventSchema.parse({
+      ...(event as Record<string, unknown>),
+      timestamp,
+    }),
+  );
+};
+
 const buildRouteAnalytics = (
   providers: ProviderCatalogResponse,
 ): { routeSummary: RouteAnalyticsSummaryResponse; routeSankey: RouteAnalyticsSankeyResponse } => {
@@ -264,58 +286,7 @@ const buildRouteAnalytics = (
       } satisfies RouteAnalyticsEvent;
     });
 
-  const demoEvents: RouteAnalyticsEvent[] = [
-    {
-      routeId: "route:stripe-mpp:marketplace-enrichment",
-      workflowId: "workflow:enrichment-api",
-      sessionId: "session:stripe-mpp:demo-001",
-      rail: "stripe_mpp",
-      protocol: "mpp",
-      sourceRoute: "Marketplace",
-      sourcePlatform: "stripe-demo",
-      router: "Stripe MPP session",
-      providerId: "stripe-mpp-demo-provider",
-      endpointGroup: "Enrichment API",
-      useCase: "Provider-attested enrichment workflow",
-      payerIdentity: "stripe:customer:demo",
-      payeeIdentity: "stripe:acct:provider-demo",
-      amountUsd: 18.5,
-      currency: "USD",
-      status: "settled",
-      settlementRef: { type: "stripe_payment_intent", value: "pi_demo_machine_payment_route" },
-      visibility: "provider_attested",
-      provenance: "demo_label",
-      provenanceByField: { rail: "demo_label", settlementRef: "demo_label" },
-      timestamp: generatedAt,
-      latencyMs: 410,
-      reasons: [{ provenance: "demo_label", label: "Stripe MPP demo route" }],
-    },
-    {
-      routeId: "route:hitpay-mpp:mcp-research",
-      workflowId: "workflow:research-workflow",
-      sessionId: "session:hitpay-mpp:demo-001",
-      rail: "hitpay_mpp",
-      protocol: "mpp",
-      sourceRoute: "MCP directory",
-      sourcePlatform: "hitpay-demo",
-      router: "HitPay MPP receipt",
-      providerId: "hitpay-mpp-demo-provider",
-      endpointGroup: "Research workflow",
-      useCase: "Provider-attested research workflow",
-      payerIdentity: "hitpay:payer:demo",
-      payeeIdentity: "hitpay:merchant:provider-demo",
-      amountUsd: 24,
-      currency: "USD",
-      status: "paid",
-      settlementRef: { type: "hitpay_charge", value: "hitpay_charge_demo_machine_route" },
-      visibility: "provider_attested",
-      provenance: "demo_label",
-      provenanceByField: { rail: "demo_label", settlementRef: "demo_label" },
-      timestamp: generatedAt,
-      latencyMs: 540,
-      reasons: [{ provenance: "demo_label", label: "HitPay MPP demo route" }],
-    },
-  ];
+  const demoEvents = loadMachinePaymentRouteFixtureEvents(generatedAt);
 
   const sampleRoutes = providerEvents.length > 0 ? [...providerEvents, ...demoEvents] : demoEvents;
   const routeCount = sampleRoutes.length;
