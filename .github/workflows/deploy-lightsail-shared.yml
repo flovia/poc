@@ -4,7 +4,6 @@ name: deploy-lightsail-shared
 # - AWS_REGION
 # - AWS_ROLE_TO_ASSUME
 # - LIGHTSAIL_INSTANCE_NAME
-# Optional repository secrets for Caddy HTTPS:
 # Optional repository secrets for BFF Bedrock inference:
 # - AWS_BEARER_TOKEN_BEDROCK
 # - BFF_BEDROCK_REGION
@@ -14,6 +13,7 @@ name: deploy-lightsail-shared
 # - MAIN_BFF_ANALYTICS_DATABASE_URL
 # - DEVELOP_BFF_ANALYTICS_DATABASE_URL
 # - BFF_ANALYTICS_DATABASE_URL
+
 # Deploy layout on the instance:
 # - $HOME/apps/main/poc and $HOME/apps/main/data
 # - $HOME/apps/develop/poc and $HOME/apps/develop/data

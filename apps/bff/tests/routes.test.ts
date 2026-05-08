@@ -46,6 +46,10 @@ const request = (path: string, init: RequestInit = {}) =>
   new Request(`http://localhost${path}`, init);
 
 const originalAnalyticsSource = process.env.BFF_ANALYTICS_SOURCE;
+const runtimeMetadata = {
+  commitHash: "abc123def456",
+  startedAt: "2026-05-08T10:11:12.000Z",
+};
 
 const withTempFile = async (fn: (filePath: string) => Promise<void> | void) => {
   const directory = path.join(process.cwd(), "tmp", `bff-read-model-${randomUUID()}`);
@@ -176,12 +180,30 @@ describe("BFF routes", () => {
 
   test("serves health without waiting for analytics data source", async () => {
     const unresolvedDataSource = new Promise<never>(() => {});
-    const handler = createBffHandler(unresolvedDataSource);
+    const handler = createBffHandler(unresolvedDataSource, null, runtimeMetadata);
 
     const response = await handler(request("/health"));
 
     expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toEqual({ status: "ok", service: "flovia-bff" });
+    await expect(response.json()).resolves.toEqual({
+      status: "ok",
+      service: "flovia-bff",
+      commitHash: runtimeMetadata.commitHash,
+      startedAt: runtimeMetadata.startedAt,
+    });
+  });
+
+  test("serves health with runtime metadata", async () => {
+    const handler = createBffHandler(fixtureAnalyticsDataSource, null, runtimeMetadata);
+    const response = await handler(request("/health"));
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({
+      status: "ok",
+      service: "flovia-bff",
+      commitHash: runtimeMetadata.commitHash,
+      startedAt: runtimeMetadata.startedAt,
+    });
   });
 
   test("rejects non-GET requests to read-only endpoints", async () => {

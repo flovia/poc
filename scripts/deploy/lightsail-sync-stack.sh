@@ -4,64 +4,10 @@ set -euo pipefail
 
 require_env() {
   local key="$1"
-
   if [ -z "${!key:-}" ]; then
     echo "Missing required env: ${key}" >&2
     exit 1
   fi
-}
-
-upsert_env_var() {
-  local env_file="$1"
-  local key="$2"
-  local value="$3"
-  local temp_file
-
-  temp_file="$(mktemp)"
-
-  awk -v key="$key" -v value="$value" '
-    BEGIN { updated = 0 }
-    index($0, key "=") == 1 {
-      print key "=" value
-      updated = 1
-      next
-    }
-    { print }
-    END {
-      if (!updated) {
-        print key "=" value
-      }
-    }
-  ' "$env_file" > "$temp_file"
-
-  mv "$temp_file" "$env_file"
-}
-
-delete_env_var() {
-  local env_file="$1"
-  local key="$2"
-  local temp_file
-
-  temp_file="$(mktemp)"
-
-  awk -v key="$key" '
-    index($0, key "=") != 1 { print }
-  ' "$env_file" > "$temp_file"
-
-  mv "$temp_file" "$env_file"
-}
-
-sync_optional_env_var() {
-  local env_file="$1"
-  local key="$2"
-  local value="${3:-}"
-
-  if [ -n "$value" ]; then
-    upsert_env_var "$env_file" "$key" "$value"
-    return
-  fi
-
-  delete_env_var "$env_file" "$key"
 }
 
 require_env DEPLOY_BRANCH
@@ -71,16 +17,8 @@ require_env GHCR_USERNAME
 require_env GHCR_TOKEN
 
 case "$DEPLOY_BRANCH" in
-  main)
-    service_name="main-bff"
-    image_tag_key="MAIN_BFF_IMAGE_TAG"
-    analytics_prefix="MAIN"
-    ;;
-  develop)
-    service_name="develop-bff"
-    image_tag_key="DEVELOP_BFF_IMAGE_TAG"
-    analytics_prefix="DEVELOP"
-    ;;
+  main)    service_name="main-bff" ;;
+  develop) service_name="" ;;
   *)
     echo "Unsupported branch: ${DEPLOY_BRANCH}" >&2
     exit 1
@@ -95,6 +33,8 @@ stack_caddy_dir="${stack_root}/deploy/caddy"
 stack_caddy_config="${stack_caddy_dir}/Caddyfile"
 main_data_dir="${apps_root}/main/data"
 develop_data_dir="${apps_root}/develop/data"
+develop_blue_container="flovia-lightsail-develop-bff-blue-1"
+develop_green_container="flovia-lightsail-develop-bff-green-1"
 
 mkdir -p \
   "$stack_root" \
@@ -103,46 +43,185 @@ mkdir -p \
   "$develop_data_dir/reports"
 
 install -m 644 docker-compose.lightsail.yml "$stack_compose_file"
-install -m 644 deploy/caddy/Caddyfile "$stack_caddy_config"
 
-touch "$stack_env_file"
-chmod 600 "$stack_env_file"
+# Read the image tag from a currently running container (empty string if not found)
+get_running_image_tag() {
+  local container="$1"
+  local running image
+  running="$(docker inspect "$container" --format '{{.State.Running}}' 2>/dev/null)" || true
+  if [ "$running" != "true" ]; then
+    return 0
+  fi
+  image="$(docker inspect "$container" --format '{{index .Config.Image}}' 2>/dev/null)" || true
+  printf '%s' "${image##*:}"
+}
 
-upsert_env_var "$stack_env_file" COMPOSE_PROJECT_NAME "flovia-lightsail"
-upsert_env_var "$stack_env_file" BFF_IMAGE_REPOSITORY "$BFF_IMAGE_REPOSITORY"
-upsert_env_var "$stack_env_file" MAIN_FLOVIA_DATA_DIR "$main_data_dir"
-upsert_env_var "$stack_env_file" DEVELOP_FLOVIA_DATA_DIR "$develop_data_dir"
-upsert_env_var "$stack_env_file" BFF_DATA_MOUNT_PATH "/data"
-upsert_env_var "$stack_env_file" CADDY_HTTP_PORT "80"
-upsert_env_var "$stack_env_file" CADDY_HTTPS_PORT "443"
-upsert_env_var "$stack_env_file" "$image_tag_key" "$DEPLOY_GIT_SHA"
-sync_optional_env_var "$stack_env_file" AWS_BEARER_TOKEN_BEDROCK "${AWS_BEARER_TOKEN_BEDROCK:-}"
-bedrock_region="${BFF_BEDROCK_REGION:-${AWS_REGION:-${AWS_DEFAULT_REGION:-}}}"
-sync_optional_env_var "$stack_env_file" AWS_REGION "$bedrock_region"
-sync_optional_env_var "$stack_env_file" AWS_DEFAULT_REGION "$bedrock_region"
-sync_optional_env_var "$stack_env_file" BFF_BEDROCK_MODEL_ID "${BFF_BEDROCK_MODEL_ID:-}"
-sync_optional_env_var "$stack_env_file" BFF_BEDROCK_PROMPT_VERSION "${BFF_BEDROCK_PROMPT_VERSION:-}"
-sync_optional_env_var "$stack_env_file" BFF_ANALYTICS_SOURCE "${BFF_ANALYTICS_SOURCE:-}"
+get_container_started_at() {
+  local container="$1"
+  docker inspect "$container" --format '{{if .State.Running}}{{.State.StartedAt}}{{end}}' 2>/dev/null || true
+}
 
-analytics_database_url_key="${analytics_prefix}_BFF_ANALYTICS_DATABASE_URL"
-analytics_source_key="${analytics_prefix}_BFF_ANALYTICS_SOURCE"
-analytics_postgres_mode_key="${analytics_prefix}_BFF_ANALYTICS_POSTGRES_MODE"
-analytics_database_url="${!analytics_database_url_key:-${BFF_ANALYTICS_DATABASE_URL:-}}"
+detect_active_develop_slot() {
+  local blue_started_at green_started_at
+  blue_started_at="$(get_container_started_at "$develop_blue_container")"
+  green_started_at="$(get_container_started_at "$develop_green_container")"
 
-if [ -n "$analytics_database_url" ]; then
-  upsert_env_var "$stack_env_file" "$analytics_source_key" "postgres"
-  upsert_env_var "$stack_env_file" "$analytics_database_url_key" "$analytics_database_url"
-  upsert_env_var "$stack_env_file" "$analytics_postgres_mode_key" "live"
+  if [ -n "$blue_started_at" ] && [ -z "$green_started_at" ]; then
+    printf 'blue'
+    return 0
+  fi
+
+  if [ -n "$green_started_at" ] && [ -z "$blue_started_at" ]; then
+    printf 'green'
+    return 0
+  fi
+
+  if [ -n "$blue_started_at" ] && [ -n "$green_started_at" ]; then
+    echo "Both develop slots are running; selecting the newest container." >&2
+    if [[ "$green_started_at" > "$blue_started_at" ]]; then
+      printf 'green'
+    else
+      printf 'blue'
+    fi
+  fi
+}
+
+detected_active_develop_slot="$(detect_active_develop_slot)"
+active_develop_slot="${detected_active_develop_slot:-blue}"
+
+# Rebuild the shared stack env for both branches:
+# - the branch being deployed gets the new SHA
+# - the other branch keeps its current running image tag
+if [ "$DEPLOY_BRANCH" = "main" ]; then
+  main_image_tag="$DEPLOY_GIT_SHA"
+  develop_image_tag="$(get_running_image_tag "flovia-lightsail-develop-bff-${active_develop_slot}-1")"
+  develop_image_tag="${develop_image_tag:-develop}"
 else
-  delete_env_var "$stack_env_file" "$analytics_source_key"
-  delete_env_var "$stack_env_file" "$analytics_database_url_key"
-  delete_env_var "$stack_env_file" "$analytics_postgres_mode_key"
+  develop_image_tag="$DEPLOY_GIT_SHA"
+  main_image_tag="$(get_running_image_tag "flovia-lightsail-main-bff-1")"
+  main_image_tag="${main_image_tag:-main}"
 fi
 
+main_analytics_url="${MAIN_BFF_ANALYTICS_DATABASE_URL:-${BFF_ANALYTICS_DATABASE_URL:-}}"
+develop_analytics_url="${DEVELOP_BFF_ANALYTICS_DATABASE_URL:-${BFF_ANALYTICS_DATABASE_URL:-}}"
+bedrock_region="${BFF_BEDROCK_REGION:-${AWS_REGION:-${AWS_DEFAULT_REGION:-}}}"
+
+# Regenerate .env from scratch — both branches' values are always available via workflow secrets
+{
+  printf 'BFF_IMAGE_REPOSITORY=%s\n' "$BFF_IMAGE_REPOSITORY"
+  printf 'MAIN_BFF_IMAGE_TAG=%s\n' "$main_image_tag"
+  printf 'DEVELOP_BFF_IMAGE_TAG=%s\n' "$develop_image_tag"
+  printf 'MAIN_FLOVIA_DATA_DIR=%s\n' "$main_data_dir"
+  printf 'DEVELOP_FLOVIA_DATA_DIR=%s\n' "$develop_data_dir"
+
+  [ -n "$bedrock_region" ] && printf 'AWS_REGION=%s\nAWS_DEFAULT_REGION=%s\n' "$bedrock_region" "$bedrock_region"
+  [ -n "${AWS_BEARER_TOKEN_BEDROCK:-}" ] && printf 'AWS_BEARER_TOKEN_BEDROCK=%s\n' "$AWS_BEARER_TOKEN_BEDROCK"
+  [ -n "${BFF_BEDROCK_MODEL_ID:-}" ] && printf 'BFF_BEDROCK_MODEL_ID=%s\n' "$BFF_BEDROCK_MODEL_ID"
+  [ -n "${BFF_BEDROCK_PROMPT_VERSION:-}" ] && printf 'BFF_BEDROCK_PROMPT_VERSION=%s\n' "$BFF_BEDROCK_PROMPT_VERSION"
+  
+  if [ -n "$main_analytics_url" ]; then
+    printf 'MAIN_BFF_ANALYTICS_SOURCE=postgres\n'
+    printf 'MAIN_BFF_ANALYTICS_DATABASE_URL=%s\n' "$main_analytics_url"
+    printf 'MAIN_BFF_ANALYTICS_POSTGRES_MODE=live\n'
+  fi
+  if [ -n "$develop_analytics_url" ]; then
+    printf 'DEVELOP_BFF_ANALYTICS_SOURCE=postgres\n'
+    printf 'DEVELOP_BFF_ANALYTICS_DATABASE_URL=%s\n' "$develop_analytics_url"
+    printf 'DEVELOP_BFF_ANALYTICS_POSTGRES_MODE=live\n'
+  fi
+
+} > "$stack_env_file"
+chmod 600 "$stack_env_file"
+
+# Shorthand for docker compose with the stack config
+dc() {
+  docker compose --env-file "$stack_env_file" -f "$stack_compose_file" "$@"
+}
+
+# Write the Caddyfile, substituting the active develop-bff slot name
+write_caddyfile() {
+  local develop_slot="$1"
+  install -m 644 deploy/caddy/Caddyfile "$stack_caddy_config"
+  sed -i "s|develop-bff-[a-z]*:3001|develop-bff-${develop_slot}:3001|g" "$stack_caddy_config"
+}
+
+# Poll /health on the container until it responds 200 or the attempt limit is reached
+wait_for_service_health() {
+  local service="$1"
+  local max_attempts=30
+  local interval=2
+  local attempt=0
+  local container_id container_ip
+
+  container_id="$(dc ps -q "$service")"
+  if [ -z "$container_id" ]; then
+    echo "Container for $service not found" >&2
+    return 1
+  fi
+
+  container_ip="$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "$container_id" \
+    | grep -oE '([0-9]{1,3}\.){3}[0-9]{1,3}' | head -1)"
+  if [ -z "$container_ip" ]; then
+    echo "Could not determine IP for $service" >&2
+    return 1
+  fi
+
+  echo "Waiting for $service to be healthy at http://${container_ip}:3001/health ..."
+  while [ "$attempt" -lt "$max_attempts" ]; do
+    if curl -sf --max-time 5 "http://${container_ip}:3001/health" >/dev/null 2>&1; then
+      echo "$service is healthy."
+      return 0
+    fi
+    attempt=$((attempt + 1))
+    printf 'Attempt %d/%d failed, retrying in %ds...\n' "$attempt" "$max_attempts" "$interval"
+    sleep "$interval"
+  done
+
+  echo "Health check for $service timed out after $((max_attempts * interval))s" >&2
+  return 1
+}
+
 printf '%s\n' "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USERNAME" --password-stdin
-docker compose --env-file "$stack_env_file" -f "$stack_compose_file" config >/dev/null
-docker compose --env-file "$stack_env_file" -f "$stack_compose_file" pull "$service_name" caddy
-docker compose --env-file "$stack_env_file" -f "$stack_compose_file" up -d --remove-orphans "$service_name" caddy
-docker compose --env-file "$stack_env_file" -f "$stack_compose_file" exec -T -w /etc/caddy caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile
+dc config >/dev/null
+
+if [ "$DEPLOY_BRANCH" = "develop" ]; then
+  # Blue-Green deployment
+  active_slot="$detected_active_develop_slot"
+  case "$active_slot" in
+    blue)  next_slot="green" ;;
+    green) next_slot="blue"  ;;
+    *)     next_slot="blue"; active_slot="" ;;
+  esac
+
+  next_service="develop-bff-${next_slot}"
+  echo "Blue-Green: active=${active_slot:-none} -> next=${next_slot}"
+
+  dc pull "$next_service" caddy
+  dc up -d "$next_service"
+
+  if ! wait_for_service_health "$next_service"; then
+    echo "Rolling back: stopping ${next_service}" >&2
+    dc stop "$next_service" 2>/dev/null || true
+    dc rm -f "$next_service" 2>/dev/null || true
+    exit 1
+  fi
+
+  write_caddyfile "$next_slot"
+  dc up -d caddy
+  dc exec -T -w /etc/caddy caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile
+
+  if [ -n "$active_slot" ]; then
+    old_service="develop-bff-${active_slot}"
+    dc stop "$old_service"
+    dc rm -f "$old_service"
+  fi
+else
+  # Standard rolling deploy for main
+  write_caddyfile "$active_develop_slot"
+  dc pull "$service_name" caddy
+  dc up -d --remove-orphans "$service_name" caddy
+  dc exec -T -w /etc/caddy caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile
+fi
+
 docker image prune -a -f
 docker logout ghcr.io >/dev/null 2>&1 || true
