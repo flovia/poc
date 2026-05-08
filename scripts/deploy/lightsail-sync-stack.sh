@@ -203,7 +203,7 @@ write_caddyfile() {
 wait_for_service_providers_ready() {
   local service="$1"
   local timeout_secs=300
-  local interval=2
+  local interval=5
   local attempt=0
   local container_id container_ip providers_url response
   local start_time elapsed remaining request_timeout sleep_for
