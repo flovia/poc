@@ -27,8 +27,7 @@ const fail = (msg: string) => {
 
 if (!fs.existsSync(BAKED_PATH)) {
   fail(
-    `baked GEO file is missing: ${BAKED_PATH}\n` +
-      `  → run \`bun run bake:geo\` to generate it.`,
+    `baked GEO file is missing: ${BAKED_PATH}\n` + `  → run \`bun run bake:geo\` to generate it.`,
   );
 }
 

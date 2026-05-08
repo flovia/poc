@@ -61,22 +61,25 @@ export const flovia = {
       const contentType = headers.get("content-type") ?? "";
       if (contentType.includes("application/json")) {
         const body = (await response.json()) as unknown;
-        return Response.json(withTrackedEvent(body, {
-          requestId,
-          provider: options.provider,
-          rail: options.rail,
-          endpoint: options.endpoint,
-          amount: options.amount,
-          currency: options.currency,
-          method: request.method,
-          responseStatus: response.status,
-          latencyMs,
-          paymentContexts,
-        }), {
-          status: response.status,
-          statusText: response.statusText,
-          headers,
-        });
+        return Response.json(
+          withTrackedEvent(body, {
+            requestId,
+            provider: options.provider,
+            rail: options.rail,
+            endpoint: options.endpoint,
+            amount: options.amount,
+            currency: options.currency,
+            method: request.method,
+            responseStatus: response.status,
+            latencyMs,
+            paymentContexts,
+          }),
+          {
+            status: response.status,
+            statusText: response.statusText,
+            headers,
+          },
+        );
       }
 
       return new Response(response.body, {
@@ -89,7 +92,8 @@ export const flovia = {
       return Response.json(
         {
           error: "showcase_paid_api_failed",
-          message: error instanceof Error && error.message ? error.message : "Showcase paid API failed.",
+          message:
+            error instanceof Error && error.message ? error.message : "Showcase paid API failed.",
           floviaEvent: {
             requestId,
             provider: options.provider,
@@ -156,4 +160,5 @@ const withTrackedEvent = (
   };
 };
 
-export const json = (body: unknown, init: ResponseInit = {}) => withNoStore(Response.json(body, init));
+export const json = (body: unknown, init: ResponseInit = {}) =>
+  withNoStore(Response.json(body, init));

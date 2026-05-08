@@ -157,9 +157,9 @@ describe("inferBrandDomain", () => {
           .domain,
       ).toBe("openrouter.ai");
       // exa.mpp.tempo.xyz -> exa.ai via curated map (NOT exa.com)
-      expect(
-        inferBrandDomain({ fqn: "exa", serviceUrl: "https://exa.mpp.tempo.xyz" }).domain,
-      ).toBe("exa.ai");
+      expect(inferBrandDomain({ fqn: "exa", serviceUrl: "https://exa.mpp.tempo.xyz" }).domain).toBe(
+        "exa.ai",
+      );
       // firecrawl.mpp.tempo.xyz -> firecrawl.dev via curated map (NOT firecrawl.com)
       expect(
         inferBrandDomain({ fqn: "firecrawl", serviceUrl: "https://firecrawl.mpp.tempo.xyz" })
@@ -185,9 +185,9 @@ describe("inferBrandDomain", () => {
     });
 
     test("Tempo internal services (rpc, storage, codestorage) resolve to tempo.xyz", () => {
-      expect(
-        inferBrandDomain({ fqn: "rpc", serviceUrl: "https://rpc.mpp.tempo.xyz" }).domain,
-      ).toBe("tempo.xyz");
+      expect(inferBrandDomain({ fqn: "rpc", serviceUrl: "https://rpc.mpp.tempo.xyz" }).domain).toBe(
+        "tempo.xyz",
+      );
       expect(
         inferBrandDomain({ fqn: "storage", serviceUrl: "https://storage.mpp.tempo.xyz" }).domain,
       ).toBe("tempo.xyz");

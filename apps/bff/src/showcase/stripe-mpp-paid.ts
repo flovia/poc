@@ -60,7 +60,9 @@ const resolveStripeShowcaseConfig = () => {
 
 const resolveMppxPrivateKey = () => {
   const privateKey = envValue("MPPX_PRIVATE_KEY");
-  return privateKey && /^0x[0-9a-fA-F]{64}$/.test(privateKey) ? privateKey as `0x${string}` : null;
+  return privateKey && /^0x[0-9a-fA-F]{64}$/.test(privateKey)
+    ? (privateKey as `0x${string}`)
+    : null;
 };
 
 const prunePaymentCache = () => {
@@ -89,8 +91,12 @@ const createPayToAddress = async (request: Request, client: Stripe) => {
   const credentialRecipient = getPayToAddressFromCredential(request);
   if (credentialRecipient) {
     const cached = paymentCache.get(credentialRecipient);
-    if (!cached) throw new Error("Invalid Stripe MPP recipient: not found in the active payment cache.");
-    return { recipient: credentialRecipient as `0x${string}`, paymentIntentId: cached.paymentIntentId };
+    if (!cached)
+      throw new Error("Invalid Stripe MPP recipient: not found in the active payment cache.");
+    return {
+      recipient: credentialRecipient as `0x${string}`,
+      paymentIntentId: cached.paymentIntentId,
+    };
   }
 
   const paymentIntent = await client.paymentIntents.create({
@@ -147,7 +153,8 @@ export const handleStripeMppPaidShowcase = (request: Request) =>
               status: "configuration_required",
               responseStatus: 503,
               payment: { provider, rail, amount, currency },
-              joinedInsight: "Live Stripe MPP requires Stripe preview credentials before Flovia can join real Tempo payment context.",
+              joinedInsight:
+                "Live Stripe MPP requires Stripe preview credentials before Flovia can join real Tempo payment context.",
             },
           },
           { status: 503 },
@@ -164,12 +171,14 @@ export const handleStripeMppPaidShowcase = (request: Request) =>
         return json(
           {
             error: "invalid_stripe_mpp_credential",
-            message: "Retry with a valid MPP Payment credential issued for this Stripe Tempo challenge.",
+            message:
+              "Retry with a valid MPP Payment credential issued for this Stripe Tempo challenge.",
             floviaEvent: {
               status: "credential_rejected",
               responseStatus: 400,
               payment: { provider, rail, amount, currency },
-              joinedInsight: "Flovia rejected a malformed Stripe MPP credential before creating a new PaymentIntent.",
+              joinedInsight:
+                "Flovia rejected a malformed Stripe MPP credential before creating a new PaymentIntent.",
             },
           },
           { status: 400 },
@@ -187,42 +196,43 @@ export const handleStripeMppPaidShowcase = (request: Request) =>
       });
 
       const mppx = ServerMppx.create({
-        methods: [
-          tempo.charge({ currency: pathUsd, recipient, testnet: true }),
-        ],
+        methods: [tempo.charge({ currency: pathUsd, recipient, testnet: true })],
         secretKey: config.mppSecretKey,
       });
 
-      const response = await mppx.compose(
-        [mppx.tempo.charge, { amount, decimals: tempoDecimals, recipient }],
-      )(request);
+      const response = await mppx.compose([
+        mppx.tempo.charge,
+        { amount, decimals: tempoDecimals, recipient },
+      ])(request);
 
       if (response.status === 402) return response.challenge;
 
       paymentCache.delete(recipient);
 
-      return response.withReceipt(Response.json({
-        ok: true,
-        foo: "bar",
-        provider,
-        paidApi: {
-          endpoint,
-          message: "Stripe MPP showcase paid response",
-          generatedAt: new Date().toISOString(),
-        },
-        floviaEvent: {
-          requestId,
+      return response.withReceipt(
+        Response.json({
+          ok: true,
+          foo: "bar",
           provider,
-          rail,
-          endpoint,
-          method: request.method,
-          responseStatus: 200,
-          status: "paid_api_delivered",
-          payment: { paymentIntentId, recipient, network: "tempo", amount, currency },
-          apiUsage: { endpoint, method: request.method, responseStatus: 200 },
-          joinedInsight: "Stripe Tempo payment context converted into retained paid API demand.",
-        },
-      }));
+          paidApi: {
+            endpoint,
+            message: "Stripe MPP showcase paid response",
+            generatedAt: new Date().toISOString(),
+          },
+          floviaEvent: {
+            requestId,
+            provider,
+            rail,
+            endpoint,
+            method: request.method,
+            responseStatus: 200,
+            status: "paid_api_delivered",
+            payment: { paymentIntentId, recipient, network: "tempo", amount, currency },
+            apiUsage: { endpoint, method: request.method, responseStatus: 200 },
+            joinedInsight: "Stripe Tempo payment context converted into retained paid API demand.",
+          },
+        }),
+      );
     },
   });
 
@@ -243,7 +253,8 @@ export const handleStripeMppPayShowcase = async (request: Request) => {
     return json(
       {
         error: "mppx_private_key_not_configured",
-        message: "Set MPPX_PRIVATE_KEY to a 0x-prefixed 32-byte Tempo payer private key to pay from the showcase button.",
+        message:
+          "Set MPPX_PRIVATE_KEY to a 0x-prefixed 32-byte Tempo payer private key to pay from the showcase button.",
         requiredEnv: ["MPPX_PRIVATE_KEY"],
       },
       { status: 503 },
@@ -275,7 +286,8 @@ export const handleStripeMppPayShowcase = async (request: Request) => {
     return json(
       {
         error: "stripe_mpp_payment_failed",
-        message: error instanceof Error && error.message ? error.message : "Stripe MPP payment failed.",
+        message:
+          error instanceof Error && error.message ? error.message : "Stripe MPP payment failed.",
         paidApi: { endpoint, payEndpoint },
       },
       { status: 502 },

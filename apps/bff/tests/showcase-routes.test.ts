@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import { createBffHandler } from "../src/http";
 
-const request = (path: string, init: RequestInit = {}) => new Request(`http://localhost${path}`, init);
+const request = (path: string, init: RequestInit = {}) =>
+  new Request(`http://localhost${path}`, init);
 const originalHitPayApiKey = process.env.HITPAY_API_KEY;
 const originalStripeSecretKey = process.env.STRIPE_SECRET_KEY;
 const originalMppxPrivateKey = process.env.MPPX_PRIVATE_KEY;
@@ -32,7 +33,11 @@ describe("showcase paid API routes", () => {
     const response = await createBffHandler(new Promise<never>(() => {}))(
       request("/showcase/stripe-mpp/paid"),
     );
-    const body = (await response.json()) as { error: string; requiredEnv: string[]; floviaEvent: { status: string; latencyMs: number } };
+    const body = (await response.json()) as {
+      error: string;
+      requiredEnv: string[];
+      floviaEvent: { status: string; latencyMs: number };
+    };
 
     expect(response.status).toBe(503);
     expect(body.error).toBe("stripe_mpp_not_configured");
@@ -56,7 +61,9 @@ describe("showcase paid API routes", () => {
     process.env.STRIPE_SECRET_KEY = "sk_test_showcase";
 
     const response = await createBffHandler(new Promise<never>(() => {}))(
-      request("/showcase/stripe-mpp/paid", { headers: { authorization: "Payment not-a-credential" } }),
+      request("/showcase/stripe-mpp/paid", {
+        headers: { authorization: "Payment not-a-credential" },
+      }),
     );
     const body = (await response.json()) as { error: string };
 

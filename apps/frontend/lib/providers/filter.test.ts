@@ -328,11 +328,11 @@ describe("protocolsOfProvider ordering", () => {
   });
 
   test("preserves single-protocol arrays", () => {
-    expect(
-      protocolsOfProvider(make({ providerId: "a", name: "A", protocols: ["x402"] })),
-    ).toEqual(["x402"]);
-    expect(
-      protocolsOfProvider(make({ providerId: "b", name: "B", protocols: ["MPP"] })),
-    ).toEqual(["MPP"]);
+    expect(protocolsOfProvider(make({ providerId: "a", name: "A", protocols: ["x402"] }))).toEqual([
+      "x402",
+    ]);
+    expect(protocolsOfProvider(make({ providerId: "b", name: "B", protocols: ["MPP"] }))).toEqual([
+      "MPP",
+    ]);
   });
 });

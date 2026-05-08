@@ -235,14 +235,15 @@ describe("BFF llm service", () => {
       });
 
       const systemPrompt = capturedCommandInput?.system?.[0]?.text;
-      expect(systemPrompt).toContain('"scenarios" must be an array of 2 or 3 short possible user-goal hypotheses.');
+      expect(systemPrompt).toContain(
+        '"scenarios" must be an array of 2 or 3 short possible user-goal hypotheses.',
+      );
       expect(systemPrompt).toContain('Do not use phrases such as "the input does not specify"');
       expect(result.model.promptVersion).toBe("workflow-intent-v2");
       expect(result.explanations).toEqual([
         expect.objectContaining({
           sessionId: "session-1",
-          intent:
-            "This burst appears consistent with a wallet checking price conditions.",
+          intent: "This burst appears consistent with a wallet checking price conditions.",
           scenarios: [
             "A bot deciding whether to place a trade.",
             "An automation loop checking whether a trigger condition was met.",

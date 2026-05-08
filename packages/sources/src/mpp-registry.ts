@@ -210,7 +210,10 @@ export const pickProbeEndpoint = (service: MppService): MppEndpoint | null => {
 export const pickProbeEndpointCandidates = (service: MppService): MppEndpoint[] => {
   const paid = (service.endpoints ?? []).filter((e) => e.payment);
   // GET first (no body needed; less likely to fail input validation before payment check)
-  return [...paid.filter((e) => e.method.toUpperCase() === "GET"), ...paid.filter((e) => e.method.toUpperCase() !== "GET")];
+  return [
+    ...paid.filter((e) => e.method.toUpperCase() === "GET"),
+    ...paid.filter((e) => e.method.toUpperCase() !== "GET"),
+  ];
 };
 
 // Strict base64 to avoid silently accepting truncated/garbage input.
@@ -435,7 +438,8 @@ const probeOnce = async (input: {
 };
 
 const isAcceptableProbe = (probe: MppProbeSuccess | MppProbeError): boolean =>
-  probe.status === 402 || (probe.status !== null && (probe as MppProbeSuccess).challenges?.length > 0);
+  probe.status === 402 ||
+  (probe.status !== null && (probe as MppProbeSuccess).challenges?.length > 0);
 
 export const captureMppServiceProbe = async (options: {
   service: MppService;
@@ -517,7 +521,11 @@ export const buildMppCaptureRecord = (input: {
   const registryAssets: string[] = [];
   for (const method of registryMethods) {
     const detail = methods[method];
-    if (detail && typeof detail === "object" && Array.isArray((detail as { assets?: unknown }).assets)) {
+    if (
+      detail &&
+      typeof detail === "object" &&
+      Array.isArray((detail as { assets?: unknown }).assets)
+    ) {
       for (const asset of (detail as { assets: unknown[] }).assets) {
         if (typeof asset === "string") registryAssets.push(asset);
       }
@@ -566,7 +574,9 @@ export const buildMppCaptureRecord = (input: {
     status: service.status,
     endpointCount: endpoints.length,
     paidEndpointCount,
-    paidEndpoints: endpoints.filter((e): e is MppEndpoint & { payment: MppEndpointPayment } => e.payment !== null),
+    paidEndpoints: endpoints.filter(
+      (e): e is MppEndpoint & { payment: MppEndpointPayment } => e.payment !== null,
+    ),
     registryAssets,
     registryMethods,
     probe: probeProjection,
@@ -619,7 +629,10 @@ const assetSymbolForOffer = (offer: MppOffer | undefined): string | undefined =>
   return undefined;
 };
 
-const normalizedAssetForRow = (offer: MppOffer | undefined, fallback: string | undefined): string => {
+const normalizedAssetForRow = (
+  offer: MppOffer | undefined,
+  fallback: string | undefined,
+): string => {
   const symbol = assetSymbolForOffer(offer);
   if (symbol) return symbol;
   return offer?.asset ?? fallback ?? "unknown";
@@ -780,9 +793,8 @@ export const toProviderCatalogRowFromMpp = (
       // Build a fully-qualified resource URL. Schema requires `resource: z.string().url()`.
       const path = endpoint.path.startsWith("/") ? endpoint.path : `/${endpoint.path}`;
       const resourceUrl = `${baseUrl}${path}`;
-      const intent = payment.intent === "session" || payment.intent === "charge"
-        ? payment.intent
-        : undefined;
+      const intent =
+        payment.intent === "session" || payment.intent === "charge" ? payment.intent : undefined;
       return {
         resource: resourceUrl,
         method: endpoint.method,
@@ -1018,10 +1030,7 @@ const ENRICH_CANDIDATE_FIELDS: ReadonlyArray<keyof ProviderCatalogRow> = [
 const isMissing = (value: unknown): boolean =>
   value === undefined || value === null || (typeof value === "string" && value.length === 0);
 
-const enrichRow = (
-  primary: ProviderCatalogRow,
-  mppRow: ProviderCatalogRow,
-): ProviderCatalogRow => {
+const enrichRow = (primary: ProviderCatalogRow, mppRow: ProviderCatalogRow): ProviderCatalogRow => {
   const enriched: ProviderCatalogRow = { ...primary };
   for (const key of ENRICH_CANDIDATE_FIELDS) {
     if (PRIMARY_OWNED_FIELDS.has(key)) continue;

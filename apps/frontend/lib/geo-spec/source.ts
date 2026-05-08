@@ -322,7 +322,9 @@ const toMppEndpoint = (r: BakedProviderResource): MppRegistryEndpoint => ({
 
 // MPP-flavored resources from a hint (used when the live row carries MPP
 // resources but baked JSON has no entry — e.g. brand new MPP providers).
-const mppEndpointsFromHint = (hint: GeoSpecProviderHint | null | undefined): MppRegistryEndpoint[] => {
+const mppEndpointsFromHint = (
+  hint: GeoSpecProviderHint | null | undefined,
+): MppRegistryEndpoint[] => {
   if (!hint?.resources) return [];
   return hint.resources
     .filter(

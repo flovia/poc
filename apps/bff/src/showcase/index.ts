@@ -7,7 +7,10 @@ export const showcaseRoutes = new Set([
   "/showcase/hitpay-mpp/paid",
 ]);
 
-export const handleShowcaseRoute = (request: Request, path: string): Promise<Response> | Response | null => {
+export const handleShowcaseRoute = (
+  request: Request,
+  path: string,
+): Promise<Response> | Response | null => {
   switch (path) {
     case "/showcase/stripe-mpp/paid":
       return handleStripeMppPaidShowcase(request);

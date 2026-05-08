@@ -44,7 +44,7 @@ const resolveCommitHash = (env: RuntimeEnv) =>
   normalizeCommitHash(env.DEPLOY_GIT_SHA) ??
   normalizeCommitHash(env.GITHUB_SHA) ??
   normalizeCommitHash(env.BFF_DEPLOY_ID) ??
-  'unknown'
+  "unknown";
 
 export const resolveBffRuntimeMetadata = (
   env: RuntimeEnv = process.env,
@@ -132,267 +132,267 @@ export const createBffHandler =
     llmService: BffLlmService | null = resolveBffLlmService(),
     runtimeMetadata: BffRuntimeMetadata = resolveBffRuntimeMetadata(),
   ) =>
-    async (request: Request) => {
-      const url = new URL(request.url);
-      const path = url.pathname.replace(/\/$/, "") || "/";
+  async (request: Request) => {
+    const url = new URL(request.url);
+    const path = url.pathname.replace(/\/$/, "") || "/";
 
-      if (request.method !== "GET") {
-        if (request.method === "POST" && path === "/showcase/stripe-mpp/pay") {
-          return handleShowcaseRoute(request, path) ?? notFound(path);
-        }
-
-        if (
-          readonlyRoutes.has(path) ||
-          showcaseRoutes.has(path) ||
-          toProfileAddress(path) !== null ||
-          toIntelligenceAddress(path) !== null ||
-          toUpsellMetricsAddress(path) !== null ||
-          toUpsellExplanationAddress(path) !== null ||
-          toWorkflowIntentAddress(path) !== null
-        ) {
-          return methodNotAllowed();
-        }
-
-        return notFound(path);
+    if (request.method !== "GET") {
+      if (request.method === "POST" && path === "/showcase/stripe-mpp/pay") {
+        return handleShowcaseRoute(request, path) ?? notFound(path);
       }
 
-      switch (path) {
-        case "/":
-          return json({ service: "flovia-bff", status: "ok" });
-        case "/health":
-          return json({
-            status: "ok",
-            service: "flovia-bff",
-            commitHash: runtimeMetadata.commitHash,
-            startedAt: runtimeMetadata.startedAt,
-          });
-        default:
-          break;
-      }
-
-      const showcaseResponse = handleShowcaseRoute(request, path);
-      if (showcaseResponse) return showcaseResponse;
-
-      const resolvedDataSource = await dataSource;
-
-      switch (path) {
-        case "/providers":
-          return json(resolvedDataSource.providers);
-        case "/customers": {
-          const serviceId = url.searchParams.get("serviceId");
-          if (serviceId) {
-            return json(resolvedDataSource.getCustomersByServiceId(serviceId));
-          }
-          return json(resolvedDataSource.getCustomers(url.searchParams.get("payTo") ?? undefined));
-        }
-        case "/wallet-usage-graph":
-          return json(resolvedDataSource.walletUsageGraph);
-        case "/analytics/services/coingecko/summary":
-          return json(resolvedDataSource.serviceSummary);
-        case "/analytics/services/comparison":
-          return json(resolvedDataSource.serviceComparison);
-        case "/analytics/services/quadrants":
-          return json(resolvedDataSource.serviceQuadrants);
-        case "/analytics/routes/summary":
-          return json(resolvedDataSource.routeSummary);
-        case "/analytics/routes/sankey":
-          return json(resolvedDataSource.routeSankey);
-        default:
-          break;
-      }
-
-      const address = toProfileAddress(path);
-      if (address !== null) {
-        const normalizedAddress = normalizePaymentRecipientAddress(address);
-        const profile = resolvedDataSource.getCustomerProfile(normalizedAddress);
-
-        if (!profile) {
-          return notFound(path);
-        }
-
-        return json(profile);
-      }
-
-      const intelligenceAddress = toIntelligenceAddress(path);
-      if (intelligenceAddress !== null) {
-        const normalizedAddress = normalizePaymentRecipientAddress(intelligenceAddress);
-        const intelligence = resolvedDataSource.getCustomerIntelligence(normalizedAddress);
-
-        if (!intelligence) {
-          return notFound(path);
-        }
-
-        return json(intelligence);
-      }
-
-      const upsellMetricsAddress = toUpsellMetricsAddress(path);
-      if (upsellMetricsAddress !== null) {
-        const normalizedAddress = normalizePaymentRecipientAddress(upsellMetricsAddress);
-        const metrics = resolvedDataSource.getCustomerUpsellMetrics(normalizedAddress);
-
-        if (!metrics) {
-          return notFound(path);
-        }
-
-        return json(metrics);
-      }
-
-      const upsellExplanationAddress = toUpsellExplanationAddress(path);
-      if (upsellExplanationAddress !== null) {
-        const normalizedAddress = normalizePaymentRecipientAddress(upsellExplanationAddress);
-        const metrics = resolvedDataSource.getCustomerUpsellMetrics(normalizedAddress);
-
-        if (!metrics) {
-          return notFound(path);
-        }
-
-        if (!llmService) {
-          return llmUnavailable();
-        }
-
-        try {
-          return json(await llmService.generateUpsellExplanation(metrics));
-        } catch (error) {
-          console.error("Bedrock upsell explanation request failed.", error);
-          return llmFailed(error);
-        }
-      }
-
-      const workflowIntentAddress = toWorkflowIntentAddress(path);
-      if (workflowIntentAddress !== null) {
-        const normalizedAddress = normalizePaymentRecipientAddress(workflowIntentAddress);
-        const profile = resolvedDataSource.getCustomerProfile(normalizedAddress);
-
-        if (!profile) {
-          return notFound(path);
-        }
-
-        const selection = buildWorkflowIntentInputFromProfile(profile);
-        const input = toWorkflowIntentInput(selection);
-
-        if (!input) {
-          return json(
-            validatePhaseBCustomerWorkflowIntentResponse({
-              generatedAt: new Date().toISOString(),
-              generatedFrom: WORKFLOW_INTENT_GENERATED_FROM,
-              address: normalizedAddress,
-              sourceGeneratedAt: profile.generatedAt,
-              sessionWindowSeconds: selection.sessionWindowSeconds,
-              sessionCount: selection.sessionCount,
-              remainingSessionCount: selection.remainingSessionCount,
-              analysisStatus: "no_candidate_sessions",
-              model: null,
-              input: null,
-              explanations: [],
-              sessions: selection.sessions,
-              failureMessage: null,
-              provenance: "derived_insight",
-              provenanceByField: {
-                address: "onchain_fact",
-                input: "derived_insight",
-                sessions: "derived_insight",
-              },
-              reasons: [workflowIntentReason],
-            }),
-          );
-        }
-
-        if (!llmService) {
-          return json(
-            validatePhaseBCustomerWorkflowIntentResponse({
-              generatedAt: new Date().toISOString(),
-              generatedFrom: WORKFLOW_INTENT_GENERATED_FROM,
-              address: normalizedAddress,
-              sourceGeneratedAt: profile.generatedAt,
-              sessionWindowSeconds: selection.sessionWindowSeconds,
-              sessionCount: selection.sessionCount,
-              remainingSessionCount: selection.remainingSessionCount,
-              analysisStatus: "unavailable",
-              model: null,
-              input,
-              explanations: [],
-              sessions: selection.sessions,
-              failureMessage: null,
-              provenance: "derived_insight",
-              provenanceByField: {
-                address: "onchain_fact",
-                input: "derived_insight",
-                sessions: "derived_insight",
-              },
-              reasons: [workflowIntentReason],
-            }),
-          );
-        }
-
-        try {
-          const result = await llmService.generateWorkflowIntentExplanation({
-            address: normalizedAddress,
-            sourceGeneratedAt: profile.generatedAt,
-            input,
-          });
-
-          return json(
-            validatePhaseBCustomerWorkflowIntentResponse({
-              generatedAt: new Date().toISOString(),
-              generatedFrom: WORKFLOW_INTENT_GENERATED_FROM,
-              address: normalizedAddress,
-              sourceGeneratedAt: profile.generatedAt,
-              sessionWindowSeconds: selection.sessionWindowSeconds,
-              sessionCount: selection.sessionCount,
-              remainingSessionCount: selection.remainingSessionCount,
-              analysisStatus: "ready",
-              model: result.model,
-              input,
-              explanations: result.explanations,
-              sessions: selection.sessions,
-              failureMessage: null,
-              provenance: "derived_insight",
-              provenanceByField: {
-                address: "onchain_fact",
-                model: "derived_insight",
-                input: "derived_insight",
-                explanations: "derived_insight",
-                sessions: "derived_insight",
-              },
-              reasons: [workflowIntentReason],
-            }),
-          );
-        } catch (error) {
-          console.error("Workflow intent request failed.", error);
-          return json(
-            validatePhaseBCustomerWorkflowIntentResponse({
-              generatedAt: new Date().toISOString(),
-              generatedFrom: WORKFLOW_INTENT_GENERATED_FROM,
-              address: normalizedAddress,
-              sourceGeneratedAt: profile.generatedAt,
-              sessionWindowSeconds: selection.sessionWindowSeconds,
-              sessionCount: selection.sessionCount,
-              remainingSessionCount: selection.remainingSessionCount,
-              analysisStatus: "failed",
-              model: null,
-              input,
-              explanations: [],
-              sessions: selection.sessions,
-              failureMessage:
-                error instanceof BffLlmInferenceError
-                  ? error.message
-                  : error instanceof Error && error.message
-                    ? error.message
-                    : "Workflow intent explanation inference failed.",
-              provenance: "derived_insight",
-              provenanceByField: {
-                address: "onchain_fact",
-                input: "derived_insight",
-                sessions: "derived_insight",
-              },
-              reasons: [workflowIntentReason],
-            }),
-          );
-        }
+      if (
+        readonlyRoutes.has(path) ||
+        showcaseRoutes.has(path) ||
+        toProfileAddress(path) !== null ||
+        toIntelligenceAddress(path) !== null ||
+        toUpsellMetricsAddress(path) !== null ||
+        toUpsellExplanationAddress(path) !== null ||
+        toWorkflowIntentAddress(path) !== null
+      ) {
+        return methodNotAllowed();
       }
 
       return notFound(path);
-    };
+    }
+
+    switch (path) {
+      case "/":
+        return json({ service: "flovia-bff", status: "ok" });
+      case "/health":
+        return json({
+          status: "ok",
+          service: "flovia-bff",
+          commitHash: runtimeMetadata.commitHash,
+          startedAt: runtimeMetadata.startedAt,
+        });
+      default:
+        break;
+    }
+
+    const showcaseResponse = handleShowcaseRoute(request, path);
+    if (showcaseResponse) return showcaseResponse;
+
+    const resolvedDataSource = await dataSource;
+
+    switch (path) {
+      case "/providers":
+        return json(resolvedDataSource.providers);
+      case "/customers": {
+        const serviceId = url.searchParams.get("serviceId");
+        if (serviceId) {
+          return json(resolvedDataSource.getCustomersByServiceId(serviceId));
+        }
+        return json(resolvedDataSource.getCustomers(url.searchParams.get("payTo") ?? undefined));
+      }
+      case "/wallet-usage-graph":
+        return json(resolvedDataSource.walletUsageGraph);
+      case "/analytics/services/coingecko/summary":
+        return json(resolvedDataSource.serviceSummary);
+      case "/analytics/services/comparison":
+        return json(resolvedDataSource.serviceComparison);
+      case "/analytics/services/quadrants":
+        return json(resolvedDataSource.serviceQuadrants);
+      case "/analytics/routes/summary":
+        return json(resolvedDataSource.routeSummary);
+      case "/analytics/routes/sankey":
+        return json(resolvedDataSource.routeSankey);
+      default:
+        break;
+    }
+
+    const address = toProfileAddress(path);
+    if (address !== null) {
+      const normalizedAddress = normalizePaymentRecipientAddress(address);
+      const profile = resolvedDataSource.getCustomerProfile(normalizedAddress);
+
+      if (!profile) {
+        return notFound(path);
+      }
+
+      return json(profile);
+    }
+
+    const intelligenceAddress = toIntelligenceAddress(path);
+    if (intelligenceAddress !== null) {
+      const normalizedAddress = normalizePaymentRecipientAddress(intelligenceAddress);
+      const intelligence = resolvedDataSource.getCustomerIntelligence(normalizedAddress);
+
+      if (!intelligence) {
+        return notFound(path);
+      }
+
+      return json(intelligence);
+    }
+
+    const upsellMetricsAddress = toUpsellMetricsAddress(path);
+    if (upsellMetricsAddress !== null) {
+      const normalizedAddress = normalizePaymentRecipientAddress(upsellMetricsAddress);
+      const metrics = resolvedDataSource.getCustomerUpsellMetrics(normalizedAddress);
+
+      if (!metrics) {
+        return notFound(path);
+      }
+
+      return json(metrics);
+    }
+
+    const upsellExplanationAddress = toUpsellExplanationAddress(path);
+    if (upsellExplanationAddress !== null) {
+      const normalizedAddress = normalizePaymentRecipientAddress(upsellExplanationAddress);
+      const metrics = resolvedDataSource.getCustomerUpsellMetrics(normalizedAddress);
+
+      if (!metrics) {
+        return notFound(path);
+      }
+
+      if (!llmService) {
+        return llmUnavailable();
+      }
+
+      try {
+        return json(await llmService.generateUpsellExplanation(metrics));
+      } catch (error) {
+        console.error("Bedrock upsell explanation request failed.", error);
+        return llmFailed(error);
+      }
+    }
+
+    const workflowIntentAddress = toWorkflowIntentAddress(path);
+    if (workflowIntentAddress !== null) {
+      const normalizedAddress = normalizePaymentRecipientAddress(workflowIntentAddress);
+      const profile = resolvedDataSource.getCustomerProfile(normalizedAddress);
+
+      if (!profile) {
+        return notFound(path);
+      }
+
+      const selection = buildWorkflowIntentInputFromProfile(profile);
+      const input = toWorkflowIntentInput(selection);
+
+      if (!input) {
+        return json(
+          validatePhaseBCustomerWorkflowIntentResponse({
+            generatedAt: new Date().toISOString(),
+            generatedFrom: WORKFLOW_INTENT_GENERATED_FROM,
+            address: normalizedAddress,
+            sourceGeneratedAt: profile.generatedAt,
+            sessionWindowSeconds: selection.sessionWindowSeconds,
+            sessionCount: selection.sessionCount,
+            remainingSessionCount: selection.remainingSessionCount,
+            analysisStatus: "no_candidate_sessions",
+            model: null,
+            input: null,
+            explanations: [],
+            sessions: selection.sessions,
+            failureMessage: null,
+            provenance: "derived_insight",
+            provenanceByField: {
+              address: "onchain_fact",
+              input: "derived_insight",
+              sessions: "derived_insight",
+            },
+            reasons: [workflowIntentReason],
+          }),
+        );
+      }
+
+      if (!llmService) {
+        return json(
+          validatePhaseBCustomerWorkflowIntentResponse({
+            generatedAt: new Date().toISOString(),
+            generatedFrom: WORKFLOW_INTENT_GENERATED_FROM,
+            address: normalizedAddress,
+            sourceGeneratedAt: profile.generatedAt,
+            sessionWindowSeconds: selection.sessionWindowSeconds,
+            sessionCount: selection.sessionCount,
+            remainingSessionCount: selection.remainingSessionCount,
+            analysisStatus: "unavailable",
+            model: null,
+            input,
+            explanations: [],
+            sessions: selection.sessions,
+            failureMessage: null,
+            provenance: "derived_insight",
+            provenanceByField: {
+              address: "onchain_fact",
+              input: "derived_insight",
+              sessions: "derived_insight",
+            },
+            reasons: [workflowIntentReason],
+          }),
+        );
+      }
+
+      try {
+        const result = await llmService.generateWorkflowIntentExplanation({
+          address: normalizedAddress,
+          sourceGeneratedAt: profile.generatedAt,
+          input,
+        });
+
+        return json(
+          validatePhaseBCustomerWorkflowIntentResponse({
+            generatedAt: new Date().toISOString(),
+            generatedFrom: WORKFLOW_INTENT_GENERATED_FROM,
+            address: normalizedAddress,
+            sourceGeneratedAt: profile.generatedAt,
+            sessionWindowSeconds: selection.sessionWindowSeconds,
+            sessionCount: selection.sessionCount,
+            remainingSessionCount: selection.remainingSessionCount,
+            analysisStatus: "ready",
+            model: result.model,
+            input,
+            explanations: result.explanations,
+            sessions: selection.sessions,
+            failureMessage: null,
+            provenance: "derived_insight",
+            provenanceByField: {
+              address: "onchain_fact",
+              model: "derived_insight",
+              input: "derived_insight",
+              explanations: "derived_insight",
+              sessions: "derived_insight",
+            },
+            reasons: [workflowIntentReason],
+          }),
+        );
+      } catch (error) {
+        console.error("Workflow intent request failed.", error);
+        return json(
+          validatePhaseBCustomerWorkflowIntentResponse({
+            generatedAt: new Date().toISOString(),
+            generatedFrom: WORKFLOW_INTENT_GENERATED_FROM,
+            address: normalizedAddress,
+            sourceGeneratedAt: profile.generatedAt,
+            sessionWindowSeconds: selection.sessionWindowSeconds,
+            sessionCount: selection.sessionCount,
+            remainingSessionCount: selection.remainingSessionCount,
+            analysisStatus: "failed",
+            model: null,
+            input,
+            explanations: [],
+            sessions: selection.sessions,
+            failureMessage:
+              error instanceof BffLlmInferenceError
+                ? error.message
+                : error instanceof Error && error.message
+                  ? error.message
+                  : "Workflow intent explanation inference failed.",
+            provenance: "derived_insight",
+            provenanceByField: {
+              address: "onchain_fact",
+              input: "derived_insight",
+              sessions: "derived_insight",
+            },
+            reasons: [workflowIntentReason],
+          }),
+        );
+      }
+    }
+
+    return notFound(path);
+  };
 
 const notFound = (path: string) =>
   json({ error: "not_found", message: `Route not found: ${path}` }, { status: 404 });
