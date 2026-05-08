@@ -4,7 +4,7 @@ import type { CSSProperties, ReactNode } from "react";
 import { useMemo, useRef, useState } from "react";
 import { mppFetch } from "@hit-pay/mpp-client";
 
-type ProviderKey = "stripe" | "hitpay";
+type ProviderKey = "stripe" | "hitpay" | "solana";
 type LiveState = "idle" | "calling" | "challenge" | "paid" | "error";
 
 type ShowcaseProviderScreenProps = {
@@ -17,10 +17,20 @@ type LiveResult = {
 };
 
 const demoTempoTxHash = "0xdb82e47e27fa089ba92edd5b6f7a1c9c1fe007820e2ede449c1c1698720d6b05";
+const demoSolanaTxSignature =
+  "5JZ4uVQ8t8HVB7n3oWQyN9fEv2L4KcD8zXdF1Nq7aHpRcMv6sEbT3wLh2YjAdF8X9k1Bc4ZsGmH7vUuQrPnY6t";
 
 const providerConfig = {
   stripe: {
     title: "Stripe MPP showcase",
+    label: "Stripe MPP",
+    dashboardLabel: "Stripe dashboard",
+    dashboardEyebrow: "What you see in Stripe Dashboard",
+    paymentLabel: "PaymentIntent",
+    callActionTitle: "Call the real Stripe MPP challenge endpoint",
+    payButtonLabel: "Pay with MPPX wallet",
+    nextActionAtChallenge: "Pay with MPPX wallet",
+    challengeTitle: "Payment required",
     endpoint: "/showcase/stripe-mpp/paid",
     publicEndpoint: "/api/showcase/stripe-mpp/paid",
     publicPayEndpoint: "/api/showcase/stripe-mpp/pay",
@@ -33,6 +43,7 @@ const providerConfig = {
     challengeArtifact: "402 challenge + Tempo recipient",
     paymentArtifact: "PaymentIntent + token transfer",
     accessArtifact: "MPP credential retry + receipt",
+    paymentRailEvidenceLine: "Tempo recipient",
     dashboardHref: "https://dashboard.stripe.com/test/payments",
     providerOnlyLabel: "Stripe MPP route",
     providerOnlySnippet: `app.get("/showcase/stripe-mpp/paid", async (c) => {
@@ -55,9 +66,24 @@ const providerConfig = {
       "Flovia joined event",
     ],
     captured: ["provider=stripe", "rail=mpp", "network=tempo", "paymentIntentId", "recipient", "endpoint status latency"],
+    copy: {
+      idle:
+        "Call the endpoint to inspect the MPP 402 challenge, or pay from the server-side MPPX demo wallet with one button.",
+      challenge:
+        "402 challenge issued. Click Pay with MPPX wallet to pay and retry with a Payment credential from the BFF demo wallet.",
+      paid: "MPP credential accepted. Paid API response delivered and joined by Flovia.",
+    },
   },
   hitpay: {
     title: "HitPay MPP showcase",
+    label: "HitPay MPP",
+    dashboardLabel: "HitPay dashboard",
+    dashboardEyebrow: "What you see in HitPay Dashboard",
+    paymentLabel: "Charge / checkout",
+    callActionTitle: "Call the real HitPay MPP endpoint",
+    payButtonLabel: "I paid. Continue.",
+    nextActionAtChallenge: "Open checkout",
+    challengeTitle: "Checkout URL issued",
     endpoint: "/showcase/hitpay-mpp/paid",
     publicEndpoint: "/api/showcase/hitpay-mpp/paid",
     publicPayEndpoint: null,
@@ -70,6 +96,7 @@ const providerConfig = {
     challengeArtifact: "402 challenge + checkout URL",
     paymentArtifact: "checkout session + QR payment",
     accessArtifact: "paid retry + API response",
+    paymentRailEvidenceLine: "checkout URL",
     dashboardHref: "https://dashboard.sandbox.hit-pay.com",
     providerOnlyLabel: "HitPay MPP route",
     providerOnlySnippet: `app.get("/showcase/hitpay-mpp/paid", (c) =>
@@ -89,8 +116,96 @@ const providerConfig = {
       "Flovia joined event",
     ],
     captured: ["provider=hitpay", "rail=mpp", "checkoutUrl", "chargeId", "amount=1.00 sgd", "endpoint status latency"],
+    copy: {
+      idle:
+        "This PoC does not take a real payment here. First call returns a 402 challenge; then complete the sandbox checkout.",
+      challenge:
+        "402 challenge issued with checkout URL. Open the HitPay sandbox checkout, pay, then click I paid. Continue.",
+      paid: "Demo payment completion accepted. Paid API response delivered and joined by Flovia.",
+    },
+  },
+  solana: {
+    title: "Solana MPP showcase",
+    label: "Solana MPP",
+    dashboardLabel: "Solana Explorer",
+    dashboardEyebrow: "What you see in Solana Explorer",
+    paymentLabel: "SPL transfer",
+    callActionTitle: "Call the real Solana MPP challenge endpoint",
+    payButtonLabel: "Pay with Solana wallet",
+    nextActionAtChallenge: "Sign with Solana wallet",
+    challengeTitle: "Solana payment required",
+    endpoint: "/showcase/solana-mpp/paid",
+    publicEndpoint: "/api/showcase/solana-mpp/paid",
+    publicPayEndpoint: null,
+    amount: "0.10 USDC (devnet)",
+    rail: "Solana SPL transfer",
+    accent: "var(--solana)",
+    accentDim: "var(--solana-dim)",
+    accentSoft: "var(--solana-soft)",
+    simulatedId: "sol_demo_charge_001",
+    challengeArtifact: "402 challenge + Solana recipient",
+    paymentArtifact: "SPL transfer + on-chain confirmation",
+    accessArtifact: "MPP credential retry + receipt",
+    paymentRailEvidenceLine: "Solana recipient",
+    dashboardHref: "https://explorer.solana.com/?cluster=devnet",
+    providerOnlyLabel: "Solana MPP route",
+    providerOnlySnippet: `const mppx = Mppx.create({
+  secretKey: process.env.MPP_SECRET_KEY,
+  methods: [solana.charge({ recipient, currency: USDC, decimals: 6, network: "devnet" })],
+});
+
+app.get("/showcase/solana-mpp/paid", async (c) => {
+  const result = await mppx.solana.charge({
+    amount: "100000",
+    currency: USDC,
+  })(c.req.raw);
+  if (result.status === 402) return result.challenge;
+  return result.withReceipt(Response.json({ ok: true }));
+});`,
+    floviaSnippet: `app.get(
+  "/showcase/solana-mpp/paid",
+  flovia.paidApi({ provider: "solana", rail: "mpp" }),
+  async (c) => {
+    // existing Solana MPP code unchanged
+  },
+);`,
+    steps: [
+      "request started",
+      "MPP challenge issued",
+      "Solana SPL transfer signed",
+      "transfer confirmed on-chain",
+      "paid API response",
+      "Flovia joined event",
+    ],
+    captured: [
+      "provider=solana",
+      "rail=mpp",
+      "network=solana-devnet",
+      "mint=USDC",
+      "recipient",
+      "endpoint status latency",
+    ],
+    // Copy templates for `LiveStatus`. `{network}` is replaced at render time
+    // with the actual Solana cluster reported by the BFF (devnet by default,
+    // but mainnet-beta or localnet if SOLANA_MPP_NETWORK is overridden) so
+    // the message matches where the SPL transfer actually settled.
+    copy: {
+      idle:
+        "Call the endpoint to inspect the Solana MPP 402 challenge. {network} USDC is used for the showcase.",
+      challenge:
+        "402 challenge issued. Sign and submit a Solana SPL transfer on {network}, then retry with the MPP credential.",
+      paid: "Solana MPP credential accepted. Paid API response delivered and joined by Flovia.",
+    },
   },
 } as const;
+
+const formatSolanaNetwork = (network: string | null | undefined) =>
+  network && network.length > 0 ? network : "devnet";
+
+const renderProviderCopy = (template: string, provider: ProviderKey, network: string | null) => {
+  if (provider !== "solana") return template;
+  return template.replace(/\{network\}/g, formatSolanaNetwork(network));
+};
 
 export function ShowcaseProviderScreen({ provider }: ShowcaseProviderScreenProps) {
   const config = providerConfig[provider];
@@ -280,6 +395,58 @@ export function ShowcaseProviderScreen({ provider }: ShowcaseProviderScreenProps
     setState("paid");
   }
 
+  function showSolanaFallbackSuccess() {
+    setChallengeId(null);
+    setResult({
+      status: 200,
+      body: {
+        ok: true,
+        foo: "bar",
+        provider: "solana",
+        paidApi: {
+          endpoint: config.endpoint,
+          message: "Solana MPP showcase paid response",
+          generatedAt: new Date().toISOString(),
+        },
+        receipt: {
+          method: "solana",
+          reference: demoSolanaTxSignature,
+          status: "success",
+          timestamp: new Date().toISOString(),
+          mode: "demo_fallback",
+        },
+        floviaEvent: {
+          requestId: "req_demo_solana_mpp",
+          provider: "solana",
+          rail: "mpp",
+          endpoint: config.endpoint,
+          amount: "0.10",
+          currency: "usdc",
+          method: "GET",
+          responseStatus: 200,
+          latencyMs: 53,
+          status: "paid_api_delivered",
+          payment: {
+            paymentId: config.simulatedId,
+            recipient: "F1ovia111111111111111111111111111111111111",
+            network: "solana-devnet",
+            amount: "0.10",
+            currency: "usdc",
+            mint: "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU",
+          },
+          apiUsage: {
+            endpoint: config.endpoint,
+            method: "GET",
+            responseStatus: 200,
+            latencyMs: 53,
+          },
+          joinedInsight: "Solana SPL token payment context converted into retained paid API demand.",
+        },
+      },
+    });
+    setState("paid");
+  }
+
   return (
     <div className="scroll">
       <div style={{ padding: "32px 40px 80px", maxWidth: 1440, margin: "0 auto" }}>
@@ -300,8 +467,19 @@ export function ShowcaseProviderScreen({ provider }: ShowcaseProviderScreenProps
         <div style={{ marginTop: 24 }}>
           <Card
             eyebrow="Live flow"
-            title={provider === "hitpay" ? "Call the real HitPay MPP endpoint" : "Call the real Stripe MPP challenge endpoint"}
-            action={<CheatCodeButton provider={provider} onClick={provider === "hitpay" ? showHitPayFallbackSuccess : showStripeFallbackSuccess} />}
+            title={config.callActionTitle}
+            action={
+              <CheatCodeButton
+                provider={provider}
+                onClick={
+                  provider === "hitpay"
+                    ? showHitPayFallbackSuccess
+                    : provider === "solana"
+                    ? showSolanaFallbackSuccess
+                    : showStripeFallbackSuccess
+                }
+              />
+            }
           >
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 16 }}>
               <button type="button" onClick={() => void callPaidApi(false)} style={buttonStyle(provider)} disabled={state === "calling"}>
@@ -311,15 +489,25 @@ export function ShowcaseProviderScreen({ provider }: ShowcaseProviderScreenProps
                 type="button"
                 onClick={() => void callPaidApi(true)}
                 style={secondaryButtonStyle}
-                disabled={state === "calling" || (provider === "hitpay" && !hitPayCheckoutUrl)}
+                disabled={
+                  state === "calling" ||
+                  (provider === "hitpay" && !hitPayCheckoutUrl) ||
+                  provider === "solana"
+                }
+                title={provider === "solana" ? "Solana wallet pay button is not wired up in this PoC yet." : undefined}
               >
-                {provider === "stripe" ? "Pay with MPPX wallet" : "I paid. Continue."}
+                {config.payButtonLabel}
               </button>
               <a href={config.dashboardHref} target="_blank" rel="noreferrer" className="ghost" style={{ alignSelf: "center", fontSize: 13 }}>
                 Provider dashboard ↗
               </a>
             </div>
-            <LiveStatus state={state} provider={provider} hasChallenge={challengeId !== null || hitPayCheckoutUrl !== null} />
+            <LiveStatus
+              state={state}
+              provider={provider}
+              hasChallenge={challengeId !== null || hitPayCheckoutUrl !== null}
+              liveNetwork={extractLiveResultFacts(result, provider).network}
+            />
             {provider === "hitpay" && state === "challenge" ? <QrPlaceholder checkoutUrl={hitPayCheckoutUrl} /> : null}
             <LiveResultPanel result={result} state={state} provider={provider} accent={config.accent} />
             {state === "paid" && result ? (
@@ -357,8 +545,8 @@ export function ShowcaseProviderScreen({ provider }: ShowcaseProviderScreenProps
             <div style={{ display: "grid", gap: 10 }}>
               <EvidenceCard
                 label="Payment rail"
-                title={provider === "stripe" ? "Stripe / MPP" : "HitPay / MPP"}
-                lines={[config.simulatedId, config.amount, provider === "stripe" ? "Tempo recipient" : "checkout URL"]}
+                title={`${config.label.replace(/ MPP$/, "")} / MPP`}
+                lines={[config.simulatedId, config.amount, config.paymentRailEvidenceLine]}
                 accent={config.accent}
               />
               <EvidenceCard
@@ -495,9 +683,10 @@ function Card({
 }
 
 function CheatCodeButton({ provider, onClick }: { provider: ProviderKey; onClick: () => void }) {
-  const color = provider === "stripe" ? "var(--mesh-blue)" : "var(--teal)";
-  const border = provider === "stripe" ? "var(--mesh-blue-soft)" : "var(--teal-soft)";
-  const background = provider === "stripe" ? "var(--mesh-blue-dim)" : "var(--teal-dim)";
+  const config = providerConfig[provider];
+  const color = config.accent;
+  const border = config.accentSoft;
+  const background = config.accentDim;
 
   return (
     <button
@@ -649,7 +838,7 @@ function SimulatedFlowDiagram({
   accessArtifact: string;
   event: Record<string, unknown>;
 }) {
-  const paymentProvider = provider === "stripe" ? "Stripe MPP" : "HitPay MPP";
+  const paymentProvider = providerConfig[provider].label;
 
   return (
     <div style={{ display: "grid", gap: 24 }}>
@@ -825,33 +1014,29 @@ function LiveStatus({
   state,
   provider,
   hasChallenge,
+  liveNetwork,
 }: {
   state: LiveState;
   provider: ProviderKey;
   hasChallenge: boolean;
+  liveNetwork: string | null;
 }) {
+  const config = providerConfig[provider];
   const copy = {
-    idle: provider === "stripe"
-      ? "Call the endpoint to inspect the MPP 402 challenge, or pay from the server-side MPPX demo wallet with one button."
-      : "This PoC does not take a real payment here. First call returns a 402 challenge; then complete the sandbox checkout.",
+    idle: renderProviderCopy(config.copy.idle, provider, liveNetwork),
     calling: "Calling the paid API endpoint…",
-    challenge:
-      provider === "stripe"
-        ? "402 challenge issued. Click Pay with MPPX wallet to pay and retry with a Payment credential from the BFF demo wallet."
-        : "402 challenge issued with checkout URL. Open the HitPay sandbox checkout, pay, then click I paid. Continue.",
-    paid: provider === "stripe"
-      ? "MPP credential accepted. Paid API response delivered and joined by Flovia."
-      : "Demo payment completion accepted. Paid API response delivered and joined by Flovia.",
+    challenge: renderProviderCopy(config.copy.challenge, provider, liveNetwork),
+    paid: renderProviderCopy(config.copy.paid, provider, liveNetwork),
     error: "Request failed. Check BFF availability and endpoint response.",
   }[state];
 
   return (
     <div
       style={{
-        border: `1px solid ${hasChallenge ? (provider === "stripe" ? "var(--mesh-blue-soft)" : "var(--teal-soft)") : "var(--line-strong)"}`,
+        border: `1px solid ${hasChallenge ? config.accentSoft : "var(--line-strong)"}`,
         borderRadius: 8,
         padding: "10px 14px",
-        background: hasChallenge ? (provider === "stripe" ? "var(--mesh-blue-dim)" : "var(--teal-dim)") : "var(--surface-card)",
+        background: hasChallenge ? config.accentDim : "var(--surface-card)",
         color: "var(--text-1)",
         fontSize: 13,
         lineHeight: 1.5,
@@ -959,6 +1144,7 @@ function SummaryItem({ label, value, href }: { label: string; value: string; hre
 }
 
 function liveSummaryTone(kind: "challenge" | "paid" | "error", accent: string, provider: ProviderKey) {
+  const config = providerConfig[provider];
   switch (kind) {
     case "challenge":
       return {
@@ -974,14 +1160,15 @@ function liveSummaryTone(kind: "challenge" | "paid" | "error", accent: string, p
       };
     case "paid":
       return {
-        border: provider === "stripe" ? "var(--mesh-blue-soft)" : "var(--teal-soft)",
+        border: config.accentSoft,
         background: "var(--surface-subtle)",
-        color: provider === "stripe" ? "var(--mesh-blue)" : "var(--teal)",
+        color: accent,
       };
   }
 }
 
 function summarizeLiveResult(result: LiveResult, provider: ProviderKey, state: LiveState) {
+  const config = providerConfig[provider];
   const body = asRecord(result.body);
   const response = asRecord(body?.response);
   const challenge = asRecord(body?.challenge) ?? asRecord(response?.challenge) ?? asRecord(body?.challenge);
@@ -989,17 +1176,30 @@ function summarizeLiveResult(result: LiveResult, provider: ProviderKey, state: L
   const payment = asRecord(floviaEvent?.payment);
   const receipt = asRecord(body?.receipt);
   const receiptReference = stringValue(receipt?.reference);
-  const receiptLabel = provider === "stripe" && receiptReference ? "Tx hash" : receiptReference ? "Receipt id" : "Receipt";
+  const receiptLabel =
+    provider === "stripe" && receiptReference
+      ? "Tx hash"
+      : provider === "solana" && receiptReference
+      ? "Tx signature"
+      : receiptReference
+      ? "Receipt id"
+      : "Receipt";
   const error = stringValue(body?.error) ?? stringValue(response?.error);
+  const receiptHref =
+    provider === "stripe" && receiptReference
+      ? tempoReceiptExplorerUrl(receiptReference)
+      : provider === "solana" && receiptReference
+      ? solanaTxExplorerUrl(receiptReference, networkFromSolanaPaymentContext(payment))
+      : undefined;
 
   if (result.status === 402 || state === "challenge") {
     return {
       kind: "challenge" as const,
       eyebrow: "Payment challenge",
-      title: provider === "hitpay" ? "Checkout URL issued" : "Payment required",
+      title: config.challengeTitle,
       items: [
-        { label: "Provider", value: provider === "hitpay" ? "HitPay MPP" : "Stripe MPP" },
-        { label: "Next action", value: provider === "hitpay" ? "Open checkout" : "Pay with MPPX wallet" },
+        { label: "Provider", value: config.label },
+        { label: "Next action", value: config.nextActionAtChallenge },
         { label: "Checkout", value: extractHitPayCheckoutUrl(challenge) ?? stringValue(payment?.checkoutUrl) ?? "—" },
       ],
     };
@@ -1011,7 +1211,7 @@ function summarizeLiveResult(result: LiveResult, provider: ProviderKey, state: L
       eyebrow: "Request failed",
       title: error ?? "Live flow error",
       items: [
-        { label: "Provider", value: provider === "hitpay" ? "HitPay MPP" : "Stripe MPP" },
+        { label: "Provider", value: config.label },
         { label: "Status", value: String(result.status || "network") },
         { label: "Message", value: stringValue(body?.message) ?? stringValue(response?.message) ?? "Check raw JSON" },
       ],
@@ -1023,12 +1223,12 @@ function summarizeLiveResult(result: LiveResult, provider: ProviderKey, state: L
     eyebrow: "Paid API response",
     title: "Payment verified and API access granted",
     items: [
-      { label: "Provider", value: provider === "hitpay" ? "HitPay MPP" : "Stripe MPP" },
+      { label: "Provider", value: config.label },
       { label: "API response", value: stringValue(response?.foo) ?? stringValue(body?.foo) ?? "ok" },
       {
         label: receiptLabel,
         value: receiptReference ?? (receipt ? "verified" : stringValue(body?.receiptJws) ? "JWS received" : "—"),
-        href: provider === "stripe" && receiptReference ? tempoReceiptExplorerUrl(receiptReference) : undefined,
+        href: receiptHref,
       },
     ],
   };
@@ -1036,6 +1236,17 @@ function summarizeLiveResult(result: LiveResult, provider: ProviderKey, state: L
 
 export function tempoReceiptExplorerUrl(txHash: string) {
   return `https://explore.testnet.tempo.xyz/receipt/${encodeURIComponent(txHash)}`;
+}
+
+export function solanaTxExplorerUrl(signature: string, network: string = "devnet") {
+  const cluster = network === "mainnet-beta" ? "" : `?cluster=${encodeURIComponent(network)}`;
+  return `https://explorer.solana.com/tx/${encodeURIComponent(signature)}${cluster}`;
+}
+
+function networkFromSolanaPaymentContext(payment: Record<string, unknown> | null | undefined): string {
+  const value = stringValue(payment?.network);
+  if (!value) return "devnet";
+  return value.startsWith("solana-") ? value.slice("solana-".length) : value;
 }
 
 export function extractLiveResultFacts(result: LiveResult | null, provider: ProviderKey = "stripe") {
@@ -1055,14 +1266,21 @@ export function extractLiveResultFacts(result: LiveResult | null, provider: Prov
     paymentId:
       provider === "hitpay"
         ? hitPayPaymentId
+        : provider === "solana"
+        ? // For Solana, the per-payment identifier is the on-chain tx
+          // signature (carried in the receipt). Fall back to nested ids only
+          // if the receipt is unavailable.
+          stringValue(payment?.paymentId) ?? receiptReference ?? hitPayPaymentId
         : stringValue(payment?.paymentIntentId) ?? stringValue(payment?.paymentId),
     txHash: provider === "stripe" ? receiptReference : null,
+    txSignature: provider === "solana" ? receiptReference : null,
     receiptId: provider === "hitpay" ? receiptReference : null,
     requestId: stringValue(floviaEvent?.requestId),
     status: stringValue(floviaEvent?.status),
     rail: stringValue(floviaEvent?.rail) ?? stringValue(payment?.rail),
     amount: stringValue(floviaEvent?.amount) ?? stringValue(payment?.amount),
     currency: stringValue(floviaEvent?.currency) ?? stringValue(payment?.currency),
+    network: provider === "solana" ? networkFromSolanaPaymentContext(payment) : null,
     endpoint: stringValue(apiUsage?.endpoint) ?? stringValue(floviaEvent?.endpoint),
     method: stringValue(apiUsage?.method) ?? stringValue(floviaEvent?.method),
     responseStatus: stringValue(apiUsage?.responseStatus) ?? stringValue(floviaEvent?.responseStatus),
@@ -1170,9 +1388,10 @@ function ProviderVsFloviaPanel({
   accent: string;
   result: LiveResult | null;
 }) {
-  const providerName = provider === "stripe" ? "Stripe dashboard" : "HitPay dashboard";
-  const providerEyebrow = provider === "stripe" ? "What you see in Stripe Dashboard" : "What you see in HitPay Dashboard";
-  const paymentLabel = provider === "stripe" ? "PaymentIntent" : "Charge / checkout";
+  const config = providerConfig[provider];
+  const providerName = config.dashboardLabel;
+  const providerEyebrow = config.dashboardEyebrow;
+  const paymentLabel = config.paymentLabel;
   const liveFacts = extractLiveResultFacts(result, provider);
   const joinedPaymentId = liveFacts.paymentId ?? paymentId;
   const paymentStatus = result?.status === 200 ? "paid" : result?.status === 402 ? "pending payment" : "demo-ready";
@@ -1184,6 +1403,13 @@ function ProviderVsFloviaPanel({
           label: "Tx hash",
           value: liveFacts.txHash,
           href: tempoReceiptExplorerUrl(liveFacts.txHash),
+        }
+      : null,
+    liveFacts.txSignature
+      ? {
+          label: "Tx signature",
+          value: liveFacts.txSignature,
+          href: solanaTxExplorerUrl(liveFacts.txSignature, liveFacts.network ?? "devnet"),
         }
       : null,
     liveFacts.receiptId ? { label: "Receipt id", value: liveFacts.receiptId } : null,
@@ -1225,10 +1451,10 @@ function ProviderVsFloviaPanel({
 
       <div
         style={{
-          border: `1px solid ${provider === "stripe" ? "var(--mesh-blue-soft)" : "var(--teal-soft)"}`,
+          border: `1px solid ${config.accentSoft}`,
           borderRadius: 14,
           padding: 16,
-          background: provider === "stripe" ? "var(--mesh-blue-dim)" : "var(--teal-dim)",
+          background: config.accentDim,
         }}
       >
         <div className="eyebrow" style={{ marginBottom: 6, color: accent }}>Joined by Flovia</div>
@@ -1381,7 +1607,7 @@ const buttonStyle = (provider: ProviderKey) => ({
   border: "1px solid transparent",
   borderRadius: 4,
   padding: "7px 13px",
-  background: provider === "stripe" ? "var(--mesh-blue)" : "var(--teal)",
+  background: providerConfig[provider].accent,
   color: "#fff",
   fontWeight: 600,
   fontSize: 14,

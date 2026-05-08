@@ -17,11 +17,12 @@ Flovia BFF
   │
   └─ showcase paid API routes
       ├─ /showcase/stripe-mpp/paid
-      └─ /showcase/hitpay-mpp/paid
+      ├─ /showcase/hitpay-mpp/paid
+      └─ /showcase/solana-mpp/paid
           ↓
           Flovia SDK wrapper
           ↓
-          Stripe MPP / HitPay MPP
+          Stripe MPP / HitPay MPP / Solana MPP
           ↓
           paid API response
 ```
@@ -85,6 +86,7 @@ Chosen names:
 ```text
 /showcase/stripe-mpp/paid
 /showcase/hitpay-mpp/paid
+/showcase/solana-mpp/paid
 ```
 
 Benefits:
@@ -257,6 +259,41 @@ Flovia should capture:
 - endpoint: `/showcase/stripe-mpp/paid`
 - Stripe payment intent id, if available
 - recipient/deposit address, if available
+- challenge issued vs paid response
+- request latency and response status
+
+### Solana MPP sample
+
+Source SDK: [`@solana/mpp`](https://github.com/solana-foundation/mpp-sdk).
+
+Relevant behavior:
+
+- `Mppx.create({ secretKey, methods: [solana.charge({ recipient, currency, decimals, network })] })`
+- per-call `mppx.solana.charge({ amount, currency })(request)`
+- returns `{ status: 402, challenge }` or `{ status: 200, withReceipt }`
+
+Showcase target:
+
+```text
+GET /showcase/solana-mpp/paid
+```
+
+Devnet defaults (PoC):
+
+- network: `devnet`
+- currency: USDC devnet mint `4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU`
+- decimals: `6`
+- display amount: `0.10 USDC`
+
+Required env: `SOLANA_MPP_RECIPIENT`. Optional: `SOLANA_MPP_NETWORK`, `SOLANA_MPP_CURRENCY`, `SOLANA_MPP_SECRET_KEY`.
+
+Flovia should capture:
+
+- rail: `mpp`
+- provider: `solana`
+- endpoint: `/showcase/solana-mpp/paid`
+- network: `solana-${network}` (e.g. `solana-devnet`)
+- mint and recipient
 - challenge issued vs paid response
 - request latency and response status
 

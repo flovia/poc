@@ -1,10 +1,12 @@
 import { handleHitPayMppPaidShowcase } from "./hitpay-mpp-paid";
+import { handleSolanaMppPaidShowcase } from "./solana-mpp-paid";
 import { handleStripeMppPaidShowcase, handleStripeMppPayShowcase } from "./stripe-mpp-paid";
 
 export const showcaseRoutes = new Set([
   "/showcase/stripe-mpp/paid",
   "/showcase/stripe-mpp/pay",
   "/showcase/hitpay-mpp/paid",
+  "/showcase/solana-mpp/paid",
 ]);
 
 export const handleShowcaseRoute = (
@@ -18,6 +20,8 @@ export const handleShowcaseRoute = (
       return handleStripeMppPayShowcase(request);
     case "/showcase/hitpay-mpp/paid":
       return handleHitPayMppPaidShowcase(request);
+    case "/showcase/solana-mpp/paid":
+      return handleSolanaMppPaidShowcase(request);
     default:
       return null;
   }

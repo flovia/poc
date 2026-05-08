@@ -20,6 +20,14 @@ const providers = [
     amount: "S$1.00 SGD",
     accent: "var(--teal)",
   },
+  {
+    href: "/showcase/solana-mpp",
+    title: "Solana MPP",
+    rail: "Solana SPL transfer (devnet)",
+    ux: "payment challenge → SPL transfer → paid retry",
+    amount: "0.10 USDC (devnet)",
+    accent: "var(--solana)",
+  },
 ];
 
 export function ShowcaseOverviewScreen() {
@@ -39,7 +47,7 @@ export function ShowcaseOverviewScreen() {
           </p>
         </header>
 
-        <section style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 16 }}>
+        <section style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 16 }}>
           {providers.map((provider) => (
             <Link
               key={provider.href}
@@ -77,6 +85,7 @@ export function ShowcaseOverviewScreen() {
             <tbody>
               <CompareRow provider="Stripe MPP" rail="Tempo" ux="Token payment credential" />
               <CompareRow provider="HitPay MPP" rail="Checkout" ux="Checkout URL and QR" />
+              <CompareRow provider="Solana MPP" rail="Solana SPL (devnet)" ux="Wallet-signed SPL transfer" />
             </tbody>
           </table>
         </section>

@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import {
   extractLiveResultFacts,
   parsePaymentReceiptHeader,
+  solanaTxExplorerUrl,
   tempoReceiptExplorerUrl,
 } from "./ShowcaseProviderScreen";
 
@@ -32,6 +33,29 @@ describe("tempoReceiptExplorerUrl", () => {
 
     expect(tempoReceiptExplorerUrl(txHash)).toBe(
       `https://explore.testnet.tempo.xyz/receipt/${txHash}`,
+    );
+  });
+});
+
+describe("solanaTxExplorerUrl", () => {
+  const signature =
+    "5JZ4uVQ8t8HVB7n3oWQyN9fEv2L4KcD8zXdF1Nq7aHpRcMv6sEbT3wLh2YjAdF8X9k1Bc4ZsGmH7vUuQrPnY6t";
+
+  test("defaults to Solana devnet cluster when no network is provided", () => {
+    expect(solanaTxExplorerUrl(signature)).toBe(
+      `https://explorer.solana.com/tx/${signature}?cluster=devnet`,
+    );
+  });
+
+  test("respects an explicit network parameter", () => {
+    expect(solanaTxExplorerUrl(signature, "localnet")).toBe(
+      `https://explorer.solana.com/tx/${signature}?cluster=localnet`,
+    );
+  });
+
+  test("omits the cluster query string for mainnet-beta so the canonical explorer URL is used", () => {
+    expect(solanaTxExplorerUrl(signature, "mainnet-beta")).toBe(
+      `https://explorer.solana.com/tx/${signature}`,
     );
   });
 });
@@ -98,16 +122,87 @@ describe("extractLiveResultFacts", () => {
     ).toEqual({
       paymentId: "pi_live_123",
       txHash,
+      txSignature: null,
       receiptId: null,
       requestId: "req_live_123",
       status: "paid_api_delivered",
       rail: "mpp",
       amount: "1.00",
       currency: "usd",
+      network: null,
       endpoint: "/showcase/stripe-mpp/paid",
       method: "GET",
       responseStatus: "200",
       latencyMs: "42",
+    });
+  });
+
+  test("uses the receipt tx signature as the Solana paymentId when no other id is supplied", () => {
+    const signature =
+      "5JZ4uVQ8t8HVB7n3oWQyN9fEv2L4KcD8zXdF1Nq7aHpRcMv6sEbT3wLh2YjAdF8X9k1Bc4ZsGmH7vUuQrPnY6t";
+
+    expect(
+      extractLiveResultFacts(
+        {
+          status: 200,
+          body: {
+            receipt: { reference: signature },
+            floviaEvent: {
+              requestId: "req_solana_123",
+              provider: "solana",
+              rail: "mpp",
+              amount: "0.10",
+              currency: "usdc",
+              status: "paid_api_delivered",
+              payment: { network: "solana-devnet" },
+              apiUsage: {
+                endpoint: "/showcase/solana-mpp/paid",
+                method: "GET",
+                responseStatus: 200,
+                latencyMs: 53,
+              },
+            },
+          },
+        },
+        "solana",
+      ),
+    ).toMatchObject({
+      paymentId: signature,
+      txSignature: signature,
+      txHash: null,
+      receiptId: null,
+      network: "devnet",
+      requestId: "req_solana_123",
+      latencyMs: "53",
+    });
+  });
+
+  test("respects an explicit Solana payment.paymentId over the receipt signature", () => {
+    const signature =
+      "5JZ4uVQ8t8HVB7n3oWQyN9fEv2L4KcD8zXdF1Nq7aHpRcMv6sEbT3wLh2YjAdF8X9k1Bc4ZsGmH7vUuQrPnY6t";
+    const explicitPaymentId = "explicit_payment_id_xyz";
+
+    expect(
+      extractLiveResultFacts(
+        {
+          status: 200,
+          body: {
+            receipt: { reference: signature },
+            floviaEvent: {
+              provider: "solana",
+              payment: {
+                paymentId: explicitPaymentId,
+                network: "solana-mainnet-beta",
+              },
+            },
+          },
+        },
+        "solana",
+      ),
+    ).toMatchObject({
+      paymentId: explicitPaymentId,
+      txSignature: signature,
+      network: "mainnet-beta",
     });
   });
 
