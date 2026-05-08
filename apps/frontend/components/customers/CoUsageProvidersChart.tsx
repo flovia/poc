@@ -9,19 +9,20 @@ const VALUE_WIDTH = 140;
 const PAD = { l: 10, r: 10, t: 6, b: 6 };
 const KPI_TOP_K = 3;
 
-// Heatmap opacity range for the bar fill, driven by sharedTxCount.
-// Lower bound > 0 keeps low-tx providers visible; upper bound < 1 leaves room
-// for the densest bars to feel emphasized without losing surrounding contrast.
-const MIN_TX_OPACITY = 0.25;
-const MAX_TX_OPACITY = 0.95;
+// Heatmap opacity range for the bar fill, driven by sharedWallets.
+// Lower bound > 0 keeps low-reach providers visible; upper bound < 1 leaves
+// room for the densest bars to feel emphasized without losing surrounding
+// contrast.
+const MIN_WALLET_OPACITY = 0.25;
+const MAX_WALLET_OPACITY = 0.95;
 
 const truncate = (value: string, max = 32): string =>
   value.length <= max ? value : `${value.slice(0, max - 1)}…`;
 
-const txOpacity = (txCount: number, maxTx: number): number => {
-  if (maxTx <= 0) return MIN_TX_OPACITY;
-  const ratio = txCount / maxTx;
-  return MIN_TX_OPACITY + (MAX_TX_OPACITY - MIN_TX_OPACITY) * ratio;
+const walletOpacity = (wallets: number, maxWallets: number): number => {
+  if (maxWallets <= 0) return MIN_WALLET_OPACITY;
+  const ratio = wallets / maxWallets;
+  return MIN_WALLET_OPACITY + (MAX_WALLET_OPACITY - MIN_WALLET_OPACITY) * ratio;
 };
 
 export function CoUsageProvidersChart({
@@ -43,7 +44,6 @@ export function CoUsageProvidersChart({
 
   const topRows = rows.slice(0, TOP_N);
   const maxWallets = Math.max(1, ...topRows.map((r) => r.sharedWallets));
-  const maxTx = Math.max(1, ...topRows.map((r) => r.sharedTxCount));
 
   const chartWidth = 700;
   const barAreaWidth = chartWidth - PAD.l - PAD.r - LABEL_WIDTH - VALUE_WIDTH;
@@ -61,7 +61,7 @@ export function CoUsageProvidersChart({
       <div style={{ display: "flex", justifyContent: "center" }}>
         <svg
           role="img"
-          aria-label={`Top ${topRows.length} synergy candidates by shared wallet reach and shared tx volume`}
+          aria-label={`Top ${topRows.length} synergy candidates by shared wallet reach`}
           width="100%"
           viewBox={`0 0 ${chartWidth} ${chartHeight}`}
           preserveAspectRatio="xMidYMid meet"
@@ -74,7 +74,7 @@ export function CoUsageProvidersChart({
           const barY = y + 5;
           const barH = ROW_HEIGHT - 10;
           const valueX = barX + barAreaWidth + 6;
-          const opacity = txOpacity(row.sharedTxCount, maxTx);
+          const opacity = walletOpacity(row.sharedWallets, maxWallets);
 
           const clickable = !!onRowSelect;
           return (
@@ -175,7 +175,7 @@ export function CoUsageProvidersChart({
                 width: 14,
                 height: 8,
                 background: "var(--mesh-blue)",
-                opacity: MIN_TX_OPACITY,
+                opacity: MIN_WALLET_OPACITY,
                 borderRadius: 1,
                 display: "inline-block",
               }}
@@ -185,7 +185,7 @@ export function CoUsageProvidersChart({
                 width: 14,
                 height: 8,
                 background: "var(--mesh-blue)",
-                opacity: (MIN_TX_OPACITY + MAX_TX_OPACITY) / 2,
+                opacity: (MIN_WALLET_OPACITY + MAX_WALLET_OPACITY) / 2,
                 borderRadius: 1,
                 display: "inline-block",
               }}
@@ -195,13 +195,13 @@ export function CoUsageProvidersChart({
                 width: 14,
                 height: 8,
                 background: "var(--mesh-blue)",
-                opacity: MAX_TX_OPACITY,
+                opacity: MAX_WALLET_OPACITY,
                 borderRadius: 1,
                 display: "inline-block",
               }}
             />
           </span>
-          Color depth = shared tx volume
+          Color depth = shared wallets (reach)
         </span>
         <span>Bar length = shared wallets (reach)</span>
         <span style={{ marginLeft: "auto" }}>
