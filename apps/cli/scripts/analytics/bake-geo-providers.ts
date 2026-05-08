@@ -267,11 +267,7 @@ type BakedGeoFile = {
 
 // Brand-key extraction (mirrors apps/frontend/lib/pay-sh/brand.ts behavior
 // closely enough that the frontend's runtime extractor will find a match).
-const KNOWN_PUBLISHERS = new Set([
-  "solana-foundation",
-  "merit-systems",
-  "paysponge",
-]);
+const KNOWN_PUBLISHERS = new Set(["solana-foundation", "merit-systems", "paysponge"]);
 
 const extractBrandKey = (serviceId: string | undefined): string | null => {
   if (!serviceId) return null;
@@ -435,10 +431,7 @@ const matchesAtlas = (
   return false;
 };
 
-const findAtlasFor = (
-  atlasEntries: AtlasEntry[],
-  rows: CatalogRow[],
-): AtlasEntry | undefined => {
+const findAtlasFor = (atlasEntries: AtlasEntry[], rows: CatalogRow[]): AtlasEntry | undefined => {
   for (const row of rows) {
     const match = atlasEntries.find((e) => matchesAtlas(e, row.serviceId, row.serviceUrl));
     if (match) return match;
@@ -499,16 +492,12 @@ const bake = (input: {
     const atlasMatch = findAtlasFor(input.atlas, paySh);
 
     const payShDescription =
-      atlasMatch?.description ??
-      paySh.find((r) => r.description)?.description ??
-      null;
-    const payShUseCase =
-      atlasMatch?.useCase ?? paySh.find((r) => r.useCase)?.useCase ?? null;
+      atlasMatch?.description ?? paySh.find((r) => r.description)?.description ?? null;
+    const payShUseCase = atlasMatch?.useCase ?? paySh.find((r) => r.useCase)?.useCase ?? null;
     // Atlas-published offers can be richer than fixture-derived ones (e.g.
     // they include probePriceUsd). Prefer atlas offers when matched.
-    const offers = atlasMatch?.offers && atlasMatch.offers.length > 0
-      ? atlasMatch.offers
-      : fixtureOffers;
+    const offers =
+      atlasMatch?.offers && atlasMatch.offers.length > 0 ? atlasMatch.offers : fixtureOffers;
 
     const provider: BakedGeoProvider = {
       id: key,
@@ -582,7 +571,9 @@ const main = async () => {
     const mppRaw = JSON.parse(fs.readFileSync(options.mppPath, "utf8"));
     mppRows = mppRaw.providers ?? [];
   } else {
-    console.warn(`[bake-geo-providers] MPP catalog not found at ${options.mppPath} — baking Pay.sh-only`);
+    console.warn(
+      `[bake-geo-providers] MPP catalog not found at ${options.mppPath} — baking Pay.sh-only`,
+    );
   }
 
   const baked = bake({ analytics: analyticsRows, mpp: mppRows, atlas: atlasEntries, intel });

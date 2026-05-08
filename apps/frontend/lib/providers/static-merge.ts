@@ -17,10 +17,7 @@ import {
 export const buildStaticProviderRouteId = (serviceId: string): string =>
   `static-${slugifyProviderName(serviceId)}`;
 
-export type StaticProviderFactory<T> = (
-  capability: StaticProviderCapability,
-  routeId: string,
-) => T;
+export type StaticProviderFactory<T> = (capability: StaticProviderCapability, routeId: string) => T;
 
 // Append entries from STATIC_PROVIDER_CAPABILITIES whose serviceId is not
 // already covered by `live`. Existing entries (including their merged

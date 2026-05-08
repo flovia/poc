@@ -59,8 +59,8 @@ describe("lightsail shared stack", () => {
     expect(syncScript).not.toContain('slot_state_file="${stack_root}/.develop-bff-slot"');
     expect(syncScript).toContain("get_container_started_at()");
     expect(syncScript).toContain("detect_active_develop_slot()");
-    expect(syncScript).toContain('flovia-lightsail-develop-bff-blue-1');
-    expect(syncScript).toContain('flovia-lightsail-develop-bff-green-1');
+    expect(syncScript).toContain("flovia-lightsail-develop-bff-blue-1");
+    expect(syncScript).toContain("flovia-lightsail-develop-bff-green-1");
     expect(syncScript).toContain('blue_started_at="$(get_container_started_at');
     expect(syncScript).toContain('green_started_at="$(get_container_started_at');
     expect(syncScript).toContain('detected_active_develop_slot="$(detect_active_develop_slot)"');
@@ -70,11 +70,11 @@ describe("lightsail shared stack", () => {
     expect(syncScript).toContain('next_slot="green"');
     expect(syncScript).toContain('next_service="develop-bff-${next_slot}"');
     expect(syncScript).toContain("wait_for_service_providers_ready");
-    expect(syncScript).toContain('local timeout_secs=300');
+    expect(syncScript).toContain("local timeout_secs=300");
     expect(syncScript).toContain('providers_url="http://${container_ip}:3001/providers"');
     expect(syncScript).toContain('curl -sf --max-time "$request_timeout" "$providers_url"');
-    expect(syncScript).toContain('grep -q \'"providerCount"\'');
-    expect(syncScript).toContain('grep -q \'"providers"\'');
+    expect(syncScript).toContain("grep -q '\"providerCount\"'");
+    expect(syncScript).toContain("grep -q '\"providers\"'");
     expect(syncScript).toContain("Rolling back");
     expect(syncScript).toContain("write_caddyfile");
     expect(syncScript).toContain("caddy reload");

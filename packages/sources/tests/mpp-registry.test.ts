@@ -17,8 +17,7 @@ import {
 } from "../src/mpp-registry";
 
 const fixtureRoot = path.resolve(import.meta.dir, "fixtures");
-const readFixture = (name: string) =>
-  fs.readFileSync(path.join(fixtureRoot, name), "utf8");
+const readFixture = (name: string) => fs.readFileSync(path.join(fixtureRoot, name), "utf8");
 
 const SAMPLE_WWW_AUTH =
   'Payment id="abc123", realm="mpp.api.agentmail.to", method="tempo", intent="charge", request="eyJhbW91bnQiOiIyMDAwMDAwIiwiY3VycmVuY3kiOiIweDIwQzAwMDAwMDAwMDAwMDAwMDAwMDAwMGI5NTM3ZDExYzYwRThiNTAiLCJtZXRob2REZXRhaWxzIjp7ImNoYWluSWQiOjQyMTd9LCJyZWNpcGllbnQiOiIweDZlMzE4NEMyMDRlNTk2ZEVEODlFOEE1NjkzQjYwMjA5N0Y0QWI2ODcifQ", expires="2026-05-06T19:19:48.333Z"';
@@ -63,7 +62,7 @@ describe("parseWwwAuthenticatePayment", () => {
 
   test("returns empty array when header is missing or malformed", () => {
     expect(parseWwwAuthenticatePayment(undefined)).toEqual([]);
-    expect(parseWwwAuthenticatePayment("Basic realm=\"x\"")).toEqual([]);
+    expect(parseWwwAuthenticatePayment('Basic realm="x"')).toEqual([]);
   });
 
   test("does not absorb attributes from a following non-Payment scheme", () => {
@@ -744,10 +743,14 @@ describe("toProviderCatalogRowFromMpp resources mapping", () => {
     if (!row) throw new Error("expected row");
     // We expect 2 resources (one per paid endpoint); the free /free is dropped.
     expect(row.resources?.length).toBe(2);
-    const charge = row.resources?.find((r) => r.method === "POST" && r.resource.endsWith("/v0/inboxes"));
+    const charge = row.resources?.find(
+      (r) => r.method === "POST" && r.resource.endsWith("/v0/inboxes"),
+    );
     expect(charge?.amountAtomic).toBe("2000000");
     expect(charge?.description).toContain("Create inbox");
-    const session = row.resources?.find((r) => r.method === "POST" && r.resource.endsWith("/v1/messages"));
+    const session = row.resources?.find(
+      (r) => r.method === "POST" && r.resource.endsWith("/v1/messages"),
+    );
     expect(session?.description).toContain("Create messages with Claude");
     // Dynamic + session-intent endpoints carry no fixed amount.
     expect(session?.amountAtomic).toBeUndefined();
@@ -821,14 +824,20 @@ describe("buildMppCaptureRecord", () => {
 });
 
 describe("mergeProviderCatalogs", () => {
-  const makeRow = (providerId: string, extras: Record<string, unknown> = {}): Record<string, unknown> => ({
+  const makeRow = (
+    providerId: string,
+    extras: Record<string, unknown> = {},
+  ): Record<string, unknown> => ({
     providerId,
     name: providerId,
     serviceId: providerId.split("--")[0] ?? providerId,
     serviceName: providerId,
     network: "base",
     asset: "USDC",
-    payTo: `0x${providerId.replace(/[^a-f0-9]/gi, "").padEnd(40, "1").slice(0, 40)}`,
+    payTo: `0x${providerId
+      .replace(/[^a-f0-9]/gi, "")
+      .padEnd(40, "1")
+      .slice(0, 40)}`,
     transactionCount: 1,
     uniqueSenderCount: 1,
     totalVolumeAtomic: "1",
@@ -865,11 +874,7 @@ describe("mergeProviderCatalogs", () => {
 
     const merged = mergeProviderCatalogs(primary, mpp);
     expect(merged.providerCount).toBe(3);
-    expect(merged.providers.map((p) => p.providerId)).toEqual([
-      "primary-a",
-      "mpp-1",
-      "mpp-2",
-    ]);
+    expect(merged.providers.map((p) => p.providerId)).toEqual(["primary-a", "mpp-1", "mpp-2"]);
     expect(merged.generatedFrom).toContain("merged");
   });
 

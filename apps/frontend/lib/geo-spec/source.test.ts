@@ -89,8 +89,7 @@ describe("geo spec source", () => {
     const spec = getGeoSpec(
       "mpp:flightapi::tempo:4217::USDC::0x6e3184c204e596ded89e8a5693b602097f4ab687",
       {
-        providerId:
-          "mpp:flightapi::tempo:4217::USDC::0x6e3184c204e596ded89e8a5693b602097f4ab687",
+        providerId: "mpp:flightapi::tempo:4217::USDC::0x6e3184c204e596ded89e8a5693b602097f4ab687",
         name: "FlightAPI",
         title: "FlightAPI",
         description: "ignored — baked JSON wins",
@@ -147,8 +146,7 @@ describe("geo spec source", () => {
     const spec = getGeoSpec(
       "x402-totally-unknown--base--usdc--0x9999999999999999999999999999999999999999",
       {
-        providerId:
-          "x402-totally-unknown--base--usdc--0x9999999999999999999999999999999999999999",
+        providerId: "x402-totally-unknown--base--usdc--0x9999999999999999999999999999999999999999",
         name: "Totally Unknown",
         title: "Totally Unknown",
         description: "live-only description",

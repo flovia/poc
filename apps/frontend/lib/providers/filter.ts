@@ -88,9 +88,7 @@ export function collectAvailableChains(providers: StoredProvider[]): CustomerCha
 // Display order for protocol badges. MPP first, then x402.
 const PROTOCOL_DISPLAY_ORDER: ReadonlyArray<"x402" | "MPP"> = ["MPP", "x402"];
 
-function sortProtocolsForDisplay(
-  protocols: readonly ("x402" | "MPP")[],
-): ("x402" | "MPP")[] {
+function sortProtocolsForDisplay(protocols: readonly ("x402" | "MPP")[]): ("x402" | "MPP")[] {
   const seen = new Set<"x402" | "MPP">();
   const ordered: ("x402" | "MPP")[] = [];
   for (const proto of PROTOCOL_DISPLAY_ORDER) {

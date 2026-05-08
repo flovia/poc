@@ -1,9 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import {
-  buildProviderCatalogFromMppCapture,
-  type MppCaptureRecord,
-} from "sources";
+import { buildProviderCatalogFromMppCapture, type MppCaptureRecord } from "sources";
 import { writeAtomically } from "./io";
 
 // Capture intermediate stays in tmp/ (it's only useful while iterating on the

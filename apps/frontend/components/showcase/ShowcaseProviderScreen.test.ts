@@ -52,7 +52,12 @@ describe("demo fallback facts", () => {
             currency: "usd",
             status: "paid_api_delivered",
             payment: { paymentIntentId: "pi_demo_stripe_mpp_001" },
-            apiUsage: { endpoint: "/showcase/stripe-mpp/paid", method: "GET", responseStatus: 200, latencyMs: 47 },
+            apiUsage: {
+              endpoint: "/showcase/stripe-mpp/paid",
+              method: "GET",
+              responseStatus: 200,
+              latencyMs: 47,
+            },
           },
         },
       }),

@@ -157,10 +157,7 @@ const buildWorkflowIntentSystemPrompt = (promptVersion: string) =>
     "Write the output in English for an internal product user.",
   ].join("\n");
 
-const buildWorkflowIntentUserPrompt = (
-  request: WorkflowIntentLlmRequest,
-  promptVersion: string,
-) =>
+const buildWorkflowIntentUserPrompt = (request: WorkflowIntentLlmRequest, promptVersion: string) =>
   JSON.stringify(
     {
       task: "Explain likely user intent for short multi-step wallet workflow sessions.",
@@ -229,21 +226,15 @@ const buildFallbackWorkflowScenarios = (
   const scenarios: string[] = [];
 
   if (/(price|quote|market|swap|liquidity|trade|token)/.test(rawText)) {
-    scenarios.push(
-      "A bot checking market or quote conditions before deciding whether to execute.",
-    );
+    scenarios.push("A bot checking market or quote conditions before deciding whether to execute.");
   }
 
   if (/(llm|response|completion|inference|model|prompt|agent)/.test(rawText)) {
-    scenarios.push(
-      "An agent evaluating retrieved results before choosing the next API step.",
-    );
+    scenarios.push("An agent evaluating retrieved results before choosing the next API step.");
   }
 
   if (/(search|query|lookup|fetch|scan|discover)/.test(rawText)) {
-    scenarios.push(
-      "A lookup workflow gathering enough context for a downstream decision.",
-    );
+    scenarios.push("A lookup workflow gathering enough context for a downstream decision.");
   }
 
   scenarios.push(
@@ -277,10 +268,8 @@ const normalizeWorkflowIntentExplanation = (
   raw: unknown,
   sessionById: Map<string, PhaseBCustomerWorkflowIntentInput["sessions"][number]>,
 ) => {
-  const candidate =
-    typeof raw === "object" && raw !== null ? (raw as Record<string, unknown>) : {};
-  const sessionId =
-    typeof candidate.sessionId === "string" ? candidate.sessionId.trim() : "";
+  const candidate = typeof raw === "object" && raw !== null ? (raw as Record<string, unknown>) : {};
+  const sessionId = typeof candidate.sessionId === "string" ? candidate.sessionId.trim() : "";
   if (!sessionId) {
     throw new BffLlmInferenceError("Workflow intent explanation is missing sessionId.");
   }
@@ -302,16 +291,12 @@ const normalizeWorkflowIntentExplanation = (
     ) || buildFallbackWorkflowIntent(session);
   const scenarios = uniqueNonEmpty(
     (Array.isArray(candidate.scenarios) ? candidate.scenarios : [])
-      .map((item) =>
-        normalizeWorkflowExplanationText(typeof item === "string" ? item : undefined),
-      )
+      .map((item) => normalizeWorkflowExplanationText(typeof item === "string" ? item : undefined))
       .filter(Boolean),
   );
   const evidence = uniqueNonEmpty(
     (Array.isArray(candidate.evidence) ? candidate.evidence : [])
-      .map((item) =>
-        normalizeWorkflowExplanationText(typeof item === "string" ? item : undefined),
-      )
+      .map((item) => normalizeWorkflowExplanationText(typeof item === "string" ? item : undefined))
       .filter(Boolean),
   );
   const caution =
@@ -965,9 +950,7 @@ class BedrockUpsellExplanationService implements BffLlmService {
         request.input.sessions.map((session) => [session.sessionId, session] as const),
       );
       explanations = Array.isArray(payload.explanations)
-        ? payload.explanations.map((item) =>
-            normalizeWorkflowIntentExplanation(item, sessionById),
-          )
+        ? payload.explanations.map((item) => normalizeWorkflowIntentExplanation(item, sessionById))
         : [];
     } catch (error) {
       if (error instanceof BffLlmInferenceError) {
