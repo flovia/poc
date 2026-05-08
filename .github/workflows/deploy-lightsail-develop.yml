@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - develop
+      - Kourin1996/add-blue-green-deploy
     paths:
       - .github/workflows/deploy-lightsail-develop.yml
       - .github/workflows/deploy-lightsail-shared.yml
