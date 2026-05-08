@@ -29,13 +29,13 @@ const SOURCE_NODE_ORDER = [
 const ROUTE_SANKEY_VIEW_COPY: Record<RouteSankeyView, RouteSankeyViewCopy> = {
   rail: {
     label: "Payment Route",
-    title: "Source route → Payment route → API workflow",
+    title: "Source route → payment route → API workflow",
     note: "Built from the route analytics response rows. Wider links indicate stronger per-route settled-USD signal.",
     emptyMessage: "No route flow detected.",
   },
   router: {
     label: "Chain",
-    title: "Source route → Chain → API workflow",
+    title: "Source route → chain → API workflow",
     note: "Built from the route analytics response rows. Chain view focuses on Base, Solana, and Tempo rows to keep the center layer symmetric.",
     emptyMessage: "No Base, Solana, or Tempo route flow detected.",
   },
@@ -101,12 +101,12 @@ function selectSankeyRouteRows(summary: RouteAnalyticsSummaryResponse, view: Rou
     machineFlowRows.length > 0
       ? machineFlowRows
       : [
-        ...summary.sampleRoutes
-          .filter((route) => route.rail === "x402")
-          .sort((left, right) => (right.amountUsd ?? 0) - (left.amountUsd ?? 0))
-          .slice(0, 8),
-        ...summary.sampleRoutes.filter((route) => DEMO_RAILS.has(route.rail)),
-      ].slice(0, 12);
+          ...summary.sampleRoutes
+            .filter((route) => route.rail === "x402")
+            .sort((left, right) => (right.amountUsd ?? 0) - (left.amountUsd ?? 0))
+            .slice(0, 8),
+          ...summary.sampleRoutes.filter((route) => DEMO_RAILS.has(route.rail)),
+        ].slice(0, 12);
 
   return view === "router"
     ? selectedRows.filter((route) => routerLabel(route) !== null)
