@@ -200,12 +200,13 @@ write_caddyfile() {
   sed -i "s|develop-bff-[a-z]*:3001|develop-bff-${develop_slot}:3001|g" "$stack_caddy_config"
 }
 
-wait_for_service_health() {
+wait_for_service_providers_ready() {
   local service="$1"
-  local max_attempts=30
+  local timeout_secs=300
   local interval=2
   local attempt=0
-  local container_id container_ip
+  local container_id container_ip providers_url response
+  local start_time elapsed remaining request_timeout sleep_for
 
   container_id="$(dc ps -q "$service")"
   if [ -z "$container_id" ]; then
@@ -220,18 +221,48 @@ wait_for_service_health() {
     return 1
   fi
 
-  echo "Waiting for $service to be healthy at http://${container_ip}:3001/health ..."
-  while [ "$attempt" -lt "$max_attempts" ]; do
-    if curl -sf --max-time 5 "http://${container_ip}:3001/health" >/dev/null 2>&1; then
-      echo "$service is healthy."
+  providers_url="http://${container_ip}:3001/providers"
+  start_time="$SECONDS"
+
+  echo "Waiting for $service providers at ${providers_url} ..."
+  while true; do
+    elapsed=$((SECONDS - start_time))
+    remaining=$((timeout_secs - elapsed))
+    if [ "$remaining" -le 0 ]; then
+      break
+    fi
+
+    request_timeout=5
+    if [ "$remaining" -lt "$request_timeout" ]; then
+      request_timeout="$remaining"
+    fi
+
+    if response="$(curl -sf --max-time "$request_timeout" "$providers_url" 2>/dev/null)" \
+      && printf '%s' "$response" | grep -q '"providerCount"' \
+      && printf '%s' "$response" | grep -q '"providers"'; then
+      echo "$service providers endpoint is ready."
       return 0
     fi
+
     attempt=$((attempt + 1))
-    printf 'Attempt %d/%d failed, retrying in %ds...\n' "$attempt" "$max_attempts" "$interval"
-    sleep "$interval"
+
+    elapsed=$((SECONDS - start_time))
+    remaining=$((timeout_secs - elapsed))
+    if [ "$remaining" -le 0 ]; then
+      break
+    fi
+
+    sleep_for="$interval"
+    if [ "$remaining" -lt "$sleep_for" ]; then
+      sleep_for="$remaining"
+    fi
+
+    printf 'Attempt %d failed, retrying in %ds (%ds remaining)...\n' \
+      "$attempt" "$sleep_for" "$remaining"
+    sleep "$sleep_for"
   done
 
-  echo "Health check for $service timed out after $((max_attempts * interval))s" >&2
+  echo "Providers readiness check for $service timed out after ${timeout_secs}s" >&2
   return 1
 }
 
@@ -259,7 +290,7 @@ if [ "$DEPLOY_BRANCH" = "develop" ]; then
   dc pull "$next_service" caddy
   dc up -d "$next_service"
 
-  if ! wait_for_service_health "$next_service"; then
+  if ! wait_for_service_providers_ready "$next_service"; then
     echo "Rolling back: stopping ${next_service}" >&2
     dc stop "$next_service" 2>/dev/null || true
     dc rm -f "$next_service" 2>/dev/null || true
