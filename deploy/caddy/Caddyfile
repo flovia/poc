@@ -13,7 +13,7 @@
 
 	redir /develop /develop/ 308
 	handle_path /develop/* {
-		reverse_proxy develop-bff:3001 {
+		reverse_proxy develop-bff-blue:3001 {
 			header_up X-Forwarded-Prefix /develop
 		}
 	}
