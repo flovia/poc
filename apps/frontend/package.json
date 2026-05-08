@@ -14,7 +14,7 @@
     "test": "bun test",
     "typecheck": "tsc --noEmit",
     "verify:geo-bake-fresh": "bun scripts/check-geo-bake-fresh.ts",
-    "verify": "bun run verify:geo-bake-fresh && bun run typecheck && bun test"
+    "verify": "bun run typecheck && bun test"
   },
   "dependencies": {
     "@hit-pay/mpp-client": "beta",

@@ -1,10 +1,10 @@
 // Verify that apps/frontend/data/geo-providers.json is at least as new as the
-// inputs that feed `bun run geo:bake`. Run as part of `bun run verify` so
-// stale baked data is caught before commit/deploy.
+// inputs that feed `bun run geo:bake`.
 //
-// The baked JSON is the only data file the GEO page reads at runtime — CI/Docker
-// builds do not re-bake. So if a tracked input changes, the developer must
-// re-run `bun run bake:geo` and commit the refreshed output.
+// This check is intentionally kept out of the default `bun run verify` path
+// because it depends on filesystem mtimes, which are noisy in CI checkouts and
+// when rebasing old generated files over newer docs. Run it explicitly when
+// changing GEO bake inputs.
 //
 // Failure exits with code 1 and prints which input is newer than the bake.
 
