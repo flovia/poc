@@ -1,3 +1,4 @@
+import { normalizePaymentRecipientAddress } from "contracts";
 import type { CustomerProfileDto, WalletUsageGraphDto } from "@/lib/api/types";
 
 export type OpportunityLevel = "high" | "medium" | "low";
@@ -37,6 +38,18 @@ export type CoUsageProviderSankeyFlow = {
   occurrences: number;
 };
 
+export type CoUsageProviderMetadata = {
+  title?: string;
+  description?: string;
+  useCase?: string;
+  category?: string;
+  serviceUrl?: string;
+  protocol?: "x402" | "MPP";
+  chain?: string;
+  assetSymbol?: string;
+  priceRangeUsd?: { min: number; max: number };
+};
+
 export type CoUsageProviderRow = {
   providerId: string;
   providerName: string;
@@ -48,11 +61,13 @@ export type CoUsageProviderRow = {
   opportunity: OpportunityLevel;
   endpoints: CoUsageProviderEndpoint[];
   payerWallets: CoUsageProviderPayer[];
-};
+} & CoUsageProviderMetadata;
 
 export type AggregateOptions = {
   ownPayTo: string | undefined;
+  ownPayTos?: readonly string[];
   resolveProviderName?: (payToWallet: string) => string | null;
+  resolveMetadata?: (payToWallet: string) => CoUsageProviderMetadata | null;
 };
 
 export type BuildCoUsageProviderSankeyOptions = {
@@ -68,7 +83,8 @@ const opportunityFor = (confidence: number): OpportunityLevel => {
   return "low";
 };
 
-const normalize = (value: string | null | undefined) => (value ? value.toLowerCase() : "");
+const normalize = (value: string | null | undefined) =>
+  value ? normalizePaymentRecipientAddress(value) : "";
 
 const EVM_ADDRESS_PATTERN = /^0x[0-9a-f]{40}$/i;
 
@@ -305,27 +321,35 @@ function classifyCoUsageCustomer(
 
 export const aggregateCoUsageProviders = (
   graph: WalletUsageGraphDto,
-  { ownPayTo, resolveProviderName }: AggregateOptions,
+  { ownPayTo, ownPayTos, resolveProviderName, resolveMetadata }: AggregateOptions,
 ): CoUsageProviderRow[] => {
   const own = normalize(ownPayTo);
+  const ownSet = new Set(
+    [ownPayTo, ...(ownPayTos ?? [])]
+      .map((payTo) => normalize(payTo))
+      .filter((payTo): payTo is string => payTo !== null),
+  );
   const accByPayTo = new Map<string, ProviderAcc>();
 
   for (const provider of graph.providerWallets) {
+    const providerPayTo = normalizePaymentRecipientAddress(provider.payTo);
+    if (ownSet.size > 0 && !ownSet.has(providerPayTo)) continue;
     for (const payer of provider.payerWallets) {
       const payerLower = payer.wallet.toLowerCase();
       for (const candidate of payer.otherServiceCandidates) {
-        const candidatePayTo = normalize(candidate.payToWallet);
-        if (!candidatePayTo) continue;
-        if (own && candidatePayTo === own) continue;
+        const rawCandidatePayTo = candidate.payToWallet?.trim() ?? "";
+        if (!rawCandidatePayTo) continue;
+        const candidatePayToKey = normalizePaymentRecipientAddress(rawCandidatePayTo);
+        if ((own && candidatePayToKey === own) || ownSet.has(candidatePayToKey)) continue;
 
-        const key = candidatePayTo;
+        const key = candidatePayToKey;
         let acc = accByPayTo.get(key);
         if (!acc) {
           acc = {
             providerId: candidate.providerId,
             providerName: candidate.providerName,
             serviceName: candidate.serviceName,
-            payToWallet: candidatePayTo,
+            payToWallet: rawCandidatePayTo,
             walletSet: new Set(),
             txTotal: 0,
             confidenceSum: 0,
@@ -362,8 +386,19 @@ export const aggregateCoUsageProviders = (
   }
 
   const rows: CoUsageProviderRow[] = [];
+  const maxWallets = Math.max(...[...accByPayTo.values()].map((acc) => acc.walletSet.size), 1);
+  const maxTx = Math.max(...[...accByPayTo.values()].map((acc) => acc.txTotal), 1);
   for (const acc of accByPayTo.values()) {
     const avgConfidence = acc.confidenceCount > 0 ? acc.confidenceSum / acc.confidenceCount : 0;
+    const walletStrength = acc.walletSet.size / maxWallets;
+    const txStrength = acc.txTotal / maxTx;
+    const overlapStrength = walletStrength * 0.6 + txStrength * 0.4;
+    const signal =
+      accByPayTo.size === 1
+        ? avgConfidence
+        : avgConfidence > 0
+          ? Math.min(1, Math.max(0, avgConfidence + (overlapStrength - 0.5) * 0.3))
+          : overlapStrength;
     const resolvedName = resolveProviderName ? resolveProviderName(acc.payToWallet) : null;
     const endpoints: CoUsageProviderEndpoint[] = [...acc.endpointsByService.values()]
       .map((e) => ({
@@ -383,6 +418,7 @@ export const aggregateCoUsageProviders = (
         if (b.sharedTxCount !== a.sharedTxCount) return b.sharedTxCount - a.sharedTxCount;
         return a.wallet.localeCompare(b.wallet);
       });
+    const metadata = resolveMetadata ? resolveMetadata(acc.payToWallet) : null;
     rows.push({
       providerId: acc.providerId,
       providerName: displayProviderName(acc.providerName, topEndpointName, resolvedName),
@@ -390,10 +426,11 @@ export const aggregateCoUsageProviders = (
       payToWallet: acc.payToWallet,
       sharedWallets: acc.walletSet.size,
       sharedTxCount: acc.txTotal,
-      confidence: Number(avgConfidence.toFixed(2)),
-      opportunity: opportunityFor(avgConfidence),
+      confidence: Number(signal.toFixed(2)),
+      opportunity: opportunityFor(signal),
       endpoints,
       payerWallets,
+      ...(metadata ?? {}),
     });
   }
 

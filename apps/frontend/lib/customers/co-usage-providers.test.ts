@@ -98,6 +98,74 @@ describe("aggregateCoUsageProviders", () => {
     expect(rows[0]?.confidence).toBeCloseTo(0.7, 5);
   });
 
+  test("only aggregates candidates for the selected provider payTo", () => {
+    const graph: WalletUsageGraphDto = {
+      ...makeGraph([
+        makePayer("0x1", [
+          makeCandidate({ providerId: "ext:a", providerName: "A", payToWallet: EXT_A }),
+        ]),
+      ]),
+      providerWallets: [
+        ...makeGraph([
+          makePayer("0x1", [
+            makeCandidate({ providerId: "ext:a", providerName: "A", payToWallet: EXT_A }),
+          ]),
+        ]).providerWallets,
+        {
+          payTo: "0x0000000000000000000000000000000000000099",
+          claimIds: ["Other Provider"],
+          payerWallets: [
+            makePayer("0x2", [
+              makeCandidate({ providerId: "ext:b", providerName: "B", payToWallet: EXT_B }),
+            ]),
+          ],
+        },
+      ],
+    };
+
+    const rows = aggregateCoUsageProviders(graph, { ownPayTo: OWN_PAY_TO });
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.payToWallet).toBe(EXT_A);
+    expect(rows[0]?.sharedWallets).toBe(1);
+  });
+
+  test("aggregates all selected provider payTos for multi-chain services", () => {
+    const SECOND_OWN_PAY_TO = "0x0000000000000000000000000000000000000020";
+    const graph: WalletUsageGraphDto = {
+      ...makeGraph([]),
+      providerWallets: [
+        {
+          payTo: OWN_PAY_TO,
+          claimIds: ["Own Provider Base"],
+          payerWallets: [
+            makePayer("0x1", [
+              makeCandidate({ providerId: "ext:a", providerName: "A", payToWallet: EXT_A }),
+            ]),
+          ],
+        },
+        {
+          payTo: SECOND_OWN_PAY_TO,
+          claimIds: ["Own Provider Solana"],
+          payerWallets: [
+            makePayer("0x2", [
+              makeCandidate({ providerId: "ext:a", providerName: "A", payToWallet: EXT_A }),
+            ]),
+          ],
+        },
+      ],
+    };
+
+    const rows = aggregateCoUsageProviders(graph, {
+      ownPayTo: OWN_PAY_TO,
+      ownPayTos: [OWN_PAY_TO, SECOND_OWN_PAY_TO],
+    });
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.payToWallet).toBe(EXT_A);
+    expect(rows[0]?.sharedWallets).toBe(2);
+  });
+
   test("merges multiple endpoints under the same payToWallet into one row", () => {
     const graph = makeGraph([
       makePayer("0x1", [
@@ -277,6 +345,89 @@ describe("aggregateCoUsageProviders", () => {
     expect(rows[0]?.providerName).toBe("Reverse Search");
   });
 
+  test("preserves the original payToWallet string casing (e.g. Solana base58)", () => {
+    const SOLANA = "Cs2zdfUNonRdRGsiZUQQLdTxzxVvJZmgiX2mpLYKuEqP";
+    const graph = makeGraph([
+      makePayer("0x1", [
+        makeCandidate({
+          providerId: "ext:solana",
+          providerName: "Alibaba",
+          payToWallet: SOLANA,
+          coUsageCount: 2,
+        }),
+      ]),
+    ]);
+    const rows = aggregateCoUsageProviders(graph, { ownPayTo: OWN_PAY_TO });
+    expect(rows[0]?.payToWallet).toBe(SOLANA);
+  });
+
+  test("metadata lookup works even when only useCase/assetSymbol/priceRangeUsd are provided", () => {
+    const graph = makeGraph([
+      makePayer("0x1", [
+        makeCandidate({
+          providerId: "ext:a",
+          payToWallet: EXT_A,
+          coUsageCount: 5,
+        }),
+      ]),
+    ]);
+    const rows = aggregateCoUsageProviders(graph, {
+      ownPayTo: OWN_PAY_TO,
+      resolveMetadata: (payToWallet) =>
+        payToWallet.toLowerCase() === EXT_A.toLowerCase()
+          ? {
+              useCase: "Analytics-only metadata",
+              assetSymbol: "USDC",
+              priceRangeUsd: { min: 0.01, max: 0.05 },
+            }
+          : null,
+    });
+    expect(rows[0]).toMatchObject({
+      useCase: "Analytics-only metadata",
+      assetSymbol: "USDC",
+      priceRangeUsd: { min: 0.01, max: 0.05 },
+    });
+  });
+
+  test("attaches metadata (description/category/serviceUrl/protocol/chain) when resolveMetadata is provided", () => {
+    const graph = makeGraph([
+      makePayer("0x1", [
+        makeCandidate({
+          providerId: "ext:a",
+          payToWallet: EXT_A,
+          coUsageCount: 5,
+        }),
+      ]),
+    ]);
+
+    const rows = aggregateCoUsageProviders(graph, {
+      ownPayTo: OWN_PAY_TO,
+      resolveMetadata: (payToWallet) =>
+        payToWallet === EXT_A
+          ? {
+              title: "AgentMail",
+              description: "Email inboxes for AI agents.",
+              useCase: "Use to give agents email.",
+              category: "messaging",
+              serviceUrl: "https://x402.api.agentmail.to",
+              protocol: "x402",
+              chain: "Solana mainnet",
+              assetSymbol: "USDC",
+              priceRangeUsd: { min: 0, max: 10 },
+            }
+          : null,
+    });
+
+    expect(rows[0]).toMatchObject({
+      description: "Email inboxes for AI agents.",
+      category: "messaging",
+      serviceUrl: "https://x402.api.agentmail.to",
+      protocol: "x402",
+      chain: "Solana mainnet",
+      assetSymbol: "USDC",
+    });
+  });
+
   test("builds sankey flows from user segments to co-usage providers to target categories", () => {
     const rows = aggregateCoUsageProviders(
       makeGraph([
@@ -418,20 +569,35 @@ describe("aggregateCoUsageProviders", () => {
 
     const flows = buildCoUsageProviderSankeyFlows(rows, {
       customersByWallet: new Map([
-        ["0xa", makeCustomer("0xa", { providerCount: 4, observationCount: 9, upsellOpportunity: "high" })],
-        ["0xb", makeCustomer("0xb", { providerCount: 2, observationCount: 5, upsellOpportunity: "medium" })],
-        ["0xc", makeCustomer("0xc", { providerCount: 1, observationCount: 1, upsellOpportunity: "low" })],
+        [
+          "0xa",
+          makeCustomer("0xa", { providerCount: 4, observationCount: 9, upsellOpportunity: "high" }),
+        ],
+        [
+          "0xb",
+          makeCustomer("0xb", {
+            providerCount: 2,
+            observationCount: 5,
+            upsellOpportunity: "medium",
+          }),
+        ],
+        [
+          "0xc",
+          makeCustomer("0xc", { providerCount: 1, observationCount: 1, upsellOpportunity: "low" }),
+        ],
       ]),
       maxProviders: 2,
       maxTargetCategories: 2,
     });
 
     expect(
-      flows.filter((flow) => flow.to === `provider:${EXT_A}`).map((flow) => ({
-        from: flow.from,
-        fromLabel: flow.fromLabel,
-        occurrences: flow.occurrences,
-      })),
+      flows
+        .filter((flow) => flow.to === `provider:${EXT_A}`)
+        .map((flow) => ({
+          from: flow.from,
+          fromLabel: flow.fromLabel,
+          occurrences: flow.occurrences,
+        })),
     ).toEqual([
       {
         from: "segment:high-intent-power-users",

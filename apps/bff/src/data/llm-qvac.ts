@@ -14,6 +14,7 @@ import {
 } from "contracts";
 import {
   BffLlmInferenceError,
+  BffLlmUnavailableError,
   type BffLlmService,
   DEFAULT_LLM_MAX_TOKENS,
   DEFAULT_LLM_TEMPERATURE,
@@ -42,6 +43,8 @@ import {
   type QvacModelSource,
   type QvacSdkClient,
   type ResolveBffLlmServiceOptions,
+  type WorkflowIntentLlmRequest,
+  type WorkflowIntentLlmResult,
   writeCachedUpsellExplanation,
 } from "./llm-shared";
 
@@ -273,6 +276,12 @@ class QvacUpsellExplanationService implements BffLlmService {
       },
       reasons: [llmReason],
     });
+  }
+
+  async generateWorkflowIntentExplanation(
+    _request: WorkflowIntentLlmRequest,
+  ): Promise<WorkflowIntentLlmResult> {
+    throw new BffLlmUnavailableError("Workflow intent explanation is not available for qvac.");
   }
 }
 

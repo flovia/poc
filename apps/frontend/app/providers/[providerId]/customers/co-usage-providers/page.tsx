@@ -1,9 +1,11 @@
+import { normalizePaymentRecipientAddress } from "contracts";
 import { TopBar } from "@/components/shell/TopBar";
 import { CoUsageProvidersView } from "@/components/customers/CoUsageProvidersView";
 import { SummaryChip } from "@/components/customers/SummaryChip";
 import { aggregateCoUsageProviders } from "@/lib/customers/co-usage-providers";
 import { resolveKnownProviderName } from "@/lib/customers/known-providers";
 import { getProviders, getWalletUsageGraph } from "@/lib/data-source";
+import { findProviderByRouteId } from "@/lib/providers";
 import { getTopBarPageContext } from "@/lib/server/page-context";
 
 export default async function CoUsageProvidersPage({
@@ -17,13 +19,55 @@ export default async function CoUsageProvidersPage({
     getTopBarPageContext(),
     getWalletUsageGraph(),
   ]);
-  const ownProvider = providers.find((p) => p.providerId === providerId);
+  const ownProvider = findProviderByRouteId(providers, providerId);
   const ownPayTo = ownProvider?.payTo;
+  const ownPayTos = ownProvider
+    ? providers
+        .filter((p) => {
+          if (ownProvider.serviceId && p.serviceId === ownProvider.serviceId) return true;
+          if (ownProvider.serviceName && p.serviceName === ownProvider.serviceName) return true;
+          return p.providerId === ownProvider.providerId;
+        })
+        .map((p) => p.payTo)
+    : [];
+
+  const metadataByPayTo = new Map(
+    providers
+      .filter(
+        (p) =>
+          p.title ||
+          p.description ||
+          p.useCase ||
+          p.category ||
+          p.serviceUrl ||
+          p.protocol ||
+          p.chain ||
+          p.assetSymbol ||
+          p.priceRangeUsd,
+      )
+      .map((p) => [
+        normalizePaymentRecipientAddress(p.payTo),
+        {
+          title: p.title,
+          description: p.description,
+          useCase: p.useCase,
+          category: p.category,
+          serviceUrl: p.serviceUrl,
+          protocol: p.protocol,
+          chain: p.chain,
+          assetSymbol: p.assetSymbol,
+          priceRangeUsd: p.priceRangeUsd,
+        },
+      ]),
+  );
 
   const rows = graph
     ? aggregateCoUsageProviders(graph, {
         ownPayTo,
+        ownPayTos,
         resolveProviderName: resolveKnownProviderName,
+        resolveMetadata: (payToWallet) =>
+          metadataByPayTo.get(normalizePaymentRecipientAddress(payToWallet)) ?? null,
       })
     : [];
 
@@ -42,14 +86,13 @@ export default async function CoUsageProvidersPage({
         dataMode={pageCtx.dataMode}
         onboarding={{
           id: "co-usage-providers",
-          title: "Find your ecosystem signals",
+          title: "Find cross-provider co-usage",
           description:
-            "See which x402 providers your customers use alongside your API, and spot partnership or bundling opportunities.",
+            "See which other x402 providers your payer wallets also pay.",
           metrics: [
-            { label: "Co-used providers", description: "External services that appear with your API usage.", icon: "external" },
-            { label: "Shared wallets", description: "Customers who overlap across providers.", icon: "customers" },
-            { label: "Co-usage frequency", description: "Which relationships show the strongest usage signal.", icon: "activity" },
-            { label: "Opportunity level", description: "Where the next partnership conversation may start.", icon: "spark" },
+            { label: "Co-used providers", description: "Other x402 providers paid by your payer wallets.", icon: "external" },
+            { label: "Overlapping wallets", description: "Overlapping payer wallets paying both APIs.", icon: "customers" },
+            { label: "Opportunity level", description: "Prioritize partnership or bundling leads from overlap strength.", icon: "spark" },
           ],
         }}
       />
@@ -87,7 +130,7 @@ export default async function CoUsageProvidersPage({
                 hint="external x402 services"
               />
               <SummaryChip
-                label="Shared wallets"
+                label="Overlapping wallets"
                 value={totalSharedWallets}
                 hint="overlapping payer wallets"
               />
@@ -95,7 +138,7 @@ export default async function CoUsageProvidersPage({
                 label="High opportunity"
                 value={highOpportunity}
                 accent="blue"
-                hint="confidence ≥ 0.70"
+                hint="signal ≥ 0.70 from wallet and tx overlap"
               />
             </div>
           </div>

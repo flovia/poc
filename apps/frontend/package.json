@@ -8,13 +8,16 @@
   },
   "scripts": {
     "dev": "next dev",
+    "bake:geo": "cd ../cli && bun run geo:bake",
     "build": "next build",
     "start": "next start",
     "test": "bun test",
     "typecheck": "tsc --noEmit",
+    "verify:geo-bake-fresh": "bun scripts/check-geo-bake-fresh.ts",
     "verify": "bun run typecheck && bun test"
   },
   "dependencies": {
+    "@hit-pay/mpp-client": "beta",
     "@nivo/sankey": "^0.99.0",
     "contracts": "workspace:*",
     "next": "^16.2.4",

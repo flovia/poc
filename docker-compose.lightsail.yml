@@ -1,44 +1,84 @@
+name: flovia-lightsail
+
+x-develop-bff: &develop-bff
+  image: ${BFF_IMAGE_REPOSITORY:?BFF_IMAGE_REPOSITORY is required}:${DEVELOP_BFF_IMAGE_TAG:-develop}
+  environment:
+    BFF_BRANCH_NAME: develop
+    PORT: 3001
+    DATABASE_URL: /data/flovia.db
+    BFF_DEPLOY_ID: ${DEVELOP_BFF_IMAGE_TAG:-develop}
+    AWS_REGION: ${AWS_REGION:-}
+    AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-}
+    AWS_BEARER_TOKEN_BEDROCK: ${AWS_BEARER_TOKEN_BEDROCK:-}
+    BFF_BEDROCK_MODEL_ID: ${BFF_BEDROCK_MODEL_ID:-}
+    BFF_BEDROCK_PROMPT_VERSION: ${BFF_BEDROCK_PROMPT_VERSION:-}
+    BFF_ANALYTICS_SOURCE: ${DEVELOP_BFF_ANALYTICS_SOURCE:-${BFF_ANALYTICS_SOURCE:-}}
+    BFF_ANALYTICS_DATABASE_URL: ${DEVELOP_BFF_ANALYTICS_DATABASE_URL:-${BFF_ANALYTICS_DATABASE_URL:-}}
+    BFF_ANALYTICS_POSTGRES_MODE: ${DEVELOP_BFF_ANALYTICS_POSTGRES_MODE:-${BFF_ANALYTICS_POSTGRES_MODE:-live}}
+    BFF_ANALYTICS_READ_MODEL_PATH: ${DEVELOP_BFF_ANALYTICS_READ_MODEL_PATH:-${BFF_ANALYTICS_READ_MODEL_PATH:-}}
+    BFF_ANALYTICS_SNAPSHOT_ID: ${DEVELOP_BFF_ANALYTICS_SNAPSHOT_ID:-${BFF_ANALYTICS_SNAPSHOT_ID:-latest}}
+    HITPAY_API_KEY: ${DEVELOP_HITPAY_API_KEY:-${HITPAY_API_KEY:-}}
+    HITPAY_WEBHOOK_SALT: ${DEVELOP_HITPAY_WEBHOOK_SALT:-${HITPAY_WEBHOOK_SALT:-}}
+    HITPAY_MPP_ENDPOINT: ${DEVELOP_HITPAY_MPP_ENDPOINT:-${HITPAY_MPP_ENDPOINT:-https://sandbox.mpp.hitpay.dev}}
+    STRIPE_SECRET_KEY: ${DEVELOP_STRIPE_SECRET_KEY:-${STRIPE_SECRET_KEY:-}}
+    MPPX_PRIVATE_KEY: ${DEVELOP_MPPX_PRIVATE_KEY:-${MPPX_PRIVATE_KEY:-}}
+    MPP_SECRET_KEY: ${DEVELOP_MPP_SECRET_KEY:-}
+  volumes:
+    - ${DEVELOP_FLOVIA_DATA_DIR:?DEVELOP_FLOVIA_DATA_DIR is required}:/data
+  expose:
+    - "3001"
+  restart: unless-stopped
+
 services:
   main-bff:
     image: ${BFF_IMAGE_REPOSITORY:?BFF_IMAGE_REPOSITORY is required}:${MAIN_BFF_IMAGE_TAG:-main}
     environment:
-      DATABASE_URL: ${BFF_DATA_MOUNT_PATH:-/data}/flovia.db
-      PORT: 3001
-      AWS_BEARER_TOKEN_BEDROCK: ${AWS_BEARER_TOKEN_BEDROCK:-}
-      AWS_REGION: ${AWS_REGION:-}
-      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-}
-      BFF_BEDROCK_MODEL_ID: ${BFF_BEDROCK_MODEL_ID:-}
-      BFF_BEDROCK_PROMPT_VERSION: ${BFF_BEDROCK_PROMPT_VERSION:-}
       BFF_BRANCH_NAME: main
-      BFF_DEPLOY_ID: ${MAIN_BFF_IMAGE_TAG:-main}
-    volumes:
-      - ${MAIN_FLOVIA_DATA_DIR:?MAIN_FLOVIA_DATA_DIR is required}:${BFF_DATA_MOUNT_PATH:-/data}
-    expose:
-      - "3001"
-    restart: unless-stopped
-
-  develop-bff:
-    image: ${BFF_IMAGE_REPOSITORY:?BFF_IMAGE_REPOSITORY is required}:${DEVELOP_BFF_IMAGE_TAG:-develop}
-    environment:
-      DATABASE_URL: ${BFF_DATA_MOUNT_PATH:-/data}/flovia.db
       PORT: 3001
-      AWS_BEARER_TOKEN_BEDROCK: ${AWS_BEARER_TOKEN_BEDROCK:-}
+      DATABASE_URL: /data/flovia.db
+      BFF_DEPLOY_ID: ${MAIN_BFF_IMAGE_TAG:-main}
       AWS_REGION: ${AWS_REGION:-}
       AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-}
+      AWS_BEARER_TOKEN_BEDROCK: ${AWS_BEARER_TOKEN_BEDROCK:-}
       BFF_BEDROCK_MODEL_ID: ${BFF_BEDROCK_MODEL_ID:-}
       BFF_BEDROCK_PROMPT_VERSION: ${BFF_BEDROCK_PROMPT_VERSION:-}
-      BFF_BRANCH_NAME: develop
-      BFF_DEPLOY_ID: ${DEVELOP_BFF_IMAGE_TAG:-develop}
+      BFF_ANALYTICS_SOURCE: ${MAIN_BFF_ANALYTICS_SOURCE:-${BFF_ANALYTICS_SOURCE:-}}
+      BFF_ANALYTICS_DATABASE_URL: ${MAIN_BFF_ANALYTICS_DATABASE_URL:-${BFF_ANALYTICS_DATABASE_URL:-}}
+      BFF_ANALYTICS_POSTGRES_MODE: ${MAIN_BFF_ANALYTICS_POSTGRES_MODE:-${BFF_ANALYTICS_POSTGRES_MODE:-live}}
+      BFF_ANALYTICS_READ_MODEL_PATH: ${MAIN_BFF_ANALYTICS_READ_MODEL_PATH:-${BFF_ANALYTICS_READ_MODEL_PATH:-}}
+      BFF_ANALYTICS_SNAPSHOT_ID: ${MAIN_BFF_ANALYTICS_SNAPSHOT_ID:-${BFF_ANALYTICS_SNAPSHOT_ID:-latest}}
+      # Fall back to DEVELOP_HITPAY_* when MAIN_HITPAY_* is not configured
+      # so the demo HitPay MPP showcase keeps working on the production
+      # endpoint without forcing duplicate sandbox secrets.
+      HITPAY_API_KEY: ${MAIN_HITPAY_API_KEY:-${DEVELOP_HITPAY_API_KEY:-${HITPAY_API_KEY:-}}}
+      HITPAY_WEBHOOK_SALT: ${MAIN_HITPAY_WEBHOOK_SALT:-${DEVELOP_HITPAY_WEBHOOK_SALT:-${HITPAY_WEBHOOK_SALT:-}}}
+      HITPAY_MPP_ENDPOINT: ${MAIN_HITPAY_MPP_ENDPOINT:-${DEVELOP_HITPAY_MPP_ENDPOINT:-${HITPAY_MPP_ENDPOINT:-https://sandbox.mpp.hitpay.dev}}}
+      STRIPE_SECRET_KEY: ${MAIN_STRIPE_SECRET_KEY:-${STRIPE_SECRET_KEY:-}}
+      MPPX_PRIVATE_KEY: ${MAIN_MPPX_PRIVATE_KEY:-${MPPX_PRIVATE_KEY:-}}
+      MPP_SECRET_KEY: ${MAIN_MPP_SECRET_KEY:-}
     volumes:
-      - ${DEVELOP_FLOVIA_DATA_DIR:?DEVELOP_FLOVIA_DATA_DIR is required}:${BFF_DATA_MOUNT_PATH:-/data}
+      - ${MAIN_FLOVIA_DATA_DIR:?MAIN_FLOVIA_DATA_DIR is required}:/data
     expose:
       - "3001"
     restart: unless-stopped
 
-  nginx:
-    image: nginx:1.27-alpine
+  develop-bff-blue:
+    <<: *develop-bff
+
+  develop-bff-green:
+    <<: *develop-bff
+
+  caddy:
+    image: caddy:2-alpine
     ports:
-      - "${NGINX_PORT:-80}:80"
+      - "80:80"
+      - "443:443"
     volumes:
-      - ./deploy/nginx/lightsail-bff.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./deploy/caddy:/etc/caddy:ro
+      - caddy_data:/data
+      - caddy_config:/config
     restart: unless-stopped
+
+volumes:
+  caddy_data:
+  caddy_config:

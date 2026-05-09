@@ -11,9 +11,9 @@
     "check:imports": "bun scripts/check-import-boundaries.ts",
     "format": "biome format --write .",
     "format:check": "biome format .",
-    "verify": "bun run check:imports && cd packages/contracts && bun run typecheck && bun test && cd ../sources && bun run typecheck && bun test && cd ../intelligence && bun run typecheck && bun test && cd ../../apps/cli && bun run verify && cd ../bff && bun run verify && cd ../frontend && bun run verify",
-    "test": "cd packages/contracts && bun test && cd ../sources && bun test && cd ../intelligence && bun test && cd ../../apps/cli && bun test && cd ../bff && bun test && cd ../frontend && bun test",
-    "typecheck": "cd packages/contracts && bun run typecheck && cd ../sources && bun run typecheck && cd ../intelligence && bun run typecheck && cd ../../apps/cli && bun run typecheck && cd ../bff && bun run typecheck && cd ../frontend && bun run typecheck"
+    "verify": "bun run check:imports && bun scripts/run-workspace-script.ts verify",
+    "test": "bun scripts/run-workspace-script.ts test",
+    "typecheck": "bun scripts/run-workspace-script.ts typecheck"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.13",

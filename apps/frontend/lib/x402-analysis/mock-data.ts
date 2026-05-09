@@ -128,22 +128,26 @@ const CATEGORY_DEFINITIONS: X402CategoryDefinition[] = [
   {
     category: "Extract",
     display_label: "Market data",
-    description: "Price history, snapshots, and OHLCV-style market data feeds such as Northwind Price API.",
+    description:
+      "Price history, snapshots, and OHLCV-style market data feeds such as Northwind Price API.",
   },
   {
     category: "Search",
     display_label: "Signal lookup",
-    description: "Pool, mempool, and orderflow lookups from DeFi signal services such as StreamDelta and LedgerLake.",
+    description:
+      "Pool, mempool, and orderflow lookups from DeFi signal services such as StreamDelta and LedgerLake.",
   },
   {
     category: "Analyze",
     display_label: "AI inference",
-    description: "Trading-thesis, risk, and policy simulation APIs such as VectorMind AI and VaultLayer.",
+    description:
+      "Trading-thesis, risk, and policy simulation APIs such as VectorMind AI and VaultLayer.",
   },
   {
     category: "Transact",
     display_label: "DEX execution & alerts",
-    description: "Swap routing, settlement, and trade alert delivery such as RouteZero DEX and SignalPort.",
+    description:
+      "Swap routing, settlement, and trade alert delivery such as RouteZero DEX and SignalPort.",
   },
 ];
 
@@ -458,9 +462,7 @@ function buildRequestEvent(
     step_order: stepOrder,
     workflow_stage: stage,
     timestamp: formatTimestamp(
-      new Date(
-        date.getTime() + workflowIndex * 9_000 + (stepOrder - 1) * 21_000,
-      ),
+      new Date(date.getTime() + workflowIndex * 9_000 + (stepOrder - 1) * 21_000),
     ),
     user_intent: blueprint.user_intent,
     buyer_type: pick(stepSeed, ["agent", "human", "automation", "service"]),
@@ -475,7 +477,11 @@ function buildRequestEvent(
     token: TOKEN,
     payment_status: status,
     http_status:
-      status === "failed" ? (errorType === "payment_verification_failed" || errorType === "insufficient_funds" ? 402 : 500) : 200,
+      status === "failed"
+        ? errorType === "payment_verification_failed" || errorType === "insufficient_funds"
+          ? 402
+          : 500
+        : 200,
     latency_ms: latencyMs,
     error_type: errorType,
   };
@@ -570,7 +576,11 @@ function buildDailyForBlueprint(
     const afterTargetLatency = clamp(
       Math.round(
         blueprint.base_latency_ms *
-          between(`${workflowSeed}:after-target-latency`, failed ? 0.88 : 0.42, failed ? 1.08 : 0.94),
+          between(
+            `${workflowSeed}:after-target-latency`,
+            failed ? 0.88 : 0.42,
+            failed ? 1.08 : 0.94,
+          ),
       ),
       90,
       3200,
@@ -658,7 +668,9 @@ export function buildX402MockDataset(baseDate = new Date()): X402MockDataset {
   }
 
   return {
-    x402_request_events: requestEvents.sort((left, right) => left.timestamp.localeCompare(right.timestamp)),
+    x402_request_events: requestEvents.sort((left, right) =>
+      left.timestamp.localeCompare(right.timestamp),
+    ),
     endpoint_master: buildEndpointMasterRows(),
     sankey_flows_daily: sankeyFlowsDaily.sort((left, right) => {
       const byDate = left.date.localeCompare(right.date);

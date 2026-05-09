@@ -5,7 +5,10 @@ import type { BedrockRuntimeClient } from "@aws-sdk/client-bedrock-runtime";
 import type { LoadModelOptions } from "@qvac/sdk";
 import {
   type EvidenceLabel,
+  type PhaseBCustomerWorkflowIntentExplanation,
+  type PhaseBCustomerWorkflowIntentInput,
   type PhaseBCustomerUpsellExplanationInput,
+  type PhaseBCustomerUpsellExplanationModel,
   type PhaseBCustomerUpsellExplanationResponse,
   type PhaseBCustomerUpsellMetricsResponse,
   validatePhaseBCustomerUpsellExplanationResponse,
@@ -19,6 +22,7 @@ export const DEFAULT_LLM_MAX_TOKENS = 500;
 export const DEFAULT_LLM_TEMPERATURE = 0.2;
 
 const DEFAULT_LLM_PROMPT_VERSION = "upsell-explanation-v1";
+const DEFAULT_WORKFLOW_INTENT_PROMPT_VERSION = "workflow-intent-v2";
 const DEFAULT_LLM_BRANCH_NAME = "unknown-branch";
 const DEFAULT_LLM_CACHE_DIRNAME = "bff-llm-cache";
 const DEFAULT_QVAC_CONTEXT_SIZE = 2048;
@@ -203,6 +207,10 @@ export const resolveDefaultPromptVersion = () =>
     process.env.BFF_LLM_PROMPT_VERSION ?? process.env.BFF_BEDROCK_PROMPT_VERSION,
   ) ?? DEFAULT_LLM_PROMPT_VERSION;
 
+export const resolveDefaultWorkflowIntentPromptVersion = () =>
+  normalizeConfiguredValue(process.env.BFF_WORKFLOW_INTENT_PROMPT_VERSION) ??
+  DEFAULT_WORKFLOW_INTENT_PROMPT_VERSION;
+
 export const resolveDefaultCacheTtlMs = () => {
   const raw = normalizeConfiguredValue(process.env.BFF_LLM_CACHE_TTL_MS);
   if (!raw) {
@@ -373,6 +381,7 @@ export type ResolveBffLlmServiceOptions = {
   qvacClient?: QvacSdkClient;
   modelId?: string;
   promptVersion?: string;
+  workflowPromptVersion?: string;
   region?: string;
   qvacModelSrc?: QvacModelSource;
   qvacModelId?: string;
@@ -386,8 +395,22 @@ export type ResolveBffLlmServiceOptions = {
   now?: () => number;
 };
 
+export type WorkflowIntentLlmRequest = {
+  address: string;
+  sourceGeneratedAt: string;
+  input: PhaseBCustomerWorkflowIntentInput;
+};
+
+export type WorkflowIntentLlmResult = {
+  model: PhaseBCustomerUpsellExplanationModel;
+  explanations: PhaseBCustomerWorkflowIntentExplanation[];
+};
+
 export type BffLlmService = {
   generateUpsellExplanation(
     input: PhaseBCustomerUpsellMetricsResponse,
   ): Promise<PhaseBCustomerUpsellExplanationResponse>;
+  generateWorkflowIntentExplanation(
+    request: WorkflowIntentLlmRequest,
+  ): Promise<WorkflowIntentLlmResult>;
 };

@@ -48,6 +48,13 @@ export const Icon = {
       <path d="M9 1.5 4 9h3.5L7 14.5 12 7H8.5z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
     </svg>
   ),
+  provider: ({ className, ...p }: IconProps) => (
+    <svg viewBox="0 0 16 16" fill="none" {...A11Y_DEFAULTS} {...p} className={navIcon(className)}>
+      <rect x="2.5" y="3" width="11" height="10" rx="2" stroke="currentColor" strokeWidth="1.3" />
+      <path d="M5 6h6M5 9h3.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+      <circle cx="11" cy="9" r="1" fill="currentColor" />
+    </svg>
+  ),
   spark: (p: IconProps) => (
     <svg viewBox="0 0 16 16" fill="none" {...A11Y_DEFAULTS} {...p}>
       <path
@@ -106,6 +113,19 @@ export const Icon = {
     <svg viewBox="0 0 16 16" fill="none" {...A11Y_DEFAULTS} {...p}>
       <rect x="2.5" y="3.5" width="11" height="10" rx="1" stroke="currentColor" strokeWidth="1.3" />
       <path d="M2.5 6.5h11 M5.5 2v3 M10.5 2v3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+    </svg>
+  ),
+  geo: ({ className, ...p }: IconProps) => (
+    <svg viewBox="0 0 16 16" fill="none" {...A11Y_DEFAULTS} {...p} className={navIcon(className)}>
+      <path
+        d="M3 2.5h6.5L12.5 5.5V13a.5.5 0 0 1-.5.5H7"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinejoin="round"
+      />
+      <path d="M9 2.5V6h3.5" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+      <circle cx="5" cy="10" r="2.2" stroke="currentColor" strokeWidth="1.3" />
+      <path d="M6.7 11.7 8.3 13.3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
     </svg>
   ),
   refresh: (p: IconProps) => (

@@ -5,19 +5,20 @@ import { HeaderTooltip } from "./HeaderTooltip";
 import { CoUsageProvidersChart } from "./CoUsageProvidersChart";
 import { CoUsageProviderDrawer } from "./CoUsageProviderDrawer";
 import type { CoUsageProviderRow } from "@/lib/customers/co-usage-providers";
+import { opportunityChipClass, opportunityLabel } from "@/lib/customers/co-usage-ui";
 
 const ENDPOINT_PREVIEW_COUNT = 3;
 
-const opportunityChipClass = (level: "high" | "medium" | "low") => {
-  if (level === "high") return "chip blue";
-  if (level === "medium") return "chip teal";
-  return "chip mute";
-};
+// Hosts whose live endpoint is currently unreachable. Marked with a red
+// badge so readers understand the data may not be verifiable today.
+const UNAVAILABLE_PROVIDER_MATCHES: readonly string[] = [
+  "evplus-funding-server.onrender.com",
+];
 
-const opportunityLabel = (level: "high" | "medium" | "low") => {
-  if (level === "high") return "High";
-  if (level === "medium") return "Medium";
-  return "Low";
+const isProviderUnavailable = (name: string | undefined | null): boolean => {
+  if (!name) return false;
+  const lower = name.toLowerCase();
+  return UNAVAILABLE_PROVIDER_MATCHES.some((needle) => lower.includes(needle));
 };
 
 const shortEndpoint = (serviceName: string): string => {
@@ -28,6 +29,11 @@ const shortEndpoint = (serviceName: string): string => {
   } catch {
     return serviceName.length > 48 ? `${serviceName.slice(0, 47)}…` : serviceName;
   }
+};
+
+const endpointPreview = (providerName: string, serviceName: string): string => {
+  const shortened = shortEndpoint(serviceName);
+  return shortened.toLowerCase() === providerName.toLowerCase() ? "—" : shortened;
 };
 
 export function CoUsageProvidersView({
@@ -85,29 +91,29 @@ export function CoUsageProvidersView({
               </th>
               <th style={{ textAlign: "right" }}>
                 <HeaderTooltip
-                  label="Shared wallets"
+                  label="Overlapping wallets"
                   description="Number of distinct payer wallets that pay both your provider and this external provider through x402."
                   align="right"
                 />
               </th>
               <th style={{ textAlign: "right" }}>
                 <HeaderTooltip
-                  label="Shared tx"
+                  label="Co-usage tx"
                   description="Total observed x402 transactions from your customers to this external provider, summed across all shared wallets."
                   align="right"
                 />
               </th>
               <th style={{ textAlign: "right" }}>
                 <HeaderTooltip
-                  label="Correlation"
-                  description="Average co-usage confidence (0–1). Higher values mean the overlap is more likely to be a meaningful behavioral signal rather than coincidental."
+                  label="Signal"
+                  description="Co-usage signal (0–1), blending candidate confidence with overlapping wallets and co-usage transaction strength."
                   align="right"
                 />
               </th>
               <th>
                 <HeaderTooltip
                   label="Opportunity"
-                  description="Bundling / partnership opportunity bucketed from the correlation score. High ≥ 0.70, Medium 0.40–0.69, Low < 0.40."
+                  description="Bundling / partnership opportunity bucketed from the co-usage signal. High means repeated overlap across multiple wallets or transactions is strong enough to warrant outreach."
                   align="right"
                 />
               </th>
@@ -132,14 +138,31 @@ export function CoUsageProvidersView({
                     >
                       <div
                         style={{
-                          fontWeight: 600,
-                          color: "var(--mesh-blue)",
-                          textDecoration: "underline",
-                          textDecorationStyle: "dotted",
-                          textDecorationColor: "var(--text-mute)",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 8,
+                          flexWrap: "wrap",
                         }}
                       >
-                        {row.providerName}
+                        <span
+                          style={{
+                            fontWeight: 600,
+                            color: "var(--mesh-blue)",
+                            textDecoration: "underline",
+                            textDecorationStyle: "dotted",
+                            textDecorationColor: "var(--text-mute)",
+                          }}
+                        >
+                          {row.providerName}
+                        </span>
+                        {isProviderUnavailable(row.providerName) && (
+                          <span
+                            className="chip danger"
+                            title="The hosted endpoint is not currently reachable"
+                          >
+                            Unavailable
+                          </span>
+                        )}
                       </div>
                       {row.payToWallet && (
                         <div
@@ -180,17 +203,7 @@ export function CoUsageProvidersView({
                               maxWidth: 360,
                             }}
                           >
-                            {shortEndpoint(ep.serviceName)}
-                          </span>
-                          <span
-                            className="mono"
-                            style={{
-                              fontSize: 11,
-                              color: "var(--text-3)",
-                              whiteSpace: "nowrap",
-                            }}
-                          >
-                            {ep.sharedTxCount} tx
+                            {endpointPreview(row.providerName, ep.serviceName)}
                           </span>
                         </div>
                       ))}

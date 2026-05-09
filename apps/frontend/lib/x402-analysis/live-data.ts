@@ -630,10 +630,12 @@ function buildIntentPattern(
   workflows: SampledWorkflow[],
 ): X402SankeyChartModel {
   const representatives = representativeProviderSummaries(providerSummaries, workflows);
+  const railForSummary = (summary: ProviderSummary) =>
+    summary.network.toLowerCase().includes("mpp") ? "MPP rail" : "x402";
   const flows = aggregateSankeyRows(
     representatives.map((summary) => ({
       left_label: summary.intentLabel,
-      middle_label: summary.providerName,
+      middle_label: railForSummary(summary),
       right_label: summary.categoryLabel,
       middle_detail: summary.rawProviderName,
       right_detail: `${summary.providerName} · ${summary.primaryEndpoint}`,
@@ -650,17 +652,17 @@ function buildIntentPattern(
   return {
     id: "intent_intermediary_target_category",
     eyebrow: "Pattern 1",
-    title: "User intent → middleman → target API category",
+    title: "Source route → payment rail → API workflow/paid endpoint",
     description:
-      "Built from live wallet-usage-graph activity, showing representative middlemen only. Intent and target category are inferred from sampled provider URLs.",
+      "Built from live wallet-usage-graph activity, showing which source routes map to payment rails and inferred API workflows.",
     layer_labels: {
-      left: "Intent",
-      mid: "Middleman",
-      right: "Target category",
+      left: "source route",
+      mid: "payment rail",
+      right: "API workflow/paid endpoint",
     },
     layer_order: {
       left: [...INTENT_DISPLAY_ORDER],
-      mid: representatives.map((summary) => summary.providerName),
+      mid: ["x402", "MPP rail"],
       right: CATEGORY_DISPLAY_ORDER,
     },
     flows,

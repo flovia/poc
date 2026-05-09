@@ -1,11 +1,15 @@
 import {
   type PhaseBCustomerProfileResponse,
+  type RouteAnalyticsSankeyResponse,
+  type RouteAnalyticsSummaryResponse,
   type WalletUsageGraphResponse,
   validatePhaseBCustomerListResponse,
   validatePhaseBCustomerUpsellExplanationResponse,
   validatePhaseBCustomerProfileResponse,
   validatePhaseBWalletUsageGraphResponse,
   validateProviderCatalogResponse,
+  validateRouteAnalyticsSankeyResponse,
+  validateRouteAnalyticsSummaryResponse,
 } from "contracts";
 import {
   adaptCustomerList,
@@ -109,8 +113,16 @@ export async function getProviders(): Promise<ProviderCatalogItemDto[]> {
   );
 }
 
-export async function getCustomers(payTo?: string): Promise<CustomerListItemDto[]> {
-  const query = payTo ? `?payTo=${encodeURIComponent(payTo)}` : "";
+export type GetCustomersFilter = { payTo?: string; serviceId?: string };
+
+export async function getCustomers(
+  filter?: string | GetCustomersFilter,
+): Promise<CustomerListItemDto[]> {
+  const opts: GetCustomersFilter = typeof filter === "string" ? { payTo: filter } : (filter ?? {});
+  const params = new URLSearchParams();
+  if (opts.serviceId) params.set("serviceId", opts.serviceId);
+  else if (opts.payTo) params.set("payTo", opts.payTo);
+  const query = params.toString() ? `?${params.toString()}` : "";
   return adaptCustomerList(
     validatePhaseBCustomerListResponse(await bffFetch<unknown>(`/customers${query}`)),
   );
@@ -124,6 +136,16 @@ export async function getWalletUsageGraphRaw(): Promise<WalletUsageGraphResponse
   return validatePhaseBWalletUsageGraphResponse(await bffFetch<unknown>("/wallet-usage-graph"));
 }
 
+export async function getRouteAnalyticsSummary(): Promise<RouteAnalyticsSummaryResponse> {
+  return validateRouteAnalyticsSummaryResponse(
+    await bffFetch<unknown>("/analytics/routes/summary"),
+  );
+}
+
+export async function getRouteAnalyticsSankey(): Promise<RouteAnalyticsSankeyResponse> {
+  return validateRouteAnalyticsSankeyResponse(await bffFetch<unknown>("/analytics/routes/sankey"));
+}
+
 // Phase B BFF は /observations を提供しないため、/wallet-usage-graph から合成する。
 // 用途: Patterns 画面の retention 計算 (payer x recipient ごとの first/last 比較)。
 export async function getObservations(): Promise<PaymentObservationDto[]> {
@@ -135,8 +157,12 @@ export async function getObservations(): Promise<PaymentObservationDto[]> {
 // Phase B BFF は /summary を提供しないため、/customers から合成する。
 // freshness indicator (撤去済) 再導入用のヘルパー。詳細は
 // docs/future-work.md "Data freshness indicator" を参照。
-export async function getSummary(payTo?: string): Promise<ReportSummaryDto> {
-  const query = payTo ? `?payTo=${encodeURIComponent(payTo)}` : "";
+export async function getSummary(filter?: string | GetCustomersFilter): Promise<ReportSummaryDto> {
+  const opts: GetCustomersFilter = typeof filter === "string" ? { payTo: filter } : (filter ?? {});
+  const params = new URLSearchParams();
+  if (opts.serviceId) params.set("serviceId", opts.serviceId);
+  else if (opts.payTo) params.set("payTo", opts.payTo);
+  const query = params.toString() ? `?${params.toString()}` : "";
   return adaptSummaryFromCustomers(
     validatePhaseBCustomerListResponse(await bffFetch<unknown>(`/customers${query}`)),
   );

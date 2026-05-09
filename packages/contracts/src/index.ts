@@ -55,6 +55,48 @@ export const EvmAddressSchema = z.preprocess(
     .transform((value) => value.toLowerCase()),
 );
 
+const EVM_ADDRESS_PATTERN = /^0[xX][a-fA-F0-9]{40}$/;
+const SOLANA_ADDRESS_PATTERN = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
+const SPL_TOKEN_PATTERN = /^SPL:[1-9A-HJ-NP-Za-km-z]{32,44}$/;
+const ERC20_TOKEN_PATTERN = /^ERC20:0[xX][a-fA-F0-9]{40}$/;
+
+export const PaymentRecipientAddressSchema = z.preprocess(
+  (value) => (typeof value === "string" ? value.trim() : value),
+  z
+    .string()
+    .min(1)
+    .refine(
+      (value) =>
+        EVM_ADDRESS_PATTERN.test(value) ||
+        SOLANA_ADDRESS_PATTERN.test(value) ||
+        SPL_TOKEN_PATTERN.test(value) ||
+        ERC20_TOKEN_PATTERN.test(value),
+      "Invalid payment recipient address (expected EVM hex, Solana base58, SPL:..., or ERC20:0x...)",
+    )
+    .transform((value) => {
+      if (EVM_ADDRESS_PATTERN.test(value)) {
+        return value.toLowerCase();
+      }
+      if (ERC20_TOKEN_PATTERN.test(value)) {
+        const [prefix, hex] = value.split(":");
+        return `${prefix}:${hex.toLowerCase()}`;
+      }
+      return value;
+    }),
+);
+
+export type PaymentRecipientAddress = z.infer<typeof PaymentRecipientAddressSchema>;
+
+export const normalizePaymentRecipientAddress = (value: string): string => {
+  const trimmed = value.trim();
+  if (EVM_ADDRESS_PATTERN.test(trimmed)) return trimmed.toLowerCase();
+  if (ERC20_TOKEN_PATTERN.test(trimmed)) {
+    const [prefix, hex] = trimmed.split(":");
+    return `${prefix}:${hex.toLowerCase()}`;
+  }
+  return trimmed;
+};
+
 export const LabelSchema = z.string().min(1).nullable();
 
 export type EvmAddress = z.infer<typeof EvmAddressSchema>;
@@ -79,6 +121,7 @@ export const DataProvenanceSchema = z.enum([
   "demo_label",
   "future_sdk_field",
   "derived_insight",
+  "registry_fact",
 ]);
 export type DataProvenance = z.infer<typeof DataProvenanceSchema>;
 
@@ -88,6 +131,7 @@ export const EndpointAttributionStatusSchema = z.enum([
   "amount_inferred_endpoint",
   "sdk_attributed_endpoint",
   "demo_attributed_endpoint",
+  "mpp_attributed_endpoint",
   "unresolved_payto",
 ]);
 export type EndpointAttributionStatus = z.infer<typeof EndpointAttributionStatusSchema>;
@@ -438,6 +482,7 @@ export type MockEndpointAttributionFixture = z.infer<typeof MockEndpointAttribut
 export const PhaseBResponseScopeSchema = z
   .object({
     providerId: z.string().min(1).optional(),
+    serviceId: z.string().min(1).optional(),
     network: z.string().min(1).optional(),
     asset: z.string().min(1).optional(),
     payTo: z.string().min(1).optional(),
@@ -449,7 +494,7 @@ export type PhaseBResponseScope = z.infer<typeof PhaseBResponseScopeSchema>;
 export const PhaseBCustomerListItemSchema = withDerivedInsightReasons(
   z
     .object({
-      address: EvmAddressSchema,
+      address: PaymentRecipientAddressSchema,
       label: LabelSchema,
       observationCount: z.number().int().nonnegative(),
       spendAtomic: AtomicAmountSchema,
@@ -457,6 +502,10 @@ export const PhaseBCustomerListItemSchema = withDerivedInsightReasons(
       lastSeenAt: z.string().datetime().optional(),
       activityGrowth: z.number(),
       upsellOpportunity: z.enum(["low", "medium", "high"]),
+      chains: z.array(z.string().min(1)).optional(),
+      assets: z.array(z.string().min(1)).optional(),
+      spendByAsset: z.record(z.string().min(1), AtomicAmountSchema).optional(),
+      tags: z.array(z.string().min(1)).optional(),
       provenance: DataProvenanceSchema,
       provenanceByField: ProvenanceByFieldSchema,
       evidence: z.array(EvidenceLabelSchema).optional(),
@@ -492,6 +541,223 @@ export const PhaseBCustomerListResponseSchema = withDerivedInsightReasons(
 
 export type PhaseBCustomerListResponse = z.infer<typeof PhaseBCustomerListResponseSchema>;
 
+export const PaymentProtocolSchema = z.enum(["x402", "MPP"]);
+
+export const MachinePaymentRailSchema = z.enum([
+  "x402",
+  "stripe_mpp",
+  "hitpay_mpp",
+  "api_key",
+  "subscription",
+  "other",
+]);
+export type MachinePaymentRail = z.infer<typeof MachinePaymentRailSchema>;
+
+export const MachinePaymentProtocolSchema = z.enum(["x402", "mpp", "legacy", "other"]);
+export type MachinePaymentProtocol = z.infer<typeof MachinePaymentProtocolSchema>;
+
+export const RouteAnalyticsVisibilitySchema = z.enum([
+  "public_onchain",
+  "provider_attested",
+  "first_party",
+  "demo_label",
+  "derived_insight",
+]);
+export type RouteAnalyticsVisibility = z.infer<typeof RouteAnalyticsVisibilitySchema>;
+
+export const SettlementReferenceTypeSchema = z.enum([
+  "onchain_tx",
+  "stripe_payment_intent",
+  "hitpay_charge",
+  "provider_receipt",
+  "session",
+]);
+export type SettlementReferenceType = z.infer<typeof SettlementReferenceTypeSchema>;
+
+export const SettlementReferenceSchema = z
+  .object({
+    type: SettlementReferenceTypeSchema,
+    value: z.string().min(1),
+    url: z.string().url().optional(),
+  })
+  .strict();
+export type SettlementReference = z.infer<typeof SettlementReferenceSchema>;
+
+export const RouteAnalyticsStatusSchema = z.enum([
+  "requested",
+  "paid",
+  "settled",
+  "failed",
+  "abandoned",
+]);
+export type RouteAnalyticsStatus = z.infer<typeof RouteAnalyticsStatusSchema>;
+
+export const RouteAnalyticsEventSchema = withDerivedInsightReasons(
+  z
+    .object({
+      routeId: z.string().min(1),
+      workflowId: z.string().min(1),
+      sessionId: z.string().min(1).optional(),
+      rail: MachinePaymentRailSchema,
+      protocol: MachinePaymentProtocolSchema,
+      sourceRoute: z.string().min(1).optional(),
+      sourcePlatform: z.string().min(1).optional(),
+      router: z.string().min(1).optional(),
+      providerId: z.string().min(1),
+      endpointGroup: z.string().min(1).optional(),
+      useCase: z.string().min(1).optional(),
+      payerIdentity: z.string().min(1).optional(),
+      payeeIdentity: z.string().min(1).optional(),
+      amountUsd: z.number().nonnegative().optional(),
+      currency: z.string().min(1),
+      status: RouteAnalyticsStatusSchema,
+      settlementRef: SettlementReferenceSchema.optional(),
+      visibility: RouteAnalyticsVisibilitySchema,
+      provenance: DataProvenanceSchema,
+      provenanceByField: ProvenanceByFieldSchema,
+      timestamp: z.string().datetime(),
+      latencyMs: z.number().int().nonnegative().optional(),
+      reasons: z.array(EvidenceLabelSchema).optional(),
+    })
+    .strict(),
+);
+export type RouteAnalyticsEvent = z.infer<typeof RouteAnalyticsEventSchema>;
+
+export const RouteAnalyticsRailSummarySchema = z
+  .object({
+    rail: MachinePaymentRailSchema,
+    routeCount: z.number().int().nonnegative(),
+    workflowCount: z.number().int().nonnegative(),
+    paidWorkflowCount: z.number().int().nonnegative(),
+    settledUsd: z.number().nonnegative(),
+    successRate: z.number().min(0).max(1),
+    repeatUsage: z.number().int().nonnegative(),
+    visibility: RouteAnalyticsVisibilitySchema,
+  })
+  .strict();
+export type RouteAnalyticsRailSummary = z.infer<typeof RouteAnalyticsRailSummarySchema>;
+
+export const RouteAnalyticsSummaryResponseSchema = withDerivedInsightReasons(
+  z
+    .object({
+      generatedAt: z.string().datetime(),
+      generatedFrom: z.string().min(1),
+      routeCount: z.number().int().nonnegative(),
+      workflowCount: z.number().int().nonnegative(),
+      paidWorkflowCount: z.number().int().nonnegative(),
+      settledUsd: z.number().nonnegative(),
+      successRate: z.number().min(0).max(1),
+      repeatUsage: z.number().int().nonnegative(),
+      paymentToAccessConversion: z.number().min(0).max(1).optional(),
+      rails: z.array(RouteAnalyticsRailSummarySchema).min(1),
+      sampleRoutes: z.array(RouteAnalyticsEventSchema).min(0),
+      provenance: DataProvenanceSchema,
+      provenanceByField: ProvenanceByFieldSchema,
+      reasons: z.array(EvidenceLabelSchema).optional(),
+    })
+    .strict(),
+);
+export type RouteAnalyticsSummaryResponse = z.infer<typeof RouteAnalyticsSummaryResponseSchema>;
+
+export const RouteAnalyticsSankeyNodeSchema = z
+  .object({
+    id: z.string().min(1),
+    label: z.string().min(1),
+    layer: z.enum(["source_route", "payment_rail", "api_workflow"]),
+    rail: MachinePaymentRailSchema.optional(),
+    visibility: RouteAnalyticsVisibilitySchema.optional(),
+  })
+  .strict();
+export type RouteAnalyticsSankeyNode = z.infer<typeof RouteAnalyticsSankeyNodeSchema>;
+
+export const RouteAnalyticsSankeyLinkSchema = z
+  .object({
+    source: z.string().min(1),
+    target: z.string().min(1),
+    routeCount: z.number().int().nonnegative(),
+    workflowCount: z.number().int().nonnegative(),
+    settledUsd: z.number().nonnegative(),
+    rail: MachinePaymentRailSchema,
+    visibility: RouteAnalyticsVisibilitySchema,
+  })
+  .strict();
+export type RouteAnalyticsSankeyLink = z.infer<typeof RouteAnalyticsSankeyLinkSchema>;
+
+export const RouteAnalyticsSankeyResponseSchema = withDerivedInsightReasons(
+  z
+    .object({
+      generatedAt: z.string().datetime(),
+      generatedFrom: z.string().min(1),
+      layers: z.tuple([
+        z.literal("source_route"),
+        z.literal("payment_rail"),
+        z.literal("api_workflow"),
+      ]),
+      nodes: z.array(RouteAnalyticsSankeyNodeSchema).min(1),
+      links: z.array(RouteAnalyticsSankeyLinkSchema).min(1),
+      provenance: DataProvenanceSchema,
+      provenanceByField: ProvenanceByFieldSchema,
+      reasons: z.array(EvidenceLabelSchema).optional(),
+    })
+    .strict(),
+);
+export type RouteAnalyticsSankeyResponse = z.infer<typeof RouteAnalyticsSankeyResponseSchema>;
+
+export const PriceRangeUsdSchema = z
+  .object({
+    min: z.number().nonnegative(),
+    max: z.number().nonnegative(),
+  })
+  .strict();
+
+const ProviderResourceSchema = z
+  .object({
+    resource: z.string().url(),
+    network: z.string().min(1).optional(),
+    asset: z.string().min(1).optional(),
+    amountAtomic: AtomicAmountSchema.optional(),
+    description: z.string().min(1).optional(),
+    method: z.string().min(1).optional(),
+    inputSchema: z.unknown().optional(),
+    lastUpdated: z.string().datetime().optional(),
+    x402Version: z.number().int().nonnegative().optional(),
+    l30DaysTotalCalls: z.number().int().nonnegative().optional(),
+    l30DaysUniquePayers: z.number().int().nonnegative().optional(),
+    transactionCount: z.number().int().nonnegative().optional(),
+    totalAmountAtomic: AtomicAmountSchema.optional(),
+    /**
+     * MPP registry payment metadata.
+     * - `intent`: "charge" (per-call, fixed price) or "session" (per-session, often dynamic).
+     * - `unitType`: e.g. "request" — billing unit when the price is unit-based.
+     * - `dynamic`: true when the price is computed at runtime (e.g. token-based LLM cost).
+     * - `decimals`: token decimals for amountAtomic (typically 6 for USDC).
+     */
+    intent: z.enum(["charge", "session"]).optional(),
+    unitType: z.string().min(1).optional(),
+    dynamic: z.boolean().optional(),
+    decimals: z.number().int().nonnegative().optional(),
+  })
+  .strict();
+
+const ProviderOfferSchema = z
+  .object({
+    protocol: PaymentProtocolSchema,
+    chain: z.string().min(1),
+    asset: z.string().min(1),
+    payToAddress: z.string().min(1),
+    probePriceUsd: z.number().nonnegative().optional(),
+  })
+  .strict();
+
+export const ProviderCatalogSourceSchema = z.enum([
+  "base_curated",
+  "pay_sh_curated",
+  "raw_x402",
+  "mpp_registry",
+]);
+
+export type ProviderCatalogSource = z.infer<typeof ProviderCatalogSourceSchema>;
+
 export const ProviderCatalogRowSchema = withDerivedInsightReasons(
   z
     .object({
@@ -502,6 +768,7 @@ export const ProviderCatalogRowSchema = withDerivedInsightReasons(
       network: z.string().min(1),
       asset: z.string().min(1),
       payTo: z.string().min(1),
+      catalogSource: ProviderCatalogSourceSchema.optional(),
       transactionCount: z.number().int().nonnegative(),
       uniqueSenderCount: z.number().int().nonnegative(),
       totalVolumeAtomic: AtomicAmountSchema,
@@ -517,6 +784,29 @@ export const ProviderCatalogRowSchema = withDerivedInsightReasons(
       attributionConfidence: z.number().min(0).max(1),
       hasCustomerFacts: z.boolean(),
       customerFactCount: z.number().int().nonnegative(),
+      title: z.string().min(1).optional(),
+      description: z.string().min(1).optional(),
+      /**
+       * MPP services registry の公式 description。Pay.sh atlas 由来の
+       * `description` と並べて GEO ページに別フィールドとして表示するため、
+       * 衝突せず独立に保持する。
+       */
+      mppDescription: z.string().min(1).optional(),
+      useCase: z.string().min(1).optional(),
+      category: z.string().min(1).optional(),
+      serviceUrl: z.string().url().optional(),
+      hasMetering: z.boolean().optional(),
+      hasFreeTier: z.boolean().optional(),
+      providerSha: z.string().min(1).optional(),
+      registryVersion: z.string().min(1).optional(),
+      registryGeneratedAt: z.string().datetime().optional(),
+      registrySourceUrl: z.string().url().optional(),
+      offers: z.array(ProviderOfferSchema).optional(),
+      protocol: PaymentProtocolSchema.optional(),
+      chain: z.string().min(1).optional(),
+      assetSymbol: z.string().min(1).optional(),
+      priceRangeUsd: PriceRangeUsdSchema.optional(),
+      resources: z.array(ProviderResourceSchema).optional(),
       provenance: DataProvenanceSchema,
       provenanceByField: ProvenanceByFieldSchema,
       reasons: z.array(EvidenceLabelSchema).optional(),
@@ -554,7 +844,7 @@ export type ProviderCatalogResponse = z.infer<typeof ProviderCatalogResponseSche
 export const PhaseBCustomerProfileIdentitySchema = withDerivedInsightReasons(
   z
     .object({
-      address: EvmAddressSchema,
+      address: PaymentRecipientAddressSchema,
       label: LabelSchema,
       network: z.string().min(1),
       asset: z.string().min(1),
@@ -605,13 +895,19 @@ export const PhaseBCustomerProfileProviderSchema = withDerivedInsightReasons(
       providerId: z.string().min(1),
       name: z.string().min(1),
       providerName: z.string().min(1).optional(),
-      payToWallet: EvmAddressSchema,
+      payToWallet: PaymentRecipientAddressSchema,
       spendAtomic: AtomicAmountSchema,
       transactionCount: z.number().int().nonnegative(),
       txCount: z.number().int().nonnegative().optional(),
       firstSeenAt: z.string().datetime().optional(),
       lastSeenAt: z.string().datetime().optional(),
       confidence: z.number().min(0).max(1),
+      description: z.string().min(1).optional(),
+      category: z.string().min(1).optional(),
+      serviceUrl: z.string().url().optional(),
+      protocol: PaymentProtocolSchema.optional(),
+      chain: z.string().min(1).optional(),
+      assetSymbol: z.string().min(1).optional(),
       provenance: DataProvenanceSchema,
       provenanceByField: ProvenanceByFieldSchema,
       reasons: z.array(EvidenceLabelSchema).optional(),
@@ -746,7 +1042,7 @@ export const PhaseBCustomerUpsellMetricsResponseSchema = withDerivedInsightReaso
     .object({
       generatedAt: z.string().datetime(),
       generatedFrom: z.string().min(1),
-      address: EvmAddressSchema,
+      address: PaymentRecipientAddressSchema,
       sourceGeneratedAt: z.string().datetime(),
       signals: PhaseBCustomerUpsellSignalsSchema,
       flags: PhaseBCustomerUpsellFlagsSchema,
@@ -809,7 +1105,7 @@ export const PhaseBCustomerUpsellExplanationResponseSchema = withDerivedInsightR
     .object({
       generatedAt: z.string().datetime(),
       generatedFrom: z.string().min(1),
-      address: EvmAddressSchema,
+      address: PaymentRecipientAddressSchema,
       sourceGeneratedAt: z.string().datetime(),
       model: PhaseBCustomerUpsellExplanationModelSchema,
       input: PhaseBCustomerUpsellExplanationInputSchema,
@@ -828,6 +1124,127 @@ export type PhaseBCustomerUpsellExplanationResponse = z.infer<
 
 export const validatePhaseBCustomerUpsellExplanationResponse = (value: unknown) =>
   PhaseBCustomerUpsellExplanationResponseSchema.parse(value);
+
+export const PhaseBCustomerWorkflowIntentSessionProviderSchema = z
+  .object({
+    providerId: z.string().min(1).optional(),
+    providerName: z.string().min(1),
+    payToWallet: PaymentRecipientAddressSchema.optional(),
+    eventCount: z.number().int().positive(),
+    totalAmountAtomic: AtomicAmountSchema,
+    activityLabels: z.array(z.string().min(1)).min(1),
+  })
+  .strict();
+
+export type PhaseBCustomerWorkflowIntentSessionProvider = z.infer<
+  typeof PhaseBCustomerWorkflowIntentSessionProviderSchema
+>;
+
+export const PhaseBCustomerWorkflowIntentSessionEventSchema = z
+  .object({
+    at: z.string().datetime(),
+    providerId: z.string().min(1).optional(),
+    providerName: z.string().min(1),
+    payToWallet: PaymentRecipientAddressSchema.optional(),
+    activityLabel: z.string().min(1),
+    description: z.string().min(1),
+    amountAtomic: AtomicAmountSchema.optional(),
+  })
+  .strict();
+
+export type PhaseBCustomerWorkflowIntentSessionEvent = z.infer<
+  typeof PhaseBCustomerWorkflowIntentSessionEventSchema
+>;
+
+export const PhaseBCustomerWorkflowIntentSessionSchema = z
+  .object({
+    sessionId: z.string().min(1),
+    startedAt: z.string().datetime(),
+    endedAt: z.string().datetime(),
+    durationSeconds: z.number().int().nonnegative(),
+    eventCount: z.number().int().positive(),
+    distinctProviderCount: z.number().int().positive(),
+    distinctActivityCount: z.number().int().positive(),
+    totalAmountAtomic: AtomicAmountSchema,
+    providers: z.array(PhaseBCustomerWorkflowIntentSessionProviderSchema).min(1),
+    events: z.array(PhaseBCustomerWorkflowIntentSessionEventSchema).min(2),
+  })
+  .strict();
+
+export type PhaseBCustomerWorkflowIntentSession = z.infer<
+  typeof PhaseBCustomerWorkflowIntentSessionSchema
+>;
+
+export const PhaseBCustomerWorkflowIntentInputSchema = z
+  .object({
+    sessionWindowSeconds: z.number().int().positive(),
+    sessions: z.array(PhaseBCustomerWorkflowIntentSessionSchema).min(1),
+  })
+  .strict();
+
+export type PhaseBCustomerWorkflowIntentInput = z.infer<
+  typeof PhaseBCustomerWorkflowIntentInputSchema
+>;
+
+export const validatePhaseBCustomerWorkflowIntentInput = (value: unknown) =>
+  PhaseBCustomerWorkflowIntentInputSchema.parse(value);
+
+export const PhaseBCustomerWorkflowIntentExplanationSchema = z
+  .object({
+    sessionId: z.string().min(1),
+    summary: z.string().min(1),
+    intent: z.string().min(1),
+    scenarios: z.array(z.string().min(1)).min(2).max(3),
+    evidence: z.array(z.string().min(1)).min(1),
+    caution: z.string().min(1),
+  })
+  .strict();
+
+export type PhaseBCustomerWorkflowIntentExplanation = z.infer<
+  typeof PhaseBCustomerWorkflowIntentExplanationSchema
+>;
+
+export const PhaseBCustomerWorkflowIntentAnalysisStatusSchema = z.enum([
+  "ready",
+  "no_candidate_sessions",
+  "unavailable",
+  "failed",
+]);
+
+export type PhaseBCustomerWorkflowIntentAnalysisStatus = z.infer<
+  typeof PhaseBCustomerWorkflowIntentAnalysisStatusSchema
+>;
+
+export const PhaseBCustomerWorkflowIntentResponseSchema = withDerivedInsightReasons(
+  z
+    .object({
+      generatedAt: z.string().datetime(),
+      generatedFrom: z.string().min(1),
+      address: PaymentRecipientAddressSchema,
+      sourceGeneratedAt: z.string().datetime(),
+      sessionWindowSeconds: z.number().int().positive(),
+      sessionCount: z.number().int().nonnegative(),
+      remainingSessionCount: z.number().int().nonnegative(),
+      analysisStatus: PhaseBCustomerWorkflowIntentAnalysisStatusSchema,
+      model: PhaseBCustomerUpsellExplanationModelSchema.nullable(),
+      input: PhaseBCustomerWorkflowIntentInputSchema.nullable(),
+      explanations: z.array(PhaseBCustomerWorkflowIntentExplanationSchema).min(0),
+      sessions: z.array(PhaseBCustomerWorkflowIntentSessionSchema).min(0),
+      failureMessage: z.string().min(1).nullable().optional(),
+      provenance: DataProvenanceSchema,
+      provenanceByField: ProvenanceByFieldSchema,
+      evidence: z.array(EvidenceLabelSchema).optional(),
+      reasons: z.array(EvidenceLabelSchema).min(1),
+    })
+    .strict(),
+);
+
+export type PhaseBCustomerWorkflowIntentResponse = z.infer<
+  typeof PhaseBCustomerWorkflowIntentResponseSchema
+>;
+
+export const validatePhaseBCustomerWorkflowIntentResponse = (value: unknown) =>
+  PhaseBCustomerWorkflowIntentResponseSchema.parse(value);
 
 export const PhaseBWalletUsageGraphObservationSchema = withDerivedInsightReasons(
   z
@@ -861,7 +1278,7 @@ export const PhaseBWalletUsageGraphOtherServiceCandidateSchema = withDerivedInsi
       serviceName: z.string().min(1),
       coUsageCount: z.number().int().nonnegative(),
       confidence: z.number().min(0).max(1),
-      payToWallet: EvmAddressSchema.optional(),
+      payToWallet: PaymentRecipientAddressSchema.optional(),
       provenance: DataProvenanceSchema,
       provenanceByField: ProvenanceByFieldSchema,
       evidence: z.array(EvidenceLabelSchema).optional(),
@@ -877,7 +1294,7 @@ export type PhaseBWalletUsageGraphOtherServiceCandidate = z.infer<
 export const PhaseBWalletUsageGraphPayerWalletSchema = withDerivedInsightReasons(
   z
     .object({
-      address: EvmAddressSchema,
+      address: PaymentRecipientAddressSchema,
       label: LabelSchema,
       sharedSpendAtomic: AtomicAmountSchema,
       sharedTransactionCount: z.number().int().nonnegative(),
@@ -905,7 +1322,7 @@ export const PhaseBWalletUsageGraphProviderWalletSchema = withDerivedInsightReas
       providerId: z.string().min(1),
       providerName: z.string().min(1),
       name: z.string().min(1),
-      payToWallet: EvmAddressSchema,
+      payToWallet: PaymentRecipientAddressSchema,
       payerWallets: z.array(PhaseBWalletUsageGraphPayerWalletSchema).min(0),
       confidence: z.number().min(0).max(1),
       firstSeenAt: z.string().datetime().optional(),
@@ -973,7 +1390,7 @@ export type CustomerIntelligenceTimeWindow = z.infer<typeof CustomerIntelligence
 
 export const CustomerIntelligenceScopeSchema = z
   .object({
-    address: EvmAddressSchema,
+    address: PaymentRecipientAddressSchema,
     network: z.preprocess(
       (value) => (typeof value === "string" ? normalizeNetwork(value) : value),
       z.string().min(1),
@@ -1041,7 +1458,7 @@ export type CustomerIntelligenceEvidence = z.infer<typeof CustomerIntelligenceEv
 export const PayToActivitySchema = withDerivedInsightReasons(
   z
     .object({
-      payTo: EvmAddressSchema,
+      payTo: PaymentRecipientAddressSchema,
       network: z.string().min(1),
       asset: z.string().min(1),
       transactionCount: z.number().int().nonnegative(),
@@ -1070,7 +1487,7 @@ export const X402ServiceCandidateSchema = withDerivedInsightReasons(
   z
     .object({
       candidateId: z.string().min(1),
-      payTo: EvmAddressSchema,
+      payTo: PaymentRecipientAddressSchema,
       providerName: z.string().min(1).nullable(),
       serviceName: z.string().min(1).nullable(),
       resource: z.string().min(1).nullable(),
@@ -1186,7 +1603,7 @@ export const CustomerIntelligenceResponseSchema = withDerivedInsightReasons(
     .object({
       generatedAt: z.string().datetime(),
       generatedFrom: z.string().min(1),
-      customerAddress: EvmAddressSchema,
+      customerAddress: PaymentRecipientAddressSchema,
       scope: CustomerIntelligenceScopeSchema,
       x402Services: z.array(X402ServiceCandidateSchema).min(0),
       payToActivities: z.array(PayToActivitySchema).min(0),
@@ -1420,6 +1837,14 @@ export const validateServiceAnalyticsComparisonResponse = (
 export const validateServiceAnalyticsQuadrantResponse = (
   value: unknown,
 ): ServiceAnalyticsQuadrantResponse => ServiceAnalyticsQuadrantResponseSchema.parse(value);
+
+export const validateRouteAnalyticsSummaryResponse = (
+  value: unknown,
+): RouteAnalyticsSummaryResponse => RouteAnalyticsSummaryResponseSchema.parse(value);
+
+export const validateRouteAnalyticsSankeyResponse = (
+  value: unknown,
+): RouteAnalyticsSankeyResponse => RouteAnalyticsSankeyResponseSchema.parse(value);
 
 export const zeroBitqueryAggregate = (identity: {
   network: string;

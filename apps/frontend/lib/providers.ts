@@ -33,6 +33,112 @@ export function ensureUniqueId(desired: string, existing: string[]): string {
   return `${desired}-${i}`;
 }
 
+type ProviderRouteLike = {
+  providerId: string;
+  name: string;
+  title?: string;
+  description?: string;
+  useCase?: string;
+  category?: string;
+  serviceId?: string;
+  serviceName?: string;
+  serviceUrl?: string;
+  hasMetering?: boolean;
+  hasFreeTier?: boolean;
+  providerSha?: string;
+  registryVersion?: string;
+  registryGeneratedAt?: string;
+  registrySourceUrl?: string;
+  priceRangeUsd?: { min: number; max: number };
+  offers?: Array<{
+    protocol: "x402" | "MPP";
+    chain: string;
+    asset: string;
+    payToAddress: string;
+    probePriceUsd?: number;
+  }>;
+  payTo?: string;
+  network?: string;
+  asset?: string;
+  endpointCount?: number;
+  resources?: Array<{
+    resource: string;
+    network?: string;
+    asset?: string;
+    amountAtomic?: string;
+    transactionCount?: number;
+    totalAmountAtomic?: string;
+  }>;
+  paths?: Array<{ payTo: string }>;
+};
+
+function candidatePayTos(provider: ProviderRouteLike): string[] {
+  if (provider.payTo) return [provider.payTo.toLowerCase()];
+  return (provider.paths ?? []).map((path) => path.payTo.toLowerCase());
+}
+
+function providerRouteAliases(provider: ProviderRouteLike): Set<string> {
+  const aliases = new Set<string>([provider.providerId.toLowerCase()]);
+  const identityCandidates = [
+    provider.providerId,
+    provider.name,
+    provider.serviceId,
+    provider.serviceName,
+  ].filter((value): value is string => typeof value === "string" && value.length > 0);
+
+  // `static-${slugify(serviceId)}` is the route id used when a static
+  // capability is the only source for a provider. The live BFF row may shadow
+  // that capability under a longer providerId — accept the static- alias too
+  // so links from older snapshots / shared URLs still resolve.
+  if (provider.serviceId) {
+    aliases.add(`static-${slugifyProviderName(provider.serviceId)}`);
+  }
+
+  for (const payTo of candidatePayTos(provider)) {
+    for (const identity of identityCandidates) {
+      aliases.add(`${identity.toLowerCase()}--${payTo}`);
+      aliases.add(`${slugifyProviderName(identity)}--${payTo}`);
+      aliases.add(`${slugifyProviderName(identity)}--base--usdc--${payTo}`);
+    }
+    if (identityCandidates.some((identity) => identity.toLowerCase().includes("coingecko"))) {
+      aliases.add(`coingecko--${payTo}`);
+      aliases.add(`coingecko--base--usdc--${payTo}`);
+    }
+  }
+
+  return aliases;
+}
+
+function tryDecodeRouteId(value: string): string | null {
+  // Next.js dynamic route params can arrive percent-encoded (e.g. when the
+  // providerId contains `:` such as MPP rows: `mpp:agentmail::tempo:4217::...`).
+  // We try a single decode pass and tolerate malformed sequences.
+  if (!value.includes("%")) return null;
+  try {
+    const decoded = decodeURIComponent(value);
+    return decoded === value ? null : decoded;
+  } catch {
+    return null;
+  }
+}
+
+export function matchesProviderRouteId(
+  provider: ProviderRouteLike,
+  routeProviderId: string,
+): boolean {
+  const aliases = providerRouteAliases(provider);
+  if (aliases.has(routeProviderId.toLowerCase())) return true;
+  const decoded = tryDecodeRouteId(routeProviderId);
+  return decoded !== null && aliases.has(decoded.toLowerCase());
+}
+
+export function findProviderByRouteId<T extends ProviderRouteLike>(
+  providers: readonly T[],
+  routeProviderId: string,
+): T | undefined {
+  return providers.find((provider) => matchesProviderRouteId(provider, routeProviderId));
+}
+
 // demo provider の payTo は UI 用の表示ダミー値で、本リポジトリの BFF
 // (apps/bff) が返す payTo とは整合しない。demo provider は Setup / Sidebar の
 // 動線体験を見せるためのモック行であり、On-chain only モードで demo provider を

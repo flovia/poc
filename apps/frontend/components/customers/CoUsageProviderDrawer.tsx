@@ -1,25 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import type { CoUsageProviderRow } from "@/lib/customers/co-usage-providers";
+import { opportunityChipClass, opportunityLabel } from "@/lib/customers/co-usage-ui";
+import { useClipboardCopy } from "@/lib/use-clipboard-copy";
 
 type Props = {
   row: CoUsageProviderRow | null;
   providerId: string;
   onClose: () => void;
-};
-
-const opportunityChipClass = (level: "high" | "medium" | "low") => {
-  if (level === "high") return "chip blue";
-  if (level === "medium") return "chip teal";
-  return "chip mute";
-};
-
-const opportunityLabel = (level: "high" | "medium" | "low") => {
-  if (level === "high") return "High";
-  if (level === "medium") return "Medium";
-  return "Low";
 };
 
 const hostnameOf = (urlOrText: string): string | null => {
@@ -32,7 +22,7 @@ const hostnameOf = (urlOrText: string): string | null => {
 
 export function CoUsageProviderDrawer({ row, providerId, onClose }: Props) {
   const open = row !== null;
-  const [copied, setCopied] = useState(false);
+  const { copied, copy, reset } = useClipboardCopy(1500);
 
   useEffect(() => {
     if (!open) return;
@@ -44,11 +34,12 @@ export function CoUsageProviderDrawer({ row, providerId, onClose }: Props) {
   }, [open, onClose]);
 
   useEffect(() => {
-    if (!open) setCopied(false);
-  }, [open]);
+    if (!open) reset();
+  }, [open, reset]);
 
   const externalSiteUrl = useMemo(() => {
     if (!row) return null;
+    if (row.serviceUrl) return row.serviceUrl;
     const host =
       hostnameOf(row.serviceName) ??
       (row.endpoints[0] ? hostnameOf(row.endpoints[0].serviceName) : null);
@@ -57,16 +48,7 @@ export function CoUsageProviderDrawer({ row, providerId, onClose }: Props) {
 
   if (!row) return null;
 
-  const handleCopy = async () => {
-    if (!row.payToWallet) return;
-    try {
-      await navigator.clipboard.writeText(row.payToWallet);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    } catch {
-      // clipboard may be blocked; ignore silently in PoC.
-    }
-  };
+  const handleCopy = () => void copy(row.payToWallet);
 
   return (
     <>
@@ -160,10 +142,63 @@ export function CoUsageProviderDrawer({ row, providerId, onClose }: Props) {
         </header>
 
         <div style={{ overflow: "auto", padding: "16px 20px 32px", flex: 1 }}>
+          {(row.description ||
+            row.useCase ||
+            row.category ||
+            row.chain ||
+            row.protocol ||
+            row.assetSymbol ||
+            row.priceRangeUsd) && (
+            <Section title="Service">
+              {row.description && (
+                <p
+                  style={{
+                    fontSize: 14,
+                    lineHeight: 1.55,
+                    color: "var(--text-1)",
+                    margin: "0 0 12px",
+                  }}
+                >
+                  {row.description}
+                </p>
+              )}
+              <div
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: 6,
+                  marginBottom: row.useCase ? 12 : 0,
+                }}
+              >
+                {row.category && <span className="chip mute">{row.category}</span>}
+                {row.chain && <span className="chip teal">{row.chain}</span>}
+                {row.protocol && <span className="chip blue">{row.protocol}</span>}
+                {row.assetSymbol && (
+                  <span className="chip mute">{row.assetSymbol}</span>
+                )}
+                {row.priceRangeUsd && (
+                  <span className="chip mute" title="Listed price range">
+                    Listed price range: {""}
+                    ${row.priceRangeUsd.min}
+                    {row.priceRangeUsd.max !== row.priceRangeUsd.min
+                      ? ` – $${row.priceRangeUsd.max}`
+                      : ""}
+                  </span>
+                )}
+              </div>
+              {row.useCase && (
+                <Field label="Use case">
+                  <span style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.5 }}>
+                    {row.useCase}
+                  </span>
+                </Field>
+              )}
+            </Section>
+          )}
           <Section title="Co-usage with your customers">
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
-              <Stat label="Shared wallets" value={row.sharedWallets.toLocaleString()} />
-              <Stat label="Shared tx" value={row.sharedTxCount.toLocaleString()} />
+              <Stat label="Overlapping wallets" value={row.sharedWallets.toLocaleString()} />
+              <Stat label="Co-usage tx" value={row.sharedTxCount.toLocaleString()} />
               <Stat label="Endpoints used" value={row.endpoints.length.toLocaleString()} />
             </div>
             <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 10 }}>
@@ -172,7 +207,7 @@ export function CoUsageProviderDrawer({ row, providerId, onClose }: Props) {
                 {opportunityLabel(row.opportunity)}
               </span>
               <span style={{ fontSize: 13, color: "var(--text-3)" }}>
-                Correlation {row.confidence.toFixed(2)}
+                Signal {row.confidence.toFixed(2)}
               </span>
             </div>
           </Section>
