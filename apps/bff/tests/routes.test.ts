@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import fs from "node:fs";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
@@ -46,7 +46,62 @@ const withTempFile = async (fn: (filePath: string) => Promise<void> | void) => {
   }
 };
 
+const llmEnvKeys = [
+  "BFF_LLM_PROVIDER",
+  "BFF_BEDROCK_MODEL_ID",
+  "BEDROCK_MODEL_ID",
+  "AWS_REGION",
+  "AWS_DEFAULT_REGION",
+  "BFF_QVAC_MODEL_SRC",
+  "BFF_QVAC_MODEL_ID",
+  "BFF_QVAC_DEVICE",
+  "BFF_QVAC_CTX_SIZE",
+  "BFF_LLM_PROMPT_VERSION",
+  "BFF_BEDROCK_PROMPT_VERSION",
+  "BFF_LLM_CACHE_DIR",
+  "BFF_LLM_CACHE_TTL_MS",
+  "BFF_BRANCH_NAME",
+  "BFF_DEPLOY_ID",
+  "HOSTNAME",
+  "DATABASE_URL",
+] as const;
+
+const snapshotLlmEnv = () =>
+  Object.fromEntries(llmEnvKeys.map((key) => [key, process.env[key]])) as Record<
+    (typeof llmEnvKeys)[number],
+    string | undefined
+  >;
+
+const clearLlmEnv = () => {
+  for (const key of llmEnvKeys) {
+    delete process.env[key];
+  }
+};
+
+const restoreLlmEnv = (snapshot: Record<(typeof llmEnvKeys)[number], string | undefined>) => {
+  for (const key of llmEnvKeys) {
+    const value = snapshot[key];
+    if (value === undefined) {
+      delete process.env[key];
+      continue;
+    }
+
+    process.env[key] = value;
+  }
+};
+
 describe("BFF routes", () => {
+  let llmEnvSnapshot: Record<(typeof llmEnvKeys)[number], string | undefined>;
+
+  beforeEach(() => {
+    llmEnvSnapshot = snapshotLlmEnv();
+    clearLlmEnv();
+  });
+
+  afterEach(() => {
+    restoreLlmEnv(llmEnvSnapshot);
+  });
+
   test("serves minimal read-only endpoints", async () => {
     const handler = createBffHandler();
 
@@ -178,7 +233,7 @@ describe("BFF routes", () => {
     expect(parsed.caveats.length).toBeGreaterThan(0);
   });
 
-  test("returns llm_unavailable when Bedrock upsell explanation is not configured", async () => {
+  test("returns llm_unavailable when llm upsell explanation is not configured", async () => {
     const handler = createBffHandler();
 
     const response = await handler(
@@ -188,7 +243,7 @@ describe("BFF routes", () => {
 
     expect(response.status).toBe(503);
     expect(body.error).toBe("llm_unavailable");
-    expect(body.message).toContain("Bedrock");
+    expect(body.message).toContain("LLM");
   });
 
   test("returns llm_failed with llm service error detail", async () => {
@@ -215,12 +270,12 @@ describe("BFF routes", () => {
     }
   });
 
-  test("returns validated Bedrock upsell explanation for a known customer wallet", async () => {
+  test("returns validated llm upsell explanation for a known customer wallet", async () => {
     const llmService: BffLlmService = {
       async generateUpsellExplanation(input) {
         return {
           generatedAt: "2026-05-01T00:00:00Z",
-          generatedFrom: "phase-b-bedrock-upsell-explanation-v1",
+          generatedFrom: "phase-b-llm-upsell-explanation-v1",
           address: input.address,
           sourceGeneratedAt: input.sourceGeneratedAt,
           model: {
@@ -254,7 +309,7 @@ describe("BFF routes", () => {
             explanation: "derived_insight",
           },
           reasons: [
-            { provenance: "derived_insight", label: "bedrock explanation from upsell metrics" },
+            { provenance: "derived_insight", label: "llm explanation from upsell metrics" },
           ],
         };
       },
@@ -271,6 +326,65 @@ describe("BFF routes", () => {
     expect(parsed.address).toBe(knownCustomerIntelligenceAddress);
     expect(parsed.explanation.summary.length).toBeGreaterThan(0);
     expect(parsed.input.reasonCodes.length).toBeGreaterThan(0);
+  });
+
+  test("disables Bun idle timeout for llm upsell explanation requests", async () => {
+    const llmService: BffLlmService = {
+      async generateUpsellExplanation(input) {
+        return {
+          generatedAt: "2026-05-01T00:00:00Z",
+          generatedFrom: "phase-b-llm-upsell-explanation-v1",
+          address: input.address,
+          sourceGeneratedAt: input.sourceGeneratedAt,
+          model: {
+            provider: "qvac",
+            modelId: "local-upsell-model.gguf",
+            promptVersion: "upsell-explanation-v1",
+          },
+          input: {
+            signals: input.signals,
+            flags: input.flags,
+            reasonCodes: input.reasonCodes,
+            caveats: input.caveats,
+          },
+          explanation: {
+            summary: "Local qvac signal",
+            reasons: [
+              "The wallet appears active based on recent observed transactions.",
+              "The wallet used multiple providers in the observed read model.",
+            ],
+            recommendedAction:
+              "Review whether the observed usage pattern matches a higher-support offering.",
+            caution: "Some metrics come from PoC heuristics and should be treated cautiously.",
+          },
+          provenance: "derived_insight",
+          provenanceByField: {
+            address: "onchain_fact",
+            model: "derived_insight",
+            input: "derived_insight",
+            explanation: "derived_insight",
+          },
+          reasons: [
+            { provenance: "derived_insight", label: "llm explanation from upsell metrics" },
+          ],
+        };
+      },
+    };
+    const handler = createBffHandler(undefined, llmService);
+    const timeoutCalls: Array<{ request: Request; seconds: number }> = [];
+    const requestInput = request(
+      `/customers/${knownCustomerIntelligenceAddress}/llm/upsell-explanation`,
+    );
+    const server = {
+      timeout(request: Request, seconds: number) {
+        timeoutCalls.push({ request, seconds });
+      },
+    };
+
+    const response = await handler(requestInput, server);
+
+    expect(response.status).toBe(200);
+    expect(timeoutCalls).toEqual([{ request: requestInput, seconds: 0 }]);
   });
 
   test("returns not found for unknown customer intelligence", async () => {

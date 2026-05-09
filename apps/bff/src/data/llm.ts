@@ -1,34 +1,31 @@
-import { createHash } from "node:crypto";
-import fs from "node:fs/promises";
-import path from "node:path";
-import { BedrockRuntimeClient, ConverseCommand } from "@aws-sdk/client-bedrock-runtime";
 import {
   type CustomerIntelligenceResponse,
   type EvidenceLabel,
   type PhaseBCustomerListResponse,
   type PhaseBCustomerProfileResponse,
-  type PhaseBCustomerUpsellExplanation,
-  type PhaseBCustomerUpsellExplanationInput,
-  type PhaseBCustomerUpsellExplanationResponse,
   type PhaseBCustomerUpsellMetricsResponse,
   type PhaseBUpsellReasonCode,
-  validatePhaseBCustomerUpsellExplanationResponse,
 } from "contracts";
+import { resolveBedrockBffLlmService } from "./llm-bedrock";
+import { resolveQvacBffLlmService } from "./llm-qvac";
+import {
+  normalizeLlmProvider,
+  type BffLlmService,
+  type ResolveBffLlmServiceOptions,
+} from "./llm-shared";
+
+export {
+  BffLlmInferenceError,
+  BffLlmUnavailableError,
+  type BffLlmService,
+} from "./llm-shared";
 
 const GENERATED_FROM = "phase-b-llm-upsell-metrics-v1";
-const UPSSELL_EXPLANATION_GENERATED_FROM = "phase-b-bedrock-upsell-explanation-v1";
-const DEFAULT_BEDROCK_PROMPT_VERSION = "upsell-explanation-v1";
-const DEFAULT_BEDROCK_MAX_TOKENS = 500;
-const DEFAULT_BEDROCK_TEMPERATURE = 0.2;
-const DEFAULT_BEDROCK_BRANCH_NAME = "unknown-branch";
-const DEFAULT_BEDROCK_CACHE_DIRNAME = "bff-llm-cache";
-const GENERIC_BEDROCK_INFERENCE_ERROR_MESSAGE = "Bedrock upsell explanation inference failed.";
 const RECENT_ACTIVITY_DAYS = 7;
 const HIGH_TX_COUNT_THRESHOLD = 5;
 const FREE_TIER_NEAR_LIMIT_THRESHOLD = 0.8;
 const TOP_SPENDER_PERCENTILE_THRESHOLD = 0.95;
 const DAY_MS = 86_400_000;
-const DEFAULT_BEDROCK_CACHE_TTL_MS = DAY_MS;
 
 const onchainReason: EvidenceLabel = {
   provenance: "onchain_fact",
@@ -44,12 +41,6 @@ const projectionReason: EvidenceLabel = {
 const heuristicReason: EvidenceLabel = {
   provenance: "derived_insight",
   label: "deterministic upsell thresholds",
-};
-
-const bedrockReason: EvidenceLabel = {
-  provenance: "derived_insight",
-  label: "bedrock explanation from upsell metrics",
-  sourceFields: ["signals", "flags", "reasonCodes", "caveats"],
 };
 
 const heuristicCaveats = [
@@ -74,515 +65,26 @@ const percentileFromRank = (rank: number, total: number) => {
   return Number(((total - rank) / (total - 1)).toFixed(6));
 };
 
-const buildUpsellExplanationInput = (
-  input: PhaseBCustomerUpsellMetricsResponse,
-): PhaseBCustomerUpsellExplanationInput => ({
-  signals: input.signals,
-  flags: input.flags,
-  reasonCodes: input.reasonCodes,
-  caveats: input.caveats,
-});
-
-const buildUpsellExplanationSystemPrompt = (promptVersion: string) =>
-  [
-    "You are a B2B growth analyst for an API payments product.",
-    `Prompt version: ${promptVersion}.`,
-    "Return strict JSON only.",
-    'Use exactly these keys: "summary", "reasons", "recommendedAction", "caution".',
-    '"summary" must be a short headline of 3 to 6 words.',
-    '"reasons" must be an array of 2 or 3 short evidence-based sentences.',
-    '"recommendedAction" must be one concise, evidence-based next step for sales, growth, or support.',
-    '"caution" must mention uncertainty or heuristic limitations when relevant.',
-    "Do not invent facts, rankings, or workflow claims that are not supported by the input.",
-    "Base every claim only on the provided metrics, flags, reason codes, and caveats.",
-    'Prefer cautious language such as "suggests", "may indicate", "is consistent with", or "appears".',
-    "Do not infer customer intent, dependency, maturity, urgency, or growth unless the input directly supports it.",
-    "Do not mention exact deadlines, outreach timing, commercial plan limits, or imminent overage unless the input explicitly states them.",
-    "If the input uses PoC heuristics, reflect that uncertainty in the summary or caution instead of turning it into a hard business fact.",
-    "Write the output in English for an internal business user.",
-  ].join("\n");
-
-const buildUpsellExplanationUserPrompt = (
-  input: PhaseBCustomerUpsellMetricsResponse,
-  promptVersion: string,
-) =>
-  JSON.stringify(
-    {
-      task: "Generate an upsell explanation for one wallet.",
-      promptVersion,
-      address: input.address,
-      metrics: buildUpsellExplanationInput(input),
-    },
-    null,
-    2,
-  );
-
-const extractTextFromBedrockResponse = (response: {
-  output?: { message?: { content?: Array<{ text?: string } | undefined> } };
-}) => {
-  const text = response.output?.message?.content
-    ?.map((item) => (typeof item?.text === "string" ? item.text : ""))
-    .join("\n")
-    .trim();
-
-  if (!text) {
-    throw new BffLlmInferenceError("Bedrock response did not contain text output.");
-  }
-
-  return text;
-};
-
-const extractJsonObject = (text: string) => {
-  const fencedMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
-  if (fencedMatch?.[1]) {
-    return fencedMatch[1].trim();
-  }
-
-  const start = text.indexOf("{");
-  const end = text.lastIndexOf("}");
-  if (start === -1 || end === -1 || end < start) {
-    throw new BffLlmInferenceError("Bedrock response did not contain a JSON object.");
-  }
-
-  return text.slice(start, end + 1);
-};
-
-const formatErrorMessage = (error: Error) => {
-  const prefix = error.name && error.name !== "Error" ? `${error.name}: ` : "";
-  return `${prefix}${error.message}`.trim();
-};
-
-const describeErrorCause = (error: unknown) => {
-  const seen = new Set<Error>();
-  const parts: string[] = [];
-  let current = error;
-
-  while (current instanceof Error && !seen.has(current)) {
-    seen.add(current);
-    const message = formatErrorMessage(current);
-    if (
-      message &&
-      message !== GENERIC_BEDROCK_INFERENCE_ERROR_MESSAGE &&
-      !parts.includes(message)
-    ) {
-      parts.push(message);
-    }
-    current = current.cause;
-  }
-
-  return parts.join(" <- ");
-};
-
-const normalizeConfiguredValue = (value: string | undefined) => {
-  const normalized = value?.trim();
-  return normalized ? normalized : undefined;
-};
-
-const resolveDefaultCacheDirectory = () => {
-  const configuredDirectory = normalizeConfiguredValue(process.env.BFF_LLM_CACHE_DIR);
-  if (configuredDirectory) {
-    return configuredDirectory;
-  }
-
-  const databaseUrl = normalizeConfiguredValue(process.env.DATABASE_URL);
-  if (databaseUrl?.startsWith("file:")) {
-    try {
-      return path.join(path.dirname(new URL(databaseUrl).pathname), DEFAULT_BEDROCK_CACHE_DIRNAME);
-    } catch {
-      return path.join(process.cwd(), "tmp", DEFAULT_BEDROCK_CACHE_DIRNAME);
-    }
-  }
-
-  if (databaseUrl) {
-    return path.join(path.dirname(databaseUrl), DEFAULT_BEDROCK_CACHE_DIRNAME);
-  }
-
-  return path.join(process.cwd(), "tmp", DEFAULT_BEDROCK_CACHE_DIRNAME);
-};
-
-const resolveDefaultBranchName = () =>
-  normalizeConfiguredValue(process.env.BFF_BRANCH_NAME ?? process.env.DEPLOY_BRANCH) ??
-  DEFAULT_BEDROCK_BRANCH_NAME;
-
-const resolveDefaultDeploymentId = () => normalizeConfiguredValue(process.env.BFF_DEPLOY_ID);
-
-const resolveDefaultRuntimeInstanceId = () => normalizeConfiguredValue(process.env.HOSTNAME);
-
-const resolveDefaultCacheTtlMs = () => {
-  const raw = normalizeConfiguredValue(process.env.BFF_LLM_CACHE_TTL_MS);
-  if (!raw) {
-    return DEFAULT_BEDROCK_CACHE_TTL_MS;
-  }
-
-  const parsed = Number(raw);
-  return Number.isFinite(parsed) && parsed >= 0 ? parsed : DEFAULT_BEDROCK_CACHE_TTL_MS;
-};
-
-const isNodeErrorWithCode = (error: unknown, code: string) =>
-  typeof error === "object" &&
-  error !== null &&
-  "code" in error &&
-  (error as { code?: string }).code === code;
-
-const buildUpsellExplanationCacheKey = (input: {
-  branchName: string;
-  modelId: string;
-  region: string;
-  promptVersion: string;
-  deploymentId?: string;
-  runtimeInstanceId?: string;
-  address: string;
-  sourceGeneratedAt: string;
-  explanationInput: PhaseBCustomerUpsellExplanationInput;
-}) =>
-  createHash("sha256")
-    .update(
-      JSON.stringify({
-        version: 1,
-        branchName: input.branchName,
-        model: {
-          provider: "bedrock",
-          modelId: input.modelId,
-          region: input.region,
-          promptVersion: input.promptVersion,
-        },
-        cacheScope: {
-          deploymentId: input.deploymentId,
-          runtimeInstanceId: input.runtimeInstanceId,
-        },
-        request: {
-          address: input.address,
-          sourceGeneratedAt: input.sourceGeneratedAt,
-          input: input.explanationInput,
-        },
-      }),
-    )
-    .digest("hex");
-
-const buildUpsellExplanationCacheFilePath = (cacheDirectory: string, cacheKey: string) =>
-  path.join(cacheDirectory, `${cacheKey}.json`);
-
-const isCachedUpsellExplanationFresh = (
-  value: PhaseBCustomerUpsellExplanationResponse,
-  nowMs: number,
-  cacheTtlMs: number,
-) => {
-  if (cacheTtlMs <= 0) {
-    return false;
-  }
-
-  const generatedAtMs = Date.parse(value.generatedAt);
-  if (!Number.isFinite(generatedAtMs)) {
-    return false;
-  }
-
-  return nowMs - generatedAtMs <= cacheTtlMs;
-};
-
-const readCachedUpsellExplanation = async (
-  cacheDirectory: string,
-  cacheKey: string,
-  nowMs: number,
-  cacheTtlMs: number,
-): Promise<PhaseBCustomerUpsellExplanationResponse | null> => {
-  const filePath = buildUpsellExplanationCacheFilePath(cacheDirectory, cacheKey);
-
-  try {
-    const payload = JSON.parse(await fs.readFile(filePath, "utf8")) as unknown;
-    const validated = validatePhaseBCustomerUpsellExplanationResponse(payload);
-    if (isCachedUpsellExplanationFresh(validated, nowMs, cacheTtlMs)) {
-      return validated;
-    }
-
-    await fs.rm(filePath, { force: true });
-    return null;
-  } catch (error) {
-    if (isNodeErrorWithCode(error, "ENOENT")) {
-      return null;
-    }
-
-    try {
-      await fs.rm(filePath, { force: true });
-    } catch {
-      // Ignore cache cleanup failures and allow regeneration below.
-    }
-
-    return null;
-  }
-};
-
-const writeCachedUpsellExplanation = async (
-  cacheDirectory: string,
-  cacheKey: string,
-  value: PhaseBCustomerUpsellExplanationResponse,
-) => {
-  await fs.mkdir(cacheDirectory, { recursive: true });
-
-  const filePath = buildUpsellExplanationCacheFilePath(cacheDirectory, cacheKey);
-  const tempPath = `${filePath}.${process.pid}.${Date.now()}.tmp`;
-
-  try {
-    await fs.writeFile(tempPath, JSON.stringify(value, null, 2));
-    await fs.rename(tempPath, filePath);
-  } finally {
-    try {
-      await fs.rm(tempPath, { force: true });
-    } catch {
-      // Ignore temp cleanup failures after write attempts.
-    }
-  }
-};
-
 type BuildUpsellMetricsByAddressInput = {
   customers: PhaseBCustomerListResponse;
   profilesByAddress: Record<string, PhaseBCustomerProfileResponse>;
   intelligenceByAddress?: Record<string, CustomerIntelligenceResponse>;
 };
 
-type ResolveBffLlmServiceOptions = {
-  client?: BedrockRuntimeClient;
-  modelId?: string;
-  promptVersion?: string;
-  region?: string;
-  branchName?: string;
-  cacheDirectory?: string;
-  cacheTtlMs?: number;
-  deploymentId?: string;
-  runtimeInstanceId?: string;
-  now?: () => number;
-};
-
-type BedrockUpsellExplanationServiceOptions = {
-  client: BedrockRuntimeClient;
-  modelId: string;
-  promptVersion: string;
-  region: string;
-  branchName: string;
-  cacheDirectory: string;
-  cacheTtlMs: number;
-  deploymentId?: string;
-  runtimeInstanceId?: string;
-  now: () => number;
-};
-
-export type BffLlmService = {
-  generateUpsellExplanation(
-    input: PhaseBCustomerUpsellMetricsResponse,
-  ): Promise<PhaseBCustomerUpsellExplanationResponse>;
-};
-
-export class BffLlmUnavailableError extends Error {
-  constructor(message = "Bedrock upsell explanation is not configured.") {
-    super(message);
-    this.name = "BffLlmUnavailableError";
-  }
-}
-
-export class BffLlmInferenceError extends Error {
-  constructor(message: string, options?: ErrorOptions) {
-    super(message, options);
-    this.name = "BffLlmInferenceError";
-  }
-}
-
-class BedrockUpsellExplanationService implements BffLlmService {
-  readonly #client: BedrockRuntimeClient;
-  readonly #modelId: string;
-  readonly #promptVersion: string;
-  readonly #region: string;
-  readonly #branchName: string;
-  readonly #cacheDirectory: string;
-  readonly #cacheTtlMs: number;
-  readonly #deploymentId?: string;
-  readonly #runtimeInstanceId?: string;
-  readonly #now: () => number;
-  readonly #inflightByCacheKey = new Map<
-    string,
-    Promise<PhaseBCustomerUpsellExplanationResponse>
-  >();
-
-  constructor(options: BedrockUpsellExplanationServiceOptions) {
-    this.#client = options.client;
-    this.#modelId = options.modelId;
-    this.#promptVersion = options.promptVersion;
-    this.#region = options.region;
-    this.#branchName = options.branchName;
-    this.#cacheDirectory = options.cacheDirectory;
-    this.#cacheTtlMs = options.cacheTtlMs;
-    this.#deploymentId = options.deploymentId;
-    this.#runtimeInstanceId = options.runtimeInstanceId;
-    this.#now = options.now;
-  }
-
-  async generateUpsellExplanation(
-    input: PhaseBCustomerUpsellMetricsResponse,
-  ): Promise<PhaseBCustomerUpsellExplanationResponse> {
-    const explanationInput = buildUpsellExplanationInput(input);
-    const cacheKey = buildUpsellExplanationCacheKey({
-      branchName: this.#branchName,
-      modelId: this.#modelId,
-      region: this.#region,
-      promptVersion: this.#promptVersion,
-      deploymentId: this.#deploymentId,
-      runtimeInstanceId: this.#runtimeInstanceId,
-      address: input.address,
-      sourceGeneratedAt: input.sourceGeneratedAt,
-      explanationInput,
-    });
-    const cached = await readCachedUpsellExplanation(
-      this.#cacheDirectory,
-      cacheKey,
-      this.#now(),
-      this.#cacheTtlMs,
-    );
-
-    if (cached) {
-      return cached;
-    }
-
-    const inflight = this.#inflightByCacheKey.get(cacheKey);
-    if (inflight) {
-      return await inflight;
-    }
-
-    const generation = this.#generateAndCacheUpsellExplanation(input, explanationInput, cacheKey);
-    this.#inflightByCacheKey.set(cacheKey, generation);
-
-    try {
-      return await generation;
-    } finally {
-      this.#inflightByCacheKey.delete(cacheKey);
-    }
-  }
-
-  async #generateAndCacheUpsellExplanation(
-    input: PhaseBCustomerUpsellMetricsResponse,
-    explanationInput: PhaseBCustomerUpsellExplanationInput,
-    cacheKey: string,
-  ) {
-    const response = await this.#generateUpsellExplanationUncached(input, explanationInput);
-    await writeCachedUpsellExplanation(this.#cacheDirectory, cacheKey, response);
-    return response;
-  }
-
-  async #generateUpsellExplanationUncached(
-    input: PhaseBCustomerUpsellMetricsResponse,
-    explanationInput: PhaseBCustomerUpsellExplanationInput,
-  ): Promise<PhaseBCustomerUpsellExplanationResponse> {
-    const command = new ConverseCommand({
-      modelId: this.#modelId,
-      system: [
-        {
-          text: buildUpsellExplanationSystemPrompt(this.#promptVersion),
-        },
-      ],
-      messages: [
-        {
-          role: "user",
-          content: [
-            {
-              text: buildUpsellExplanationUserPrompt(
-                {
-                  ...input,
-                  signals: explanationInput.signals,
-                  flags: explanationInput.flags,
-                  reasonCodes: explanationInput.reasonCodes,
-                  caveats: explanationInput.caveats,
-                },
-                this.#promptVersion,
-              ),
-            },
-          ],
-        },
-      ],
-      inferenceConfig: {
-        maxTokens: DEFAULT_BEDROCK_MAX_TOKENS,
-        temperature: DEFAULT_BEDROCK_TEMPERATURE,
-      },
-    });
-    let explanation: PhaseBCustomerUpsellExplanation;
-
-    try {
-      const response = await this.#client.send(command);
-      const text = extractTextFromBedrockResponse(response);
-      explanation = JSON.parse(extractJsonObject(text)) as PhaseBCustomerUpsellExplanation;
-    } catch (error) {
-      if (error instanceof BffLlmInferenceError) {
-        throw error;
-      }
-
-      const causeDetail = describeErrorCause(error);
-      throw new BffLlmInferenceError(
-        causeDetail
-          ? `${GENERIC_BEDROCK_INFERENCE_ERROR_MESSAGE} ${causeDetail}`
-          : GENERIC_BEDROCK_INFERENCE_ERROR_MESSAGE,
-        {
-          cause: error,
-        },
-      );
-    }
-
-    return validatePhaseBCustomerUpsellExplanationResponse({
-      generatedAt: new Date(this.#now()).toISOString(),
-      generatedFrom: UPSSELL_EXPLANATION_GENERATED_FROM,
-      address: input.address,
-      sourceGeneratedAt: input.sourceGeneratedAt,
-      model: {
-        provider: "bedrock",
-        modelId: this.#modelId,
-        region: this.#region,
-        promptVersion: this.#promptVersion,
-      },
-      input: explanationInput,
-      explanation,
-      provenance: "derived_insight",
-      provenanceByField: {
-        address: "onchain_fact",
-        sourceGeneratedAt: "derived_insight",
-        model: "derived_insight",
-        input: "derived_insight",
-        explanation: "derived_insight",
-      },
-      reasons: [bedrockReason],
-    });
-  }
-}
-
 export const resolveBffLlmService = (
   options: ResolveBffLlmServiceOptions = {},
 ): BffLlmService | null => {
-  const modelId =
-    options.modelId ?? process.env.BFF_BEDROCK_MODEL_ID ?? process.env.BEDROCK_MODEL_ID;
-  const region = options.region ?? process.env.AWS_REGION ?? process.env.AWS_DEFAULT_REGION;
-  const promptVersion =
-    options.promptVersion ??
-    process.env.BFF_BEDROCK_PROMPT_VERSION ??
-    DEFAULT_BEDROCK_PROMPT_VERSION;
-  const branchName = options.branchName ?? resolveDefaultBranchName();
-  const cacheDirectory = options.cacheDirectory ?? resolveDefaultCacheDirectory();
-  const cacheTtlMs = options.cacheTtlMs ?? resolveDefaultCacheTtlMs();
-  const deploymentId = options.deploymentId ?? resolveDefaultDeploymentId();
-  const runtimeInstanceId = options.runtimeInstanceId ?? resolveDefaultRuntimeInstanceId();
-  const now = options.now ?? Date.now;
+  const configuredProvider = normalizeLlmProvider(options.provider ?? process.env.BFF_LLM_PROVIDER);
 
-  if (!modelId || !region) {
-    return null;
+  if (configuredProvider === "bedrock") {
+    return resolveBedrockBffLlmService(options);
   }
 
-  const client = options.client ?? new BedrockRuntimeClient({ region });
+  if (configuredProvider === "qvac") {
+    return resolveQvacBffLlmService(options, true);
+  }
 
-  return new BedrockUpsellExplanationService({
-    client,
-    modelId,
-    promptVersion,
-    region,
-    branchName,
-    cacheDirectory,
-    cacheTtlMs,
-    deploymentId,
-    runtimeInstanceId,
-    now,
-  });
+  return resolveBedrockBffLlmService(options) ?? resolveQvacBffLlmService(options, false);
 };
 
 export const buildUpsellMetricsByAddress = ({

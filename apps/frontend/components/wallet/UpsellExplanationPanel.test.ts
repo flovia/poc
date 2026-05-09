@@ -31,4 +31,10 @@ describe("formatUpsellExplanationModelName", () => {
   test("falls back to the raw model id suffix when the pattern is unknown", () => {
     expect(formatUpsellExplanationModelName("provider.custom-model-v1")).toBe("Custom Model V1");
   });
+
+  test("keeps qvac gguf model ids readable", () => {
+    expect(formatUpsellExplanationModelName("Llama-3.2-1B-Instruct-Q4_0.gguf")).toBe(
+      "Llama 3.2 1B Instruct Q4_0",
+    );
+  });
 });

@@ -2,7 +2,10 @@ import { type BffAnalyticsDataSource, resolveAnalyticsDataSource } from "./data/
 import { BffLlmInferenceError, type BffLlmService, resolveBffLlmService } from "./data/llm";
 
 type JsonValue = unknown;
-const GENERIC_BEDROCK_INFERENCE_ERROR_MESSAGE = "Bedrock upsell explanation inference failed.";
+type RequestTimeoutController = {
+  timeout(request: Request, seconds: number): void;
+};
+const GENERIC_LLM_INFERENCE_ERROR_MESSAGE = "LLM upsell explanation inference failed.";
 
 const json = (body: JsonValue, init: ResponseInit = {}) =>
   Response.json(body, {
@@ -57,7 +60,7 @@ const llmUnavailable = () =>
   json(
     {
       error: "llm_unavailable",
-      message: "Bedrock upsell explanation is not configured for this environment.",
+      message: "LLM upsell explanation is not configured for this environment.",
     },
     { status: 503 },
   );
@@ -71,7 +74,7 @@ const llmFailed = (error: unknown) =>
           ? error.message
           : error instanceof Error && error.message
             ? error.message
-            : GENERIC_BEDROCK_INFERENCE_ERROR_MESSAGE,
+            : GENERIC_LLM_INFERENCE_ERROR_MESSAGE,
     },
     { status: 502 },
   );
@@ -81,7 +84,7 @@ export const createBffHandler =
     dataSource: BffAnalyticsDataSource = resolveAnalyticsDataSource(),
     llmService: BffLlmService | null = resolveBffLlmService(),
   ) =>
-  async (request: Request) => {
+  async (request: Request, server?: RequestTimeoutController) => {
     const url = new URL(request.url);
     const path = url.pathname.replace(/\/$/, "") || "/";
 
@@ -170,9 +173,11 @@ export const createBffHandler =
       }
 
       try {
+        // QVAC may need to download and load a local model on the first request.
+        server?.timeout(request, 0);
         return json(await llmService.generateUpsellExplanation(metrics));
       } catch (error) {
-        console.error("Bedrock upsell explanation request failed.", error);
+        console.error("LLM upsell explanation request failed.", error);
         return llmFailed(error);
       }
     }

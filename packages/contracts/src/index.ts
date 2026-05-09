@@ -769,9 +769,9 @@ export const validatePhaseBCustomerUpsellMetricsResponse = (value: unknown) =>
 
 export const PhaseBCustomerUpsellExplanationModelSchema = z
   .object({
-    provider: z.literal("bedrock"),
+    provider: z.enum(["qvac", "bedrock"]),
     modelId: z.string().min(1),
-    region: z.string().min(1),
+    region: z.string().min(1).optional(),
     promptVersion: z.string().min(1),
   })
   .strict();
