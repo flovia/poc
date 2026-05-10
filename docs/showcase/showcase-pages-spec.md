@@ -24,9 +24,11 @@ Frontend pages:
 BFF showcase API endpoints:
 
 ```text
-GET /showcase/stripe-mpp/paid
-GET /showcase/hitpay-mpp/paid
-GET /showcase/solana-mpp/paid
+GET  /showcase/stripe-mpp/paid
+POST /showcase/stripe-mpp/pay
+GET  /showcase/hitpay-mpp/paid
+GET  /showcase/solana-mpp/paid
+POST /showcase/solana-mpp/pay
 ```
 
 The frontend calls the BFF endpoints directly. No separate API provider server is introduced for the PoC.
@@ -99,8 +101,7 @@ Sections:
 4. Live flow
    - `Call paid API` action against the BFF route on Solana devnet
    - 402 challenge with Solana recipient address and SPL mint
-   - paid retry path uses the standard MPP credential round-trip
-   - in this PoC, the in-page "Pay with Solana wallet" button is intentionally not wired up; payment is signed externally
+   - `Pay with Solana wallet` posts to the BFF `/showcase/solana-mpp/pay` route, which uses a server-side payer keypair (`SOLANA_MPP_PAYER_PRIVATE_KEY`) via `@solana/mpp/client` to sign and submit the SPL transfer, then retries the paid endpoint with the MPP credential and returns the paid response. The payer wallet must hold devnet SOL (for fees) and devnet USDC (for the SPL transfer)
 5. What Flovia captured
    - Payment: provider, rail, amount, currency, mint, recipient, network (`solana-devnet`)
    - API usage: endpoint, status, latency, request id

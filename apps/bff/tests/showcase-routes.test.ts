@@ -8,6 +8,7 @@ const originalStripeSecretKey = process.env.STRIPE_SECRET_KEY;
 const originalMppxPrivateKey = process.env.MPPX_PRIVATE_KEY;
 const originalSolanaRecipient = process.env.SOLANA_MPP_RECIPIENT;
 const originalSolanaNetwork = process.env.SOLANA_MPP_NETWORK;
+const originalSolanaPayerKey = process.env.SOLANA_MPP_PAYER_PRIVATE_KEY;
 
 describe("showcase paid API routes", () => {
   afterEach(() => {
@@ -39,6 +40,12 @@ describe("showcase paid API routes", () => {
       delete process.env.SOLANA_MPP_NETWORK;
     } else {
       process.env.SOLANA_MPP_NETWORK = originalSolanaNetwork;
+    }
+
+    if (originalSolanaPayerKey === undefined) {
+      delete process.env.SOLANA_MPP_PAYER_PRIVATE_KEY;
+    } else {
+      process.env.SOLANA_MPP_PAYER_PRIVATE_KEY = originalSolanaPayerKey;
     }
   });
 
@@ -209,5 +216,105 @@ describe("showcase paid API routes", () => {
 
     expect(response.status).toBe(405);
     expect(body.error).toBe("method_not_allowed");
+  });
+
+  test("requires explicit Solana pay button confirmation header", async () => {
+    const response = await createBffHandler(new Promise<never>(() => {}))(
+      request("/showcase/solana-mpp/pay", { method: "POST" }),
+    );
+    const body = (await response.json()) as { error: string };
+
+    expect(response.status).toBe(400);
+    expect(body.error).toBe("solana_mpp_pay_confirmation_required");
+  });
+
+  test("returns clear Solana pay error when payer private key is missing", async () => {
+    delete process.env.SOLANA_MPP_PAYER_PRIVATE_KEY;
+
+    const response = await createBffHandler(new Promise<never>(() => {}))(
+      request("/showcase/solana-mpp/pay", {
+        method: "POST",
+        headers: { "x-flovia-showcase-pay": "solana-mpp" },
+      }),
+    );
+    const body = (await response.json()) as { error: string; requiredEnv: string[] };
+
+    expect(response.status).toBe(503);
+    expect(body.error).toBe("solana_mpp_payer_not_configured");
+    expect(body.requiredEnv).toContain("SOLANA_MPP_PAYER_PRIVATE_KEY");
+  });
+
+  test("rejects malformed Solana payer private keys before signing", async () => {
+    process.env.SOLANA_MPP_PAYER_PRIVATE_KEY = "[1,2,3]";
+
+    const response = await createBffHandler(new Promise<never>(() => {}))(
+      request("/showcase/solana-mpp/pay", {
+        method: "POST",
+        headers: { "x-flovia-showcase-pay": "solana-mpp" },
+      }),
+    );
+    const body = (await response.json()) as { error: string; message: string };
+
+    expect(response.status).toBe(503);
+    expect(body.error).toBe("solana_mpp_payer_key_invalid");
+    expect(body.message).toContain("64");
+  });
+
+  test("rejects base58 payer keys that decode to the wrong length", async () => {
+    // "2" is base58 for 0x01 — only 1 byte, far short of the 64 required.
+    process.env.SOLANA_MPP_PAYER_PRIVATE_KEY = "2";
+
+    const response = await createBffHandler(new Promise<never>(() => {}))(
+      request("/showcase/solana-mpp/pay", {
+        method: "POST",
+        headers: { "x-flovia-showcase-pay": "solana-mpp" },
+      }),
+    );
+    const body = (await response.json()) as { error: string; message: string };
+
+    expect(response.status).toBe(503);
+    expect(body.error).toBe("solana_mpp_payer_key_invalid");
+    expect(body.message).toContain("64 bytes");
+    expect(body.message).toContain("base58");
+  });
+
+  test("accepts a valid 64-byte JSON payer keypair (config-time only; payment requires devnet funding)", async () => {
+    // Generate a real ed25519 keypair, pack into the Solana CLI 64-byte format.
+    const kp = await crypto.subtle.generateKey({ name: "Ed25519" }, true, ["sign", "verify"]);
+    const skJwk = await crypto.subtle.exportKey("jwk", kp.privateKey);
+    const pkJwk = await crypto.subtle.exportKey("jwk", kp.publicKey);
+    const skRaw = Buffer.from(skJwk.d ?? "", "base64url");
+    const pkRaw = Buffer.from(pkJwk.x ?? "", "base64url");
+    const combined = new Uint8Array(64);
+    combined.set(skRaw, 0);
+    combined.set(pkRaw, 32);
+    process.env.SOLANA_MPP_PAYER_PRIVATE_KEY = JSON.stringify(Array.from(combined));
+
+    const response = await createBffHandler(new Promise<never>(() => {}))(
+      request("/showcase/solana-mpp/pay", {
+        method: "POST",
+        headers: { "x-flovia-showcase-pay": "solana-mpp" },
+      }),
+    );
+    const body = (await response.json()) as { error?: string };
+
+    // The route should NOT bounce on key parsing. It will subsequently fail at
+    // the payment stage (either 502 for unfunded wallet, or 503 for missing
+    // recipient if env not set), but that proves the key was accepted.
+    expect(response.status).not.toBe(503);
+    expect(body.error).not.toBe("solana_mpp_payer_key_invalid");
+  });
+
+  test("rejects POST with the wrong confirmation header value", async () => {
+    const response = await createBffHandler(new Promise<never>(() => {}))(
+      request("/showcase/solana-mpp/pay", {
+        method: "POST",
+        headers: { "x-flovia-showcase-pay": "stripe-mpp" },
+      }),
+    );
+    const body = (await response.json()) as { error: string };
+
+    expect(response.status).toBe(400);
+    expect(body.error).toBe("solana_mpp_pay_confirmation_required");
   });
 });

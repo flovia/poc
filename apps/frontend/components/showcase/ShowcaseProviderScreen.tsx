@@ -34,6 +34,7 @@ const providerConfig = {
     endpoint: "/showcase/stripe-mpp/paid",
     publicEndpoint: "/api/showcase/stripe-mpp/paid",
     publicPayEndpoint: "/api/showcase/stripe-mpp/pay",
+    payConfirmationValue: "stripe-mpp",
     amount: "$1.00 USD",
     rail: "Tempo token payment",
     accent: "var(--mesh-blue)",
@@ -87,6 +88,7 @@ const providerConfig = {
     endpoint: "/showcase/hitpay-mpp/paid",
     publicEndpoint: "/api/showcase/hitpay-mpp/paid",
     publicPayEndpoint: null,
+    payConfirmationValue: null,
     amount: "S$1.00 SGD",
     rail: "Checkout URL / QR",
     accent: "var(--teal)",
@@ -136,7 +138,8 @@ const providerConfig = {
     challengeTitle: "Solana payment required",
     endpoint: "/showcase/solana-mpp/paid",
     publicEndpoint: "/api/showcase/solana-mpp/paid",
-    publicPayEndpoint: null,
+    publicPayEndpoint: "/api/showcase/solana-mpp/pay",
+    payConfirmationValue: "solana-mpp",
     amount: "0.10 USDC (devnet)",
     rail: "Solana SPL transfer",
     accent: "var(--solana)",
@@ -191,9 +194,9 @@ app.get("/showcase/solana-mpp/paid", async (c) => {
     // the message matches where the SPL transfer actually settled.
     copy: {
       idle:
-        "Call the endpoint to inspect the Solana MPP 402 challenge. {network} USDC is used for the showcase.",
+        "Call the endpoint to inspect the Solana MPP 402 challenge, or pay from the server-side payer wallet (devnet USDC). {network} is the configured cluster.",
       challenge:
-        "402 challenge issued. Sign and submit a Solana SPL transfer on {network}, then retry with the MPP credential.",
+        "402 challenge issued. Click Pay with Solana wallet to sign and submit an SPL transfer on {network}, then retry with the MPP credential.",
       paid: "Solana MPP credential accepted. Paid API response delivered and joined by Flovia.",
     },
   },
@@ -243,14 +246,20 @@ export function ShowcaseProviderScreen({ provider }: ShowcaseProviderScreenProps
     setResult(null);
 
     try {
-      const response = await fetch(withCredential && config.publicPayEndpoint ? config.publicPayEndpoint : config.publicEndpoint, {
-        cache: "no-store",
-        method: withCredential && config.publicPayEndpoint ? "POST" : "GET",
-        headers: {
-          accept: "application/json",
-          ...(withCredential && config.publicPayEndpoint ? { "x-flovia-showcase-pay": "stripe-mpp" } : {}),
+      const useCredentialPath = withCredential && config.publicPayEndpoint !== null;
+      const response = await fetch(
+        useCredentialPath ? (config.publicPayEndpoint as string) : config.publicEndpoint,
+        {
+          cache: "no-store",
+          method: useCredentialPath ? "POST" : "GET",
+          headers: {
+            accept: "application/json",
+            ...(useCredentialPath && config.payConfirmationValue
+              ? { "x-flovia-showcase-pay": config.payConfirmationValue }
+              : {}),
+          },
         },
-      });
+      );
       const body = await readResponseBody(response);
       const receipt = parsePaymentReceiptHeader(response.headers.get("Payment-Receipt"));
       setResult({ status: response.status, body: attachReceiptToBody(body, receipt) });
@@ -489,12 +498,7 @@ export function ShowcaseProviderScreen({ provider }: ShowcaseProviderScreenProps
                 type="button"
                 onClick={() => void callPaidApi(true)}
                 style={secondaryButtonStyle}
-                disabled={
-                  state === "calling" ||
-                  (provider === "hitpay" && !hitPayCheckoutUrl) ||
-                  provider === "solana"
-                }
-                title={provider === "solana" ? "Solana wallet pay button is not wired up in this PoC yet." : undefined}
+                disabled={state === "calling" || (provider === "hitpay" && !hitPayCheckoutUrl)}
               >
                 {config.payButtonLabel}
               </button>
