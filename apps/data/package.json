@@ -13,6 +13,7 @@
     "verify": "bun run typecheck && bun test",
     "collect:balances": "bun run src/cli/collect-balances.ts",
     "collect:transfers": "bun run src/cli/collect-transfers.ts",
+    "enrich:provider": "bun run src/cli/enrich-provider.ts",
     "migrate": "bun run src/cli/migrate.ts",
     "migrate:status": "bun run src/cli/migrate.ts --status",
     "postgres:up": "docker compose -f docker-compose.postgres.yml up -d --wait",

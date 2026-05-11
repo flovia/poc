@@ -264,6 +264,11 @@ Implementation direction chosen:
   and Solana balance/token metadata enrichment. Exact Solana payment-transfer
   collection remains Alchemy/RPC Fast because Dune Sim and GoldRush REST do not
   cover Pay.sh token-account transfer history reliably.
+- Add a typed provider enrichment snapshot path for one concrete Pay.sh Solana
+  target. `apps/data/src/cli/enrich-provider.ts` combines the latest Alchemy
+  Solana transfer observation with Dune Sim and GoldRush Solana USDC balances and
+  emits display-ready JSON. This is still stdout/dry-run only, but it is enough
+  for a BFF/UI layer to consume later without exposing raw provider payloads.
 - `RPC_FAST_API_KEY` is the only RPC Fast credential; the Solana endpoint is the
   fixed provider URL `https://solana-rpc.rpcfast.com/`.
 
