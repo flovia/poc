@@ -14,10 +14,24 @@ generated outputs, or outdated helper scripts from `poc-data`.
 
 - The current `poc` repository remains the latest/canonical source for GEO and
   Pay.sh work.
+- GEO runtime data is managed as the baked JSON artifact
+  `apps/frontend/data/geo-providers.json`, generated from current `poc` inputs.
+- Pay.sh source data is managed from the current `poc` atlas/fixture flow, not
+  from `poc-data` exports.
 - `poc-data` geo-source content is not copied as a canonical fixture in this
   scaffold.
 - The scaffold imports SQL migrations only, preserving schema history without
   copying local data or private notes.
+
+## Deferred import paths
+
+- Pay.sh Postgres importer code is not migrated in this scaffold. The current
+  source of truth is JSON/atlas based, while Postgres is a live/read-model path.
+- `payment_collection_targets` seeding is also deferred because it depends on a
+  deliberate Postgres import/update flow and is not needed for the current JSON
+  GEO/Pay.sh runtime path.
+- If these are added later, they should read current `poc` inputs rather than
+  treating `poc-data/geo-source` as canonical.
 
 ## Alchemy and RPC distinction
 
