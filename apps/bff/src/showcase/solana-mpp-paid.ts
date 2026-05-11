@@ -348,9 +348,7 @@ export const handleSolanaMppPayShowcase = async (request: Request) => {
   try {
     const rpcUrl = envValue("SOLANA_MPP_RPC_URL");
     const mppx = ClientMppx.create({
-      methods: [
-        clientSolana.charge({ signer, broadcast: true, ...(rpcUrl ? { rpcUrl } : {}) }),
-      ],
+      methods: [clientSolana.charge({ signer, broadcast: true, ...(rpcUrl ? { rpcUrl } : {}) })],
       polyfill: false,
       fetch: ((input, init) => {
         const paidRequest = new Request(input, init);
