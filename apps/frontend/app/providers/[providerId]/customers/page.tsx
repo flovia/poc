@@ -7,6 +7,7 @@ import { SnapshotIndicator } from "@/components/customers/SnapshotIndicator";
 import { getCustomers, getProviders, getSdkExtrasMap, getSummary } from "@/lib/data-source";
 import { buildNoCustomerFactsNotice } from "@/lib/customers/empty-state";
 import { findProviderByRouteId } from "@/lib/providers";
+import { getProviderBalanceContext } from "@/lib/provider-enrichment";
 import { getTopBarPageContext } from "@/lib/server/page-context";
 
 export default async function CustomersPage({
@@ -33,6 +34,7 @@ export default async function CustomersPage({
     .reduce((acc, c) => acc + BigInt(c.spendAtomic), 0n)
     .toString();
   const noCustomerFactsNotice = buildNoCustomerFactsNotice(activeProvider, customers.length);
+  const balanceContext = getProviderBalanceContext(activeProvider);
 
   return (
     <>
@@ -73,7 +75,7 @@ export default async function CustomersPage({
               marginBottom: 20,
             }}
           >
-            <CustomersHeader providerId={resolvedProviderId} />
+            <CustomersHeader providerId={resolvedProviderId} balanceContext={balanceContext} />
             <SnapshotIndicator generatedAt={summary.generatedAt} />
           </div>
 

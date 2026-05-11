@@ -1,6 +1,28 @@
 services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: poc_data_test
+      POSTGRES_USER: poc_data
+      POSTGRES_PASSWORD: poc_data
+    ports:
+      - "55432:5432"
+    volumes:
+      - poc_data_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U poc_data -d poc_data_test"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+
   bff:
     command: bun --watch src/server.ts
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      BFF_ANALYTICS_SOURCE: postgres
+      BFF_ANALYTICS_DATABASE_URL: postgresql://poc_data:poc_data@postgres:5432/poc_data_test
     develop:
       watch:
         - action: sync
@@ -47,3 +69,8 @@ services:
           path: ./apps/frontend/package.json
         - action: rebuild
           path: ./packages/contracts/package.json
+
+volumes:
+  poc_data_postgres:
+    external: true
+    name: poc_data_postgres
