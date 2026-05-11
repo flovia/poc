@@ -187,6 +187,15 @@ Dune Sim findings:
   owner and its USDC token account. This suggests it is not immediately reliable
   for the current Pay.sh Solana targets, or a different address/coverage pattern
   is required.
+- Follow-up coverage validation clarified the pattern: Dune Sim SVM balances can
+  resolve the Pay.sh owner wallet and show USDC, but SVM transactions returned
+  rows only for the fee-payer/signing wallet seen in the known RPC transaction.
+  It returned zero rows for the Pay.sh owner wallet, the Pay.sh USDC token
+  account, the source owner wallet, the source token account, and the USDC mint.
+- Therefore Dune Sim SVM transactions should not be treated as a payment-target
+  collector for our Solana use case. Its likely fit is wallet/balance enrichment
+  and investigation of fee-payer/signing-wallet activity, not exact SPL payment
+  receipt collection by token account.
 - If used later, never construct `next_offset`; persist and replay only the value
   returned by the API.
 
@@ -194,13 +203,33 @@ GoldRush findings:
 
 - GoldRush Base ERC-20 `transfers_v2` succeeded for Base USDC and is a plausible
   comparison/fallback source for Base transfer history.
+- GoldRush Base fit is good for historical ERC-20 backfill and enrichment, but
+  exact payment collection should still use safeguards: contract allowlist,
+  block confirmation delay, idempotency by transaction/transfer identity, and
+  optional RPC receipt confirmation for high-value payments. Documentation does
+  not make finality/reorg guarantees explicit.
 - GoldRush Solana `balances_v2` succeeded, but Solana `transactions_v3` and
   `transfers_v2` returned `501` with "Chain: solana-mainnet is not currently
   supported for this endpoint." Current REST support is therefore insufficient
   for Solana transfer collection.
-- GoldRush Solana may still be useful for balance enrichment, but not as the
-  first transfer-history collector unless the Pipeline/Streaming product is
-  explicitly adopted.
+- GoldRush Solana REST may still be useful for balance/token metadata enrichment,
+  but not as a transfer-history collector. GoldRush Pipeline lists SPL Token
+  Transfers and may be relevant later, but that would be a heavier push/ETL
+  integration requiring vendor confirmation on backfill, replay, delivery
+  guarantees, token-account coverage, and cost.
+
+Updated service fit evaluation:
+
+| Service | Base payment collection | Solana payment collection | Enrichment fit | Recommended role |
+| --- | --- | --- | --- | --- |
+| Alchemy | High | High | Medium | Primary collector |
+| RPC Fast | N/A | High | Low | Solana RPC fallback |
+| Dune Sim | Medium | Low for payment targets | High | Base validation and wallet/balance enrichment |
+| GoldRush | Medium-high with safeguards | Low via REST | High | Base fallback/enrichment; Solana balance enrichment only |
+
+Decision: keep Dune Sim and GoldRush out of the first production collector path.
+Use them for comparison and enrichment after Alchemy/RPC Fast collection has
+produced canonical payment observations.
 
 Interface implications:
 
