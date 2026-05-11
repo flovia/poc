@@ -1,0 +1,48 @@
+[
+  {
+    "target": {
+      "providerId": "pay_sh:mpp:Cs2zdfUNonRdRGsiZUQQLdTxzxVvJZmgiX2mpLYKuEqP",
+      "chain": "solana",
+      "asset": "USDC",
+      "payToAddress": "Cs2zdfUNonRdRGsiZUQQLdTxzxVvJZmgiX2mpLYKuEqP",
+      "receiveTokenAccount": "3m3xS513PgjPwnLbmGbgL4Nk62QEtwzuoXphVN3kfMNh",
+      "tokenMintAddress": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+    },
+    "latestTransfer": {
+      "source": "alchemy",
+      "signature": "PHWCmWxc3mkubakrenXSsXjEtaRpjyKhZfDEt7XGg9yunf5992SU1xd5wssDEip1p1TmwKgK25fuvfnNHUZYLKD",
+      "transactionHash": "PHWCmWxc3mkubakrenXSsXjEtaRpjyKhZfDEt7XGg9yunf5992SU1xd5wssDEip1p1TmwKgK25fuvfnNHUZYLKD",
+      "slot": "418999118",
+      "timestamp": "2026-05-11T07:49:39.000Z",
+      "direction": "incoming",
+      "amountBaseUnits": "10000",
+      "assetAddress": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+    },
+    "balances": [
+      {
+        "source": "dune-sim",
+        "walletAddress": "Cs2zdfUNonRdRGsiZUQQLdTxzxVvJZmgiX2mpLYKuEqP",
+        "assetAddress": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+        "assetSymbol": "USDC",
+        "assetName": "USD Coin",
+        "amountBaseUnits": "1729978",
+        "decimals": 6,
+        "valueUsd": 1.729978
+      },
+      {
+        "source": "goldrush",
+        "walletAddress": "Cs2zdfUNonRdRGsiZUQQLdTxzxVvJZmgiX2mpLYKuEqP",
+        "assetAddress": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+        "assetSymbol": "USDC",
+        "assetName": "USD Coin",
+        "amountBaseUnits": "1729978",
+        "decimals": 6,
+        "valueUsd": 1.7300528
+      }
+    ],
+    "provenance": {
+      "enrichedAt": "2026-05-11T10:17:35.767Z",
+      "sources": ["alchemy", "dune-sim", "goldrush"]
+    }
+  }
+]

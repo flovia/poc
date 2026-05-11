@@ -12,6 +12,7 @@ const workspaces = [
   "packages/sources",
   "packages/intelligence",
   "apps/cli",
+  "apps/data",
   "apps/bff",
   "apps/frontend",
 ] as const;
