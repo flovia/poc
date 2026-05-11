@@ -1,0 +1,24 @@
+# This compose file intentionally uses the named volume from poc-data
+# (`poc_data_postgres`) so local schema/data continuity is possible during
+# migration. Do not run this compose project and the poc-data compose project
+# at the same time because both bind host port 55432 and share the volume.
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: poc_data_test
+      POSTGRES_USER: poc_data
+      POSTGRES_PASSWORD: poc_data
+    ports:
+      - "55432:5432"
+    volumes:
+      - poc_data_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U poc_data -d poc_data_test"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+
+volumes:
+  poc_data_postgres:
+    name: poc_data_postgres

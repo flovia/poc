@@ -1,0 +1,23 @@
+{
+  "name": "data",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "packageManager": "bun@1.3.13",
+  "engines": {
+    "bun": ">=1.3.13"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "bun test tests",
+    "verify": "bun run typecheck && bun test",
+    "migrate": "bun run src/cli/migrate.ts",
+    "migrate:status": "bun run src/cli/migrate.ts --status",
+    "postgres:up": "docker compose -f docker-compose.postgres.yml up -d --wait",
+    "postgres:down": "docker compose -f docker-compose.postgres.yml down"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.3.13",
+    "typescript": "^6.0.3"
+  }
+}
