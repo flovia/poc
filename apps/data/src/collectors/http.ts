@@ -21,6 +21,19 @@ export async function postJsonRpc(
   return payload;
 }
 
+export async function getJson(
+  fetchImpl: FetchLike,
+  url: string,
+  headers: HeadersInit = {},
+): Promise<unknown> {
+  const response = await fetchImpl(url, { headers });
+  const payload = await response.json().catch(() => undefined);
+  if (!response.ok) {
+    throw new Error(`HTTP GET failed with HTTP ${response.status}`);
+  }
+  return payload;
+}
+
 function isJsonRpcError(payload: unknown): payload is { error: { message?: string } } {
   return (
     typeof payload === "object" &&

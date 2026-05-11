@@ -16,6 +16,8 @@ export type CollectorCredentialStatus = {
   values: Record<string, string>;
 };
 
+export const RPC_FAST_SOLANA_RPC_URL = "https://solana-rpc.rpcfast.com/";
+
 export const supportedCollectorServiceIds = [
   "alchemy",
   "rpc-fast",
@@ -40,9 +42,9 @@ export const collectorServiceDefinitions: Record<CollectorServiceId, CollectorSe
     label: "RPC Fast",
     role: "Alternative low-latency Solana RPC provider to compare with Alchemy-backed polling.",
     supportedChains: ["solana"],
-    requiredEnv: ["RPC_FAST_SOLANA_RPC_URL", "RPC_FAST_API_KEY"],
+    requiredEnv: ["RPC_FAST_API_KEY"],
     notes: [
-      "Keep the Solana endpoint URL and API key separate so query-param and header auth can both be tested.",
+      `Use the fixed Solana endpoint ${RPC_FAST_SOLANA_RPC_URL} and pass the API key separately.`,
     ],
   },
   "dune-sim": {

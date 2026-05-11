@@ -3,6 +3,7 @@ import {
   collectorCredentialTemplate,
   collectorServiceDefinitions,
   loadCollectorCredentials,
+  RPC_FAST_SOLANA_RPC_URL,
   supportedCollectorServiceIds,
 } from "../../src/collectors/config.js";
 
@@ -13,10 +14,8 @@ describe("collector config", () => {
 
   test("declares credential requirements for each service", () => {
     expect(collectorServiceDefinitions.alchemy.requiredEnv).toEqual(["ALCHEMY_API_KEY"]);
-    expect(collectorServiceDefinitions["rpc-fast"].requiredEnv).toEqual([
-      "RPC_FAST_SOLANA_RPC_URL",
-      "RPC_FAST_API_KEY",
-    ]);
+    expect(RPC_FAST_SOLANA_RPC_URL).toBe("https://solana-rpc.rpcfast.com/");
+    expect(collectorServiceDefinitions["rpc-fast"].requiredEnv).toEqual(["RPC_FAST_API_KEY"]);
     expect(collectorServiceDefinitions["rpc-fast"].supportedChains).toEqual(["solana"]);
     expect(collectorServiceDefinitions["dune-sim"].requiredEnv).toEqual(["DUNE_SIM_API_KEY"]);
     expect(collectorServiceDefinitions.goldrush.requiredEnv).toEqual(["GOLDRUSH_API_KEY"]);

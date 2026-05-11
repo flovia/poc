@@ -50,7 +50,7 @@ export type CollectorCursor =
     }
   | {
       source: "goldrush";
-      chain: "base";
+      chain: SupportedChain;
       pageNumber?: number;
       hasMore?: boolean;
     };
@@ -96,10 +96,44 @@ export type CollectTransfersResult = {
   warnings?: string[];
 };
 
+export type NormalizedCollectorBalance = {
+  source: CollectorServiceId;
+  chain: SupportedChain;
+  queryTarget: CollectorTarget;
+  walletAddress: string;
+  assetAddress: string;
+  assetSymbol?: string;
+  assetName?: string;
+  amountBaseUnits: string;
+  decimals?: number;
+  valueUsd?: number;
+  rawPayload: unknown;
+};
+
+export type CollectBalancesInput = {
+  targets: readonly CollectorTarget[];
+  limit?: number;
+  cursor?: CollectorCursor;
+};
+
+export type CollectBalancesResult = {
+  source: CollectorServiceId;
+  balances: NormalizedCollectorBalance[];
+  nextCursor?: CollectorCursor;
+  rawRequestCount: number;
+  warnings?: string[];
+};
+
 export interface TransferCollector {
   readonly source: CollectorServiceId;
   readonly supportedChains: readonly SupportedChain[];
   collectTransfers(input: CollectTransfersInput): Promise<CollectTransfersResult>;
+}
+
+export interface BalanceCollector {
+  readonly source: CollectorServiceId;
+  readonly supportedChains: readonly SupportedChain[];
+  collectBalances(input: CollectBalancesInput): Promise<CollectBalancesResult>;
 }
 
 export function normalizeCollectorTransferAmount(amount: bigint | number | string): string {

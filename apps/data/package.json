@@ -11,6 +11,7 @@
     "typecheck": "tsc -p tsconfig.json",
     "test": "bun test tests",
     "verify": "bun run typecheck && bun test",
+    "collect:balances": "bun run src/cli/collect-balances.ts",
     "collect:transfers": "bun run src/cli/collect-transfers.ts",
     "migrate": "bun run src/cli/migrate.ts",
     "migrate:status": "bun run src/cli/migrate.ts --status",

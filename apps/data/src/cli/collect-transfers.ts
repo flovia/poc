@@ -1,6 +1,8 @@
 #!/usr/bin/env bun
 import { createAlchemyBaseTransfersCollector } from "../collectors/alchemy/base-transfers.js";
-import { normalizeHttpsUrl } from "../collectors/http.js";
+import { RPC_FAST_SOLANA_RPC_URL } from "../collectors/config.js";
+import { createDuneSimBaseActivityCollector } from "../collectors/dune-sim/base-activity.js";
+import { createGoldRushBaseTransfersCollector } from "../collectors/goldrush/base-transfers.js";
 import { createSolanaRpcTransferCollector } from "../collectors/solana/rpc-transfers.js";
 import {
   PAY_SH_SOLANA_USDC_COLLECTION_TARGETS,
@@ -12,7 +14,7 @@ const BASE_USDC = "0x833589fcd6edb6e08f4c7c32d4f71b54bdA02913";
 const BASE_MPP_PAY_TO = "0x93053f1e7a5efeda532fe69cbbe43cbec3a0f13f";
 
 type CollectTransfersCliOptions = {
-  source: "alchemy" | "rpc-fast";
+  source: "alchemy" | "rpc-fast" | "dune-sim" | "goldrush";
   chain: "base" | "solana";
   dryRun: boolean;
   limit: number;
@@ -32,8 +34,14 @@ function parseArgs(args: readonly string[]): CollectTransfersCliOptions {
     const arg = args[index];
     if (arg === "--source") {
       const value = args[++index];
-      if (value !== "alchemy" && value !== "rpc-fast")
-        throw new Error("--source must be alchemy or rpc-fast");
+      if (
+        value !== "alchemy" &&
+        value !== "rpc-fast" &&
+        value !== "dune-sim" &&
+        value !== "goldrush"
+      ) {
+        throw new Error("--source must be alchemy, rpc-fast, dune-sim, or goldrush");
+      }
       options.source = value;
     } else if (arg === "--chain") {
       const value = args[++index];
@@ -54,6 +62,12 @@ function parseArgs(args: readonly string[]): CollectTransfersCliOptions {
   }
   if (options.source === "rpc-fast" && options.chain !== "solana") {
     throw new Error("rpc-fast collector only supports solana");
+  }
+  if (
+    (options.source === "dune-sim" || options.source === "goldrush") &&
+    options.chain !== "base"
+  ) {
+    throw new Error(`${options.source} collector currently supports base validation only`);
   }
   if (options.chain === "base" && options.fromBlock === undefined) {
     throw new Error("--from-block is required for base collection");
@@ -86,9 +100,15 @@ function createCollector(options: CollectTransfersCliOptions): TransferCollector
       endpoint: `https://solana-mainnet.g.alchemy.com/v2/${requiredEnv("ALCHEMY_API_KEY")}`,
     });
   }
+  if (options.source === "dune-sim") {
+    return createDuneSimBaseActivityCollector({ apiKey: requiredEnv("DUNE_SIM_API_KEY") });
+  }
+  if (options.source === "goldrush") {
+    return createGoldRushBaseTransfersCollector({ apiKey: requiredEnv("GOLDRUSH_API_KEY") });
+  }
   return createSolanaRpcTransferCollector({
     source: "rpc-fast",
-    endpoint: normalizeHttpsUrl(requiredEnv("RPC_FAST_SOLANA_RPC_URL")),
+    endpoint: RPC_FAST_SOLANA_RPC_URL,
     headers: { "x-token": requiredEnv("RPC_FAST_API_KEY") },
   });
 }

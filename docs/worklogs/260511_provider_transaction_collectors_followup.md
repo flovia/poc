@@ -258,6 +258,14 @@ Implementation direction chosen:
 - Add `apps/data/src/cli/collect-transfers.ts` as a dry-run/stdout-only CLI so
   live collector behavior can be checked without writing to Postgres or changing
   normal offline verification.
+- Add Dune Sim and GoldRush adapters as non-primary data-source providers:
+  Dune Sim is used for Base validation/activity context and Solana owner-wallet
+  balance enrichment, while GoldRush is used for Base ERC-20 fallback/enrichment
+  and Solana balance/token metadata enrichment. Exact Solana payment-transfer
+  collection remains Alchemy/RPC Fast because Dune Sim and GoldRush REST do not
+  cover Pay.sh token-account transfer history reliably.
+- `RPC_FAST_API_KEY` is the only RPC Fast credential; the Solana endpoint is the
+  fixed provider URL `https://solana-rpc.rpcfast.com/`.
 
 Checkpoint and writer direction:
 
