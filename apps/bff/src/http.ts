@@ -145,7 +145,10 @@ export const createBffHandler =
     const path = url.pathname.replace(/\/$/, "") || "/";
 
     if (request.method !== "GET") {
-      if (request.method === "POST" && path === "/showcase/stripe-mpp/pay") {
+      if (
+        request.method === "POST" &&
+        (path === "/showcase/stripe-mpp/pay" || path === "/showcase/solana-mpp/pay")
+      ) {
         return handleShowcaseRoute(request, path) ?? notFound(path);
       }
 

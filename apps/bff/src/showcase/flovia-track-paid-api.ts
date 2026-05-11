@@ -1,4 +1,4 @@
-type ShowcasePaymentProvider = "stripe" | "hitpay";
+type ShowcasePaymentProvider = "stripe" | "hitpay" | "solana";
 
 type PaymentContext = Record<string, string | number | boolean | null>;
 
