@@ -50,6 +50,7 @@ const envValue = (key: string) => {
 
 const buildSolanaMppx = (recipient: string, network: SolanaNetwork) => {
   const mint = envValue("SOLANA_MPP_CURRENCY") ?? USDC_DEVNET_MINT;
+  const rpcUrl = envValue("SOLANA_MPP_RPC_URL");
   return Mppx.create({
     secretKey: envValue("SOLANA_MPP_SECRET_KEY") ?? crypto.randomBytes(32).toString("base64"),
     methods: [
@@ -58,6 +59,7 @@ const buildSolanaMppx = (recipient: string, network: SolanaNetwork) => {
         currency: mint,
         decimals,
         network,
+        ...(rpcUrl ? { rpcUrl } : {}),
       }),
     ],
   });
@@ -66,16 +68,24 @@ const buildSolanaMppx = (recipient: string, network: SolanaNetwork) => {
 let cachedMppx: ReturnType<typeof buildSolanaMppx> | null = null;
 let cachedRecipient: string | null = null;
 let cachedNetwork: SolanaNetwork | null = null;
+let cachedRpcUrl: string | null = null;
 
 const resolveSolanaMppx = (network: SolanaNetwork) => {
   const recipient = envValue("SOLANA_MPP_RECIPIENT");
   if (!recipient) return null;
-  if (cachedMppx && cachedRecipient === recipient && cachedNetwork === network) {
+  const rpcUrl = envValue("SOLANA_MPP_RPC_URL");
+  if (
+    cachedMppx &&
+    cachedRecipient === recipient &&
+    cachedNetwork === network &&
+    cachedRpcUrl === rpcUrl
+  ) {
     return { mppx: cachedMppx, recipient };
   }
   cachedMppx = buildSolanaMppx(recipient, network);
   cachedRecipient = recipient;
   cachedNetwork = network;
+  cachedRpcUrl = rpcUrl;
   return { mppx: cachedMppx, recipient };
 };
 
@@ -336,8 +346,11 @@ export const handleSolanaMppPayShowcase = async (request: Request) => {
   }
 
   try {
+    const rpcUrl = envValue("SOLANA_MPP_RPC_URL");
     const mppx = ClientMppx.create({
-      methods: [clientSolana.charge({ signer })],
+      methods: [
+        clientSolana.charge({ signer, broadcast: true, ...(rpcUrl ? { rpcUrl } : {}) }),
+      ],
       polyfill: false,
       fetch: ((input, init) => {
         const paidRequest = new Request(input, init);
