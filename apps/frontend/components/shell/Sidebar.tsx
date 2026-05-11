@@ -294,6 +294,13 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
           >
             HitPay MPP
           </Link>
+          <Link
+            href="/showcase/solana-mpp"
+            className="nav-item nav-item--sub"
+            aria-current={pathname === "/showcase/solana-mpp"}
+          >
+            Solana MPP
+          </Link>
         </div>
 
       </nav>

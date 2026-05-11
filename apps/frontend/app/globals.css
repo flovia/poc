@@ -44,6 +44,10 @@
   --teal-soft:       rgba(44, 122, 123, 0.10);
   --teal-dim:        rgba(44, 122, 123, 0.04);
 
+  --solana:          #9945FF;
+  --solana-soft:     rgba(153, 69, 255, 0.10);
+  --solana-dim:      rgba(153, 69, 255, 0.04);
+
   --warn:            #B45309;
   --warn-soft:       rgba(180, 83, 9, 0.10);
   --danger:          #DC2626;

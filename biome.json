@@ -10,7 +10,9 @@
       "!**/dist/**/*",
       "!apps/*/data/**/*.json",
       "!apps/*/fixtures/**/*.json",
-      "!apps/*/reports/**/*.json"
+      "!apps/*/reports/**/*.json",
+      "!data/**/*.json",
+      "!reports/**/*.json"
     ]
   },
   "formatter": {

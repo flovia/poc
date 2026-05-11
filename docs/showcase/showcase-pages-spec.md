@@ -18,13 +18,17 @@ Frontend pages:
 /showcase
 /showcase/stripe-mpp
 /showcase/hitpay-mpp
+/showcase/solana-mpp
 ```
 
 BFF showcase API endpoints:
 
 ```text
-GET /showcase/stripe-mpp/paid
-GET /showcase/hitpay-mpp/paid
+GET  /showcase/stripe-mpp/paid
+POST /showcase/stripe-mpp/pay
+GET  /showcase/hitpay-mpp/paid
+GET  /showcase/solana-mpp/paid
+POST /showcase/solana-mpp/pay
 ```
 
 The frontend calls the BFF endpoints directly. No separate API provider server is introduced for the PoC.
@@ -79,6 +83,29 @@ Sections:
    - Payment: provider, rail, amount, currency, payment intent id, recipient
    - API usage: endpoint, status, latency, request id
    - Joined insight: payment converted into paid API demand
+
+### `/showcase/solana-mpp`
+
+Purpose: Solana MPP-specific integration and flow verification.
+
+Sections:
+
+1. Header
+   - title: `Solana MPP showcase`
+   - labels: `Solana`, `MPP`, `SPL`, `devnet`, `Flovia SDK`
+2. Integration
+   - code snippet showing `Mppx.create({ methods: [solana.charge(...)] })` from `@solana/mpp/server` wrapped by `flovia.trackPaidApi(...)`
+3. Simulated flow
+   - deterministic timeline that does not require live wallet setup
+   - steps: request started → challenge issued → SPL transfer signed → on-chain confirmation → paid API response → Flovia joined event
+4. Live flow
+   - `Call paid API` action against the BFF route on Solana devnet
+   - 402 challenge with Solana recipient address and SPL mint
+   - `Pay with Solana wallet` posts to the BFF `/showcase/solana-mpp/pay` route, which uses a server-side payer keypair (`SOLANA_MPP_PAYER_PRIVATE_KEY`) via `@solana/mpp/client` to sign and submit the SPL transfer, then retries the paid endpoint with the MPP credential and returns the paid response. The payer wallet must hold devnet SOL (for fees) and devnet USDC (for the SPL transfer)
+5. What Flovia captured
+   - Payment: provider, rail, amount, currency, mint, recipient, network (`solana-devnet`)
+   - API usage: endpoint, status, latency, request id
+   - Joined insight: SPL token payment converted into paid API demand
 
 ### `/showcase/hitpay-mpp`
 

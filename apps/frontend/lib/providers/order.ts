@@ -17,8 +17,7 @@ function pinnedProviderRank(provider: StoredProvider): number {
   // accordingly. Fall back to the single `catalogSource` for non-aggregated
   // rows.
   const aggregated = provider.catalogSources ?? [];
-  const isMpp =
-    aggregated.includes("mpp_registry") || provider.catalogSource === "mpp_registry";
+  const isMpp = aggregated.includes("mpp_registry") || provider.catalogSource === "mpp_registry";
   if (isMpp) return MPP_RANK;
   const identity = `${provider.providerId} ${provider.serviceId ?? ""} ${provider.name} ${
     provider.serviceName ?? ""

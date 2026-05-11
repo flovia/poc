@@ -10,7 +10,8 @@ const currency = "sgd";
 type HitPayMpp = ReturnType<typeof createMpp>;
 
 let cachedMpp: HitPayMpp | null = null;
-let cachedProtectedPaid: ((request: Request, ctx: unknown) => Promise<Response> | Response) | null = null;
+let cachedProtectedPaid: ((request: Request, ctx: unknown) => Promise<Response> | Response) | null =
+  null;
 
 const resolveHitPayMpp = () => {
   if (!process.env.HITPAY_API_KEY) return null;
@@ -72,7 +73,8 @@ export const handleHitPayMppPaidShowcase = (request: Request) =>
               status: "configuration_required",
               responseStatus: 503,
               payment: { provider, rail, amount, currency },
-              joinedInsight: "Live HitPay MPP requires sandbox credentials before Flovia can join real checkout payment context.",
+              joinedInsight:
+                "Live HitPay MPP requires sandbox credentials before Flovia can join real checkout payment context.",
             },
           },
           { status: 503 },

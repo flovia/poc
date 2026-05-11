@@ -18,6 +18,19 @@ function capitalizeWord(value: string): string {
   return value[0].toUpperCase() + value.slice(1);
 }
 
+function toModelNameCandidate(modelId: string): string {
+  const basename = modelId.split(/[\\/]/).pop() ?? modelId;
+  const withoutVariant = basename.replace(/:\d+$/i, "");
+  const withoutExtension = withoutVariant.replace(/\.(gguf|bin|onnx)$/i, "");
+  const segments = withoutExtension.split(".");
+
+  if (segments.length > 1 && segments.slice(0, -1).every((segment) => /^[a-z][a-z0-9-]*$/.test(segment))) {
+    return segments[segments.length - 1] ?? withoutExtension;
+  }
+
+  return withoutExtension;
+}
+
 export function compactUpsellSummary(summary: string): string {
   const normalized = summary.replace(/\s+/g, " ").trim();
   if (normalized.length <= MAX_SUMMARY_TITLE_LENGTH) {
@@ -40,9 +53,7 @@ export function compactUpsellSummary(summary: string): string {
 }
 
 export function formatUpsellExplanationModelName(modelId: string): string {
-  const parts = modelId.split(".");
-  const rawName = parts[parts.length - 1] ?? modelId;
-  const normalized = rawName
+  const normalized = toModelNameCandidate(modelId)
     .replace(/-\d{8}-v\d+(?::\d+)?$/i, "")
     .replace(/:\d+$/i, "");
 
@@ -67,7 +78,9 @@ export function formatUpsellExplanationModelName(modelId: string): string {
   return normalized
     .split("-")
     .filter(Boolean)
-    .map((part) => capitalizeWord(part.toLowerCase()))
+    .map((part) =>
+      /^[0-9]+[A-Z0-9_]+$/.test(part) ? part : capitalizeWord(part.toLowerCase()),
+    )
     .join(" ");
 }
 

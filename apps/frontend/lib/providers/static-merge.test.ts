@@ -1,9 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { buildStaticProviderRouteId, mergeStaticProviders } from "./static-merge";
-import {
-  STATIC_PROVIDER_CAPABILITIES,
-  type StaticProviderCapability,
-} from "./static-capabilities";
+import { STATIC_PROVIDER_CAPABILITIES, type StaticProviderCapability } from "./static-capabilities";
 
 type Item = { providerId: string; serviceId?: string; name?: string };
 

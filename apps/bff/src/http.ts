@@ -3,13 +3,28 @@ import {
   validatePhaseBCustomerWorkflowIntentResponse,
 } from "contracts";
 import { type BffAnalyticsDataSource, resolveAnalyticsDataSource } from "./data/analytics-source";
-import { BffLlmInferenceError, type BffLlmService, resolveBffLlmService } from "./data/llm";
+import {
+  BffLlmInferenceError,
+  BffLlmUnavailableError,
+  type BffLlmService,
+  resolveBffLlmService,
+} from "./data/llm";
 import { buildWorkflowIntentInputFromProfile, toWorkflowIntentInput } from "./data/workflow-intent";
 import { handleShowcaseRoute, showcaseRoutes } from "./showcase";
 
 type JsonValue = unknown;
-const GENERIC_BEDROCK_INFERENCE_ERROR_MESSAGE = "Bedrock upsell explanation inference failed.";
+type RequestTimeoutController = {
+  timeout(request: Request, seconds: number): void;
+};
+type RuntimeEnv = NodeJS.ProcessEnv;
+export type BffRuntimeMetadata = {
+  commitHash: string | null;
+  startedAt: string;
+};
+
+const GENERIC_LLM_INFERENCE_ERROR_MESSAGE = "LLM upsell explanation inference failed.";
 const WORKFLOW_INTENT_GENERATED_FROM = "phase-b-wallet-workflow-intent-v1";
+const COMMIT_HASH_PATTERN = /^[0-9a-f]{7,40}$/i;
 const workflowIntentReason = {
   provenance: "derived_insight" as const,
   label: "BFF workflow intent session analysis",
@@ -23,6 +38,29 @@ const json = (body: JsonValue, init: ResponseInit = {}) =>
       ...(init.headers ?? {}),
     },
   });
+
+const normalizeCommitHash = (value: string | null | undefined) => {
+  const trimmed = value?.trim();
+  if (!trimmed || !COMMIT_HASH_PATTERN.test(trimmed)) {
+    return null;
+  }
+  return trimmed;
+};
+
+const resolveCommitHash = (env: RuntimeEnv) =>
+  normalizeCommitHash(env.BFF_COMMIT_HASH) ??
+  normalizeCommitHash(env.DEPLOY_GIT_SHA) ??
+  normalizeCommitHash(env.GITHUB_SHA) ??
+  normalizeCommitHash(env.BFF_DEPLOY_ID) ??
+  "unknown";
+
+export const resolveBffRuntimeMetadata = (
+  env: RuntimeEnv = process.env,
+  now: Date = new Date(),
+): BffRuntimeMetadata => ({
+  commitHash: resolveCommitHash(env),
+  startedAt: now.toISOString(),
+});
 
 const readonlyRoutes = new Set([
   "/",
@@ -75,7 +113,7 @@ const llmUnavailable = () =>
   json(
     {
       error: "llm_unavailable",
-      message: "Bedrock upsell explanation is not configured for this environment.",
+      message: "LLM upsell explanation is not configured for this environment.",
     },
     { status: 503 },
   );
@@ -89,7 +127,7 @@ const llmFailed = (error: unknown) =>
           ? error.message
           : error instanceof Error && error.message
             ? error.message
-            : GENERIC_BEDROCK_INFERENCE_ERROR_MESSAGE,
+            : GENERIC_LLM_INFERENCE_ERROR_MESSAGE,
     },
     { status: 502 },
   );
@@ -100,13 +138,17 @@ export const createBffHandler =
       | BffAnalyticsDataSource
       | Promise<BffAnalyticsDataSource> = resolveAnalyticsDataSource(),
     llmService: BffLlmService | null = resolveBffLlmService(),
+    runtimeMetadata: BffRuntimeMetadata = resolveBffRuntimeMetadata(),
   ) =>
-  async (request: Request) => {
+  async (request: Request, server?: RequestTimeoutController) => {
     const url = new URL(request.url);
     const path = url.pathname.replace(/\/$/, "") || "/";
 
     if (request.method !== "GET") {
-      if (request.method === "POST" && path === "/showcase/stripe-mpp/pay") {
+      if (
+        request.method === "POST" &&
+        (path === "/showcase/stripe-mpp/pay" || path === "/showcase/solana-mpp/pay")
+      ) {
         return handleShowcaseRoute(request, path) ?? notFound(path);
       }
 
@@ -129,7 +171,12 @@ export const createBffHandler =
       case "/":
         return json({ service: "flovia-bff", status: "ok" });
       case "/health":
-        return json({ status: "ok", service: "flovia-bff" });
+        return json({
+          status: "ok",
+          service: "flovia-bff",
+          commitHash: runtimeMetadata.commitHash,
+          startedAt: runtimeMetadata.startedAt,
+        });
       default:
         break;
     }
@@ -215,9 +262,14 @@ export const createBffHandler =
       }
 
       try {
+        // QVAC may need to download and load a local model on the first request.
+        server?.timeout(request, 0);
         return json(await llmService.generateUpsellExplanation(metrics));
       } catch (error) {
-        console.error("Bedrock upsell explanation request failed.", error);
+        if (error instanceof BffLlmUnavailableError) {
+          return llmUnavailable();
+        }
+        console.error("LLM upsell explanation request failed.", error);
         return llmFailed(error);
       }
     }
@@ -261,8 +313,8 @@ export const createBffHandler =
         );
       }
 
-      if (!llmService) {
-        return json(
+      const unavailableResponse = () =>
+        json(
           validatePhaseBCustomerWorkflowIntentResponse({
             generatedAt: new Date().toISOString(),
             generatedFrom: WORKFLOW_INTENT_GENERATED_FROM,
@@ -286,9 +338,13 @@ export const createBffHandler =
             reasons: [workflowIntentReason],
           }),
         );
+
+      if (!llmService) {
+        return unavailableResponse();
       }
 
       try {
+        server?.timeout(request, 0);
         const result = await llmService.generateWorkflowIntentExplanation({
           address: normalizedAddress,
           sourceGeneratedAt: profile.generatedAt,
@@ -322,6 +378,9 @@ export const createBffHandler =
           }),
         );
       } catch (error) {
+        if (error instanceof BffLlmUnavailableError) {
+          return unavailableResponse();
+        }
         console.error("Workflow intent request failed.", error);
         return json(
           validatePhaseBCustomerWorkflowIntentResponse({

@@ -44,9 +44,7 @@ describe("provider route aliases", () => {
   });
 
   test("invalid percent-encoded sequence does not throw", () => {
-    expect(() =>
-      findProviderByRouteId([coingeckoProvider], "%E0%A4%A"),
-    ).not.toThrow();
+    expect(() => findProviderByRouteId([coingeckoProvider], "%E0%A4%A")).not.toThrow();
   });
 
   test("resolves a `static-${slug(serviceId)}` route id to the matching live row", () => {

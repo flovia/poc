@@ -43,7 +43,9 @@ const buildActivityLabel = (description: string) => {
 };
 
 const buildProviderLookup = (profile: PhaseBCustomerProfileResponse["profile"]) => {
-  const byProviderId = new Map(profile.providers.map((provider) => [provider.providerId, provider]));
+  const byProviderId = new Map(
+    profile.providers.map((provider) => [provider.providerId, provider]),
+  );
   const byPayToWallet = new Map(
     profile.providers.map((provider) => [
       normalizePaymentRecipientAddress(provider.payToWallet),
@@ -66,7 +68,8 @@ const enrichPaymentEvents = (
       const provider =
         (rawId ? byProviderId.get(rawId) : undefined) ??
         (rawId ? byPayToWallet.get(normalizePaymentRecipientAddress(rawId)) : undefined);
-      const payToWallet = provider?.payToWallet ?? (isLikelyPaymentAddress(rawId) ? rawId : undefined);
+      const payToWallet =
+        provider?.payToWallet ?? (isLikelyPaymentAddress(rawId) ? rawId : undefined);
 
       return {
         at: event.at,
@@ -80,7 +83,9 @@ const enrichPaymentEvents = (
         sortIndex,
       };
     })
-    .sort((left, right) => left.timestampMs - right.timestampMs || left.sortIndex - right.sortIndex);
+    .sort(
+      (left, right) => left.timestampMs - right.timestampMs || left.sortIndex - right.sortIndex,
+    );
 };
 
 const buildSession = (
@@ -92,10 +97,7 @@ const buildSession = (
   const distinctActivities = new Set(events.map((event) => event.activityLabel));
   if (distinctActivities.size < WORKFLOW_INTENT_MIN_EVENTS) return null;
 
-  const providers = new Map<
-    string,
-    PhaseBCustomerWorkflowIntentSession["providers"][number]
-  >();
+  const providers = new Map<string, PhaseBCustomerWorkflowIntentSession["providers"][number]>();
   for (const event of events) {
     const key = `${event.providerId ?? event.providerName}:${event.payToWallet ?? ""}`;
     const current = providers.get(key);
@@ -129,11 +131,13 @@ const buildSession = (
     sessionId: `session-${sessionIndex}`,
     startedAt,
     endedAt,
-    durationSeconds: Math.max(0, Math.floor((parseTimestamp(endedAt) - parseTimestamp(startedAt)) / 1000)),
+    durationSeconds: Math.max(
+      0,
+      Math.floor((parseTimestamp(endedAt) - parseTimestamp(startedAt)) / 1000),
+    ),
     eventCount: events.length,
-    distinctProviderCount: new Set(
-      events.map((event) => event.providerId ?? event.providerName),
-    ).size,
+    distinctProviderCount: new Set(events.map((event) => event.providerId ?? event.providerName))
+      .size,
     distinctActivityCount: distinctActivities.size,
     totalAmountAtomic: events.reduce((sum, event) => addAtomic(sum, event.amountAtomic), "0"),
     providers: [...providers.values()],
