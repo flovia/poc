@@ -1,9 +1,11 @@
-import { describe, expect, test } from "bun:test";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import type { BedrockRuntimeClient } from "@aws-sdk/client-bedrock-runtime";
+import { resolveBedrockBffLlmService } from "../src/data/llm-bedrock";
+import { resolveQvacBffLlmService } from "../src/data/llm-qvac";
 import { fixtureAnalyticsDataSource } from "../src/data/analytics-source";
 import { BffLlmInferenceError, resolveBffLlmService } from "../src/data/llm";
 import { knownCustomerIntelligenceAddress } from "../src/data/phase-b-demo";
@@ -18,7 +20,62 @@ const withTempDir = async (prefix: string, fn: (directory: string) => Promise<vo
   }
 };
 
+const llmEnvKeys = [
+  "BFF_LLM_PROVIDER",
+  "BFF_BEDROCK_MODEL_ID",
+  "BEDROCK_MODEL_ID",
+  "AWS_REGION",
+  "AWS_DEFAULT_REGION",
+  "BFF_QVAC_MODEL_SRC",
+  "BFF_QVAC_MODEL_ID",
+  "BFF_QVAC_DEVICE",
+  "BFF_QVAC_CTX_SIZE",
+  "BFF_LLM_PROMPT_VERSION",
+  "BFF_BEDROCK_PROMPT_VERSION",
+  "BFF_WORKFLOW_INTENT_PROMPT_VERSION",
+  "BFF_LLM_CACHE_DIR",
+  "BFF_LLM_CACHE_TTL_MS",
+  "BFF_BRANCH_NAME",
+  "BFF_DEPLOY_ID",
+  "HOSTNAME",
+  "DATABASE_URL",
+] as const;
+
+const snapshotLlmEnv = () =>
+  Object.fromEntries(llmEnvKeys.map((key) => [key, process.env[key]])) as Record<
+    (typeof llmEnvKeys)[number],
+    string | undefined
+  >;
+
+const clearLlmEnv = () => {
+  for (const key of llmEnvKeys) {
+    delete process.env[key];
+  }
+};
+
+const restoreLlmEnv = (snapshot: Record<(typeof llmEnvKeys)[number], string | undefined>) => {
+  for (const key of llmEnvKeys) {
+    const value = snapshot[key];
+    if (value === undefined) {
+      delete process.env[key];
+      continue;
+    }
+
+    process.env[key] = value;
+  }
+};
+
 describe("BFF llm service", () => {
+  let llmEnvSnapshot: Record<(typeof llmEnvKeys)[number], string | undefined>;
+
+  beforeEach(() => {
+    llmEnvSnapshot = snapshotLlmEnv();
+    clearLlmEnv();
+  });
+
+  afterEach(() => {
+    restoreLlmEnv(llmEnvSnapshot);
+  });
   test("reuses cached Bedrock workflow intent explanations for the same input", async () =>
     withTempDir("workflow-intent-cache-hit", async (cacheDirectory) => {
       let sendCalls = 0;
@@ -311,6 +368,138 @@ describe("BFF llm service", () => {
       expect(second).toEqual(first);
     }));
 
+  test("uses qvac inference when explicitly selected and reuses the loaded model", async () =>
+    withTempDir("qvac-cache-hit", async (cacheDirectory) => {
+      const metrics = fixtureAnalyticsDataSource.getCustomerUpsellMetrics(
+        knownCustomerIntelligenceAddress,
+      );
+
+      if (!metrics) {
+        throw new Error("Expected fixture upsell metrics for the known customer.");
+      }
+
+      let loadCalls = 0;
+      let completionCalls = 0;
+      let capturedModelId: string | undefined;
+      let capturedHistory: Array<{ role: string; content: string }> | undefined;
+      const service = resolveBffLlmService({
+        provider: "qvac",
+        qvacClient: {
+          async loadModel() {
+            loadCalls += 1;
+            return "qvac-loaded-model-id";
+          },
+          async completeText(input) {
+            completionCalls += 1;
+            capturedModelId = input.modelId;
+            capturedHistory = input.history;
+            return JSON.stringify({
+              summary: "Local qvac signal",
+              reasons: [
+                "The wallet appears active based on recent observed transactions.",
+                "The wallet used multiple providers in the observed read model.",
+              ],
+              recommendedAction:
+                "Review whether the observed usage pattern matches a higher-support offering.",
+              caution: "Some metrics come from PoC heuristics and should be treated cautiously.",
+            });
+          },
+        },
+        qvacModelSrc: "registry://hf/acme/local-upsell-model.gguf",
+        qvacModelId: "local-upsell-model.gguf",
+        promptVersion: "upsell-explanation-v1",
+        branchName: "develop",
+        cacheDirectory,
+      });
+
+      if (!service) {
+        throw new Error("Expected qvac llm service to resolve.");
+      }
+
+      const first = await service.generateUpsellExplanation(metrics);
+      const second = await service.generateUpsellExplanation(metrics);
+
+      expect(loadCalls).toBe(1);
+      expect(completionCalls).toBe(1);
+      expect(capturedModelId).toBe("qvac-loaded-model-id");
+      expect(capturedHistory?.[0]?.role).toBe("system");
+      expect(capturedHistory?.[1]?.role).toBe("user");
+      expect(first.model.provider).toBe("qvac");
+      expect(first.model.modelId).toBe("local-upsell-model.gguf");
+      expect(second).toEqual(first);
+    }));
+
+  test("resolves provider-specific services from split modules", async () =>
+    withTempDir("split-resolvers", async (cacheDirectory) => {
+      const metrics = fixtureAnalyticsDataSource.getCustomerUpsellMetrics(
+        knownCustomerIntelligenceAddress,
+      );
+
+      if (!metrics) {
+        throw new Error("Expected fixture upsell metrics for the known customer.");
+      }
+
+      const bedrock = resolveBedrockBffLlmService({
+        client: {
+          async send() {
+            return {
+              output: {
+                message: {
+                  content: [
+                    {
+                      text: JSON.stringify({
+                        summary: "Bedrock split path",
+                        reasons: [
+                          "The wallet appears active based on recent observed transactions.",
+                          "The wallet used multiple providers in the observed read model.",
+                        ],
+                        recommendedAction:
+                          "Review whether the observed usage pattern matches a higher-support offering.",
+                        caution:
+                          "Some metrics come from PoC heuristics and should be treated cautiously.",
+                      }),
+                    },
+                  ],
+                },
+              },
+            };
+          },
+        } as unknown as BedrockRuntimeClient,
+        modelId: "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+        region: "ap-northeast-1",
+        cacheDirectory,
+      });
+      const qvac = resolveQvacBffLlmService({
+        qvacClient: {
+          async loadModel() {
+            return "qvac-loaded-model-id";
+          },
+          async completeText() {
+            return JSON.stringify({
+              summary: "Qvac split path",
+              reasons: [
+                "The wallet appears active based on recent observed transactions.",
+                "The wallet used multiple providers in the observed read model.",
+              ],
+              recommendedAction:
+                "Review whether the observed usage pattern matches a higher-support offering.",
+              caution: "Some metrics come from PoC heuristics and should be treated cautiously.",
+            });
+          },
+        },
+        qvacModelSrc: "registry://hf/acme/local-upsell-model.gguf",
+        qvacModelId: "local-upsell-model.gguf",
+        cacheDirectory,
+      });
+
+      if (!bedrock || !qvac) {
+        throw new Error("Expected split provider resolvers to return services.");
+      }
+
+      expect((await bedrock.generateUpsellExplanation(metrics)).model.provider).toBe("bedrock");
+      expect((await qvac.generateUpsellExplanation(metrics)).model.provider).toBe("qvac");
+    }));
+
   test("cache key varies by branch name, model, and input", async () =>
     withTempDir("cache-key", async (cacheDirectory) => {
       const metrics = fixtureAnalyticsDataSource.getCustomerUpsellMetrics(
@@ -566,7 +755,7 @@ describe("BFF llm service", () => {
         throw new Error("Expected Bedrock inference to fail.");
       } catch (error) {
         expect(error).toBeInstanceOf(BffLlmInferenceError);
-        expect((error as Error).message).toContain("Bedrock upsell explanation inference failed.");
+        expect((error as Error).message).toContain("LLM upsell explanation inference failed.");
         expect((error as Error).message).toContain("AccessDeniedException");
         expect((error as Error).message).toContain("You don't have access to this model");
       }

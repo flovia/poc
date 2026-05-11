@@ -828,7 +828,7 @@ describe("contracts schema validation", () => {
   test("accepts a valid Phase B upsell explanation response", () => {
     const parsed = validatePhaseBCustomerUpsellExplanationResponse({
       generatedAt: "2026-05-01T00:00:00Z",
-      generatedFrom: "phase-b-bedrock-upsell-explanation-v1",
+      generatedFrom: "phase-b-llm-upsell-explanation-v1",
       address: "0xAC5A07C44A4F971667B3DF4B6551FB6991B2142D",
       sourceGeneratedAt: "2026-04-30T13:00:22Z",
       model: {
@@ -893,9 +893,7 @@ describe("contracts schema validation", () => {
         input: "derived_insight",
         explanation: "derived_insight",
       },
-      reasons: [
-        { provenance: "derived_insight", label: "bedrock explanation from upsell metrics" },
-      ],
+      reasons: [{ provenance: "derived_insight", label: "llm explanation from upsell metrics" }],
     });
 
     expect(parsed.address).toBe("0xac5a07c44a4f971667b3df4b6551fb6991b2142d");
