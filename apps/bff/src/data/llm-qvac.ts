@@ -1,10 +1,4 @@
-import {
-  QWEN3_4B_INST_Q4_K_M,
-  VERBOSITY,
-  completion,
-  downloadAsset,
-  loadModel,
-} from "@qvac/sdk";
+import { QWEN3_4B_INST_Q4_K_M, VERBOSITY, completion, downloadAsset, loadModel } from "@qvac/sdk";
 import {
   type PhaseBCustomerUpsellExplanation,
   type PhaseBCustomerUpsellExplanationInput,

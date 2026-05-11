@@ -199,8 +199,7 @@ export const resolveDefaultBranchName = () =>
 
 export const resolveDefaultDeploymentId = () => normalizeConfiguredValue(process.env.BFF_DEPLOY_ID);
 
-export const resolveDefaultRuntimeInstanceId = () =>
-  normalizeConfiguredValue(process.env.HOSTNAME);
+export const resolveDefaultRuntimeInstanceId = () => normalizeConfiguredValue(process.env.HOSTNAME);
 
 export const resolveDefaultPromptVersion = () =>
   normalizeConfiguredValue(
