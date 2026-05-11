@@ -343,7 +343,7 @@ describe("BFF canonical adapters", () => {
   test("adapts upsell explanation envelope to wallet card view model", () => {
     const response: PhaseBCustomerUpsellExplanationResponse = {
       generatedAt: "2026-05-01T02:50:45.838Z",
-      generatedFrom: "phase-b-bedrock-upsell-explanation-v1",
+      generatedFrom: "phase-b-llm-upsell-explanation-v1",
       address: "0x0000000000000000000000000000000000000001",
       sourceGeneratedAt: "2026-04-30T13:00:22.751Z",
       model: {
