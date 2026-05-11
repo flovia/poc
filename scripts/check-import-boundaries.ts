@@ -2,12 +2,21 @@ import fs from "node:fs";
 import path from "node:path";
 
 const root = path.resolve(import.meta.dir, "..");
-const workspaceNames = new Set(["contracts", "sources", "intelligence", "cli", "bff", "frontend"]);
+const workspaceNames = new Set([
+  "contracts",
+  "sources",
+  "intelligence",
+  "cli",
+  "data",
+  "bff",
+  "frontend",
+]);
 const workspaceRoots = [
   { kind: "package", name: "contracts", root: path.join(root, "packages", "contracts") },
   { kind: "package", name: "sources", root: path.join(root, "packages", "sources") },
   { kind: "package", name: "intelligence", root: path.join(root, "packages", "intelligence") },
   { kind: "app", name: "cli", root: path.join(root, "apps", "cli") },
+  { kind: "app", name: "data", root: path.join(root, "apps", "data") },
   { kind: "app", name: "bff", root: path.join(root, "apps", "bff") },
   { kind: "app", name: "frontend", root: path.join(root, "apps", "frontend") },
 ] as const;
@@ -94,6 +103,12 @@ for (const workspace of workspaceRoots) {
       if (workspace.name === "bff" && targetWorkspace === "cli") {
         violations.push(
           `${path.relative(root, file)} imports ${specifier}; apps/bff may not depend on apps/cli`,
+        );
+      }
+
+      if (workspace.name === "data") {
+        violations.push(
+          `${path.relative(root, file)} imports ${specifier}; apps/data may not depend on other workspaces`,
         );
       }
 
