@@ -16,15 +16,16 @@ scaffold.
 
 ## Postgres strategy
 
-For local continuity, prefer reusing the existing `poc_data_postgres` Docker
-volume with `docker-compose.postgres.yml`. This mirrors the `poc-data` local DB
-shape and lets the migration runner inspect or continue against existing local
-state.
+By default, `docker-compose.postgres.yml` creates or reuses the named volume
+`poc_data_postgres`. On a fresh machine this simply creates a new empty local DB.
+On a machine that already ran `poc-data`, it can reuse the existing local volume
+to inspect or continue against that state.
 
-Alternatively, create a fresh local DB with the same compose file. Do not run
-the old `poc-data` compose project and this app's compose project at the same
-time: both bind host port `55432` and intentionally point at the same named
-volume by default.
+Reusing the old volume is a local migration convenience, not a project
+requirement. Other environments can start from an empty DB and run migrations.
+Do not run the old `poc-data` compose project and this app's compose project at
+the same time: both bind host port `55432` and point at the same named volume by
+default.
 
 ```sh
 bun run --cwd apps/data postgres:up

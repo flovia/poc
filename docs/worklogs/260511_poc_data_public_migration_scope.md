@@ -34,11 +34,11 @@ generated outputs, or outdated helper scripts from `poc-data`.
 
 - The app includes a Postgres 16 Alpine compose file compatible with the
   `poc-data` local setup.
-- The compose file intentionally uses the named volume `poc_data_postgres` so
-  existing local state can be reused for continuity.
-- Open question: decide per developer machine whether to reuse the existing
-  `poc_data_postgres` volume or start from a fresh DB/volume for isolated
-  validation.
+- The compose file uses the named volume `poc_data_postgres`. On a fresh machine
+  this creates a new empty local DB; on a machine that already ran `poc-data`, it
+  can reuse the existing local volume for continuity.
+- Reusing the old volume is a local migration convenience, not a project
+  requirement. Other environments can start from an empty DB and run migrations.
 - Do not run the old `poc-data` compose project and this repo's `apps/data`
   compose project at the same time because they share host port `55432` and the
   named volume.
