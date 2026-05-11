@@ -289,6 +289,11 @@ describe("showcase paid API routes", () => {
     combined.set(skRaw, 0);
     combined.set(pkRaw, 32);
     process.env.SOLANA_MPP_PAYER_PRIVATE_KEY = JSON.stringify(Array.from(combined));
+    // Pin a recipient so the assertion below isolates payer-key parsing from
+    // the unrelated `solana_mpp_not_configured` (missing recipient) 503 path.
+    // Without this, CI runs that don't define SOLANA_MPP_RECIPIENT see the
+    // paid handler short-circuit at 503 before the payment stage is reached.
+    process.env.SOLANA_MPP_RECIPIENT = "9cVgh9GaPrQ7nsCEwx1GE9eqSArs5XodyMX7vLRhHp4F";
 
     const response = await createBffHandler(new Promise<never>(() => {}))(
       request("/showcase/solana-mpp/pay", {
@@ -299,10 +304,12 @@ describe("showcase paid API routes", () => {
     const body = (await response.json()) as { error?: string };
 
     // The route should NOT bounce on key parsing. It will subsequently fail at
-    // the payment stage (either 502 for unfunded wallet, or 503 for missing
-    // recipient if env not set), but that proves the key was accepted.
+    // the payment stage (502 for unfunded wallet / network unreachable), but
+    // that proves the key was accepted.
     expect(response.status).not.toBe(503);
     expect(body.error).not.toBe("solana_mpp_payer_key_invalid");
+    expect(body.error).not.toBe("solana_mpp_payer_not_configured");
+    expect(body.error).not.toBe("solana_mpp_not_configured");
   });
 
   test("rejects POST with the wrong confirmation header value", async () => {
