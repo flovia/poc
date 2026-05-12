@@ -46,6 +46,8 @@ collectors add display/context data such as owner-wallet balances.
 | RPC Fast | - | Fallback via Solana JSON-RPC | - | Solana RPC fallback |
 | Dune Sim | Validation/activity context | - | Yes | Enrichment and comparison |
 | GoldRush | ERC-20 fallback/enrichment | - | Yes | Base fallback and Solana balance enrichment |
+| CoinGecko | - | - | Yes, paired with Solana RPC | Price/value enrichment for wallet token balances |
+| Nansen | - | - | Yes | Current address balance enrichment |
 
 Exact Solana payment-transfer collection currently stays on Alchemy/RPC Fast
 because Dune Sim and GoldRush REST do not reliably expose Pay.sh token-account
@@ -58,6 +60,8 @@ Required live credentials are listed in `apps/data/.env.example`:
 - `RPC_FAST_API_KEY`
 - `DUNE_SIM_API_KEY`
 - `GOLDRUSH_API_KEY`
+- `COINGECKO_API_KEY`
+- `NANSEN_API_KEY`
 
 RPC Fast uses the fixed Solana endpoint
 `https://solana-rpc.rpcfast.com/`; only the API key is configured.
@@ -85,10 +89,44 @@ bun run --cwd apps/data collect:balances -- \
 bun run --cwd apps/data collect:balances -- \
   --source goldrush --chain solana --dry-run --limit 1
 
+bun run --cwd apps/data collect:balances -- \
+  --source coingecko --chain solana --dry-run --limit 1
+
+bun run --cwd apps/data collect:balances -- \
+  --source nansen --chain solana --dry-run --limit 1
+
 # Display-ready enrichment snapshot for one Pay.sh Solana target.
 bun run --cwd apps/data enrich:provider -- \
   --target pay-sh-solana:first --dry-run
 ```
+
+## Dune Sim demo path
+
+Flovia uses Dune Sim's Solana SVM balances endpoint to turn a Pay.sh
+provider wallet into product-ready balance context. The frontend shows the
+result as `Balance 1.72 USDC`; the data app commands below show the live
+endpoint-backed path that produces that enrichment data.
+
+```sh
+# 1. Fetch the Pay.sh Solana owner-wallet USDC balance through Dune Sim.
+bun run --cwd apps/data collect:balances -- \
+  --source dune-sim --chain solana --dry-run --limit 1
+
+# 2. Build the provider enrichment snapshot used by the demo UI.
+#    The output includes a `demo.partnerProof` section naming the SIM endpoint
+#    and the UI-facing `Balance ... USDC` label. It also includes the same
+#    normalized balance view from GoldRush, CoinGecko, and Nansen when their
+#    credentials are present.
+bun run --cwd apps/data enrich:provider -- \
+  --target pay-sh-solana:first --dry-run
+```
+
+The relevant SIM integration is `GET /beta/svm/balances/{address}?chains=solana`.
+CoinGecko does not provide wallet balances directly, so that adapter reads the
+Solana token-account balance through JSON-RPC and uses CoinGecko for USDC price
+enrichment. Nansen uses `POST /api/v1/profiler/address/current-balance`.
+In this PoC, the frontend consumes a baked snapshot so the demo is stable, while
+the live collector command remains reproducible for judges and local testing.
 
 The first baked frontend enrichment fixture currently contains one public-safe
 Pay.sh Solana owner address:

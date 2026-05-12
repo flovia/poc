@@ -9,7 +9,14 @@ import {
 
 describe("collector config", () => {
   test("lists phase1 collector services in a stable order", () => {
-    expect(supportedCollectorServiceIds).toEqual(["alchemy", "rpc-fast", "dune-sim", "goldrush"]);
+    expect(supportedCollectorServiceIds).toEqual([
+      "alchemy",
+      "rpc-fast",
+      "dune-sim",
+      "goldrush",
+      "coingecko",
+      "nansen",
+    ]);
   });
 
   test("declares credential requirements for each service", () => {
@@ -19,6 +26,8 @@ describe("collector config", () => {
     expect(collectorServiceDefinitions["rpc-fast"].supportedChains).toEqual(["solana"]);
     expect(collectorServiceDefinitions["dune-sim"].requiredEnv).toEqual(["DUNE_SIM_API_KEY"]);
     expect(collectorServiceDefinitions.goldrush.requiredEnv).toEqual(["GOLDRUSH_API_KEY"]);
+    expect(collectorServiceDefinitions.coingecko.requiredEnv).toEqual(["COINGECKO_API_KEY"]);
+    expect(collectorServiceDefinitions.nansen.requiredEnv).toEqual(["NANSEN_API_KEY"]);
   });
 
   test("loads present credentials without reading process.env directly", () => {
@@ -39,5 +48,7 @@ describe("collector config", () => {
     expect(collectorCredentialTemplate()).toContain("ALCHEMY_API_KEY=");
     expect(collectorCredentialTemplate()).toContain("DUNE_SIM_API_KEY=");
     expect(collectorCredentialTemplate()).toContain("GOLDRUSH_API_KEY=");
+    expect(collectorCredentialTemplate()).toContain("COINGECKO_API_KEY=");
+    expect(collectorCredentialTemplate()).toContain("NANSEN_API_KEY=");
   });
 });

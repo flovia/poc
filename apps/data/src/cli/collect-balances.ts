@@ -1,11 +1,13 @@
 #!/usr/bin/env bun
+import { createCoinGeckoSolanaBalancesCollector } from "../collectors/coingecko/solana-balances.js";
 import { createDuneSimSolanaBalancesCollector } from "../collectors/dune-sim/solana-balances.js";
 import { createGoldRushSolanaBalancesCollector } from "../collectors/goldrush/solana-balances.js";
+import { createNansenSolanaBalancesCollector } from "../collectors/nansen/solana-balances.js";
 import { PAY_SH_SOLANA_USDC_COLLECTION_TARGETS } from "../collectors/targets/pay-sh-solana.js";
 import type { BalanceCollector, CollectorTarget } from "../collectors/types.js";
 
 type CollectBalancesCliOptions = {
-  source: "dune-sim" | "goldrush";
+  source: "dune-sim" | "goldrush" | "coingecko" | "nansen";
   chain: "solana";
   dryRun: boolean;
   limit: number;
@@ -22,8 +24,13 @@ function parseArgs(args: readonly string[]): CollectBalancesCliOptions {
     const arg = args[index];
     if (arg === "--source") {
       const value = args[++index];
-      if (value !== "dune-sim" && value !== "goldrush") {
-        throw new Error("--source must be dune-sim or goldrush");
+      if (
+        value !== "dune-sim" &&
+        value !== "goldrush" &&
+        value !== "coingecko" &&
+        value !== "nansen"
+      ) {
+        throw new Error("--source must be dune-sim, goldrush, coingecko, or nansen");
       }
       options.source = value;
     } else if (arg === "--chain") {
@@ -55,7 +62,13 @@ function createCollector(options: CollectBalancesCliOptions): BalanceCollector {
   if (options.source === "dune-sim") {
     return createDuneSimSolanaBalancesCollector({ apiKey: requiredEnv("DUNE_SIM_API_KEY") });
   }
-  return createGoldRushSolanaBalancesCollector({ apiKey: requiredEnv("GOLDRUSH_API_KEY") });
+  if (options.source === "goldrush") {
+    return createGoldRushSolanaBalancesCollector({ apiKey: requiredEnv("GOLDRUSH_API_KEY") });
+  }
+  if (options.source === "coingecko") {
+    return createCoinGeckoSolanaBalancesCollector({ apiKey: requiredEnv("COINGECKO_API_KEY") });
+  }
+  return createNansenSolanaBalancesCollector({ apiKey: requiredEnv("NANSEN_API_KEY") });
 }
 
 function defaultTargets(options: CollectBalancesCliOptions): CollectorTarget[] {
