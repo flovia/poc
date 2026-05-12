@@ -217,6 +217,14 @@ const serviceIdForComparison = (serviceId: string) =>
   serviceId.toLowerCase().includes("coingecko") ? "coingecko" : serviceId.toLowerCase();
 const isValidPaymentRecipientAddress = (value: string) =>
   PaymentRecipientAddressSchema.safeParse(value).success;
+const endpointPathForResource = (resource: string) => {
+  try {
+    const url = new URL(resource);
+    return `${decodeURI(url.pathname)}${url.search}`;
+  } catch {
+    return resource;
+  }
+};
 
 const candidateForProvider = (provider: CustomerRow) => ({
   providerId: providerIdFor({
@@ -354,6 +362,32 @@ const buildPayload = (
   const now = generatedAt();
   const providers = providerRows.filter((row) => row.payTo);
   const catalogProviders = providers.filter((provider) => provider.catalogSource !== "raw_x402");
+  const catalogProviderById = new Map<string, ProviderRow>();
+  for (const provider of catalogProviders) {
+    const providerId = providerIdFor({
+      serviceId: provider.serviceId,
+      network: provider.network,
+      asset: provider.asset,
+      payTo: provider.payTo,
+    });
+    const existing = catalogProviderById.get(providerId);
+    if (!existing || provider.resources.length > existing.resources.length) {
+      catalogProviderById.set(providerId, provider);
+    }
+  }
+  const apiPathsForProvider = (provider: CustomerRow) => {
+    const row = catalogProviderById.get(
+      providerIdFor({
+        serviceId: provider.serviceId,
+        network: provider.network,
+        asset: provider.asset,
+        payTo: provider.payTo,
+      }),
+    );
+    return Array.from(
+      new Set(row?.resources.map((resource) => endpointPathForResource(resource.resource)) ?? []),
+    );
+  };
   const walletGraphProviders = providers.filter((provider) =>
     isValidPaymentRecipientAddress(provider.payTo),
   );
@@ -655,6 +689,9 @@ const buildPayload = (
               txCount: provider.transactionCount,
               firstSeenAt: provider.firstSeenAt,
               lastSeenAt: provider.lastSeenAt,
+              ...(apiPathsForProvider(provider).length
+                ? { apiPaths: apiPathsForProvider(provider) }
+                : {}),
               confidence: 0.5,
               provenance: "derived_insight",
               provenanceByField: { payToWallet: "onchain_fact", spendAtomic: "onchain_fact" },
@@ -1008,8 +1045,9 @@ export const loadPostgresLiveAnalyticsDataSource = async (
       FROM pay_sh_provider_catalog pc
       JOIN provider_metrics pm ON pm.provider_fqn = pc.provider_fqn
       LEFT JOIN LATERAL (
-        SELECT jsonb_agg(
-          jsonb_build_object(
+        SELECT jsonb_agg(resource ORDER BY resource ->> 'resource') AS resources
+        FROM (
+          SELECT jsonb_build_object(
             'resource', r.resource_url,
             'network', po.chain,
             'asset', CASE
@@ -1024,16 +1062,34 @@ export const loadPostgresLiveAnalyticsDataSource = async (
             'x402Version', r.raw -> 'x402Version',
             'l30DaysTotalCalls', r.raw #> '{quality,l30DaysTotalCalls}',
             'l30DaysUniquePayers', r.raw #> '{quality,l30DaysUniquePayers}'
-          ) ORDER BY r.resource_url
-        ) AS resources
-        FROM x402_payment_options po
-        JOIN x402_resources r ON r.resource_id = po.resource_id
-        WHERE CASE
-            WHEN lower(po.chain) = 'base' THEN lower(po.pay_to_address)
-            ELSE po.pay_to_address
-          END = pm.pay_to
-          AND po.active
-          AND r.active
+          ) AS resource
+          FROM x402_payment_options po
+          JOIN x402_resources r ON r.resource_id = po.resource_id
+          WHERE CASE
+              WHEN lower(po.chain) = 'base' THEN lower(po.pay_to_address)
+              ELSE po.pay_to_address
+            END = pm.pay_to
+            AND po.active
+            AND r.active
+          UNION ALL
+          SELECT jsonb_build_object(
+            'resource', CASE
+              WHEN pr.resource_url ~ '^https?://' THEN pr.resource_url
+              WHEN pc.service_url IS NOT NULL AND pc.service_url <> ''
+                THEN regexp_replace(pc.service_url, '/+$', '') || '/' || regexp_replace(pr.resource_url, '^/+', '')
+              ELSE pr.resource_url
+            END,
+            'network', pm.network,
+            'asset', pm.asset,
+            'amountAtomic', pr.observed_spend_atomic::text,
+            'description', pr.description,
+            'method', pr.method,
+            'transactionCount', pr.transaction_count,
+            'totalAmountAtomic', pr.observed_spend_atomic::text
+          ) AS resource
+          FROM pay_sh_provider_resources pr
+          WHERE pr.provider_fqn = pc.provider_fqn
+        ) resource_rows
       ) resources ON true
       WHERE pm.pay_to IS NOT NULL
       ORDER BY transaction_count DESC, pay_to ASC

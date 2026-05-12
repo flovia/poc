@@ -30,7 +30,13 @@ export function CustomersHeader({ providerId, balanceContext }: CustomersHeaderP
         <span>Provider · {name}</span>
         {balanceContext ? (
           <span
-            style={{ textTransform: "none", fontWeight: 400, letterSpacing: "normal", opacity: 0.68 }}
+            style={{
+              textTransform: "none",
+              fontWeight: 600,
+              letterSpacing: "normal",
+              color: "var(--text-2)",
+              opacity: 0.82,
+            }}
           >
             · {balanceContext.label} {balanceContext.value}
           </span>

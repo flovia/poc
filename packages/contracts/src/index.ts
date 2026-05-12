@@ -908,6 +908,7 @@ export const PhaseBCustomerProfileProviderSchema = withDerivedInsightReasons(
       protocol: PaymentProtocolSchema.optional(),
       chain: z.string().min(1).optional(),
       assetSymbol: z.string().min(1).optional(),
+      apiPaths: z.array(z.string().min(1)).optional(),
       provenance: DataProvenanceSchema,
       provenanceByField: ProvenanceByFieldSchema,
       reasons: z.array(EvidenceLabelSchema).optional(),

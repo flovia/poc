@@ -157,19 +157,32 @@ const providerConfig = {
   methods: [solana.charge({ recipient, currency: USDC, decimals: 6, network: "devnet" })],
 });
 
-app.get("/showcase/solana-mpp/paid", async (c) => {
-  const result = await mppx.solana.charge({
-    amount: "100000",
-    currency: USDC,
-  })(c.req.raw);
-  if (result.status === 402) return result.challenge;
-  return result.withReceipt(Response.json({ ok: true }));
-});`,
-    floviaSnippet: `app.get(
+app.get(
+  "/showcase/solana-mpp/paid",
+  async (c) => {
+    const result = await mppx.solana.charge({
+      amount: "100000",
+      currency: USDC,
+    })(c.req.raw);
+    if (result.status === 402) return result.challenge;
+    return result.withReceipt(Response.json({ ok: true }));
+  },
+);`,
+    floviaSnippet: `const mppx = Mppx.create({
+  secretKey: process.env.MPP_SECRET_KEY,
+  methods: [solana.charge({ recipient, currency: USDC, decimals: 6, network: "devnet" })],
+});
+
+app.get(
   "/showcase/solana-mpp/paid",
   flovia.paidApi({ provider: "solana", rail: "mpp" }),
   async (c) => {
-    // existing Solana MPP code unchanged
+    const result = await mppx.solana.charge({
+      amount: "100000",
+      currency: USDC,
+    })(c.req.raw);
+    if (result.status === 402) return result.challenge;
+    return result.withReceipt(Response.json({ ok: true }));
   },
 );`,
     steps: [

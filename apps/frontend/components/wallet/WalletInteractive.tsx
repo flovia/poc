@@ -44,6 +44,14 @@ export function WalletInteractive({
     return map;
   }, [providers]);
 
+  const apiPathsByProviderId = useMemo(() => {
+    const map = new Map<string, string[]>();
+    for (const provider of providers) {
+      if (provider.apiPaths?.length) map.set(provider.providerId, provider.apiPaths);
+    }
+    return map;
+  }, [providers]);
+
   const isSdkProtagonist =
     dataMode === "sdkConnected" && sdkExtras !== null && sdkExtras.upsell !== null;
 
@@ -53,6 +61,7 @@ export function WalletInteractive({
         timeline={timeline}
         providers={providers}
         payToByProviderId={payToByProviderId}
+        apiPathsByProviderId={apiPathsByProviderId}
         storedProviders={stored}
         dataMode={dataMode}
         sdkExtras={sdkExtras}
@@ -61,6 +70,7 @@ export function WalletInteractive({
         timeline={timeline}
         providers={providers}
         payToByProviderId={payToByProviderId}
+        apiPathsByProviderId={apiPathsByProviderId}
         storedProviders={stored}
         dataMode={dataMode}
         sdkExtras={sdkExtras}

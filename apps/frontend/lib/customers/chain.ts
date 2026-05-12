@@ -71,12 +71,17 @@ export function normalizeChain(raw: string | undefined | null): CustomerChain {
   return "other";
 }
 
+const prioritizeSolana = (chains: CustomerChain[]): CustomerChain[] => {
+  if (!chains.includes("solana")) return chains;
+  return ["solana", ...chains.filter((chain) => chain !== "solana")];
+};
+
 export function getCustomerChainAttribution(
   customer: CustomerListItemDto,
 ): CustomerChainAttribution {
   const rawChains = (customer.chains ?? []).filter((x): x is string => typeof x === "string");
   const normalizedChains = rawChains.length
-    ? Array.from(new Set(rawChains.map(normalizeChain)))
+    ? prioritizeSolana(Array.from(new Set(rawChains.map(normalizeChain))))
     : (["base"] as CustomerChain[]);
   const assets = (customer.assets ?? []).filter((x): x is string => typeof x === "string");
   const primaryChain = normalizedChains[0] ?? "base";

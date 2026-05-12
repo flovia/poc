@@ -44,5 +44,405 @@
       "enrichedAt": "2026-05-11T10:17:35.767Z",
       "sources": ["alchemy", "dune-sim", "goldrush"]
     }
+  },
+  {
+    "target": {
+      "providerId": "pro-api-coingecko-com--base--usdc--0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
+      "chain": "base",
+      "asset": "USDC",
+      "payToAddress": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
+      "tokenMintAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+    },
+    "balances": [
+      {
+        "source": "coingecko",
+        "walletAddress": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
+        "assetAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "assetSymbol": "USDC",
+        "assetName": "USD Coin",
+        "amountBaseUnits": "21890000",
+        "decimals": 6,
+        "valueUsd": 21.89
+      },
+      {
+        "source": "nansen",
+        "walletAddress": "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
+        "assetAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "assetSymbol": "USDC",
+        "assetName": "USD Coin",
+        "amountBaseUnits": "21890000",
+        "decimals": 6,
+        "valueUsd": 21.89
+      }
+    ],
+    "provenance": {
+      "enrichedAt": "2026-05-12T00:00:00.000Z",
+      "sources": ["coingecko", "nansen"]
+    }
+  },
+  {
+    "target": {
+      "providerId": "api-nansen-ai--base--usdc--0x93053f1e7a5efeda532fe69cbbe43cbec3a0f13f",
+      "chain": "base",
+      "asset": "USDC",
+      "payToAddress": "0x93053f1e7a5efeda532fe69cbbe43cbec3a0f13f",
+      "tokenMintAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+    },
+    "balances": [
+      {
+        "source": "nansen",
+        "walletAddress": "0x93053f1e7a5efeda532fe69cbbe43cbec3a0f13f",
+        "assetAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "assetSymbol": "USDC",
+        "assetName": "USD Coin",
+        "amountBaseUnits": "3849865231",
+        "decimals": 6,
+        "valueUsd": 3849.865231
+      },
+      {
+        "source": "coingecko",
+        "walletAddress": "0x93053f1e7a5efeda532fe69cbbe43cbec3a0f13f",
+        "assetAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "assetSymbol": "USDC",
+        "assetName": "USD Coin",
+        "amountBaseUnits": "3849865231",
+        "decimals": 6,
+        "valueUsd": 3849.865231
+      }
+    ],
+    "provenance": {
+      "enrichedAt": "2026-05-12T00:00:00.000Z",
+      "sources": ["nansen", "coingecko"]
+    }
+  },
+  {
+    "target": {
+      "providerId": "pro-api-coingecko-com--solana--usdc--8xhngtrittcujmiadj6azw8grsifppwhnmv3hyqlhupl",
+      "chain": "solana",
+      "asset": "USDC",
+      "payToAddress": "8xhngtrittcujmiadj6azw8grsifppwhnmv3hyqlhupl",
+      "tokenMintAddress": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+    },
+    "balances": [
+      {
+        "source": "coingecko",
+        "walletAddress": "8xhngtrittcujmiadj6azw8grsifppwhnmv3hyqlhupl",
+        "assetAddress": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+        "assetSymbol": "USDC",
+        "assetName": "USD Coin",
+        "amountBaseUnits": "0",
+        "decimals": 6,
+        "valueUsd": 0
+      }
+    ],
+    "provenance": { "enrichedAt": "2026-05-12T00:00:00.000Z", "sources": ["coingecko"] }
+  },
+  {
+    "target": {
+      "providerId": "api-nansen-ai--solana--usdc--j7zvjespvwp1orxqz7mymnmt22ntm3gwq3t7hebvpzyx",
+      "chain": "solana",
+      "asset": "USDC",
+      "payToAddress": "J7ZvJEspvwP1oRxQZ7mYmNmT22NTm3GWq3t7HEbvPZYx",
+      "tokenMintAddress": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+    },
+    "balances": [
+      {
+        "source": "nansen",
+        "walletAddress": "J7ZvJEspvwP1oRxQZ7mYmNmT22NTm3GWq3t7HEbvPZYx",
+        "assetAddress": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+        "assetSymbol": "USDC",
+        "assetName": "USD Coin",
+        "amountBaseUnits": "35800000",
+        "decimals": 6,
+        "valueUsd": 35.8
+      }
+    ],
+    "provenance": { "enrichedAt": "2026-05-12T00:00:00.000Z", "sources": ["nansen"] }
+  },
+  {
+    "target": {
+      "providerId": "stableemail--base--usdc--0x6e3184c204e596ded89e8a5693b602097f4ab687",
+      "chain": "base",
+      "asset": "USDC",
+      "payToAddress": "0x6e3184C204e596dED89E8A5693B602097F4Ab687",
+      "tokenMintAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+    },
+    "balances": [
+      {
+        "source": "coingecko",
+        "walletAddress": "0x6e3184C204e596dED89E8A5693B602097F4Ab687",
+        "assetAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "assetSymbol": "USDC",
+        "assetName": "USD Coin",
+        "amountBaseUnits": "241513458",
+        "decimals": 6,
+        "valueUsd": 241.513458
+      }
+    ],
+    "provenance": { "enrichedAt": "2026-05-12T00:00:00.000Z", "sources": ["coingecko"] }
+  },
+  {
+    "target": {
+      "providerId": "stableemail--solana--usdc--7r4e5dwns68mdaxbw7n8jbzhq7rcmbp9z6smhfh4nxww",
+      "chain": "solana",
+      "asset": "USDC",
+      "payToAddress": "7r4e5dwNS68MDaxbw7N8jbzHq7RCMBp9z6smHFH4NXWw",
+      "tokenMintAddress": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+    },
+    "balances": [
+      {
+        "source": "coingecko",
+        "walletAddress": "7r4e5dwNS68MDaxbw7N8jbzHq7RCMBp9z6smHFH4NXWw",
+        "assetAddress": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+        "assetSymbol": "USDC",
+        "assetName": "USD Coin",
+        "amountBaseUnits": "0",
+        "decimals": 6,
+        "valueUsd": 0
+      }
+    ],
+    "provenance": { "enrichedAt": "2026-05-12T00:00:00.000Z", "sources": ["coingecko"] }
+  },
+  {
+    "target": {
+      "providerId": "crush-rewards--base--usdc--0xe2e662cf219025afc0c9bf850b6a2b0a0b5517fe",
+      "chain": "base",
+      "asset": "USDC",
+      "payToAddress": "0xe2e662cF219025AFC0C9Bf850b6a2B0a0b5517fe",
+      "tokenMintAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+    },
+    "balances": [
+      {
+        "source": "coingecko",
+        "walletAddress": "0xe2e662cF219025AFC0C9Bf850b6a2B0a0b5517fe",
+        "assetAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "assetSymbol": "USDC",
+        "assetName": "USD Coin",
+        "amountBaseUnits": "5645000",
+        "decimals": 6,
+        "valueUsd": 5.645
+      }
+    ],
+    "provenance": { "enrichedAt": "2026-05-12T00:00:00.000Z", "sources": ["coingecko"] }
+  },
+  {
+    "target": {
+      "providerId": "crush-rewards--solana--usdc--2hyy7whhxsownskqrzyfunh7yboxnmeqbgnfhprub2w",
+      "chain": "solana",
+      "asset": "USDC",
+      "payToAddress": "2hYY7wHhXsoWnskQRzYFUNH7YboXNMEqbGnAFHpRuB2W",
+      "tokenMintAddress": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+    },
+    "balances": [
+      {
+        "source": "coingecko",
+        "walletAddress": "2hYY7wHhXsoWnskQRzYFUNH7YboXNMEqbGnAFHpRuB2W",
+        "assetAddress": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+        "assetSymbol": "USDC",
+        "assetName": "USD Coin",
+        "amountBaseUnits": "0",
+        "decimals": 6,
+        "valueUsd": 0
+      }
+    ],
+    "provenance": { "enrichedAt": "2026-05-12T00:00:00.000Z", "sources": ["coingecko"] }
+  },
+  {
+    "target": {
+      "providerId": "dtelecom--base--usdc--0x47d3394c7234714e4b9e9b74827c12be847f9dda",
+      "chain": "base",
+      "asset": "USDC",
+      "payToAddress": "0x47d3394c7234714E4B9e9b74827c12bE847F9DDA",
+      "tokenMintAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+    },
+    "balances": [
+      {
+        "source": "coingecko",
+        "walletAddress": "0x47d3394c7234714E4B9e9b74827c12bE847F9DDA",
+        "assetAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "assetSymbol": "USDC",
+        "assetName": "USD Coin",
+        "amountBaseUnits": "10650000",
+        "decimals": 6,
+        "valueUsd": 10.65
+      }
+    ],
+    "provenance": { "enrichedAt": "2026-05-12T00:00:00.000Z", "sources": ["coingecko"] }
+  },
+  {
+    "target": {
+      "providerId": "dtelecom--solana--usdc--8mpzjexx1ripfmradexptc3uk4ev3nhefn6nrsx7o7jm",
+      "chain": "solana",
+      "asset": "USDC",
+      "payToAddress": "8MPzJeXx1RipFmRADExptc3UK4EV3nhEFN6NRSx7o7jm",
+      "tokenMintAddress": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+    },
+    "balances": [
+      {
+        "source": "coingecko",
+        "walletAddress": "8MPzJeXx1RipFmRADExptc3UK4EV3nhEFN6NRSx7o7jm",
+        "assetAddress": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+        "assetSymbol": "USDC",
+        "assetName": "USD Coin",
+        "amountBaseUnits": "0",
+        "decimals": 6,
+        "valueUsd": 0
+      }
+    ],
+    "provenance": { "enrichedAt": "2026-05-12T00:00:00.000Z", "sources": ["coingecko"] }
+  },
+  {
+    "target": {
+      "providerId": "stablesocial--base--usdc--0x124f620b4f3b53559cd9148c9b1b2773ca104478",
+      "chain": "base",
+      "asset": "USDC",
+      "payToAddress": "0x124F620b4F3b53559Cd9148c9b1B2773ca104478",
+      "tokenMintAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+    },
+    "balances": [
+      {
+        "source": "coingecko",
+        "walletAddress": "0x124F620b4F3b53559Cd9148c9b1B2773ca104478",
+        "assetAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "assetSymbol": "USDC",
+        "assetName": "USD Coin",
+        "amountBaseUnits": "0",
+        "decimals": 6,
+        "valueUsd": 0
+      }
+    ],
+    "provenance": { "enrichedAt": "2026-05-12T00:00:00.000Z", "sources": ["coingecko"] }
+  },
+  {
+    "target": {
+      "providerId": "stablesocial--solana--usdc--bx1v9we4bct28gm3hwwfxwnxdxpyhkwmfcwahnytnbnl",
+      "chain": "solana",
+      "asset": "USDC",
+      "payToAddress": "BX1v9we4BCt28GM3hWwfXwnXDXpYHKWMFcWaHNytnbNL",
+      "tokenMintAddress": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+    },
+    "balances": [
+      {
+        "source": "coingecko",
+        "walletAddress": "BX1v9we4BCt28GM3hWwfXwnXDXpYHKWMFcWaHNytnbNL",
+        "assetAddress": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+        "assetSymbol": "USDC",
+        "assetName": "USD Coin",
+        "amountBaseUnits": "0",
+        "decimals": 6,
+        "valueUsd": 0
+      }
+    ],
+    "provenance": { "enrichedAt": "2026-05-12T00:00:00.000Z", "sources": ["coingecko"] }
+  },
+  {
+    "target": {
+      "providerId": "rentcast-api--base--usdc--0xd73912ba30832328a3db96bee73ebfab58b7429f",
+      "chain": "base",
+      "asset": "USDC",
+      "payToAddress": "0xD73912BA30832328a3db96BeE73ebfaB58b7429f",
+      "tokenMintAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+    },
+    "balances": [
+      {
+        "source": "coingecko",
+        "walletAddress": "0xD73912BA30832328a3db96BeE73ebfaB58b7429f",
+        "assetAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "assetSymbol": "USDC",
+        "assetName": "USD Coin",
+        "amountBaseUnits": "0",
+        "decimals": 6,
+        "valueUsd": 0
+      }
+    ],
+    "provenance": { "enrichedAt": "2026-05-12T00:00:00.000Z", "sources": ["coingecko"] }
+  },
+  {
+    "target": {
+      "providerId": "rentcast-api--solana--usdc--9hw9py9umgtxrnpabzjifck1t3suwzjyri9l9qykg6zz",
+      "chain": "solana",
+      "asset": "USDC",
+      "payToAddress": "9hw9Py9uMGtXRNpABZjifcK1t3suwzjyri9L9QYKg6zZ",
+      "tokenMintAddress": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+    },
+    "balances": [
+      {
+        "source": "coingecko",
+        "walletAddress": "9hw9Py9uMGtXRNpABZjifcK1t3suwzjyri9L9QYKg6zZ",
+        "assetAddress": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+        "assetSymbol": "USDC",
+        "assetName": "USD Coin",
+        "amountBaseUnits": "0",
+        "decimals": 6,
+        "valueUsd": 0
+      }
+    ],
+    "provenance": { "enrichedAt": "2026-05-12T00:00:00.000Z", "sources": ["coingecko"] }
+  },
+  {
+    "target": {
+      "providerId": "purch--solana--usdc--8lixrhc61iry8qwj6qevoirxxyfrtgsahvbm8rav6ht2",
+      "chain": "solana",
+      "asset": "USDC",
+      "payToAddress": "8LiXrHC61irY8qwj6qevoiRXxYfrTgSaHVbm8rav6HT2",
+      "tokenMintAddress": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+    },
+    "balances": [
+      {
+        "source": "coingecko",
+        "walletAddress": "8LiXrHC61irY8qwj6qevoiRXxYfrTgSaHVbm8rav6HT2",
+        "assetAddress": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+        "assetSymbol": "USDC",
+        "assetName": "USD Coin",
+        "amountBaseUnits": "0",
+        "decimals": 6,
+        "valueUsd": 0
+      }
+    ],
+    "provenance": { "enrichedAt": "2026-05-12T00:00:00.000Z", "sources": ["coingecko"] }
+  },
+  {
+    "target": {
+      "providerId": "quicknode--base--usdc--0xf46394addda95a3d5bcc1124605e3d15d204623c",
+      "chain": "base",
+      "asset": "USDC",
+      "payToAddress": "0xF46394adDdA95A3d5bCC1124605E3d15D204623C",
+      "tokenMintAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+    },
+    "balances": [
+      {
+        "source": "coingecko",
+        "walletAddress": "0xF46394adDdA95A3d5bCC1124605E3d15D204623C",
+        "assetAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "assetSymbol": "USDC",
+        "assetName": "USD Coin",
+        "amountBaseUnits": "0",
+        "decimals": 6,
+        "valueUsd": 0
+      }
+    ],
+    "provenance": { "enrichedAt": "2026-05-12T00:00:00.000Z", "sources": ["coingecko"] }
+  },
+  {
+    "target": {
+      "providerId": "quicknode--solana--usdc--2lwbc9mi6drurdehbttons4uddth1a4xwbdm1ekqct57",
+      "chain": "solana",
+      "asset": "USDC",
+      "payToAddress": "2LWbc9Mi6dRUrdEHBttoNS4udDtH1A4xwBdm1EKqcT57",
+      "tokenMintAddress": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+    },
+    "balances": [
+      {
+        "source": "coingecko",
+        "walletAddress": "2LWbc9Mi6dRUrdEHBttoNS4udDtH1A4xwBdm1EKqcT57",
+        "assetAddress": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+        "assetSymbol": "USDC",
+        "assetName": "USD Coin",
+        "amountBaseUnits": "0",
+        "decimals": 6,
+        "valueUsd": 0
+      }
+    ],
+    "provenance": { "enrichedAt": "2026-05-12T00:00:00.000Z", "sources": ["coingecko"] }
   }
 ]

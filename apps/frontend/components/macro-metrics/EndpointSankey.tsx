@@ -83,7 +83,7 @@ export function EndpointSankey({
         nodeBorderRadius={4}
         nodeBorderColor={{ from: "color", modifiers: [["darker", 0.25]] }}
         nodeOpacity={0.95}
-        linkOpacity={0.28}
+        linkOpacity={0.45}
         linkHoverOpacity={0.8}
         linkContract={compact ? 1 : 2}
         enableLinkGradient
