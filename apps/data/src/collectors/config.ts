@@ -23,6 +23,8 @@ export const supportedCollectorServiceIds = [
   "rpc-fast",
   "dune-sim",
   "goldrush",
+  "coingecko",
+  "nansen",
 ] as const satisfies readonly CollectorServiceId[];
 
 export const collectorServiceDefinitions: Record<CollectorServiceId, CollectorServiceDefinition> = {
@@ -64,6 +66,24 @@ export const collectorServiceDefinitions: Record<CollectorServiceId, CollectorSe
     notes: [
       "Prefer header/basic auth during tmp evaluation; avoid credentials in URLs when possible.",
     ],
+  },
+  coingecko: {
+    id: "coingecko",
+    label: "CoinGecko",
+    role: "Token price enrichment paired with Solana RPC token-account balance reads.",
+    supportedChains: ["solana"],
+    requiredEnv: ["COINGECKO_API_KEY"],
+    notes: [
+      "CoinGecko does not expose wallet balances; use it to price balances fetched from Solana RPC.",
+    ],
+  },
+  nansen: {
+    id: "nansen",
+    label: "Nansen",
+    role: "Current address balance enrichment for Solana provider wallets.",
+    supportedChains: ["solana"],
+    requiredEnv: ["NANSEN_API_KEY"],
+    notes: ["Use the profiler address current-balance endpoint and filter by exact Solana mint."],
   },
 };
 

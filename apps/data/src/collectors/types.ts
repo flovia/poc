@@ -1,4 +1,10 @@
-export type CollectorServiceId = "alchemy" | "rpc-fast" | "dune-sim" | "goldrush";
+export type CollectorServiceId =
+  | "alchemy"
+  | "rpc-fast"
+  | "dune-sim"
+  | "goldrush"
+  | "coingecko"
+  | "nansen";
 
 export type SupportedChain = "base" | "solana";
 
@@ -50,6 +56,12 @@ export type CollectorCursor =
     }
   | {
       source: "goldrush";
+      chain: SupportedChain;
+      pageNumber?: number;
+      hasMore?: boolean;
+    }
+  | {
+      source: "coingecko" | "nansen";
       chain: SupportedChain;
       pageNumber?: number;
       hasMore?: boolean;
