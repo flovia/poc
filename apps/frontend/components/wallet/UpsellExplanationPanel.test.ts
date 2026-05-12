@@ -1,5 +1,8 @@
 import { describe, expect, test } from "bun:test";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { compactUpsellSummary, formatUpsellExplanationModelName } from "./UpsellExplanationPanel";
+import { UpsellExplanationPanel } from "./UpsellExplanationPanel";
 
 describe("compactUpsellSummary", () => {
   test("preserves short titles", () => {
@@ -36,5 +39,13 @@ describe("formatUpsellExplanationModelName", () => {
     expect(formatUpsellExplanationModelName("Llama-3.2-1B-Instruct-Q4_0.gguf")).toBe(
       "Llama 3.2 1B Instruct Q4_0",
     );
+  });
+});
+
+describe("UpsellExplanationPanel", () => {
+  test("uses the same neutral border color as the rest of the wallet page", () => {
+    const html = renderToStaticMarkup(createElement(UpsellExplanationPanel, { address: "0x1234" }));
+
+    expect(html).toContain("border:1px solid var(--line-strong)");
   });
 });

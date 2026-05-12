@@ -33,7 +33,7 @@ export function IdentityBar({ customer, metrics, dataMode, sdkExtras }: Identity
       style={{
         padding: "20px 24px",
         background: "#FFFFFF",
-        borderColor: "var(--line)",
+        borderColor: "var(--line-strong)",
         position: "relative",
         overflow: "hidden",
       }}

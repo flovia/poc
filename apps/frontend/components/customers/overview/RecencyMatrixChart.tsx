@@ -53,82 +53,90 @@ export function RecencyMatrixChart({ matrix }: RecencyMatrixChartProps) {
   const thresholdNote = `Recent active: last seen on/after ${formatTimestamp(matrix.lastSeenMedian)} · Median spend: ${formatAtomic(matrix.spendMedianAtomic)} USDC`;
 
   return (
-    <OverviewCard
-      title="Account Segmentation by Recency × Spend"
-    >
-      <div style={{ fontSize: 12, color: "var(--text-3)", marginBottom: 10, lineHeight: 1.4 }}>
-        {thresholdNote}
-      </div>
+    <OverviewCard title="Account Segmentation by Recency × Spend">
       <div
         style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gridTemplateRows: "repeat(2, minmax(0, 1fr))",
-          gap: 8,
+          display: "flex",
+          flexDirection: "column",
+          gap: 10,
           height: "100%",
           minHeight: 0,
         }}
       >
-        {CELLS.map((spec) => {
-          const count = matrix.cells[spec.key];
-          const share = total === 0 ? 0 : count / total;
-          const isEmphasized = spec.accent !== "neutral";
-          return (
-            <div
-              key={spec.key}
-              style={{
-                background: "var(--surface-card)",
-                border: "1px solid var(--line)",
-                borderRadius: "var(--radius)",
-                padding: "12px",
-                display: "flex",
-                flexDirection: "column",
-                gap: 8,
-              }}
-              title={`${spec.label}: ${count} of ${total} wallets (${formatPercent(share)})`}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <span
-                  aria-hidden
-                  style={{
-                    width: 6,
-                    height: 6,
-                    borderRadius: "50%",
-                    background: isEmphasized ? ACCENT_FG[spec.accent] : "var(--text-mute)",
-                    flexShrink: 0,
-                  }}
-                />
-                <div
-                  style={{
-                    fontSize: 12,
-                    fontWeight: 600,
-                    letterSpacing: "0.02em",
-                    color: "var(--text-2)",
-                  }}
-                >
-                  {spec.label}
+        <div style={{ fontSize: 12, color: "var(--text-3)", lineHeight: 1.4 }}>{thresholdNote}</div>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gridTemplateRows: "repeat(2, minmax(0, 1fr))",
+            gap: 8,
+            flex: "1 1 0%",
+            minHeight: 0,
+          }}
+        >
+          {CELLS.map((spec) => {
+            const count = matrix.cells[spec.key];
+            const share = total === 0 ? 0 : count / total;
+            const isEmphasized = spec.accent !== "neutral";
+            return (
+              <div
+                key={spec.key}
+                style={{
+                  background: "var(--surface-card)",
+                  border: "1px solid var(--line)",
+                  borderRadius: "var(--radius)",
+                  padding: "12px",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 8,
+                }}
+                title={`${spec.label}: ${count} of ${total} wallets (${formatPercent(share)})`}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <span
+                    aria-hidden
+                    style={{
+                      width: 6,
+                      height: 6,
+                      borderRadius: "50%",
+                      background: isEmphasized ? ACCENT_FG[spec.accent] : "var(--text-mute)",
+                      flexShrink: 0,
+                    }}
+                  />
+                  <div
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 600,
+                      letterSpacing: "0.02em",
+                      color: "var(--text-2)",
+                    }}
+                  >
+                    {spec.label}
+                  </div>
+                </div>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+                  <span
+                    className="display"
+                    style={{
+                      fontSize: 26,
+                      fontWeight: 600,
+                      lineHeight: 1,
+                      color: isEmphasized ? ACCENT_FG[spec.accent] : "var(--text-1)",
+                    }}
+                  >
+                    {count}
+                  </span>
+                  <span style={{ fontSize: 13, fontWeight: 500, color: "var(--text-3)" }}>
+                    {formatPercent(share)}
+                  </span>
+                </div>
+                <div style={{ fontSize: 12, color: "var(--text-3)", lineHeight: 1.35 }}>
+                  {spec.hint}
                 </div>
               </div>
-              <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-                <span
-                  className="display"
-                  style={{
-                    fontSize: 26,
-                    fontWeight: 600,
-                    lineHeight: 1,
-                    color: isEmphasized ? ACCENT_FG[spec.accent] : "var(--text-1)",
-                  }}
-                >
-                  {count}
-                </span>
-                <span style={{ fontSize: 13, fontWeight: 500, color: "var(--text-3)" }}>
-                  {formatPercent(share)}
-                </span>
-              </div>
-              <div style={{ fontSize: 12, color: "var(--text-3)", lineHeight: 1.35 }}>{spec.hint}</div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
     </OverviewCard>
   );

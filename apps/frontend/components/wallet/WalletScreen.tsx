@@ -10,6 +10,7 @@ import {
   RecentActivityInsight,
   UpsellCard,
 } from "./Insights";
+import { WalletInsightsLayout } from "./WalletInsightsLayout";
 import { WalletInteractive } from "./WalletInteractive";
 
 type WalletScreenProps = {
@@ -51,17 +52,27 @@ export function WalletScreen({
           sdkExtras={sdkExtras}
         />
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))", gap: 14, marginTop: 18 }}>
-          <UpsellCard
-            address={profile.customer.address}
-            metrics={profile.metrics}
-            dataMode={dataMode}
-            sdkExtras={sdkExtras}
-          />
-          <EntryPointInsight metrics={profile.metrics} dataMode={dataMode} sdkExtras={sdkExtras} />
-          <RecentActivityInsight metrics={profile.metrics} providers={profile.providers} />
-          <InsightsList insights={profile.insights} />
-        </div>
+        <WalletInsightsLayout
+          workflow={
+            <EntryPointInsight
+              metrics={profile.metrics}
+              dataMode={dataMode}
+              sdkExtras={sdkExtras}
+            />
+          }
+          recentActivity={
+            <RecentActivityInsight metrics={profile.metrics} providers={profile.providers} />
+          }
+          opportunity={<InsightsList insights={profile.insights} />}
+          upsell={
+            <UpsellCard
+              address={profile.customer.address}
+              metrics={profile.metrics}
+              dataMode={dataMode}
+              sdkExtras={sdkExtras}
+            />
+          }
+        />
 
         <div
           style={{

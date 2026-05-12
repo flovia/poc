@@ -37,6 +37,7 @@ export function UpsellCard({
         icon={<Icon.bolt width="11" height="11" />}
         label="SDK preview · Upsell opportunity"
         delay={60}
+        stretch
       >
         <div
           style={{
@@ -66,7 +67,7 @@ export function UpsellCard({
             background: "rgba(123, 97, 168, 0.06)",
             borderRadius: 6,
             padding: "10px 12px",
-            border: "1px solid rgba(123, 97, 168, 0.16)",
+            border: "1px solid var(--line-strong)",
           }}
         >
           <div
@@ -118,6 +119,7 @@ function UpsellCardLive({
       icon={<Icon.bolt width="11" height="11" />}
       label="Upsell opportunity"
       delay={60}
+      stretch
     >
       <div
         style={{
@@ -144,7 +146,7 @@ function UpsellCardLive({
           background: "var(--teal-dim)",
           borderRadius: 10,
           padding: "10px 12px",
-          border: "1px solid rgba(44, 122, 123, 0.20)",
+          border: "1px solid var(--line-strong)",
           marginBottom: 10,
         }}
       >
@@ -225,6 +227,7 @@ export function EntryPointInsight({
         icon={<Icon.spark width="11" height="11" />}
         label="SDK preview · Entry-point badge"
         delay={120}
+        stretch
       >
         <div style={{ fontSize: 14, lineHeight: 1.55, color: "var(--text-1)" }}>
           Your API is{" "}
@@ -246,6 +249,7 @@ export function EntryPointInsight({
       icon={<Icon.spark width="11" height="11" />}
       label="Workflow position"
       delay={120}
+      stretch
     >
       <div style={{ fontSize: 14, lineHeight: 1.55, color: "var(--text-1)" }}>
         {hasEntry ? (
@@ -292,6 +296,7 @@ export function RecentActivityInsight({
       icon={<Icon.bolt width="11" height="11" />}
       label="Recent activity & co-usage"
       delay={150}
+      stretch
     >
       <div style={{ fontSize: 14, lineHeight: 1.55, color: "var(--text-1)" }}>
         {hasGrowthSignal ? (
@@ -346,6 +351,26 @@ export function RecentActivityInsight({
 export function InsightsList({ insights }: { insights: CustomerInsightDto[] }) {
   const actionable = insights.filter((insight) => insight.severity !== "info");
   if (actionable.length === 0) return null;
+  if (actionable.length === 1) {
+    const insight = actionable[0];
+    if (!insight) return null;
+    return (
+      <InsightCard
+        tone={SEVERITY_TONE[insight.severity]}
+        label={insight.severity}
+        delay={180}
+        stretch
+      >
+        <div style={{ fontSize: 14, fontWeight: 500, color: "var(--text-1)", marginBottom: 4 }}>
+          {insight.title}
+        </div>
+        <div style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.55 }}>
+          {insight.description}
+        </div>
+      </InsightCard>
+    );
+  }
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
       {actionable.map((insight, i) => (

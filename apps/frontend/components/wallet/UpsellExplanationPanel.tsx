@@ -102,7 +102,7 @@ function LoadingPanel() {
         background: "rgba(47, 93, 154, 0.04)",
         borderRadius: 10,
         padding: "12px 13px",
-        border: "1px solid rgba(47, 93, 154, 0.14)",
+        border: "1px solid var(--line-strong)",
         display: "flex",
         flexDirection: "column",
         gap: 10,
@@ -176,7 +176,7 @@ export function UpsellExplanationPanel({ address }: { address: string }) {
           background: "rgba(47, 93, 154, 0.04)",
           borderRadius: 10,
           padding: "12px 13px",
-          border: "1px solid rgba(47, 93, 154, 0.14)",
+          border: "1px solid var(--line-strong)",
         }}
       >
         <div
@@ -207,7 +207,7 @@ export function UpsellExplanationPanel({ address }: { address: string }) {
         background: "rgba(47, 93, 154, 0.04)",
         borderRadius: 10,
         padding: "12px 13px",
-        border: "1px solid rgba(47, 93, 154, 0.14)",
+        border: "1px solid var(--line-strong)",
       }}
     >
       <div
