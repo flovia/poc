@@ -21,7 +21,6 @@ const SOURCE_NODE_ORDER = [
   "Direct API client",
   "pay.sh",
   "dexter",
-  "agentcash",
   "agents.market",
   "MCP directory",
 ] as const;
@@ -66,7 +65,7 @@ export function buildRouteSankeyFlows(
     if (!middle) continue;
 
     const workflow = route.endpointGroup ?? route.workflowId;
-    const amountScore = Math.round(((route.amountUsd ?? 0) / maxAmountUsd) * 5);
+    const amountScore = Math.round(Math.sqrt((route.amountUsd ?? 0) / maxAmountUsd) * 15);
     const occurrences = Math.max(1, amountScore);
 
     addEndpointSankeyFlow(grouped, {
