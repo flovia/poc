@@ -123,6 +123,18 @@ describe("filterAndSortCustomers", () => {
     expect(result.map((c) => c.address)).toEqual(["0x2", "0x3", "0x1"]);
   });
 
+  test("prioritizes solana customers before selected sort", () => {
+    const mixed: CustomerListItemDto[] = [
+      make({ address: "0xbase-high", spendAtomic: "999", chains: ["base"] }),
+      make({ address: "0xsol-low", spendAtomic: "1", chains: ["base", "solana"] }),
+      make({ address: "0xbase-mid", spendAtomic: "500", chains: ["base"] }),
+    ];
+
+    const result = filterAndSortCustomers(mixed, DEFAULT_CUSTOMER_FILTER);
+
+    expect(result.map((c) => c.address)).toEqual(["0xsol-low", "0xbase-high", "0xbase-mid"]);
+  });
+
   test("does not mutate input array", () => {
     const snapshot = fixture.map((c) => c.address);
     filterAndSortCustomers(fixture, { ...DEFAULT_CUSTOMER_FILTER, sort: "observations" });

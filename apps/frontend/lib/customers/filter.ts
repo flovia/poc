@@ -35,6 +35,13 @@ const sortComparators: Record<
   lastSeen: (a, b) => b.lastSeenAt - a.lastSeenAt,
 };
 
+const compareSolanaFirst = (a: CustomerListItemDto, b: CustomerListItemDto): number => {
+  const aHasSolana = getCustomerChainAttribution(a).chains.includes("solana");
+  const bHasSolana = getCustomerChainAttribution(b).chains.includes("solana");
+  if (aHasSolana === bHasSolana) return 0;
+  return aHasSolana ? -1 : 1;
+};
+
 export function filterAndSortCustomers(
   customers: readonly CustomerListItemDto[],
   state: CustomerFilterState,
@@ -48,5 +55,7 @@ export function filterAndSortCustomers(
     }
     return true;
   });
-  return [...filtered].sort(sortComparators[state.sort]);
+  return [...filtered].sort(
+    (a, b) => compareSolanaFirst(a, b) || sortComparators[state.sort](a, b),
+  );
 }

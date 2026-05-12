@@ -184,7 +184,7 @@ export function CustomersTable({
 
             <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
               {chainAttribution.chains.map((chain) => (
-                <ChainBadge key={chain} chain={chain} />
+                <ChainBadge key={chain} chain={chain} asset={chainAttribution.asset} />
               ))}
             </div>
 
