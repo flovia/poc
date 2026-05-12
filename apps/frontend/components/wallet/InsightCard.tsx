@@ -9,12 +9,13 @@ type InsightCardProps = {
   children: ReactNode;
   footer?: ReactNode;
   delay?: number;
+  stretch?: boolean;
 };
 
 const TONES: Record<Tone, { border: string }> = {
-  default: { border: "var(--line)" },
-  upsell: { border: "var(--signal-priority)" },
-  blue: { border: "rgba(47, 93, 154, 0.28)" },
+  default: { border: "var(--line-strong)" },
+  upsell: { border: "var(--line-strong)" },
+  blue: { border: "var(--line-strong)" },
 };
 
 const LABEL_COLOR: Record<Tone, string> = {
@@ -30,6 +31,7 @@ export function InsightCard({
   children,
   footer,
   delay = 0,
+  stretch = false,
 }: InsightCardProps) {
   const t = TONES[tone];
   return (
@@ -39,6 +41,14 @@ export function InsightCard({
         padding: 18,
         borderColor: t.border,
         animationDelay: delay + "ms",
+        ...(stretch
+          ? {
+              display: "flex",
+              flexDirection: "column",
+              height: "100%",
+              minWidth: 0,
+            }
+          : {}),
       }}
     >
       {label && (
