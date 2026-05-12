@@ -84,6 +84,132 @@ export function formatUpsellExplanationModelName(modelId: string): string {
     .join(" ");
 }
 
+export function UpsellExplanationReadyPanel({
+  data,
+}: {
+  data: CustomerUpsellExplanationDto;
+}) {
+  return (
+    <div
+      style={{
+        background: "rgba(47, 93, 154, 0.04)",
+        borderRadius: 10,
+        padding: "12px 13px",
+        border: "1px solid var(--line-strong)",
+      }}
+    >
+      <div
+        style={{
+          marginBottom: 8,
+          display: "flex",
+          alignItems: "flex-start",
+          justifyContent: "space-between",
+        }}
+      >
+        <div
+          style={{
+            fontSize: 12,
+            fontWeight: 600,
+            letterSpacing: "0.05em",
+            textTransform: "uppercase",
+            color: "var(--mesh-blue)",
+          }}
+        >
+          LLM explanation
+        </div>
+      </div>
+
+      <div
+        style={{
+          display: "flex",
+          alignItems: "flex-start",
+          justifyContent: "space-between",
+          gap: 12,
+          marginBottom: 8,
+        }}
+      >
+        <div
+          className="display"
+          style={{
+            fontSize: 11,
+            fontWeight: 600,
+            letterSpacing: "0.05em",
+            textTransform: "uppercase",
+            color: "var(--text-mute)",
+          }}
+        >
+          User Activity Summary
+        </div>
+      </div>
+
+      <ul
+        style={{
+          margin: 0,
+        }}
+      >
+        {data.reasons.map((reason, index) => (
+          <li
+            key={`${data.generatedAt}:${index}`}
+            style={{
+              fontSize: 13,
+              color: "var(--text-1)",
+              lineHeight: 1.5,
+            }}
+          >
+            {reason}
+          </li>
+        ))}
+      </ul>
+
+      <div
+        style={{
+          marginTop: 10,
+          paddingTop: 10,
+          display: "flex",
+          flexDirection: "column",
+          gap: 8,
+        }}
+      >
+        <div>
+          <div
+            style={{
+              fontSize: 11,
+              fontWeight: 600,
+              letterSpacing: "0.05em",
+              textTransform: "uppercase",
+              color: "var(--text-mute)",
+              marginBottom: 4,
+            }}
+          >
+            Recommended action
+          </div>
+          <div style={{ fontSize: 13, color: "var(--text-1)", lineHeight: 1.5 }}>
+            {data.recommendedAction}
+          </div>
+        </div>
+
+        <div>
+          <div
+            style={{
+              fontSize: 11,
+              fontWeight: 600,
+              letterSpacing: "0.05em",
+              textTransform: "uppercase",
+              color: "var(--text-mute)",
+              marginBottom: 4,
+            }}
+          >
+            Caution
+          </div>
+          <div style={{ fontSize: 13, color: "var(--text-1)", lineHeight: 1.5 }}>
+            {data.caution}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function SkeletonLine({
   width,
   height = 11,
@@ -199,134 +325,5 @@ export function UpsellExplanationPanel({ address }: { address: string }) {
   }
 
   const { data } = state;
-  const modelName = formatUpsellExplanationModelName(data.modelId);
-
-  return (
-    <div
-      style={{
-        background: "rgba(47, 93, 154, 0.04)",
-        borderRadius: 10,
-        padding: "12px 13px",
-        border: "1px solid var(--line-strong)",
-      }}
-    >
-      <div
-        style={{
-          marginBottom: 8,
-          display: "flex",
-          alignItems: "flex-start",
-          justifyContent: "space-between",
-        }}
-      >
-        <div
-          style={{
-            fontSize: 12,
-            fontWeight: 600,
-            letterSpacing: "0.05em",
-            textTransform: "uppercase",
-            color: "var(--mesh-blue)",
-          }}
-        >
-          LLM explanation
-        </div>
-        <div
-          title={data.modelId}
-          style={{
-            flexShrink: 0,
-            maxWidth: "42%",
-            fontSize: 11,
-            color: "var(--text-mute)",
-            lineHeight: 1.4,
-            textAlign: "right",
-          }}
-        >
-          Summarized by {modelName}
-        </div>
-      </div>
-
-      <div
-        style={{
-          display: "flex",
-          alignItems: "flex-start",
-          justifyContent: "space-between",
-          gap: 12,
-          marginBottom: 8,
-        }}
-      >
-        <div
-          className="display"
-          style={{
-            fontSize: 11,
-            fontWeight: 600,
-            letterSpacing: "0.05em",
-            textTransform: "uppercase",
-            color: "var(--text-mute)",
-          }}
-        >
-          User Activity Summary
-        </div>
-      </div>
-
-      <ul
-        style={{
-          margin: 0,
-        }}
-      >
-        {data.reasons.map((reason, index) => (
-          <li key={`${data.generatedAt}:${index}`} style={{
-            fontSize: 13,
-            color: "var(--text-1)",
-            lineHeight: 1.5
-          }}>{reason}</li>
-        ))}
-      </ul>
-
-      <div
-        style={{
-          marginTop: 10,
-          paddingTop: 10,
-          display: "flex",
-          flexDirection: "column",
-          gap: 8,
-        }}
-      >
-        <div>
-          <div
-            style={{
-              fontSize: 11,
-              fontWeight: 600,
-              letterSpacing: "0.05em",
-              textTransform: "uppercase",
-              color: "var(--text-mute)",
-              marginBottom: 4,
-            }}
-          >
-            Recommended action
-          </div>
-          <div style={{ fontSize: 13, color: "var(--text-1)", lineHeight: 1.5 }}>
-            {data.recommendedAction}
-          </div>
-        </div>
-
-        <div>
-          <div
-            style={{
-              fontSize: 11,
-              fontWeight: 600,
-              letterSpacing: "0.05em",
-              textTransform: "uppercase",
-              color: "var(--text-mute)",
-              marginBottom: 4,
-            }}
-          >
-            Caution
-          </div>
-          <div style={{ fontSize: 13, color: "var(--text-1)", lineHeight: 1.5 }}>
-            {data.caution}
-          </div>
-        </div>
-
-      </div>
-    </div>
-  );
+  return <UpsellExplanationReadyPanel data={data} />;
 }
