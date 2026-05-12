@@ -19,6 +19,7 @@ type ActivityTimelineProps = {
   timeline: CustomerTimelineEventDto[];
   providers: CustomerProviderUsageDto[];
   payToByProviderId: Map<string, string>;
+  apiPathsByProviderId: Map<string, string[]>;
   storedProviders: StoredProvider[];
   dataMode: DashboardMode;
   sdkExtras: SdkExtras | null;
@@ -40,6 +41,7 @@ export function ActivityTimeline({
   timeline,
   providers,
   payToByProviderId,
+  apiPathsByProviderId,
   storedProviders,
   dataMode,
   sdkExtras,
@@ -111,10 +113,12 @@ export function ActivityTimeline({
             : undefined;
           // SDK extra があれば apiPath を上書き. なければ従来の resolveApiPaths.
           const showApiPath = event.type === "payment" && (payTo !== undefined || !!sdkExtra);
+          const providerApiPaths = rawId ? (apiPathsByProviderId.get(rawId) ?? []) : [];
+          const resolvedApiPaths = payTo ? resolveApiPaths(payTo, storedProviders) : [];
           const apiPathDisplay = sdkExtra
             ? { text: sdkExtra.apiPath, unmapped: false }
             : showApiPath
-              ? formatApiPaths(resolveApiPaths(payTo!, storedProviders))
+              ? formatApiPaths(resolvedApiPaths.length ? resolvedApiPaths : providerApiPaths)
               : null;
 
           // SDK preview grouping: cycleId が前の行と変わったら見出しを挿入.

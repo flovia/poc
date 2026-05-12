@@ -2,10 +2,10 @@ import type { StoredProvider } from "@/lib/types";
 
 // Display priority groups (lower rank = shown first):
 //   0: MPP-registry rows  (catalogSource === "mpp_registry")
-//   1: CoinGecko          (string match in identity)
-//   2: Nansen             (string match in identity)
+//   1: Nansen             (string match in identity)
+//   2: CoinGecko          (string match in identity)
 //   3: everything else    (preserves the upstream order)
-const PINNED_PROVIDER_MARKS = ["coingecko", "nansen"] as const;
+const PINNED_PROVIDER_MARKS = ["nansen", "coingecko"] as const;
 const MPP_RANK = 0;
 const PINNED_BASE_RANK = 1;
 const DEFAULT_RANK = PINNED_BASE_RANK + PINNED_PROVIDER_MARKS.length;

@@ -31,7 +31,12 @@ const PROTOCOL_OPTIONS: ReadonlyArray<{ value: ProviderProtocolFilter; label: st
   { value: "x402", label: "x402" },
 ];
 
-const preferedServices = new Set(["api.nansen.ai", "pro-api.coingecko.com"]);
+const preferedServices = ["api.nansen.ai", "pro-api.coingecko.com"] as const;
+
+function preferredServiceRank(serviceName: string | undefined): number {
+  const index = preferedServices.indexOf(serviceName as (typeof preferedServices)[number]);
+  return index === -1 ? preferedServices.length : index;
+}
 
 
 export function ProvidersPicker() {
@@ -52,13 +57,12 @@ export function ProvidersPicker() {
     () => {
       const filtered = filterProviders(stored, filter, { demoOpted, userIds, demoIds });
 
-      // XXX: Bring CoinGecko and Nansen up
+      // XXX: Bring Nansen and CoinGecko up for the Frontier demo.
       return filtered.sort((a: any, b: any) => {
-        const aIsTarget = preferedServices.has(a.serviceName);
-        const bIsTarget = preferedServices.has(b.serviceName);
+        const aRank = preferredServiceRank(a.serviceName);
+        const bRank = preferredServiceRank(b.serviceName);
 
-        if (aIsTarget && !bIsTarget) return -1;
-        if (!aIsTarget && bIsTarget) return 1;
+        if (aRank !== bRank) return aRank - bRank;
 
         return 0;
       });

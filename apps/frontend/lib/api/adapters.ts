@@ -79,6 +79,7 @@ function aggregateProviderUsage(
       transactionCount: provider.txCount ?? provider.transactionCount,
       firstSeenAt: toTimestamp(provider.firstSeenAt),
       lastSeenAt: toTimestamp(provider.lastSeenAt),
+      ...(provider.apiPaths?.length ? { apiPaths: provider.apiPaths } : {}),
     };
 
     if (!current) {
@@ -93,6 +94,7 @@ function aggregateProviderUsage(
       transactionCount: current.transactionCount + next.transactionCount,
       firstSeenAt: minTimestamp(current.firstSeenAt, next.firstSeenAt),
       lastSeenAt: Math.max(current.lastSeenAt, next.lastSeenAt),
+      apiPaths: Array.from(new Set([...(current.apiPaths ?? []), ...(next.apiPaths ?? [])])),
     });
   }
 
@@ -176,7 +178,7 @@ export function adaptProviderCatalog(response: ProviderCatalogResponse): Provide
   return adapted.map((entry) => entry.item);
 }
 
-const PINNED_PROVIDER_MARKS = ["coingecko", "nansen"] as const;
+const PINNED_PROVIDER_MARKS = ["nansen", "coingecko"] as const;
 
 function pinnedRank(provider: ProviderCatalogItemDto): number {
   const identity = `${provider.providerId} ${provider.serviceId ?? ""} ${provider.name} ${

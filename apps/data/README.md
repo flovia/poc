@@ -98,6 +98,10 @@ bun run --cwd apps/data collect:balances -- \
 # Display-ready enrichment snapshot for one Pay.sh Solana target.
 bun run --cwd apps/data enrich:provider -- \
   --target pay-sh-solana:first --dry-run
+
+# Seed DB-backed Frontier demo Solana customer rows for the BFF live read model.
+DATABASE_URL=postgres://poc_data:poc_data@localhost:55432/poc_data_test \
+  bun run --cwd apps/data seed:frontier-solana-customers
 ```
 
 ## Dune Sim demo path
@@ -139,3 +143,38 @@ USDC mint: EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v
 
 That fixture is a temporary static artifact until enrichment snapshots are
 written through a BFF/Postgres read model.
+
+## Frontier Solana customer seed
+
+The customer page should get Solana wallets through the database-backed BFF read
+model. For the Frontier demo, `seed:frontier-solana-customers` upserts a small
+public-safe **demo** Solana customer set into:
+
+- `pay_sh_providers`
+- `pay_sh_payment_offers`
+- `payment_collection_targets`
+- `goldsky_webhook_token_transfers_solana`
+
+Those rows flow through `payment_attributed_transfers_solana` and the BFF
+Postgres live read model, so provider customer pages receive rows with
+`chains: ["solana"]` instead of relying on frontend-only fixtures.
+
+This is intentionally marked as removable demo data, not live-collected
+production history:
+
+- transfer ids use the `frontier-demo:` prefix
+- `payment_collection_targets.source = 'frontier_demo'`
+- `source_document = 'frontier-final-polish-demo'`
+- transfer `raw_payload.demoData = true`
+- transfer `raw_payload.demoSeedSource = 'frontier-final-polish-demo'`
+
+Remove the demo rows with:
+
+```sh
+DATABASE_URL=postgres://poc_data:poc_data@localhost:55432/poc_data_test \
+  bun run --cwd apps/data seed:frontier-solana-customers -- --remove
+```
+
+Prefer live collector output when time and credentials allow. This seed exists
+as a stable fallback for the Frontier demo and should not be presented as
+live-collected transaction history.

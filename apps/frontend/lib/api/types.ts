@@ -116,6 +116,7 @@ export type CustomerProviderUsageDto = {
   transactionCount: number;
   firstSeenAt: number;
   lastSeenAt: number;
+  apiPaths?: string[];
 };
 
 export type CustomerTimelineEventType = "payment" | "provider_usage" | "growth" | "upsell_signal";

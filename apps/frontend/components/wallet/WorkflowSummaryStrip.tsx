@@ -17,6 +17,7 @@ type Props = {
   timeline: CustomerTimelineEventDto[];
   providers: CustomerProviderUsageDto[];
   payToByProviderId: Map<string, string>;
+  apiPathsByProviderId: Map<string, string[]>;
   storedProviders: StoredProvider[];
   dataMode: DashboardMode;
   sdkExtras: SdkExtras | null;
@@ -42,6 +43,7 @@ function buildCycles(
   timeline: CustomerTimelineEventDto[],
   providers: CustomerProviderUsageDto[],
   payToByProviderId: Map<string, string>,
+  apiPathsByProviderId: Map<string, string[]>,
   storedProviders: StoredProvider[],
   sdkExtrasByTxHash: Map<string, { apiPath: string }> | null,
 ): { cycles: Cycle[]; remaining: number } {
@@ -79,7 +81,12 @@ function buildCycles(
       textInfo = { text: sdkExtra.apiPath, unmapped: false };
     } else {
       const payTo = event.providerId ? payToByProviderId.get(event.providerId) : undefined;
-      const apiPaths = payTo ? resolveApiPaths(payTo, storedProviders) : [];
+      const storedApiPaths = payTo ? resolveApiPaths(payTo, storedProviders) : [];
+      const apiPaths = storedApiPaths.length
+        ? storedApiPaths
+        : event.providerId
+          ? (apiPathsByProviderId.get(event.providerId) ?? [])
+          : [];
       textInfo = formatApiPaths(apiPaths);
     }
 
@@ -97,6 +104,7 @@ export function WorkflowSummaryStrip({
   timeline,
   providers,
   payToByProviderId,
+  apiPathsByProviderId,
   storedProviders,
   dataMode,
   sdkExtras,
@@ -112,8 +120,15 @@ export function WorkflowSummaryStrip({
 
   const { cycles, remaining } = useMemo(
     () =>
-      buildCycles(timeline, providers, payToByProviderId, storedProviders, sdkExtrasByTxHash),
-    [timeline, providers, payToByProviderId, storedProviders, sdkExtrasByTxHash],
+      buildCycles(
+        timeline,
+        providers,
+        payToByProviderId,
+        apiPathsByProviderId,
+        storedProviders,
+        sdkExtrasByTxHash,
+      ),
+    [timeline, providers, payToByProviderId, apiPathsByProviderId, storedProviders, sdkExtrasByTxHash],
   );
 
   const cycleLabel = (i: number) =>
