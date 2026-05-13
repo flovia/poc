@@ -1,0 +1,122 @@
+name: Vercel Deploy
+description: Build and deploy a Vercel project with the Vercel CLI
+
+inputs:
+  environment:
+    description: Deployment environment (production or preview)
+    required: true
+  branch:
+    description: Git branch name for the deployment context
+    required: true
+  vercel-token:
+    description: Vercel API token
+    required: true
+
+outputs:
+  url:
+    description: Deployment URL returned by Vercel CLI
+    value: ${{ steps.deploy.outputs.url }}
+
+runs:
+  using: composite
+  steps:
+    - name: Validate deployment inputs
+      shell: bash
+      env:
+        DEPLOY_ENVIRONMENT: ${{ inputs.environment }}
+        DEPLOY_BRANCH: ${{ inputs.branch }}
+      run: |
+        set -euo pipefail
+
+        case "${DEPLOY_ENVIRONMENT}" in
+          production|preview)
+            ;;
+          *)
+            echo "Unsupported environment: ${DEPLOY_ENVIRONMENT}" >&2
+            exit 1
+            ;;
+        esac
+
+        if [ -z "${DEPLOY_BRANCH}" ]; then
+          echo "The branch input is required." >&2
+          exit 1
+        fi
+
+        for key in VERCEL_ORG_ID VERCEL_PROJECT_ID; do
+          if [ -z "${!key:-}" ]; then
+            echo "Missing required environment variable: ${key}" >&2
+            exit 1
+          fi
+        done
+
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@v2
+      with:
+        bun-version: 1.3.13
+
+    - name: Install Vercel CLI
+      shell: bash
+      run: npm install --global vercel@latest
+
+    - name: Pull Vercel environment information
+      shell: bash
+      env:
+        DEPLOY_ENVIRONMENT: ${{ inputs.environment }}
+        DEPLOY_BRANCH: ${{ inputs.branch }}
+        VERCEL_TOKEN: ${{ inputs.vercel-token }}
+      run: |
+        set -euo pipefail
+
+        case "${DEPLOY_ENVIRONMENT}" in
+          production)
+            vercel pull --yes --environment=production --token="${VERCEL_TOKEN}"
+            ;;
+          preview)
+            vercel pull --yes --environment=preview --git-branch="${DEPLOY_BRANCH}" --token="${VERCEL_TOKEN}"
+            ;;
+        esac
+
+    - name: Build project artifacts
+      shell: bash
+      env:
+        DEPLOY_ENVIRONMENT: ${{ inputs.environment }}
+        VERCEL_TOKEN: ${{ inputs.vercel-token }}
+      run: |
+        set -euo pipefail
+
+        case "${DEPLOY_ENVIRONMENT}" in
+          production)
+            vercel build --prod --token="${VERCEL_TOKEN}"
+            ;;
+          preview)
+            vercel build --token="${VERCEL_TOKEN}"
+            ;;
+        esac
+
+    - name: Deploy project artifacts
+      id: deploy
+      shell: bash
+      env:
+        DEPLOY_ENVIRONMENT: ${{ inputs.environment }}
+        VERCEL_TOKEN: ${{ inputs.vercel-token }}
+      run: |
+        set -euo pipefail
+
+        case "${DEPLOY_ENVIRONMENT}" in
+          production)
+            deployment_output="$(vercel deploy --prebuilt --prod --token="${VERCEL_TOKEN}")"
+            ;;
+          preview)
+            deployment_output="$(vercel deploy --prebuilt --token="${VERCEL_TOKEN}")"
+            ;;
+        esac
+
+        deployment_url="$(printf '%s\n' "${deployment_output}" | sed '/^[[:space:]]*$/d' | tail -n 1 | tr -d '\r')"
+
+        if [ -z "${deployment_url}" ]; then
+          echo "Failed to determine deployment URL from Vercel CLI output." >&2
+          exit 1
+        fi
+
+        printf 'url=%s\n' "${deployment_url}" >> "${GITHUB_OUTPUT}"
+        printf 'Deployment URL: %s\n' "${deployment_url}"
