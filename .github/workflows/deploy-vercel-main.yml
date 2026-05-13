@@ -1,0 +1,60 @@
+name: deploy-vercel-main
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/actions/vercel-deploy/action.yml
+      - .github/workflows/deploy-vercel-main.yml
+      - apps/frontend/**
+      - packages/contracts/**
+      - package.json
+      - bun.lock
+      - vercel.json
+
+permissions:
+  contents: read
+
+concurrency:
+  group: vercel-production-main
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Deploy Vercel Production
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+
+      - name: Deploy frontend to Vercel Production
+        id: deploy
+        uses: ./.github/actions/vercel-deploy
+        with:
+          environment: production
+          branch: ${{ github.ref_name }}
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+
+      - name: Report deployment URL
+        shell: bash
+        env:
+          DEPLOY_URL: ${{ steps.deploy.outputs.url }}
+        run: |
+          set -euo pipefail
+
+          printf 'Production deployment URL: %s\n' "${DEPLOY_URL}"
+
+          {
+            echo "## Vercel Production Deployment"
+            echo
+            echo "- Deployment URL: ${DEPLOY_URL}"
+            echo "- Branch: ${GITHUB_REF_NAME}"
+            echo "- Commit SHA: ${GITHUB_SHA}"
+            echo "- Environment: production"
+          } >> "${GITHUB_STEP_SUMMARY}"
