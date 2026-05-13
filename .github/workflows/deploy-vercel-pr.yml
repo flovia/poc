@@ -1,0 +1,120 @@
+name: deploy-vercel-pr
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+    paths:
+      - .github/actions/vercel-deploy/action.yml
+      - .github/workflows/deploy-vercel-pr.yml
+      - apps/frontend/**
+      - packages/contracts/**
+      - package.json
+      - bun.lock
+      - vercel.json
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: vercel-preview-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Deploy Vercel Preview
+    if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+    steps:
+      - name: Checkout PR head commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Deploy frontend to Vercel Preview
+        id: deploy
+        uses: ./.github/actions/vercel-deploy
+        with:
+          environment: preview
+          branch: ${{ github.event.pull_request.head.ref }}
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+
+      - name: Report preview deployment URL
+        shell: bash
+        env:
+          DEPLOY_URL: ${{ steps.deploy.outputs.url }}
+          DEPLOY_BRANCH: ${{ github.event.pull_request.head.ref }}
+          DEPLOY_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+
+          printf 'Preview deployment URL: %s\n' "${DEPLOY_URL}"
+
+          {
+            echo "## Vercel Preview Deployment"
+            echo
+            echo "- Preview URL: ${DEPLOY_URL}"
+            echo "- Branch: ${DEPLOY_BRANCH}"
+            echo "- Commit SHA: ${DEPLOY_SHA}"
+            echo "- Environment: preview"
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: Upsert PR preview comment
+        uses: actions/github-script@v7
+        env:
+          DEPLOY_URL: ${{ steps.deploy.outputs.url }}
+          DEPLOY_BRANCH: ${{ github.event.pull_request.head.ref }}
+          DEPLOY_SHA: ${{ github.event.pull_request.head.sha }}
+          DEPLOY_ENVIRONMENT: preview
+          COMMENT_MARKER: "<!-- vercel-preview-deployment -->"
+        with:
+          script: |
+            const marker = process.env.COMMENT_MARKER;
+            const body = [
+              marker,
+              "## Vercel Preview Deployment",
+              "",
+              `- Preview URL: ${process.env.DEPLOY_URL}`,
+              `- Branch: ${process.env.DEPLOY_BRANCH}`,
+              `- Commit SHA: ${process.env.DEPLOY_SHA}`,
+              `- Environment: ${process.env.DEPLOY_ENVIRONMENT}`,
+            ].join("\n");
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              per_page: 100,
+            });
+
+            const existingComment = comments.find((comment) =>
+              comment.body?.includes(marker),
+            );
+
+            if (existingComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existingComment.id,
+                body,
+              });
+              core.info(`Updated preview deployment comment: ${existingComment.html_url}`);
+              return;
+            }
+
+            const { data: createdComment } = await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body,
+            });
+
+            core.info(`Created preview deployment comment: ${createdComment.html_url}`);
