@@ -1,142 +1,91 @@
-// BFF DTO 型のフロント側ミラー。`apps/bff/src/api/customer-dto.ts` および
-// `apps/cli/lib/api/dto.ts` の export と一対一で対応する。BFF が拡張された
-// ときはここも合わせて更新する。
+// Frontend API models are derived from contracts at the BFF boundary. Shapes
+// that intentionally differ from contract DTOs are marked as view models below.
 
-import type { DataProvenance, EvidenceLabel, ProviderCatalogSource } from "contracts";
+import type {
+  EvidenceLabel,
+  PhaseBCustomerListResponse,
+  PhaseBCustomerProfileResponse,
+  PhaseBCustomerUpsellExplanationResponse,
+  ProviderCatalogResponse,
+  WalletUsageGraphResponse,
+} from "contracts";
 
 export type { DataProvenance, EvidenceLabel, ProviderCatalogSource } from "contracts";
 
-export type UpsellOpportunity = "low" | "medium" | "high";
+type ContractCustomerListItem = PhaseBCustomerListResponse["customers"][number];
+type ContractProviderCatalogItem = ProviderCatalogResponse["providers"][number];
+type ContractCustomerProfile = PhaseBCustomerProfileResponse["profile"];
+type ContractCustomerProfileProvider = ContractCustomerProfile["providers"][number];
+type ContractCustomerTimelineEvent = ContractCustomerProfile["timeline"][number];
+type ContractCustomerInsight = ContractCustomerProfile["insights"][number];
+type ContractWalletUsageGraph = WalletUsageGraphResponse["graph"];
+type ContractWalletProvider = ContractWalletUsageGraph["providerWallets"][number];
+type ContractWalletPayer = ContractWalletProvider["payerWallets"][number];
+type ContractWalletObservation = ContractWalletPayer["observations"][number];
+type ContractWalletOtherServiceCandidate = ContractWalletPayer["otherServiceCandidates"][number];
 
-export type CustomerListItemDto = {
-  address: string;
-  label: string | null;
-  observationCount: number;
-  spendAtomic: string;
-  providerCount: number;
+export type UpsellOpportunity = ContractCustomerListItem["upsellOpportunity"];
+
+// View model: contract customer list item with ISO datetime converted to a unix timestamp.
+export type CustomerListItemDto = Omit<
+  ContractCustomerListItem,
+  "evidence" | "lastSeenAt" | "reasons"
+> & {
   lastSeenAt: number;
-  activityGrowth: number;
-  upsellOpportunity: UpsellOpportunity;
-  chains?: string[];
-  assets?: string[];
-  spendByAsset?: Record<string, string>;
-  tags?: string[];
-  provenance: DataProvenance;
-  provenanceByField: Record<string, DataProvenance>;
   reasons: EvidenceLabel[];
 };
 
-export type ProviderCatalogItemDto = {
-  providerId: string;
-  name: string;
-  serviceId?: string;
-  serviceName?: string;
-  network: string;
-  asset: string;
-  payTo: string;
-  catalogSource?: ProviderCatalogSource;
-  transactionCount: number;
-  uniqueSenderCount: number;
-  totalVolumeAtomic: string;
-  endpointCount: number;
-  resourceCount: number;
-  endpointAttributionStatus: string;
-  attributionConfidence: number;
-  hasCustomerFacts: boolean;
-  customerFactCount: number;
-  title?: string;
-  description?: string;
-  /**
-   * Description published by the MPP services registry. Lives alongside
-   * `description` (which is Pay.sh atlas-sourced) so the GEO page can show
-   * both signals separately.
-   */
-  mppDescription?: string;
-  useCase?: string;
-  category?: string;
-  serviceUrl?: string;
-  hasMetering?: boolean;
-  hasFreeTier?: boolean;
-  providerSha?: string;
-  registryVersion?: string;
-  registryGeneratedAt?: string;
-  registrySourceUrl?: string;
-  offers?: Array<{
-    protocol: "x402" | "MPP";
-    chain: string;
-    asset: string;
-    payToAddress: string;
-    probePriceUsd?: number;
-  }>;
-  protocol?: "x402" | "MPP";
-  chain?: string;
-  assetSymbol?: string;
-  priceRangeUsd?: { min: number; max: number };
-  resources?: Array<{
-    resource: string;
-    network?: string;
-    asset?: string;
-    amountAtomic?: string;
-    description?: string;
-    method?: string;
-    inputSchema?: unknown;
-    lastUpdated?: string;
-    x402Version?: number;
-    l30DaysTotalCalls?: number;
-    l30DaysUniquePayers?: number;
-    transactionCount?: number;
-    totalAmountAtomic?: string;
-  }>;
-  provenance: DataProvenance;
-  provenanceByField: Record<string, DataProvenance>;
+// Derived frontend model: provider catalog item with frontend-only evidence aliases removed
+// and reasons normalized to an array by the adapter.
+export type ProviderCatalogItemDto = Omit<
+  ContractProviderCatalogItem,
+  "evidence" | "mappingPattern" | "reasons"
+> & {
   reasons: EvidenceLabel[];
 };
 
-export type CustomerIdentityDto = {
-  address: string;
-  label: string | null;
+// View model: compact identity used by legacy UI copy.
+export type CustomerIdentityDto = Pick<ContractCustomerProfile["identity"], "address" | "label"> & {
   role: "payer_wallet";
   identityBasis: "wallet_address";
   caveat: string;
 };
 
-export type CustomerMetricsDto = {
-  spendAtomic: string;
-  activityGrowth: number;
-  freeTierProgress: number;
-  entryPointRatio: number;
-  upsellOpportunity: UpsellOpportunity;
-};
+export type CustomerMetricsDto = Pick<
+  ContractCustomerProfile["metrics"],
+  "activityGrowth" | "entryPointRatio" | "freeTierProgress" | "spendAtomic" | "upsellOpportunity"
+>;
 
-export type CustomerProviderUsageDto = {
-  providerId: string;
-  name: string;
-  payToWallet: string;
-  spendAtomic: string;
-  transactionCount: number;
+// View model: profile provider usage aggregated by provider/payTo and timestamp-normalized.
+export type CustomerProviderUsageDto = Pick<
+  ContractCustomerProfileProvider,
+  "apiPaths" | "payToWallet" | "providerId" | "spendAtomic" | "transactionCount"
+> & {
+  name: ContractCustomerProfileProvider["name"];
   firstSeenAt: number;
   lastSeenAt: number;
-  apiPaths?: string[];
 };
 
 export type CustomerTimelineEventType = "payment" | "provider_usage" | "growth" | "upsell_signal";
 
+// View model: contract timeline event mapped to legacy UI event labels and timestamp.
 export type CustomerTimelineEventDto = {
-  date: string;
+  date: ContractCustomerTimelineEvent["at"];
   timestamp: number;
   type: CustomerTimelineEventType;
   title: string;
-  description: string;
-  amountAtomic?: string;
-  providerId?: string;
+  description: ContractCustomerTimelineEvent["description"];
+  amountAtomic?: ContractCustomerTimelineEvent["amountAtomic"];
+  providerId?: ContractCustomerTimelineEvent["relatedProviderId"];
   txHash?: string;
 };
 
 export type CustomerInsightSeverity = "info" | "opportunity" | "warning";
 
+// View model: contract insight classification mapped to legacy UI severity.
 export type CustomerInsightDto = {
   severity: CustomerInsightSeverity;
-  title: string;
+  title: ContractCustomerInsight["title"];
   description: string;
 };
 
@@ -148,26 +97,33 @@ export type CustomerProfileDto = {
   insights: CustomerInsightDto[];
 };
 
-export type CustomerUpsellExplanationDto = {
-  generatedAt: string;
-  address: string;
-  modelId: string;
-  summary: string;
-  reasons: string[];
-  recommendedAction: string;
-  caution: string;
-};
+// View model: flattens the contract explanation response for the legacy panel.
+export type CustomerUpsellExplanationDto = Pick<
+  PhaseBCustomerUpsellExplanationResponse,
+  "address" | "generatedAt"
+> &
+  Pick<
+    PhaseBCustomerUpsellExplanationResponse["explanation"],
+    "caution" | "reasons" | "recommendedAction" | "summary"
+  > & {
+    modelId: PhaseBCustomerUpsellExplanationResponse["model"]["modelId"];
+  };
 
+// View model: legacy graph shape derived from the contract wallet usage graph.
 export type WalletUsageGraphDto = {
   generatedFrom: "payment_observations+provider_endpoint_claims+attribution_candidates";
   payerWalletLanguage: true;
-  identityFieldsExcluded: string[];
+  identityFieldsExcluded: ContractWalletUsageGraph["identityFieldsExcluded"];
   providerWallets: Array<{
-    payTo: string;
+    payTo: ContractWalletProvider["payToWallet"];
     claimIds: string[];
     payerWallets: Array<{
-      wallet: string;
-      observations: Array<{ caseId: string; txHash: string; evidenceRefs: string[] }>;
+      wallet: ContractWalletPayer["address"];
+      observations: Array<{
+        caseId: ContractWalletObservation["providerId"];
+        txHash: string;
+        evidenceRefs: string[];
+      }>;
       otherServiceCandidates: Array<{
         // Legacy aliases kept for backward compatibility with the original
         // patterns view model. New consumers should prefer the explicit
@@ -178,14 +134,14 @@ export type WalletUsageGraphDto = {
         candidateType: string;
         /** @deprecated use payToWallet */
         entityId: string | null;
-        confidence: number;
+        confidence: ContractWalletOtherServiceCandidate["confidence"];
         reasons: string[];
         evidenceRefs: string[];
-        providerId: string;
-        providerName: string;
-        serviceName: string;
-        coUsageCount: number;
-        payToWallet: string | null;
+        providerId: ContractWalletOtherServiceCandidate["providerId"];
+        providerName: ContractWalletOtherServiceCandidate["providerName"];
+        serviceName: ContractWalletOtherServiceCandidate["serviceName"];
+        coUsageCount: ContractWalletOtherServiceCandidate["coUsageCount"];
+        payToWallet: ContractWalletOtherServiceCandidate["payToWallet"] | null;
       }>;
     }>;
   }>;
