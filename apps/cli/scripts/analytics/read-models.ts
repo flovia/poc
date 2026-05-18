@@ -10,7 +10,19 @@ import {
   validatePhaseBWalletUsageGraphResponse,
 } from "contracts";
 import { writeAtomically } from "./io";
+import {
+  firstTimestamp,
+  latestTimestamp,
+  serviceIdForKey,
+  slug,
+  sumAtomic,
+} from "./read-model-builders";
 import { createAnalyticsStore } from "./store";
+import {
+  listLatestCustomerIntelligenceSnapshots,
+  listServiceAnalyticsRows,
+  type ServiceAnalyticsRow,
+} from "./store/read-model-repo";
 
 export type GenerateServiceReadModelsOptions = {
   analyticsDbPath?: string;
@@ -28,15 +40,6 @@ const reason = {
   label: "offline analytics data store",
   description: "Generated from local SQLite analytics store; no BFF request-path external calls.",
 };
-
-const sumAtomic = (values: string[]) =>
-  values.reduce((sum, value) => sum + BigInt(value), 0n).toString();
-
-const latestTimestamp = (items: Array<string | undefined>) =>
-  items.filter((item) => item !== undefined).sort((left, right) => right.localeCompare(left))[0];
-
-const firstTimestamp = (items: Array<string | undefined>) =>
-  items.filter((item) => item !== undefined).sort((left, right) => left.localeCompare(right))[0];
 
 const serviceName = (service: CustomerIntelligenceResponse["x402Services"][number]) =>
   service.serviceName ?? service.providerName ?? service.resource ?? service.payTo;
@@ -72,26 +75,6 @@ export const computeActivityGrowth = (timestamps: string[]): number => {
   const capped = Math.min(ACTIVITY_GROWTH_MAX, ratio);
   return Number(capped.toFixed(2));
 };
-
-type ServiceAnalyticsRow = {
-  service_key: string;
-  service_name: string;
-  sink_key: string;
-  endpoint_attribution_status: string;
-  confidence: number;
-  resource_count: number;
-  transaction_count: number;
-  unique_sender_count: number;
-};
-
-const serviceIdForKey = (serviceKey: string) =>
-  serviceKey.toLowerCase().includes("coingecko") ? "coingecko" : serviceKey.toLowerCase();
-
-const slug = (value: string) =>
-  value
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "") || "provider";
 
 const providerIdFor = (input: {
   serviceId?: string;
@@ -143,34 +126,6 @@ const topEndpointsForService = (serviceRows: ServiceAnalyticsRow[], limit: numbe
         reasons: [reason],
       };
     });
-};
-
-const loadCustomerIntelligenceSnapshots = (
-  store: ReturnType<typeof createAnalyticsStore>,
-  customerRunIds?: number[],
-): CustomerIntelligenceResponse[] => {
-  const runFilter = customerRunIds
-    ? customerRunIds.length
-      ? `WHERE source_run_id IN (${customerRunIds.map(() => "?").join(", ")})`
-      : "WHERE 0"
-    : "";
-  const runParameters = customerRunIds ?? [];
-  const rows = store.db
-    .prepare(
-      `SELECT wallet_address, payload_json
-       FROM customer_intelligence_snapshots
-       ${runFilter}
-       ORDER BY generated_at DESC`,
-    )
-    .all(...runParameters) as Array<{ wallet_address: string; payload_json: string }>;
-  const latestByAddress = new Map<string, CustomerIntelligenceResponse>();
-  for (const row of rows) {
-    const key = row.wallet_address.toLowerCase();
-    if (!latestByAddress.has(key)) {
-      latestByAddress.set(key, JSON.parse(row.payload_json) as CustomerIntelligenceResponse);
-    }
-  }
-  return [...latestByAddress.values()];
 };
 
 // Constrain transfer-fact lookups to the same (network, asset, timeWindow) the
@@ -544,38 +499,7 @@ export const generateServiceAnalyticsReadModels = (
   log("[analytics:read-models] analytics store initialized");
   const generatedAt = options.generatedAt ?? new Date().toISOString();
   const generatedFrom = "analytics-data-store:service-read-model-generation";
-  const aggregateRunIds = options.aggregateRunIds ?? [];
-  const aggregateRunFilter = aggregateRunIds.length
-    ? `AND pa.source_run_id IN (${aggregateRunIds.map(() => "?").join(", ")})`
-    : "";
-  const aggregateRowFilter = aggregateRunIds.length ? "WHERE pa.source_run_id IS NOT NULL" : "";
-  const rows = store.db
-    .prepare(
-      `WITH canonical_service_candidates AS (
-         SELECT
-           sink_key,
-           service_key,
-           COALESCE(MAX(service), MAX(provider), MAX(domain), service_key) AS service_name,
-           COUNT(DISTINCT resource_id) AS resource_count
-         FROM service_candidates
-         GROUP BY sink_key, service_key
-       )
-       SELECT
-         COALESCE(sc.service_key, ea.pay_to) AS service_key,
-         COALESCE(sc.service_name, ea.pay_to) AS service_name,
-         ea.sink_key,
-         ea.endpoint_attribution_status,
-         ea.confidence,
-         COALESCE(sc.resource_count, ea.resource_count) AS resource_count,
-         COALESCE(pa.transaction_count, 0) AS transaction_count,
-         COALESCE(pa.unique_sender_count, 0) AS unique_sender_count
-       FROM endpoint_attribution ea
-       LEFT JOIN canonical_service_candidates sc ON sc.sink_key = ea.sink_key
-       LEFT JOIN payto_aggregates pa ON pa.sink_key = ea.sink_key ${aggregateRunFilter}
-       ${aggregateRowFilter}
-       ORDER BY transaction_count DESC`,
-    )
-    .all(...aggregateRunIds) as ServiceAnalyticsRow[];
+  const rows = listServiceAnalyticsRows(store.db, options.aggregateRunIds ?? []);
   log(`[analytics:read-models] loaded ${rows.length} service analytics row(s)`);
 
   const servicesById = new Map<string, ServiceAnalyticsRow[]>();
@@ -699,7 +623,10 @@ export const generateServiceAnalyticsReadModels = (
     reasons: [reason],
   });
 
-  const customerSnapshots = loadCustomerIntelligenceSnapshots(store, options.customerRunIds);
+  const customerSnapshots = listLatestCustomerIntelligenceSnapshots(
+    store.db,
+    options.customerRunIds,
+  );
   const growthByAddress = buildActivityGrowthByAddress(store, customerSnapshots);
   const customerReadModels = buildCustomerReadModels(
     customerSnapshots,

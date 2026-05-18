@@ -4,11 +4,7 @@ import type { ChangeEvent } from "react";
 import { Icon } from "@/components/ui/Icon";
 import { Select, type SelectOption } from "./Select";
 import type { CustomerChainFilter } from "@/lib/customers/chain";
-import type {
-  CustomerFilterState,
-  CustomerSortKey,
-  CustomerUpsellFilter,
-} from "@/lib/customers/filter";
+import type { CustomerFilterState, CustomerSortKey } from "@/lib/customers/filter";
 
 type ToolbarProps = {
   total: number;
@@ -19,15 +15,9 @@ type ToolbarProps = {
 
 const SORT_OPTIONS: ReadonlyArray<SelectOption<CustomerSortKey>> = [
   { value: "spend", label: "Spend ↓" },
-  { value: "observations", label: "Observations ↓" },
+  { value: "observations", label: "Calls ↓" },
+  { value: "providers", label: "Providers ↓" },
   { value: "lastSeen", label: "Last seen" },
-];
-
-const UPSELL_OPTIONS: ReadonlyArray<SelectOption<CustomerUpsellFilter>> = [
-  { value: "all", label: "All" },
-  { value: "high", label: "High" },
-  { value: "medium", label: "Medium" },
-  { value: "low", label: "Low" },
 ];
 
 const CHAIN_OPTIONS: ReadonlyArray<SelectOption<CustomerChainFilter>> = [
@@ -50,10 +40,6 @@ export function Toolbar({ total, filteredCount, state, onChange }: ToolbarProps)
 
   const handleSort = (sort: CustomerSortKey) => {
     onChange({ ...state, sort });
-  };
-
-  const handleUpsell = (upsell: CustomerUpsellFilter) => {
-    onChange({ ...state, upsell });
   };
 
   const handleChain = (chain: CustomerChainFilter) => {
@@ -91,12 +77,6 @@ export function Toolbar({ total, filteredCount, state, onChange }: ToolbarProps)
         options={SORT_OPTIONS}
         value={state.sort}
         onChange={handleSort}
-      />
-      <Select
-        label="Upsell"
-        options={UPSELL_OPTIONS}
-        value={state.upsell}
-        onChange={handleUpsell}
       />
       <Select
         label="Chain"

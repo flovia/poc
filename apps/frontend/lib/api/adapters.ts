@@ -19,6 +19,9 @@ import type {
   WalletUsageGraphDto,
 } from "./types";
 
+// Pure adapters from validated contract DTOs to frontend view models. Keep any
+// UI-only shape changes here so contract DTOs do not drift into component code.
+
 const DEFAULT_TIMESTAMP = 0;
 
 function toTimestamp(value: string | undefined): number {
@@ -102,67 +105,20 @@ function aggregateProviderUsage(
 }
 
 export function adaptCustomerList(response: PhaseBCustomerListResponse): CustomerListItemDto[] {
-  return response.customers.map((customer) => ({
-    address: customer.address,
-    label: customer.label,
-    observationCount: customer.observationCount,
-    spendAtomic: customer.spendAtomic,
-    providerCount: customer.providerCount,
-    lastSeenAt: toTimestamp(customer.lastSeenAt),
-    activityGrowth: customer.activityGrowth,
-    upsellOpportunity: customer.upsellOpportunity,
-    chains: customer.chains,
-    assets: customer.assets,
-    spendByAsset: customer.spendByAsset,
-    tags: customer.tags,
-    provenance: customer.provenance,
-    provenanceByField: customer.provenanceByField ?? {},
-    reasons: customer.reasons ?? [],
-  }));
+  return response.customers.map((customer) => {
+    const { evidence: _evidence, lastSeenAt, reasons, ...item } = customer;
+    return {
+      ...item,
+      lastSeenAt: toTimestamp(lastSeenAt),
+      provenanceByField: customer.provenanceByField ?? {},
+      reasons: reasons ?? [],
+    } satisfies CustomerListItemDto;
+  });
 }
 
 export function adaptProviderCatalog(response: ProviderCatalogResponse): ProviderCatalogItemDto[] {
   const adapted = response.providers.map((provider, originalIndex) => ({
-    item: {
-      providerId: provider.providerId,
-      name: provider.name,
-      serviceId: provider.serviceId,
-      serviceName: provider.serviceName,
-      network: provider.network,
-      asset: provider.asset,
-      payTo: provider.payTo,
-      catalogSource: provider.catalogSource,
-      transactionCount: provider.transactionCount,
-      uniqueSenderCount: provider.uniqueSenderCount,
-      totalVolumeAtomic: provider.totalVolumeAtomic,
-      endpointCount: provider.endpointCount,
-      resourceCount: provider.resourceCount,
-      endpointAttributionStatus: provider.endpointAttributionStatus,
-      attributionConfidence: provider.attributionConfidence,
-      hasCustomerFacts: provider.hasCustomerFacts,
-      customerFactCount: provider.customerFactCount,
-      title: provider.title,
-      description: provider.description,
-      mppDescription: provider.mppDescription,
-      useCase: provider.useCase,
-      category: provider.category,
-      serviceUrl: provider.serviceUrl,
-      hasMetering: provider.hasMetering,
-      hasFreeTier: provider.hasFreeTier,
-      providerSha: provider.providerSha,
-      registryVersion: provider.registryVersion,
-      registryGeneratedAt: provider.registryGeneratedAt,
-      registrySourceUrl: provider.registrySourceUrl,
-      offers: provider.offers,
-      protocol: provider.protocol,
-      chain: provider.chain,
-      assetSymbol: provider.assetSymbol,
-      priceRangeUsd: provider.priceRangeUsd,
-      resources: provider.resources,
-      provenance: provider.provenance,
-      provenanceByField: provider.provenanceByField ?? {},
-      reasons: provider.reasons ?? [],
-    } satisfies ProviderCatalogItemDto,
+    item: toProviderCatalogItem(provider),
     originalIndex,
   }));
 
@@ -176,6 +132,17 @@ export function adaptProviderCatalog(response: ProviderCatalogResponse): Provide
     return left.originalIndex - right.originalIndex;
   });
   return adapted.map((entry) => entry.item);
+}
+
+function toProviderCatalogItem(
+  provider: ProviderCatalogResponse["providers"][number],
+): ProviderCatalogItemDto {
+  const { mappingPattern: _mappingPattern, reasons, ...item } = provider;
+  return {
+    ...item,
+    provenanceByField: provider.provenanceByField ?? {},
+    reasons: reasons ?? [],
+  } satisfies ProviderCatalogItemDto;
 }
 
 const PINNED_PROVIDER_MARKS = ["nansen", "coingecko"] as const;
