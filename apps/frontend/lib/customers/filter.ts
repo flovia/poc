@@ -1,21 +1,17 @@
-import type { CustomerListItemDto, UpsellOpportunity } from "@/lib/api/types";
+import type { CustomerListItemDto } from "@/lib/api/types";
 import { getCustomerChainAttribution, type CustomerChainFilter } from "./chain";
 
-export type CustomerSortKey = "spend" | "observations" | "lastSeen";
-
-export type CustomerUpsellFilter = "all" | UpsellOpportunity;
+export type CustomerSortKey = "spend" | "observations" | "providers" | "lastSeen";
 
 export type CustomerFilterState = {
   query: string;
   sort: CustomerSortKey;
-  upsell: CustomerUpsellFilter;
   chain: CustomerChainFilter;
 };
 
 export const DEFAULT_CUSTOMER_FILTER: CustomerFilterState = {
   query: "",
   sort: "spend",
-  upsell: "all",
   chain: "all",
 };
 
@@ -32,6 +28,7 @@ const sortComparators: Record<
 > = {
   spend: (a, b) => compareBigIntDesc(a.spendAtomic, b.spendAtomic),
   observations: (a, b) => b.observationCount - a.observationCount,
+  providers: (a, b) => b.providerCount - a.providerCount,
   lastSeen: (a, b) => b.lastSeenAt - a.lastSeenAt,
 };
 
@@ -48,7 +45,6 @@ export function filterAndSortCustomers(
 ): CustomerListItemDto[] {
   const trimmedQuery = state.query.trim().toLowerCase();
   const filtered = customers.filter((c) => {
-    if (state.upsell !== "all" && c.upsellOpportunity !== state.upsell) return false;
     if (trimmedQuery.length > 0 && !c.address.toLowerCase().includes(trimmedQuery)) return false;
     if (state.chain !== "all" && !getCustomerChainAttribution(c).chains.includes(state.chain)) {
       return false;

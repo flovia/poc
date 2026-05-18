@@ -31,6 +31,7 @@ const fixture: CustomerListItemDto[] = [
     address: "0xAAaaaaaaAAAAaaaaAAAAaaaaaaaaAAAA00000001",
     spendAtomic: "100",
     observationCount: 5,
+    providerCount: 3,
     activityGrowth: 0.1,
     lastSeenAt: 1_700_000_300,
     upsellOpportunity: "high",
@@ -39,6 +40,7 @@ const fixture: CustomerListItemDto[] = [
     address: "0xBBbbbbbbBBBBbbbbBBBBbbbbbbbbBBBB00000002",
     spendAtomic: "999",
     observationCount: 2,
+    providerCount: 7,
     activityGrowth: -0.4,
     lastSeenAt: 1_700_000_100,
     upsellOpportunity: "medium",
@@ -47,6 +49,7 @@ const fixture: CustomerListItemDto[] = [
     address: "0xCCccccccCCCCccccCCCCccccccccCCCC00000003",
     spendAtomic: "500",
     observationCount: 12,
+    providerCount: 1,
     activityGrowth: 0.9,
     lastSeenAt: 1_700_000_200,
     upsellOpportunity: "low",
@@ -81,25 +84,20 @@ describe("filterAndSortCustomers", () => {
     expect(result.map((c) => c.address)).toEqual(["0xAAaaaaaaAAAAaaaaAAAAaaaaaaaaAAAA00000001"]);
   });
 
-  test("filters by upsell tier", () => {
-    const state: CustomerFilterState = { ...DEFAULT_CUSTOMER_FILTER, upsell: "high" };
-    const result = filterAndSortCustomers(fixture, state);
-    expect(result).toHaveLength(1);
-    expect(result[0].upsellOpportunity).toBe("high");
-    expect(result[0].address).toBe("0xAAaaaaaaAAAAaaaaAAAAaaaaaaaaAAAA00000001");
-  });
-
-  test("upsell=all keeps every tier", () => {
-    const result = filterAndSortCustomers(fixture, { ...DEFAULT_CUSTOMER_FILTER, upsell: "all" });
-    expect(result).toHaveLength(3);
-  });
-
   test("sorts by observations desc", () => {
     const result = filterAndSortCustomers(fixture, {
       ...DEFAULT_CUSTOMER_FILTER,
       sort: "observations",
     });
     expect(result.map((c) => c.observationCount)).toEqual([12, 5, 2]);
+  });
+
+  test("sorts by providers desc", () => {
+    const result = filterAndSortCustomers(fixture, {
+      ...DEFAULT_CUSTOMER_FILTER,
+      sort: "providers",
+    });
+    expect(result.map((c) => c.providerCount)).toEqual([7, 3, 1]);
   });
 
   test("sorts by last seen desc", () => {
@@ -141,16 +139,15 @@ describe("filterAndSortCustomers", () => {
     expect(fixture.map((c) => c.address)).toEqual(snapshot);
   });
 
-  test("combines query, upsell, and sort", () => {
+  test("combines query and sort", () => {
     const state: CustomerFilterState = {
-      query: "0x",
-      upsell: "high",
+      query: "00000003",
       sort: "spend",
       chain: "all",
     };
     const result = filterAndSortCustomers(fixture, state);
     expect(result).toHaveLength(1);
-    expect(result[0].upsellOpportunity).toBe("high");
+    expect(result[0].address).toBe("0xCCccccccCCCCccccCCCCccccccccCCCC00000003");
   });
 
   test("chain=all keeps every wallet under the current single-chain dataset", () => {
