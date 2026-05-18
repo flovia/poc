@@ -1,18 +1,25 @@
-import {
-  normalizePaymentRecipientAddress,
-  validatePhaseBCustomerWorkflowIntentResponse,
-} from "contracts";
+import { normalizePaymentRecipientAddress } from "contracts";
 import { type BffAnalyticsDataSource, resolveAnalyticsDataSource } from "./data/analytics-source";
 import {
-  BffLlmInferenceError,
   BffLlmUnavailableError,
   type BffLlmService,
   resolveBffLlmService,
 } from "./data/llm";
 import { buildWorkflowIntentInputFromProfile, toWorkflowIntentInput } from "./data/workflow-intent";
+import {
+  json,
+  llmFailed,
+  llmUnavailable,
+  methodNotAllowed,
+  notFound,
+  workflowIntentFailed,
+  workflowIntentNoCandidateSessions,
+  workflowIntentReady,
+  workflowIntentUnavailable,
+} from "./http/responses";
+import { matchCustomerRoute, normalizePath, readonlyRoutes } from "./http/routes";
 import { handleShowcaseRoute, showcaseRoutes } from "./showcase";
 
-type JsonValue = unknown;
 type RequestTimeoutController = {
   timeout(request: Request, seconds: number): void;
 };
@@ -22,22 +29,7 @@ export type BffRuntimeMetadata = {
   startedAt: string;
 };
 
-const GENERIC_LLM_INFERENCE_ERROR_MESSAGE = "LLM upsell explanation inference failed.";
-const WORKFLOW_INTENT_GENERATED_FROM = "phase-b-wallet-workflow-intent-v1";
 const COMMIT_HASH_PATTERN = /^[0-9a-f]{7,40}$/i;
-const workflowIntentReason = {
-  provenance: "derived_insight" as const,
-  label: "BFF workflow intent session analysis",
-};
-
-const json = (body: JsonValue, init: ResponseInit = {}) =>
-  Response.json(body, {
-    ...init,
-    headers: {
-      "cache-control": "no-store",
-      ...(init.headers ?? {}),
-    },
-  });
 
 const normalizeCommitHash = (value: string | null | undefined) => {
   const trimmed = value?.trim();
@@ -62,76 +54,6 @@ export const resolveBffRuntimeMetadata = (
   startedAt: now.toISOString(),
 });
 
-const readonlyRoutes = new Set([
-  "/",
-  "/health",
-  "/providers",
-  "/customers",
-  "/wallet-usage-graph",
-  "/analytics/services/coingecko/summary",
-  "/analytics/services/comparison",
-  "/analytics/services/quadrants",
-  "/analytics/routes/summary",
-  "/analytics/routes/sankey",
-]);
-
-const toProfileAddress = (path: string) => {
-  const match = path.match(/^\/customers\/([^/]+)\/profile$/);
-  return match?.[1] ?? null;
-};
-
-const toIntelligenceAddress = (path: string) => {
-  const match = path.match(/^\/customers\/([^/]+)\/intelligence$/);
-  return match?.[1] ?? null;
-};
-
-const toUpsellMetricsAddress = (path: string) => {
-  const match = path.match(/^\/customers\/([^/]+)\/llm\/upsell-metrics$/);
-  return match?.[1] ?? null;
-};
-
-const toUpsellExplanationAddress = (path: string) => {
-  const match = path.match(/^\/customers\/([^/]+)\/llm\/upsell-explanation$/);
-  return match?.[1] ?? null;
-};
-
-const toWorkflowIntentAddress = (path: string) => {
-  const match = path.match(/^\/customers\/([^/]+)\/llm\/workflow-intent$/);
-  return match?.[1] ?? null;
-};
-
-const methodNotAllowed = () =>
-  json(
-    {
-      error: "method_not_allowed",
-      message: "The BFF only supports GET for read endpoints.",
-    },
-    { status: 405, headers: { allow: "GET" } },
-  );
-
-const llmUnavailable = () =>
-  json(
-    {
-      error: "llm_unavailable",
-      message: "LLM upsell explanation is not configured for this environment.",
-    },
-    { status: 503 },
-  );
-
-const llmFailed = (error: unknown) =>
-  json(
-    {
-      error: "llm_failed",
-      message:
-        error instanceof BffLlmInferenceError
-          ? error.message
-          : error instanceof Error && error.message
-            ? error.message
-            : GENERIC_LLM_INFERENCE_ERROR_MESSAGE,
-    },
-    { status: 502 },
-  );
-
 export const createBffHandler =
   (
     dataSource:
@@ -142,7 +64,8 @@ export const createBffHandler =
   ) =>
   async (request: Request, server?: RequestTimeoutController) => {
     const url = new URL(request.url);
-    const path = url.pathname.replace(/\/$/, "") || "/";
+    const path = normalizePath(url);
+    const customerRoute = matchCustomerRoute(path);
 
     if (request.method !== "GET") {
       if (
@@ -155,11 +78,7 @@ export const createBffHandler =
       if (
         readonlyRoutes.has(path) ||
         showcaseRoutes.has(path) ||
-        toProfileAddress(path) !== null ||
-        toIntelligenceAddress(path) !== null ||
-        toUpsellMetricsAddress(path) !== null ||
-        toUpsellExplanationAddress(path) !== null ||
-        toWorkflowIntentAddress(path) !== null
+        customerRoute !== null
       ) {
         return methodNotAllowed();
       }
@@ -212,9 +131,8 @@ export const createBffHandler =
         break;
     }
 
-    const address = toProfileAddress(path);
-    if (address !== null) {
-      const normalizedAddress = normalizePaymentRecipientAddress(address);
+    if (customerRoute?.kind === "profile") {
+      const normalizedAddress = normalizePaymentRecipientAddress(customerRoute.address);
       const profile = resolvedDataSource.getCustomerProfile(normalizedAddress);
 
       if (!profile) {
@@ -224,9 +142,8 @@ export const createBffHandler =
       return json(profile);
     }
 
-    const intelligenceAddress = toIntelligenceAddress(path);
-    if (intelligenceAddress !== null) {
-      const normalizedAddress = normalizePaymentRecipientAddress(intelligenceAddress);
+    if (customerRoute?.kind === "intelligence") {
+      const normalizedAddress = normalizePaymentRecipientAddress(customerRoute.address);
       const intelligence = resolvedDataSource.getCustomerIntelligence(normalizedAddress);
 
       if (!intelligence) {
@@ -236,9 +153,8 @@ export const createBffHandler =
       return json(intelligence);
     }
 
-    const upsellMetricsAddress = toUpsellMetricsAddress(path);
-    if (upsellMetricsAddress !== null) {
-      const normalizedAddress = normalizePaymentRecipientAddress(upsellMetricsAddress);
+    if (customerRoute?.kind === "upsellMetrics") {
+      const normalizedAddress = normalizePaymentRecipientAddress(customerRoute.address);
       const metrics = resolvedDataSource.getCustomerUpsellMetrics(normalizedAddress);
 
       if (!metrics) {
@@ -248,9 +164,8 @@ export const createBffHandler =
       return json(metrics);
     }
 
-    const upsellExplanationAddress = toUpsellExplanationAddress(path);
-    if (upsellExplanationAddress !== null) {
-      const normalizedAddress = normalizePaymentRecipientAddress(upsellExplanationAddress);
+    if (customerRoute?.kind === "upsellExplanation") {
+      const normalizedAddress = normalizePaymentRecipientAddress(customerRoute.address);
       const metrics = resolvedDataSource.getCustomerUpsellMetrics(normalizedAddress);
 
       if (!metrics) {
@@ -274,9 +189,8 @@ export const createBffHandler =
       }
     }
 
-    const workflowIntentAddress = toWorkflowIntentAddress(path);
-    if (workflowIntentAddress !== null) {
-      const normalizedAddress = normalizePaymentRecipientAddress(workflowIntentAddress);
+    if (customerRoute?.kind === "workflowIntent") {
+      const normalizedAddress = normalizePaymentRecipientAddress(customerRoute.address);
       const profile = resolvedDataSource.getCustomerProfile(normalizedAddress);
 
       if (!profile) {
@@ -287,57 +201,16 @@ export const createBffHandler =
       const input = toWorkflowIntentInput(selection);
 
       if (!input) {
-        return json(
-          validatePhaseBCustomerWorkflowIntentResponse({
-            generatedAt: new Date().toISOString(),
-            generatedFrom: WORKFLOW_INTENT_GENERATED_FROM,
-            address: normalizedAddress,
-            sourceGeneratedAt: profile.generatedAt,
-            sessionWindowSeconds: selection.sessionWindowSeconds,
-            sessionCount: selection.sessionCount,
-            remainingSessionCount: selection.remainingSessionCount,
-            analysisStatus: "no_candidate_sessions",
-            model: null,
-            input: null,
-            explanations: [],
-            sessions: selection.sessions,
-            failureMessage: null,
-            provenance: "derived_insight",
-            provenanceByField: {
-              address: "onchain_fact",
-              input: "derived_insight",
-              sessions: "derived_insight",
-            },
-            reasons: [workflowIntentReason],
-          }),
-        );
+        return workflowIntentNoCandidateSessions({
+          address: normalizedAddress,
+          profile,
+          selection,
+          input,
+        });
       }
 
       const unavailableResponse = () =>
-        json(
-          validatePhaseBCustomerWorkflowIntentResponse({
-            generatedAt: new Date().toISOString(),
-            generatedFrom: WORKFLOW_INTENT_GENERATED_FROM,
-            address: normalizedAddress,
-            sourceGeneratedAt: profile.generatedAt,
-            sessionWindowSeconds: selection.sessionWindowSeconds,
-            sessionCount: selection.sessionCount,
-            remainingSessionCount: selection.remainingSessionCount,
-            analysisStatus: "unavailable",
-            model: null,
-            input,
-            explanations: [],
-            sessions: selection.sessions,
-            failureMessage: null,
-            provenance: "derived_insight",
-            provenanceByField: {
-              address: "onchain_fact",
-              input: "derived_insight",
-              sessions: "derived_insight",
-            },
-            reasons: [workflowIntentReason],
-          }),
-        );
+        workflowIntentUnavailable({ address: normalizedAddress, profile, selection, input });
 
       if (!llmService) {
         return unavailableResponse();
@@ -351,71 +224,15 @@ export const createBffHandler =
           input,
         });
 
-        return json(
-          validatePhaseBCustomerWorkflowIntentResponse({
-            generatedAt: new Date().toISOString(),
-            generatedFrom: WORKFLOW_INTENT_GENERATED_FROM,
-            address: normalizedAddress,
-            sourceGeneratedAt: profile.generatedAt,
-            sessionWindowSeconds: selection.sessionWindowSeconds,
-            sessionCount: selection.sessionCount,
-            remainingSessionCount: selection.remainingSessionCount,
-            analysisStatus: "ready",
-            model: result.model,
-            input,
-            explanations: result.explanations,
-            sessions: selection.sessions,
-            failureMessage: null,
-            provenance: "derived_insight",
-            provenanceByField: {
-              address: "onchain_fact",
-              model: "derived_insight",
-              input: "derived_insight",
-              explanations: "derived_insight",
-              sessions: "derived_insight",
-            },
-            reasons: [workflowIntentReason],
-          }),
-        );
+        return workflowIntentReady({ address: normalizedAddress, profile, selection, input, result });
       } catch (error) {
         if (error instanceof BffLlmUnavailableError) {
           return unavailableResponse();
         }
         console.error("Workflow intent request failed.", error);
-        return json(
-          validatePhaseBCustomerWorkflowIntentResponse({
-            generatedAt: new Date().toISOString(),
-            generatedFrom: WORKFLOW_INTENT_GENERATED_FROM,
-            address: normalizedAddress,
-            sourceGeneratedAt: profile.generatedAt,
-            sessionWindowSeconds: selection.sessionWindowSeconds,
-            sessionCount: selection.sessionCount,
-            remainingSessionCount: selection.remainingSessionCount,
-            analysisStatus: "failed",
-            model: null,
-            input,
-            explanations: [],
-            sessions: selection.sessions,
-            failureMessage:
-              error instanceof BffLlmInferenceError
-                ? error.message
-                : error instanceof Error && error.message
-                  ? error.message
-                  : "Workflow intent explanation inference failed.",
-            provenance: "derived_insight",
-            provenanceByField: {
-              address: "onchain_fact",
-              input: "derived_insight",
-              sessions: "derived_insight",
-            },
-            reasons: [workflowIntentReason],
-          }),
-        );
+        return workflowIntentFailed({ address: normalizedAddress, profile, selection, input, error });
       }
     }
 
     return notFound(path);
   };
-
-const notFound = (path: string) =>
-  json({ error: "not_found", message: `Route not found: ${path}` }, { status: 404 });
