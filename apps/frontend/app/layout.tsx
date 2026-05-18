@@ -26,14 +26,14 @@ const spaceGrotesk = Space_Grotesk({
   display: "swap",
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://demo.flovia402.com";
 const siteName = "Flovia";
 const siteTitle = "Flovia — Turn x402 / MPP payments into decisions";
 const siteDescription =
   "Co-usage discovery for agent-driven API economies. Flovia turns on-chain x402 / MPP payments into product decisions.";
 
 export const metadata: Metadata = {
-  metadataBase: siteUrl ? new URL(siteUrl) : null,
+  metadataBase: new URL(siteUrl),
   title: {
     default: siteTitle,
     template: "%s — Flovia",
@@ -47,11 +47,20 @@ export const metadata: Metadata = {
     description: siteDescription,
     url: "/",
     locale: "en_US",
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: siteTitle,
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: siteTitle,
     description: siteDescription,
+    images: ["/twitter-image"],
   },
 };
 
