@@ -1,10 +1,6 @@
 import { normalizePaymentRecipientAddress } from "contracts";
 import { type BffAnalyticsDataSource, resolveAnalyticsDataSource } from "./data/analytics-source";
-import {
-  BffLlmUnavailableError,
-  type BffLlmService,
-  resolveBffLlmService,
-} from "./data/llm";
+import { BffLlmUnavailableError, type BffLlmService, resolveBffLlmService } from "./data/llm";
 import { buildWorkflowIntentInputFromProfile, toWorkflowIntentInput } from "./data/workflow-intent";
 import {
   json,
@@ -75,11 +71,7 @@ export const createBffHandler =
         return handleShowcaseRoute(request, path) ?? notFound(path);
       }
 
-      if (
-        readonlyRoutes.has(path) ||
-        showcaseRoutes.has(path) ||
-        customerRoute !== null
-      ) {
+      if (readonlyRoutes.has(path) || showcaseRoutes.has(path) || customerRoute !== null) {
         return methodNotAllowed();
       }
 
@@ -224,13 +216,25 @@ export const createBffHandler =
           input,
         });
 
-        return workflowIntentReady({ address: normalizedAddress, profile, selection, input, result });
+        return workflowIntentReady({
+          address: normalizedAddress,
+          profile,
+          selection,
+          input,
+          result,
+        });
       } catch (error) {
         if (error instanceof BffLlmUnavailableError) {
           return unavailableResponse();
         }
         console.error("Workflow intent request failed.", error);
-        return workflowIntentFailed({ address: normalizedAddress, profile, selection, input, error });
+        return workflowIntentFailed({
+          address: normalizedAddress,
+          profile,
+          selection,
+          input,
+          error,
+        });
       }
     }
 

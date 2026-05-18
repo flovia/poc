@@ -623,7 +623,10 @@ export const generateServiceAnalyticsReadModels = (
     reasons: [reason],
   });
 
-  const customerSnapshots = listLatestCustomerIntelligenceSnapshots(store.db, options.customerRunIds);
+  const customerSnapshots = listLatestCustomerIntelligenceSnapshots(
+    store.db,
+    options.customerRunIds,
+  );
   const growthByAddress = buildActivityGrowthByAddress(store, customerSnapshots);
   const customerReadModels = buildCustomerReadModels(
     customerSnapshots,
