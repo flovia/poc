@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { Analytics } from "@vercel/analytics/next";
 import { Geist, Geist_Mono, Space_Grotesk } from "next/font/google";
 import { headers } from "next/headers";
 import { isMobileUserAgent, MobileDesktopGate } from "@/components/shell/MobileDesktopGate";
@@ -84,7 +85,10 @@ export default async function RootLayout({
 
   return (
     <html lang="en" className={`${geist.variable} ${geistMono.variable} ${spaceGrotesk.variable}`}>
-      <body>{content}</body>
+      <body>
+        {content}
+        <Analytics />
+      </body>
     </html>
   );
 }
