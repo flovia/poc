@@ -13,8 +13,9 @@ export function CustomersHeader({ providerId, balanceContext }: CustomersHeaderP
   const name = !hydrated ? "…" : active?.name ?? providerId;
 
   return (
-    <div>
+    <div className="customers-header">
       <div
+        className="customers-header-meta"
         style={{
           fontSize: 12,
           fontWeight: 600,
@@ -27,9 +28,10 @@ export function CustomersHeader({ providerId, balanceContext }: CustomersHeaderP
           gap: 6,
         }}
       >
-        <span>Provider · {name}</span>
+        <span className="customers-header-provider">Provider · {name}</span>
         {balanceContext ? (
           <span
+            className="customers-header-balance"
             style={{
               textTransform: "none",
               fontWeight: 600,
@@ -42,7 +44,7 @@ export function CustomersHeader({ providerId, balanceContext }: CustomersHeaderP
           </span>
         ) : null}
       </div>
-      <h1 style={{ fontSize: 28, fontWeight: 700, margin: 0, letterSpacing: "-0.01em" }}>
+      <h1 className="customers-header-title" style={{ fontSize: 28, fontWeight: 700, margin: 0, letterSpacing: "-0.01em" }}>
         Customers calling your API
       </h1>
     </div>

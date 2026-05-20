@@ -19,6 +19,7 @@ export function CustomersOverview({ customers, totalSpendAtomic, providerName }:
 
   return (
     <div
+      className="customers-overview"
       style={{
         display: "grid",
         gridTemplateColumns: "repeat(2, minmax(280px, 1fr))",

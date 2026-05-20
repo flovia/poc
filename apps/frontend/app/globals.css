@@ -315,6 +315,82 @@ a { color: inherit; text-decoration: none; }
   grid-template-columns: minmax(0, 1fr) 220px 100px 110px;
 }
 
+.customers-page-pad {
+  padding: 32px 40px 80px;
+}
+
+.customers-page-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.customers-header,
+.customers-header-meta,
+.customers-header-provider,
+.customers-header-balance {
+  min-width: 0;
+}
+
+.customers-header-meta {
+  flex-wrap: wrap;
+}
+
+.customers-header-provider,
+.customers-header-balance {
+  overflow-wrap: anywhere;
+}
+
+.customers-toolbar {
+  padding: 10px;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.customers-toolbar__search {
+  position: relative;
+  flex: 1;
+  max-width: 320px;
+}
+
+.customers-toolbar__count {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--text-3);
+  white-space: nowrap;
+}
+
+.customers-overview {
+  min-width: 0;
+}
+
+.wallet-screen-pad {
+  position: relative;
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 28px 40px 80px;
+}
+
+.identity-bar-layout {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  min-width: 0;
+}
+
+.identity-bar-address-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  min-width: 0;
+}
+
 @media (max-width: 1100px) {
   .providers-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -411,6 +487,88 @@ a { color: inherit; text-decoration: none; }
     padding: 24px 16px 64px;
   }
 
+  .customers-page-pad {
+    padding: 24px 16px 64px;
+  }
+
+  .customers-page-head {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .customers-header-title {
+    font-size: 24px !important;
+    line-height: 1.15;
+  }
+
+  .customers-header-meta {
+    align-items: flex-start !important;
+  }
+
+  .customers-toolbar {
+    align-items: stretch;
+    flex-wrap: wrap;
+  }
+
+  .customers-toolbar__search {
+    flex-basis: 100%;
+    max-width: none;
+  }
+
+  .customers-toolbar__count {
+    flex-basis: 100%;
+    margin-left: 0;
+    text-align: left;
+  }
+
+  .customers-overview {
+    grid-template-columns: 1fr !important;
+    grid-template-areas: "totals" "recency" "spread" !important;
+  }
+
+  .customers-overview > * {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .recency-matrix-grid {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: auto !important;
+  }
+
+  .provider-spread-row {
+    grid-template-columns: 80px minmax(0, 1fr) minmax(52px, auto) !important;
+  }
+
+  .wallet-screen-pad {
+    padding: 22px 16px 64px;
+  }
+
+  .identity-bar-layout {
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .identity-bar-address-row {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .identity-bar-address {
+    flex-basis: 100%;
+    font-size: 18px !important;
+  }
+
+  .identity-bar-spend {
+    align-items: flex-start !important;
+    width: 100%;
+  }
+
+  [data-layout-row="insight-summary"] {
+    grid-template-columns: 1fr !important;
+  }
+
   .setup-config-head,
   .setup-form-footer,
   .setup-form-footer__meta {
@@ -440,6 +598,10 @@ a { color: inherit; text-decoration: none; }
 @media (max-width: 640px) {
   .providers-grid {
     grid-template-columns: 1fr;
+  }
+
+  .wallets-spend-metrics {
+    grid-template-columns: 1fr !important;
   }
 
   .setup-actions {
@@ -1194,6 +1356,10 @@ a { color: inherit; text-decoration: none; }
 .mesh-haze { display: none; }
 
 /* ---- Customers table grid ---- */
+.customers-table-card {
+  min-width: 0;
+}
+
 .cust-row {
   display: grid;
   grid-template-columns:
@@ -1308,6 +1474,132 @@ a { color: inherit; text-decoration: none; }
   .row-arrow {
     color: var(--text-3);
     opacity: 1;
+  }
+
+  .timeline-event-row {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+    padding: 14px 16px !important;
+  }
+
+  .timeline-event-row > span:last-child {
+    text-align: left !important;
+  }
+
+  .co-usage-host-toggle,
+  .co-usage-host-static {
+    padding: 12px 14px 14px;
+  }
+
+  .co-usage-host-row .summary,
+  .co-usage-endpoint-row .summary {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .co-usage-host-row .summary-right,
+  .co-usage-endpoint-row .summary-right {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .co-usage-endpoint-row {
+    padding: 10px 14px 12px 28px;
+  }
+
+  .co-usage-endpoint-row .meta {
+    flex-direction: column;
+    gap: 4px;
+  }
+}
+
+@media (max-width: 767px) {
+  .cust-row.cust-head {
+    display: none;
+  }
+
+  .cust-row,
+  .cust-row.cust-row-sdk {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin: 10px;
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--surface-card);
+  }
+
+  .cust-row:last-child {
+    border-bottom: 1px solid var(--line);
+  }
+
+  .cust-row-link:hover,
+  .cust-row-link:focus-visible,
+  .cust-row-link:active {
+    background: var(--surface-muted);
+  }
+
+  .cust-row-link:focus-visible {
+    outline-offset: 2px;
+  }
+
+  .cust-cell {
+    min-width: 0;
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: space-between !important;
+    gap: 10px;
+  }
+
+  .cust-cell::before {
+    content: attr(data-label);
+    flex: 0 0 auto;
+    color: var(--text-mute);
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 650;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .cust-cell--wallet,
+  .cust-cell--last-seen {
+    grid-column: 1 / -1;
+  }
+
+  .cust-cell--wallet {
+    align-items: center !important;
+    justify-content: flex-start !important;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .cust-cell--wallet::before {
+    content: none;
+  }
+
+  .cust-cell--last-seen {
+    align-items: center !important;
+    padding-top: 10px;
+    border-top: 1px solid var(--line);
+  }
+
+  .row-indicator {
+    background: var(--mesh-blue);
+  }
+
+  .row-arrow {
+    color: var(--text-3);
+    opacity: 1;
+  }
+}
+
+@media (max-width: 420px) {
+  .cust-row,
+  .cust-row.cust-row-sdk {
+    grid-template-columns: 1fr;
   }
 }
 

@@ -66,15 +66,8 @@ export default async function CustomersPage({
         }}
       />
       <div className="scroll">
-        <div style={{ padding: "32px 40px 80px" }}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "flex-end",
-              justifyContent: "space-between",
-              marginBottom: 20,
-            }}
-          >
+        <div className="customers-page-pad">
+          <div className="customers-page-head">
             <CustomersHeader providerId={resolvedProviderId} balanceContext={balanceContext} />
             <SnapshotIndicator generatedAt={summary.generatedAt} />
           </div>
