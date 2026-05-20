@@ -13,7 +13,7 @@ type Props = {
 export function MacroMetricsScreen({ metrics, providerId }: Props) {
   return (
     <div style={{ background: "var(--bg-shell)", minHeight: "100%" }}>
-      <div style={{ padding: "32px 40px 80px", maxWidth: 1560, margin: "0 auto" }}>
+      <div className="macro-page-pad">
         <header style={{ marginBottom: 24 }}>
           <div className="eyebrow" style={{ marginBottom: 8 }}>
             Demo macro analytics · CEO view
@@ -129,7 +129,9 @@ export function MacroMetricsScreen({ metrics, providerId }: Props) {
               />
             </Card>
             <Card title="Endpoint category flow" eyebrow="P1 proxy flow">
-              <EndpointSankey flows={metrics.endpointFlows} />
+              <div className="sankey-scroll">
+                <EndpointSankey flows={metrics.endpointFlows} />
+              </div>
             </Card>
           </TwoColumn>
         </Section>
@@ -210,7 +212,7 @@ function KpiGrid({ children }: { children: ReactNode }) {
 }
 
 function TwoColumn({ children }: { children: ReactNode }) {
-  return <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(360px, 1fr))", gap: 14 }}>{children}</div>;
+  return <div className="macro-two-column" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 360px), 1fr))", gap: 14 }}>{children}</div>;
 }
 
 function Card({ eyebrow, title, children }: { eyebrow: string; title: string; children: ReactNode }) {
@@ -227,7 +229,7 @@ function KpiCard({ label, value, hint }: { label: string; value: string | number
   return (
     <div className="card" style={{ padding: "16px 18px", background: "#fff" }}>
       <div className="eyebrow" style={{ marginBottom: 8 }}>{label}</div>
-      <div className="mono" style={{ fontSize: 27, fontWeight: 700, color: "var(--text-1)", whiteSpace: "nowrap" }}>{value}</div>
+      <div className="mono macro-kpi-value" style={{ fontSize: 27, fontWeight: 700, color: "var(--text-1)", whiteSpace: "nowrap" }}>{value}</div>
       <div style={{ color: "var(--text-mute)", fontSize: 12, marginTop: 4 }}>{hint}</div>
     </div>
   );
@@ -236,7 +238,7 @@ function KpiCard({ label, value, hint }: { label: string; value: string | number
 function TrendCard({ trend7d, trend30d }: { trend7d: TrendPoint[]; trend30d: TrendPoint[] }) {
   return (
     <Card title="7d / 30d trend line" eyebrow="P0">
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+      <div className="macro-trend-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
         <MiniTrend title="Last 7 days" points={trend7d} />
         <MiniTrend title="Last 30 days" points={trend30d} compact />
       </div>
@@ -279,7 +281,7 @@ function BarList({ rows }: { rows: Array<{ label: string; value: string | number
 
 function DataTable({ columns, rows }: { columns: string[]; rows: Array<Array<string | number>> }) {
   return (
-    <div style={{ overflowX: "auto" }}>
+    <div className="table-scroll" style={{ overflowX: "auto" }}>
       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
         <thead>
           <tr style={{ color: "var(--text-3)", borderBottom: "1px solid var(--line-strong)" }}>

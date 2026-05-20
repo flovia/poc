@@ -17,7 +17,7 @@ const PRIORITIES: CatalogPriority[] = ["P0", "P1", "P2", "P3"];
 export function MetricsCatalogScreen({ catalog }: Props) {
   return (
     <div style={{ background: "var(--bg-shell)", minHeight: "100%" }}>
-      <div style={{ padding: "32px 40px 80px", maxWidth: 1560, margin: "0 auto" }}>
+      <div className="metrics-catalog-page-pad">
         <header style={{ marginBottom: 22 }}>
           <div className="eyebrow" style={{ marginBottom: 8 }}>
             Full metrics catalog · demo/proxy review surface
@@ -44,7 +44,7 @@ export function MetricsCatalogScreen({ catalog }: Props) {
               <h2 className="display" style={{ fontSize: 23, fontWeight: 650, margin: "0 0 14px" }}>
                 {priorityTitle(priority)}
               </h2>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(360px, 1fr))", gap: 14 }}>
+              <div className="metrics-catalog-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 360px), 1fr))", gap: 14 }}>
                 {items.map((item) => (
                   <MetricCard key={item.id} item={item} />
                 ))}
@@ -95,7 +95,7 @@ function MetricCard({ item }: { item: CatalogMetric }) {
           </div>
           <h3 style={{ margin: 0, fontSize: 16, fontWeight: 680, lineHeight: 1.3 }}>{item.title}</h3>
         </div>
-        <span className="mono" style={{ color: "var(--text-mute)", fontSize: 11, whiteSpace: "nowrap" }}>
+        <span className="mono metrics-catalog-visualization" style={{ color: "var(--text-mute)", fontSize: 11, whiteSpace: "nowrap" }}>
           {item.visualization}
         </span>
       </div>
@@ -126,7 +126,11 @@ function Preview({ preview }: { preview: CatalogPreview }) {
       {preview.kind === "kpi" && <Rows rows={preview.rows ?? []} />}
       {preview.kind === "bars" && <Bars rows={preview.rows ?? []} />}
       {preview.kind === "table" && <Rows rows={preview.rows ?? []} />}
-      {preview.kind === "flow" && <EndpointSankey flows={preview.flows ?? []} compact />}
+      {preview.kind === "flow" && (
+        <div className="sankey-scroll">
+          <EndpointSankey flows={preview.flows ?? []} compact />
+        </div>
+      )}
       {preview.kind === "heatmap" && <Heatmap cells={preview.cells ?? []} />}
       {preview.kind === "quadrant" && <Scatter points={preview.points ?? []} quadrant />}
       {preview.kind === "scatter" && <Scatter points={preview.points ?? []} />}
@@ -141,7 +145,7 @@ function Rows({ rows }: { rows: NonNullable<CatalogPreview["rows"]> }) {
   return (
     <div style={{ display: "grid", gap: 8 }}>
       {rows.map((row) => (
-        <div key={`${row.label}-${row.value}`} style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 12, fontSize: 13 }}>
+        <div key={`${row.label}-${row.value}`} className="metrics-preview-row" style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 12, fontSize: 13 }}>
           <span style={{ color: "var(--text-2)", minWidth: 0 }}>{row.label}</span>
           <span className="mono" style={{ color: "var(--text-1)", fontWeight: 650 }}>{row.value}</span>
         </div>
@@ -194,7 +198,7 @@ function Forest({ rows }: { rows: NonNullable<CatalogPreview["rows"]> }) {
   return (
     <div style={{ display: "grid", gap: 9 }}>
       {rows.map((row) => (
-        <div key={row.label} style={{ display: "grid", gridTemplateColumns: "110px 1fr 58px", gap: 8, alignItems: "center", fontSize: 12 }}>
+        <div key={row.label} className="metrics-preview-forest-row" style={{ display: "grid", gridTemplateColumns: "110px 1fr 58px", gap: 8, alignItems: "center", fontSize: 12 }}>
           <span style={{ color: "var(--text-2)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row.label}</span>
           <div style={{ height: 2, background: "var(--line)", position: "relative" }}>
             <span style={{ position: "absolute", left: `${Math.round((row.share ?? 0.5) * 100)}%`, top: -5, width: 12, height: 12, borderRadius: "50%", background: "var(--teal)" }} />
@@ -210,7 +214,7 @@ function BoxRows({ rows }: { rows: NonNullable<CatalogPreview["rows"]> }) {
   return (
     <div style={{ display: "grid", gap: 8 }}>
       {rows.map((row) => (
-        <div key={row.label} style={{ display: "grid", gridTemplateColumns: "70px 1fr auto", gap: 10, alignItems: "center", fontSize: 12 }}>
+        <div key={row.label} className="metrics-preview-box-row" style={{ display: "grid", gridTemplateColumns: "70px 1fr auto", gap: 10, alignItems: "center", fontSize: 12 }}>
           <span style={{ color: "var(--text-2)" }}>{row.label}</span>
           <div style={{ height: 10, borderRadius: 5, background: "var(--line)", overflow: "hidden" }}>
             <div style={{ width: `${Math.round((row.share ?? 0.5) * 100)}%`, height: "100%", background: "var(--teal)" }} />

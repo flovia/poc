@@ -97,15 +97,8 @@ export default async function CoUsageProvidersPage({
         }}
       />
       <div className="scroll">
-        <div style={{ padding: "32px 40px 80px" }}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "flex-end",
-              justifyContent: "space-between",
-              marginBottom: 20,
-            }}
-          >
+        <div className="co-usage-providers-page-pad">
+          <div className="co-usage-providers-page-head">
             <div>
               <div
                 style={{
@@ -123,7 +116,7 @@ export default async function CoUsageProvidersPage({
                 Co-Usage Providers
               </h1>
             </div>
-            <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+            <div className="co-usage-providers-summary">
               <SummaryChip
                 label="Providers"
                 value={totalProviders}

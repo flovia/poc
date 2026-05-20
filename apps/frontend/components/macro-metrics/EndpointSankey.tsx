@@ -70,7 +70,7 @@ export function EndpointSankey({
       : { top: 10, right: 132, bottom: 10, left: 16 });
 
   return (
-    <div style={{ height: resolvedHeight, minWidth: resolvedMinWidth, width: "100%" }}>
+    <div className="endpoint-sankey-frame" style={{ height: resolvedHeight, minWidth: resolvedMinWidth, width: "100%" }}>
       <ResponsiveSankey<SankeyNode, SankeyLink>
         data={data}
         margin={resolvedMargin}
