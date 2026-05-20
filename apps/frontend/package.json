@@ -19,6 +19,7 @@
   "dependencies": {
     "@hit-pay/mpp-client": "beta",
     "@nivo/sankey": "^0.99.0",
+    "@vercel/analytics": "^2.0.1",
     "contracts": "workspace:*",
     "next": "^16.2.4",
     "react": "^19.0.0",
