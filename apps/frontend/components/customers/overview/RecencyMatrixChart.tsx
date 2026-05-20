@@ -65,6 +65,7 @@ export function RecencyMatrixChart({ matrix }: RecencyMatrixChartProps) {
       >
         <div style={{ fontSize: 12, color: "var(--text-3)", lineHeight: 1.4 }}>{thresholdNote}</div>
         <div
+          className="recency-matrix-grid"
           style={{
             display: "grid",
             gridTemplateColumns: "1fr 1fr",

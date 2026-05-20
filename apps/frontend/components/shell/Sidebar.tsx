@@ -17,7 +17,7 @@ import { SDK_DEMO_PROVIDER_ID, SDK_DEMO_PROVIDER_NAME } from "@/lib/sdk-fixtures
 // "wallet" is intentionally treated as a child of "customers" for nav
 // highlighting — there's no top-level Wallet entry, the wallet detail page
 // is reached by drilling in from the customers list.
-type ActiveRoute =
+export type ActiveRoute =
   | "customers"
   | "api-growth"
   | "geo-spec"
@@ -33,9 +33,10 @@ type SidebarProps = {
   activeProviderId: string | undefined;
   activeRoute: ActiveRoute;
   dataMode: DashboardMode;
+  className?: string;
 };
 
-export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProps) {
+export function Sidebar({ activeProviderId, activeRoute, dataMode, className }: SidebarProps) {
   const pathname = usePathname();
   const { stored, userProviders, hydrated, demoOpted } = useProviders();
   const userIds = useMemo(
@@ -96,7 +97,7 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
   };
 
   return (
-    <aside className="sidebar">
+    <aside className={className ? `sidebar ${className}` : "sidebar"}>
       <div className="brand">
         <Image
           className="brand-mark"
@@ -151,8 +152,6 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode }: SidebarProp
       </Link>
 
       <nav className="nav">
-        <div className="nav-label">Workspace</div>
-
         {navDisabled ? (
           <span
             role="link"

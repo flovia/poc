@@ -33,7 +33,7 @@ const providers = [
 export function ShowcaseOverviewScreen() {
   return (
     <div className="scroll">
-      <div style={{ padding: "32px 40px 80px", maxWidth: 1440, margin: "0 auto" }}>
+      <div className="showcase-page-pad">
         <header style={{ marginBottom: 32 }}>
           <div className="eyebrow" style={{ marginBottom: 12 }}>
             Paid API analytics showcase
@@ -47,7 +47,7 @@ export function ShowcaseOverviewScreen() {
           </p>
         </header>
 
-        <section style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 16 }}>
+        <section className="showcase-provider-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 16 }}>
           {providers.map((provider) => (
             <Link
               key={provider.href}
@@ -73,7 +73,8 @@ export function ShowcaseOverviewScreen() {
               Comparison
             </div>
           </div>
-          <table className="dt" style={{ margin: 0 }}>
+          <div className="table-scroll">
+            <table className="dt" style={{ margin: 0 }}>
             <thead>
               <tr>
                 <th>provider</th>
@@ -87,14 +88,15 @@ export function ShowcaseOverviewScreen() {
               <CompareRow provider="HitPay MPP" rail="Checkout" ux="Checkout URL and QR" />
               <CompareRow provider="Solana MPP" rail="Solana SPL (devnet)" ux="Wallet-signed SPL transfer" />
             </tbody>
-          </table>
+            </table>
+          </div>
         </section>
 
         <section className="card" style={{ marginTop: 24, padding: 24 }}>
           <div className="eyebrow" style={{ marginBottom: 16 }}>
             Joined analytics preview
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 46px 1fr 46px 1fr", alignItems: "center", gap: 10 }}>
+          <div className="showcase-overview-flow" style={{ display: "grid", gridTemplateColumns: "1fr 46px 1fr 46px 1fr", alignItems: "center", gap: 10 }}>
             <FlowBox title="Payment context" items={["provider", "rail", "amount", "challenge id"]} />
             <FlowArrow />
             <FlowBox title="API usage" items={["endpoint", "status", "latency", "request id"]} />
@@ -141,5 +143,5 @@ function FlowBox({ title, items }: { title: string; items: string[] }) {
 }
 
 function FlowArrow() {
-  return <div className="mono" style={{ textAlign: "center", color: "var(--text-3)", fontSize: 22 }}>→</div>;
+  return <div className="mono showcase-flow-arrow" style={{ textAlign: "center", color: "var(--text-3)", fontSize: 22 }}>→</div>;
 }

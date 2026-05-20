@@ -56,6 +56,7 @@ export function CoUsageProvidersView({
   return (
     <>
       <div
+        className="co-usage-providers-table-card"
         style={{
           display: "grid",
           gap: 20,
@@ -74,7 +75,7 @@ export function CoUsageProvidersView({
           boxShadow: "var(--shadow-1)",
         }}
       >
-        <table className="dt">
+        <table className="dt co-usage-providers-table">
           <thead>
             <tr>
               <th>
@@ -124,7 +125,7 @@ export function CoUsageProvidersView({
               const key = row.payToWallet ?? row.providerId;
               return (
                 <tr key={key}>
-                  <td>
+                  <td data-label="Provider">
                     <button
                       type="button"
                       onClick={() => select(row)}
@@ -179,7 +180,7 @@ export function CoUsageProvidersView({
                       )}
                     </button>
                   </td>
-                  <td style={{ color: "var(--text-2)" }}>
+                  <td data-label="Top endpoints" style={{ color: "var(--text-2)" }}>
                     <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
                       {row.endpoints.slice(0, ENDPOINT_PREVIEW_COUNT).map((ep, i) => (
                         <div
@@ -218,12 +219,12 @@ export function CoUsageProvidersView({
                       )}
                     </div>
                   </td>
-                  <td style={{ textAlign: "right" }}>{row.sharedWallets.toLocaleString()}</td>
-                  <td style={{ textAlign: "right" }}>{row.sharedTxCount.toLocaleString()}</td>
-                  <td style={{ textAlign: "right" }} className="mono">
+                  <td data-label="Overlapping wallets" style={{ textAlign: "right" }}>{row.sharedWallets.toLocaleString()}</td>
+                  <td data-label="Co-usage tx" style={{ textAlign: "right" }}>{row.sharedTxCount.toLocaleString()}</td>
+                  <td data-label="Signal" style={{ textAlign: "right" }} className="mono">
                     {row.confidence.toFixed(2)}
                   </td>
-                  <td>
+                  <td data-label="Opportunity">
                     <span className={opportunityChipClass(row.opportunity)}>
                       {opportunityLabel(row.opportunity)}
                     </span>

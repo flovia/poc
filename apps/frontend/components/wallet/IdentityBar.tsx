@@ -38,27 +38,11 @@ export function IdentityBar({ customer, metrics, dataMode, sdkExtras }: Identity
         overflow: "hidden",
       }}
     >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "flex-start",
-          justifyContent: "space-between",
-          gap: 24,
-          minWidth: 0,
-        }}
-      >
+      <div className="identity-bar-layout">
         <div style={{ minWidth: 0, flex: 1 }}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              marginBottom: 8,
-              minWidth: 0,
-            }}
-          >
+          <div className="identity-bar-address-row">
             <span
-              className="mono display"
+              className="mono display identity-bar-address"
               style={{
                 fontSize: 22,
                 fontWeight: 600,
@@ -133,6 +117,7 @@ export function IdentityBar({ customer, metrics, dataMode, sdkExtras }: Identity
         </div>
 
         <div
+          className="identity-bar-spend"
           style={{
             display: "flex",
             flexDirection: "column",

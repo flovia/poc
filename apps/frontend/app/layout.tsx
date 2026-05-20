@@ -1,8 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Analytics } from "@vercel/analytics/next";
 import { Geist, Geist_Mono, Space_Grotesk } from "next/font/google";
-import { headers } from "next/headers";
-import { isMobileUserAgent, MobileDesktopGate } from "@/components/shell/MobileDesktopGate";
 import { ProvidersContextProvider } from "./providers";
 import "./globals.css";
 
@@ -75,18 +73,10 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const userAgent = (await headers()).get("user-agent");
-  const landingUrl = process.env.NEXT_PUBLIC_LANDING_URL ?? "https://flovia402.com";
-  const content = isMobileUserAgent(userAgent) ? (
-    <MobileDesktopGate landingUrl={landingUrl} />
-  ) : (
-    <ProvidersContextProvider>{children}</ProvidersContextProvider>
-  );
-
   return (
     <html lang="en" className={`${geist.variable} ${geistMono.variable} ${spaceGrotesk.variable}`}>
       <body>
-        {content}
+        <ProvidersContextProvider>{children}</ProvidersContextProvider>
         <Analytics />
       </body>
     </html>

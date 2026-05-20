@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Fragment } from "react";
 import { useActiveProvider } from "@/app/providers";
 import { PageOnboarding, type PageOnboardingContent } from "@/components/onboarding/PageOnboarding";
+import { MobileMenuButton } from "@/components/shell/MobileMenuButton";
 import type { DashboardMode } from "@/lib/data-mode";
 
 export type Crumb = {
@@ -37,6 +38,7 @@ export function TopBar({
 
   return (
     <header className="topbar">
+      <MobileMenuButton />
       <div className="crumb">
         <span style={{ color: "var(--text-3)" }}>{providerName}</span>
         <span className="sep">/</span>
@@ -55,6 +57,7 @@ export function TopBar({
       </div>
       <div className="spacer" />
       {onboarding ? <PageOnboarding content={onboarding} /> : null}
+      <img className="mobile-brand-logo" src="/logo.png" alt="Flovia" />
       {/*
         グローバル UI 要素 (期間セレクタ / freshness インジケータ) は撤去済み。
         いずれもページ単独で意味を持つので、ページ内 Toolbar / Header に再配置する

@@ -153,6 +153,7 @@ export function ActivityTimeline({
                 </div>
               )}
               <div
+                className="timeline-event-row"
                 style={{
                   display: "grid",
                   gridTemplateColumns: "150px 90px minmax(0, 1fr) 110px",

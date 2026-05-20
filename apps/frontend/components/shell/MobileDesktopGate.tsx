@@ -19,7 +19,7 @@ export function MobileDesktopGate({ landingUrl }: MobileDesktopGateProps) {
         </div>
         <h1 id="mobile-desktop-gate-title">Flovia is built for desktop analytics</h1>
         <p className="mobile-desktop-gate-copy">
-          This workspace uses dense payment tables, provider-level analysis, and network views that
+          Flovia uses dense payment tables, provider-level analysis, and network views that
           need a larger screen. Open Flovia on desktop for the full dashboard experience.
         </p>
         <div className="mobile-desktop-gate-actions">

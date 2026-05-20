@@ -1,4 +1,4 @@
-import { Sidebar } from "@/components/shell/Sidebar";
+import { AppShell } from "@/components/shell/AppShell";
 import { SdkPreviewNoticeBar } from "@/components/shell/SdkPreviewNoticeBar";
 import { getServerDashboardMode } from "@/lib/data-mode";
 
@@ -7,10 +7,7 @@ export default async function SetupLayout({ children }: { children: React.ReactN
   return (
     <>
       <SdkPreviewNoticeBar />
-      <div className="app">
-        <Sidebar activeProviderId={undefined} activeRoute="setup" dataMode={dataMode} />
-        <main className="main">{children}</main>
-      </div>
+      <AppShell activeProviderId={undefined} activeRoute="setup" dataMode={dataMode}>{children}</AppShell>
     </>
   );
 }
