@@ -15,14 +15,11 @@ export default async function ProvidersIndexPage() {
               <header className="providers-page-header">
                 <MobileMenuButton />
                 <div className="providers-page-header__body">
-                  <div className="eyebrow" style={{ marginBottom: 8 }}>
-                    Workspace
-                  </div>
                   <h1
                     className="display"
                     style={{ fontSize: 30, fontWeight: 700, margin: 0, letterSpacing: "-0.02em" }}
                   >
-                    API providers
+                    API Providers
                   </h1>
                   <p
                     style={{
@@ -36,6 +33,7 @@ export default async function ProvidersIndexPage() {
                     Pick an API provider to view its customers, growth, and GEO.
                   </p>
                 </div>
+                <img className="mobile-brand-logo" src="/logo.png" alt="Flovia" />
               </header>
               <ProvidersPicker />
             </div>

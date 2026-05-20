@@ -42,7 +42,7 @@ export function AppShell({ children, activeProviderId, activeRoute, dataMode }: 
             className="mobile-nav__panel"
             role="dialog"
             aria-modal="true"
-            aria-label="Workspace navigation"
+            aria-label="Navigation"
             onClickCapture={(event) => {
               if ((event.target as HTMLElement).closest("a")) nav.close();
             }}

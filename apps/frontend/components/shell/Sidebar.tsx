@@ -152,8 +152,6 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode, className }: 
       </Link>
 
       <nav className="nav">
-        <div className="nav-label">Workspace</div>
-
         {navDisabled ? (
           <span
             role="link"
