@@ -14,7 +14,6 @@ on:
       - deploy/**
       - docker-compose.lightsail.yml
       - package.json
-      - bun.lock
   workflow_dispatch:
 
 permissions:
