@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Fragment } from "react";
 import { useActiveProvider } from "@/app/providers";
 import { PageOnboarding, type PageOnboardingContent } from "@/components/onboarding/PageOnboarding";
-import { useMobileNav } from "@/components/shell/MobileNavContext";
+import { MobileMenuButton } from "@/components/shell/MobileMenuButton";
 import type { DashboardMode } from "@/lib/data-mode";
 
 export type Crumb = {
@@ -28,7 +28,6 @@ export function TopBar({
   onboarding,
 }: TopBarProps) {
   const { active, hydrated } = useActiveProvider(providerId);
-  const mobileNav = useMobileNav();
 
   let providerName = fallbackProviderName;
   if (providerId) {
@@ -39,19 +38,7 @@ export function TopBar({
 
   return (
     <header className="topbar">
-      {mobileNav ? (
-        <button
-          type="button"
-          className="mobile-menu-button"
-          aria-label="Open navigation"
-          aria-expanded={mobileNav.isOpen}
-          onClick={mobileNav.open}
-        >
-          <span aria-hidden />
-          <span aria-hidden />
-          <span aria-hidden />
-        </button>
-      ) : null}
+      <MobileMenuButton />
       <div className="crumb">
         <span style={{ color: "var(--text-3)" }}>{providerName}</span>
         <span className="sep">/</span>
