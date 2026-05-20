@@ -1,4 +1,4 @@
-import { Sidebar } from "@/components/shell/Sidebar";
+import { AppShell } from "@/components/shell/AppShell";
 import { SdkPreviewNoticeBar } from "@/components/shell/SdkPreviewNoticeBar";
 import { ProvidersPicker } from "@/components/providers/ProvidersPicker";
 import { getServerDashboardMode } from "@/lib/data-mode";
@@ -8,11 +8,9 @@ export default async function ProvidersIndexPage() {
   return (
     <>
       <SdkPreviewNoticeBar />
-      <div className="app">
-        <Sidebar activeProviderId={undefined} activeRoute={undefined} dataMode={dataMode} />
-        <main className="main">
+      <AppShell activeProviderId={undefined} activeRoute={undefined} dataMode={dataMode}>
           <div className="scroll" style={{ background: "var(--bg-shell)" }}>
-            <div style={{ padding: "32px 40px 80px", maxWidth: 1200, margin: "0 auto" }}>
+            <div className="page-pad page-pad--wide">
               <header style={{ marginBottom: 24 }}>
                 <div className="eyebrow" style={{ marginBottom: 8 }}>
                   Workspace
@@ -38,8 +36,7 @@ export default async function ProvidersIndexPage() {
               <ProvidersPicker />
             </div>
           </div>
-        </main>
-      </div>
+      </AppShell>
     </>
   );
 }

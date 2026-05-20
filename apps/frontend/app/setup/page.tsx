@@ -11,7 +11,7 @@ export default async function SetupPage() {
     <>
       <TopBar crumbs={[{ label: "Setup" }]} dataMode={dataMode} />
       <div className="scroll">
-        <div style={{ padding: "40px 56px 80px", maxWidth: 880, margin: "0 auto" }}>
+        <div className="page-pad page-pad--setup">
           <div style={{ marginBottom: 36 }}>
             <div
               style={{

@@ -2,7 +2,7 @@
 
 import { use, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Sidebar } from "@/components/shell/Sidebar";
+import { AppShell } from "@/components/shell/AppShell";
 import { useProviders } from "@/app/providers";
 import type { DashboardMode } from "@/lib/data-mode";
 
@@ -59,13 +59,11 @@ export function ProviderClientLayout({
   const showSkeleton = !hydrated || (dataMode === "onChainOnly" && stored.length === 0);
 
   return (
-    <div className="app">
-      <Sidebar
-        activeProviderId={showSkeleton ? undefined : providerId}
-        activeRoute={activeRoute}
-        dataMode={dataMode}
-      />
-      <main className="main">
+    <AppShell
+      activeProviderId={showSkeleton ? undefined : providerId}
+      activeRoute={activeRoute}
+      dataMode={dataMode}
+    >
         {showSkeleton ? (
           <div style={{ padding: 40 }}>
             <div className="sk" style={{ width: 220, height: 18, marginBottom: 10 }} />
@@ -74,7 +72,6 @@ export function ProviderClientLayout({
         ) : (
           children
         )}
-      </main>
-    </div>
+    </AppShell>
   );
 }
