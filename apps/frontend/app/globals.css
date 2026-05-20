@@ -437,6 +437,10 @@ a { color: inherit; text-decoration: none; }
   justify-content: center;
 }
 
+.table-scroll > table {
+  min-width: 640px;
+}
+
 .endpoint-sankey-frame {
   max-width: 100%;
 }
@@ -445,9 +449,31 @@ a { color: inherit; text-decoration: none; }
   overflow-wrap: anywhere;
 }
 
+.showcase-page-pad {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 32px 40px 80px;
+}
+
+.showcase-code-compare,
+.showcase-join-flow,
+.showcase-step-grid,
+.showcase-lane-grid,
+.showcase-summary-grid,
+.showcase-comparison-grid,
+.showcase-join-equation,
+.showcase-provider-grid,
+.showcase-overview-flow {
+  min-width: 0;
+}
+
 @media (max-width: 1100px) {
   .providers-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .showcase-step-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 }
 
@@ -680,6 +706,44 @@ a { color: inherit; text-decoration: none; }
     gap: 6px !important;
   }
 
+  .showcase-page-pad {
+    padding: 24px 16px 64px;
+  }
+
+  .showcase-code-compare,
+  .showcase-join-flow,
+  .showcase-lane-grid,
+  .showcase-summary-grid,
+  .showcase-comparison-grid,
+  .showcase-join-equation,
+  .showcase-provider-grid,
+  .showcase-overview-flow {
+    grid-template-columns: 1fr !important;
+  }
+
+  .showcase-arrow,
+  .showcase-flow-arrow {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    min-height: 28px;
+    transform: rotate(90deg);
+  }
+
+  .showcase-equation-symbol {
+    text-align: center;
+  }
+
+  .showcase-card {
+    padding: 16px !important;
+  }
+
+  .showcase-evidence-chip {
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
   .setup-config-head,
   .setup-form-footer,
   .setup-form-footer__meta {
@@ -762,6 +826,20 @@ a { color: inherit; text-decoration: none; }
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
+  }
+
+  .showcase-step-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .showcase-card-head {
+    align-items: stretch !important;
+    flex-direction: column;
+  }
+
+  .showcase-comparison-item {
+    grid-template-columns: 1fr !important;
+    gap: 3px !important;
   }
 
   .setup-actions {
