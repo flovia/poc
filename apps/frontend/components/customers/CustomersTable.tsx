@@ -56,7 +56,7 @@ export function CustomersTable({
   const isSdkConnected = dataMode === "sdkConnected";
   const rowClass = isSdkConnected ? "cust-row cust-row-sdk" : "cust-row";
   return (
-    <div className="card" style={{ overflow: "visible" }}>
+    <div className="card customers-table-card" style={{ overflow: "visible" }}>
       <div className={`${rowClass} cust-head`}>
         <div>
           <HeaderTooltip
@@ -148,7 +148,7 @@ export function CustomersTable({
               color: "inherit",
             }}
           >
-            <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+            <div className="cust-cell cust-cell--wallet" style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
               <span className="row-indicator" />
               <span style={{ minWidth: 0 }}>
                 <span
@@ -177,18 +177,18 @@ export function CustomersTable({
             </div>
 
             {isSdkConnected && (
-              <div style={{ minWidth: 0 }}>
+              <div className="cust-cell" data-label="Agent" style={{ minWidth: 0 }}>
                 {extras?.agentType ? <AgentBadge agentType={extras.agentType} /> : <span style={{ color: "var(--text-mute)" }}>—</span>}
               </div>
             )}
 
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+            <div className="cust-cell" data-label="Chain" style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
               {chainAttribution.chains.map((chain) => (
                 <ChainBadge key={chain} chain={chain} asset={chainAttribution.asset} />
               ))}
             </div>
 
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+            <div className="cust-cell" data-label="Tag" style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
               {(c.tags ?? []).length === 0 ? (
                 <span style={{ color: "var(--text-mute)", fontSize: 12 }}>—</span>
               ) : (
@@ -205,7 +205,7 @@ export function CustomersTable({
               )}
             </div>
 
-            <div className="mono" style={{ fontSize: 14, color: "var(--text-1)" }}>
+            <div className="cust-cell mono" data-label="Spend" style={{ fontSize: 14, color: "var(--text-1)" }}>
               {c.spendByAsset && Object.keys(c.spendByAsset).length > 1 ? (
                 <span style={{ display: "flex", flexDirection: "column", gap: 2 }}>
                   {Object.entries(c.spendByAsset).map(([asset, amt]) => (
@@ -219,32 +219,39 @@ export function CustomersTable({
                 formatAtomic(c.spendAtomic)
               )}
             </div>
-            <div className="mono" style={{ fontSize: 14, color: "var(--text-2)" }}>
+            <div className="cust-cell mono" data-label="Calls" style={{ fontSize: 14, color: "var(--text-2)" }}>
               {c.observationCount}
             </div>
-            <div className="mono" style={{ fontSize: 14, color: "var(--text-2)" }}>
+            <div className="cust-cell mono" data-label="Providers" style={{ fontSize: 14, color: "var(--text-2)" }}>
               {c.providerCount}
             </div>
 
             {isSdkConnected && (
               <div
                 data-testid="customers-endpoint"
-                className="mono"
+                className="cust-cell mono"
+                data-label="Endpoint"
                 style={{
                   fontSize: 13,
                   color: extras?.usedEndpointsTopK[0] ? "var(--text-2)" : "var(--text-mute)",
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
                   fontStyle: extras?.usedEndpointsTopK[0] ? "normal" : "italic",
                 }}
               >
-                {extras?.usedEndpointsTopK[0] ?? "(none)"}
+                <span
+                  style={{
+                    minWidth: 0,
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}
+                >
+                  {extras?.usedEndpointsTopK[0] ?? "(none)"}
+                </span>
               </div>
             )}
 
             {isSdkConnected && (
-              <div>
+              <div className="cust-cell" data-label="7d">
                 {extras && extras.sparkline7d.length === 7 ? (
                   <Sparkline7d points={extras.sparkline7d} width={90} height={28} />
                 ) : (
@@ -254,6 +261,8 @@ export function CustomersTable({
             )}
 
             <div
+              className="cust-cell cust-cell--last-seen"
+              data-label="Last seen"
               style={{
                 display: "flex",
                 alignItems: "center",

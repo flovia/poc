@@ -12,6 +12,7 @@ export function WalletsSpendCard({ walletCount, totalSpendAtomic }: WalletsSpend
       title="Wallets and spend"
     >
       <div
+        className="wallets-spend-metrics"
         style={{
           display: "grid",
           gridTemplateColumns: "1fr 1fr",

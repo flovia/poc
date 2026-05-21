@@ -47,11 +47,8 @@ export function Toolbar({ total, filteredCount, state, onChange }: ToolbarProps)
   };
 
   return (
-    <div
-      className="card"
-      style={{ padding: 10, marginBottom: 14, display: "flex", alignItems: "center", gap: 10 }}
-    >
-      <div style={{ position: "relative", flex: 1, maxWidth: 320 }}>
+    <div className="card customers-toolbar">
+      <div className="customers-toolbar__search">
         <Icon.search
           width="14"
           height="14"
@@ -84,8 +81,7 @@ export function Toolbar({ total, filteredCount, state, onChange }: ToolbarProps)
         value={state.chain}
         onChange={handleChain}
       />
-      <div style={{ flex: 1 }} />
-      <span style={{ fontSize: 12, color: "var(--text-3)" }}>
+      <span className="customers-toolbar__count">
         {filteredCount} of {total} wallets
       </span>
     </div>

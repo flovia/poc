@@ -1,4 +1,4 @@
-import { Sidebar } from "@/components/shell/Sidebar";
+import { AppShell } from "@/components/shell/AppShell";
 import { SdkPreviewNoticeBar } from "@/components/shell/SdkPreviewNoticeBar";
 import { getServerDashboardMode } from "@/lib/data-mode";
 
@@ -8,10 +8,7 @@ export default async function ShowcaseLayout({ children }: { children: React.Rea
   return (
     <>
       <SdkPreviewNoticeBar />
-      <div className="app">
-        <Sidebar activeProviderId={undefined} activeRoute="showcase" dataMode={dataMode} />
-        <main className="main">{children}</main>
-      </div>
+      <AppShell activeProviderId={undefined} activeRoute="showcase" dataMode={dataMode}>{children}</AppShell>
     </>
   );
 }

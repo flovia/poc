@@ -471,7 +471,7 @@ export function ShowcaseProviderScreen({ provider }: ShowcaseProviderScreenProps
 
   return (
     <div className="scroll">
-      <div style={{ padding: "32px 40px 80px", maxWidth: 1440, margin: "0 auto" }}>
+      <div className="showcase-page-pad">
         <header style={{ marginBottom: 24 }}>
           <div>
             <div className="eyebrow" style={{ marginBottom: 8 }}>Integration → Live → Flovia result → Simulate</div>
@@ -480,7 +480,7 @@ export function ShowcaseProviderScreen({ provider }: ShowcaseProviderScreenProps
         </header>
 
         <Card eyebrow="Integration">
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 12 }}>
+          <div className="showcase-code-compare" style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 12 }}>
             <CodeCompareColumn label={config.providerOnlyLabel} tone="muted" code={config.providerOnlySnippet} />
             <CodeCompareColumn label="With Flovia SDK" tone="accent" accent={config.accent} accentDim={config.accentDim} code={config.floviaSnippet} />
           </div>
@@ -552,6 +552,7 @@ export function ShowcaseProviderScreen({ provider }: ShowcaseProviderScreenProps
             Payment dashboards know who paid. API logs know what was used. Flovia connects them.
           </h2>
           <div
+            className="showcase-join-flow"
             style={{
               display: "grid",
               gridTemplateColumns: "minmax(0, 1fr) 64px minmax(220px, 0.82fr) 64px minmax(0, 1fr)",
@@ -678,10 +679,11 @@ function Card({
   children: ReactNode;
 }) {
   return (
-    <section className="card" style={{ padding: 24 }}>
+    <section className="card showcase-card" style={{ padding: 24 }}>
       <div className="eyebrow" style={{ marginBottom: 8 }}>{eyebrow}</div>
       {title || action ? (
         <div
+          className="showcase-card-head"
           style={{
             display: "flex",
             justifyContent: "space-between",
@@ -860,6 +862,7 @@ function SimulatedFlowDiagram({
   return (
     <div style={{ display: "grid", gap: 24 }}>
       <div
+        className="showcase-step-grid"
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(5, minmax(0, 1fr))",
@@ -901,6 +904,7 @@ function SimulatedFlowDiagram({
       </div>
 
       <div
+        className="showcase-lane-grid"
         style={{
           display: "grid",
           gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr)",
@@ -1118,7 +1122,7 @@ function LiveResultPanel({
           </span>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 10, marginTop: 14 }}>
+        <div className="showcase-summary-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 10, marginTop: 14 }}>
           {summary.items.map((item) => (
             <SummaryItem key={item.label} label={item.label} value={item.value} href={"href" in item ? item.href : undefined} />
           ))}
@@ -1446,7 +1450,7 @@ function ProviderVsFloviaPanel({
 
   return (
     <div style={{ display: "grid", gap: 14 }}>
-      <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)", gap: 14 }}>
+      <div className="showcase-comparison-grid" style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)", gap: 14 }}>
         <ComparisonColumn
           eyebrow={providerEyebrow}
           title={providerName}
@@ -1475,11 +1479,11 @@ function ProviderVsFloviaPanel({
         }}
       >
         <div className="eyebrow" style={{ marginBottom: 6, color: accent }}>Joined by Flovia</div>
-        <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr)", gap: 10, alignItems: "center" }}>
+        <div className="showcase-join-equation" style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr)", gap: 10, alignItems: "center" }}>
           <JoinPill label="payment" value={joinedPaymentId} />
-          <span className="mono" style={{ color: "var(--text-3)", fontSize: 18 }}>×</span>
+          <span className="mono showcase-equation-symbol" style={{ color: "var(--text-3)", fontSize: 18 }}>×</span>
           <JoinPill label="endpoint" value={endpoint} />
-          <span className="mono" style={{ color: "var(--text-3)", fontSize: 18 }}>→</span>
+          <span className="mono showcase-equation-symbol" style={{ color: "var(--text-3)", fontSize: 18 }}>→</span>
           <JoinPill label="decision signal" value="conversion + retained demand" />
         </div>
       </div>
@@ -1514,7 +1518,7 @@ function ComparisonColumn({
       <h3 style={{ margin: "0 0 12px", fontSize: 16 }}>{title}</h3>
       <div style={{ display: "grid", gap: 9 }}>
         {items.map((item) => (
-          <div key={item.label} style={{ display: "grid", gridTemplateColumns: "120px minmax(0, 1fr)", gap: 10, alignItems: "baseline" }}>
+          <div key={item.label} className="showcase-comparison-item" style={{ display: "grid", gridTemplateColumns: "120px minmax(0, 1fr)", gap: 10, alignItems: "baseline" }}>
             <span style={{ color: "var(--text-3)", fontSize: 12 }}>{item.label}</span>
             {item.href ? (
               <a className="mono" href={item.href} target="_blank" rel="noreferrer" style={{ color: accent, fontSize: 12, overflowWrap: "anywhere" }}>
@@ -1557,7 +1561,7 @@ function EvidenceCard({
       <div className="eyebrow" style={{ marginBottom: 6, color: accent }}>{label}</div>
       <h3 style={{ margin: 0, fontSize: 15, fontWeight: 600 }}>{title}</h3>
       <div style={{ display: "grid", gap: 7, marginTop: 12 }}>
-        {lines.map((line) => <span key={line} className="chip mute" style={{ width: "fit-content", background: "var(--surface-card)" }}>{line}</span>)}
+        {lines.map((line) => <span key={line} className="chip mute showcase-evidence-chip" style={{ width: "fit-content", background: "var(--surface-card)" }}>{line}</span>)}
       </div>
     </div>
   );
@@ -1606,7 +1610,7 @@ function JoinLine({ left, right }: { left: string; right: string }) {
 }
 
 function Arrow() {
-  return <div className="mono" style={{ display: "grid", placeItems: "center", color: "var(--text-3)", fontSize: 22 }}>→</div>;
+  return <div className="mono showcase-arrow" style={{ display: "grid", placeItems: "center", color: "var(--text-3)", fontSize: 22 }}>→</div>;
 }
 
 const secondaryButtonStyle = {

@@ -80,7 +80,7 @@ export function SetupForm() {
     <div className="card" style={{ position: "relative", padding: 28, overflow: "hidden" }}>
       <div style={{ position: "relative" }}>
         {/* Mode toggle */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 22 }}>
+        <div className="setup-config-head">
           <div>
             <div style={{ fontSize: 14, fontWeight: 600 }}>Configuration</div>
             <div style={{ fontSize: 13, color: "var(--text-3)", marginTop: 2 }}>
@@ -137,7 +137,7 @@ export function SetupForm() {
 
         {mode === "simple" ? (
           <Field label="pay_to address" hint="single 0x… address that receives all x402 payments">
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div className="setup-inline-field">
               <input
                 id={addrId}
                 aria-label="pay_to address"
@@ -166,12 +166,7 @@ export function SetupForm() {
               {paths.map((row, i) => (
                 <div
                   key={i}
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "1fr 1.2fr 28px",
-                    gap: 8,
-                    alignItems: "center",
-                  }}
+                  className="setup-path-row"
                 >
                   <input
                     className="mono"
@@ -219,17 +214,8 @@ export function SetupForm() {
           </div>
         )}
 
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginTop: 28,
-            paddingTop: 22,
-            borderTop: "1px solid var(--line)",
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+        <div className="setup-form-footer">
+          <div className="setup-form-footer__meta">
             {hydrated && !demoOpted && (
               <button
                 type="button"
@@ -244,7 +230,7 @@ export function SetupForm() {
               {validation ?? "Stored locally in this browser. No server account required."}
             </div>
           </div>
-          <div style={{ display: "flex", gap: 8 }}>
+          <div className="setup-actions">
             <button
               type="button"
               className="btn ghost"

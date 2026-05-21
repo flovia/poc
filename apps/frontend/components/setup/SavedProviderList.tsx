@@ -48,9 +48,8 @@ export function SavedProviderList() {
             return (
               <div
                 key={p.providerId}
+                className="saved-provider-row"
                 style={{
-                  display: "grid",
-                  gridTemplateColumns: "minmax(0,1fr) 220px 100px 110px",
                   alignItems: "center",
                   padding: "12px 14px",
                   gap: 12,

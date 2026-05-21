@@ -30,7 +30,7 @@ export function WalletScreen({
 }: WalletScreenProps) {
   return (
     <div style={{ position: "relative", background: "var(--bg-shell)", minHeight: "100%" }}>
-      <div style={{ position: "relative", padding: "28px 40px 80px", maxWidth: 1500, margin: "0 auto" }}>
+      <div className="wallet-screen-pad">
         <Link
           href={`/providers/${providerId}/customers`}
           style={{

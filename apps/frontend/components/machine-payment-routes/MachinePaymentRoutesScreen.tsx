@@ -119,7 +119,7 @@ export function MachinePaymentRoutesScreen({ providerId, summary }: MachinePayme
   const railRows = buildDisplayRailRows(summary);
 
   return (
-    <div style={{ padding: "32px 40px 80px", maxWidth: 1440, margin: "0 auto" }}>
+    <div className="machine-routes-page-pad">
       <div style={{ marginBottom: 22 }}>
         <div
           style={{
@@ -138,6 +138,7 @@ export function MachinePaymentRoutesScreen({ providerId, summary }: MachinePayme
       </div>
 
       <div
+        className="machine-routes-stat-grid"
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(5, minmax(0, 1fr))",
@@ -252,7 +253,7 @@ export function MachinePaymentRoutesScreen({ providerId, summary }: MachinePayme
             </span>
           </div>
         </div>
-        <div style={{ overflow: "visible", display: "flex", justifyContent: "center", minWidth: 0 }}>
+        <div className="sankey-scroll" style={{ overflow: "visible", display: "flex", justifyContent: "center", minWidth: 0 }}>
           <EndpointSankey
             flows={routeSankeyFlows}
             ariaLabel="Machine payment route Sankey diagram"

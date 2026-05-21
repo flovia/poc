@@ -32,6 +32,7 @@ export function ProviderSpreadChart({ spread, providerName }: ProviderSpreadChar
           return (
             <div
               key={bucket.label}
+              className="provider-spread-row"
               style={{ display: "grid", gridTemplateColumns: "92px 1fr 56px", gap: 10, alignItems: "center" }}
               title={`${bucket.label}: ${bucket.count} of ${total} wallets (${formatPercent(bucket.share)})`}
             >

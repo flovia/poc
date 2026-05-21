@@ -86,13 +86,7 @@ export function ProvidersPicker() {
 
   if (!hydrated) {
     return (
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-          gap: 16,
-        }}
-      >
+      <div className="providers-grid">
         {[0, 1, 2, 3, 4, 5].map((i) => (
           <div key={i} className="sk" style={{ height: 124, borderRadius: "var(--radius)" }} />
         ))}
@@ -166,13 +160,7 @@ export function ProvidersPicker() {
           </button>
         </article>
       ) : (
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-            gap: 16,
-          }}
-        >
+        <div className="providers-grid">
           {filtered.map((p) => {
         const isDemo = isDemoProvider(p, demoOpted, userIds);
         // Aggregated catalog sources from the brand-key dedup (e.g.
