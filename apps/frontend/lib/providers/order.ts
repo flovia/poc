@@ -2,15 +2,15 @@ import type { StoredProvider } from "@/lib/types";
 
 // Display priority groups (lower rank = shown first):
 //   0: QuickNode          (current x402 data focus)
-//   1: MPP-registry rows  (catalogSource === "mpp_registry")
-//   2: Nansen             (string match in identity)
-//   3: CoinGecko          (string match in identity)
+//   1: Nansen             (string match in identity)
+//   2: CoinGecko          (string match in identity)
+//   3: MPP-registry rows  (catalogSource === "mpp_registry")
 //   4: everything else    (preserves the upstream order)
 const TOP_PROVIDER_MARK = "quicknode";
 const PINNED_PROVIDER_MARKS = ["nansen", "coingecko"] as const;
-const MPP_RANK = 1;
-const PINNED_BASE_RANK = 2;
-const DEFAULT_RANK = PINNED_BASE_RANK + PINNED_PROVIDER_MARKS.length;
+const PINNED_BASE_RANK = 1;
+const MPP_RANK = PINNED_BASE_RANK + PINNED_PROVIDER_MARKS.length;
+const DEFAULT_RANK = MPP_RANK + 1;
 
 function pinnedProviderRank(provider: StoredProvider): number {
   // Aggregated cards (brand-key dedup) carry every contributing catalog source
