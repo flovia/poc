@@ -6,6 +6,7 @@ import type {
   PostgresAnalyticsClient,
 } from "./analytics-data-source";
 import { loadGeneratedAnalyticsDataSourceFromPayload } from "./json-read-model-source";
+import { loadPostgresLiveAnalyticsPayload } from "./postgres-live-read-model";
 
 export const createBunPostgresClient = (url: string): PostgresAnalyticsClient => {
   const sql = new SQL(url);
@@ -39,4 +40,20 @@ export const loadPostgresAnalyticsDataSource = async (
     throw new Error(`BFF analytics snapshot not found: ${snapshotId}`);
   }
   return loadGeneratedAnalyticsDataSourceFromPayload(payload as GeneratedReadModelFile);
+};
+
+export const persistPostgresLiveAnalyticsSnapshot = async (
+  client: PostgresAnalyticsClient,
+  snapshotId = "latest",
+): Promise<GeneratedReadModelFile> => {
+  const payload = await loadPostgresLiveAnalyticsPayload(client);
+  await client.query(
+    `INSERT INTO bff_analytics_snapshots (id, payload)
+       VALUES ($1, $2::jsonb)
+       ON CONFLICT (id) DO UPDATE
+       SET payload = EXCLUDED.payload,
+           updated_at = now()`,
+    [snapshotId, JSON.stringify(payload)],
+  );
+  return payload;
 };

@@ -9,6 +9,7 @@ import {
   isSolanaCustomer,
   loadGeneratedAnalyticsDataSource,
   loadPostgresAnalyticsDataSource,
+  persistPostgresLiveAnalyticsSnapshot,
   resolveAnalyticsDataSource,
   shouldTagPaySh,
 } from "../src/data/analytics-source";
@@ -1152,9 +1153,38 @@ describe("BFF routes", () => {
     ).toThrow("postgres:// DATABASE_URL");
   });
 
-  test("uses postgres live loader by default", async () => {
+  test("uses postgres snapshot loader by default", async () => {
     const dataSource = await resolveAnalyticsDataSource(undefined, {
-      env: { BFF_ANALYTICS_SOURCE: "postgres" },
+      env: {
+        BFF_ANALYTICS_SOURCE: "postgres",
+        BFF_ANALYTICS_SNAPSHOT_ID: "snapshot-test",
+      },
+      postgresClient: {
+        async query(sql, params) {
+          expect(sql).toBe("SELECT payload FROM bff_analytics_snapshots WHERE id = $1");
+          expect(params).toEqual(["snapshot-test"]);
+          return [
+            {
+              payload: {
+                serviceSummary: {
+                  ...serviceAnalyticsSummaryResponse,
+                  generatedFrom: "postgres-snapshot-default-test",
+                  transactionCount: 77,
+                },
+              },
+            },
+          ];
+        },
+      },
+    });
+
+    expect(dataSource.serviceSummary.generatedFrom).toBe("postgres-snapshot-default-test");
+    expect(dataSource.serviceSummary.transactionCount).toBe(77);
+  });
+
+  test("uses postgres live loader when live mode is configured", async () => {
+    const dataSource = await resolveAnalyticsDataSource(undefined, {
+      env: { BFF_ANALYTICS_SOURCE: "postgres", BFF_ANALYTICS_POSTGRES_MODE: "live" },
       postgresClient: {
         async query(sql) {
           if (sql.includes("attributed_grouped")) {
@@ -1190,6 +1220,31 @@ describe("BFF routes", () => {
     expect(dataSource.serviceSummary.generatedFrom).toBe("postgres-live-read-model");
     expect(dataSource.providers.providers[0]?.serviceId).toBe("live-service");
     expect(dataSource.providers.providers[0]?.catalogSource).toBe("pay_sh_curated");
+  });
+
+  test("persists postgres live payload as a named snapshot", async () => {
+    const queries: Array<{ sql: string; params?: unknown[] }> = [];
+    const payload = await persistPostgresLiveAnalyticsSnapshot(
+      {
+        async query(sql, params) {
+          queries.push({ sql, params });
+          if (sql.includes("attributed_grouped")) return [];
+          if (sql.includes("provider_activity")) return [];
+          if (sql.includes("INSERT INTO bff_analytics_snapshots")) return [];
+          throw new Error(`unexpected query: ${sql}`);
+        },
+      },
+      "latest",
+    );
+
+    const insert = queries.find((query) =>
+      query.sql.includes("INSERT INTO bff_analytics_snapshots"),
+    );
+    expect(insert?.params?.[0]).toBe("latest");
+    expect(typeof insert?.params?.[1]).toBe("string");
+    expect((payload.serviceSummary as { generatedFrom?: string } | undefined)?.generatedFrom).toBe(
+      "postgres-live-read-model",
+    );
   });
 
   test("uses postgres snapshot loader when snapshot mode is configured", async () => {

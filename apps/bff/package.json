@@ -9,6 +9,7 @@
   },
   "scripts": {
     "start": "bun --env-file=../../.env src/server.ts",
+    "analytics:snapshot": "bun --env-file=../../.env scripts/generate-analytics-snapshot.ts",
     "test": "bun test",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "verify": "bun run typecheck && bun test"

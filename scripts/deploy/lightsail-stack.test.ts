@@ -26,7 +26,7 @@ describe("lightsail shared stack", () => {
     expect(caddyfile).toContain('respond "{\\"branches\\":[\\"main\\",\\"develop\\"]}" 200');
     expect(caddyfile).toContain("redir /main /main/ 308");
     expect(caddyfile).toContain("handle_path /main/* {");
-    expect(caddyfile).toContain("reverse_proxy main-bff:3001 {");
+    expect(caddyfile).toContain("reverse_proxy main-bff-blue:3001 {");
     expect(caddyfile).toContain("header_up X-Forwarded-Prefix /main");
     expect(caddyfile).toContain("redir /develop /develop/ 308");
     expect(caddyfile).toContain("handle_path /develop/* {");
@@ -43,8 +43,8 @@ describe("lightsail shared stack", () => {
     expect(syncScript).toContain('stack_caddy_dir="${stack_root}/deploy/caddy"');
     expect(syncScript).toContain('stack_caddy_config="${stack_caddy_dir}/Caddyfile"');
     expect(syncScript).toContain('install -m 644 deploy/caddy/Caddyfile "$stack_caddy_config"');
-    expect(syncScript).toContain('dc pull "$service_name" caddy');
-    expect(syncScript).toContain('dc up -d --remove-orphans "$service_name" caddy');
+    expect(syncScript).toContain('dc pull "$next_service" caddy');
+    expect(syncScript).toContain('dc up -d "$next_service"');
     expect(syncScript).toContain(
       "dc exec -T -w /etc/caddy caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile",
     );
@@ -58,17 +58,19 @@ describe("lightsail shared stack", () => {
 
     expect(syncScript).not.toContain('slot_state_file="${stack_root}/.develop-bff-slot"');
     expect(syncScript).toContain("get_container_started_at()");
-    expect(syncScript).toContain("detect_active_develop_slot()");
+    expect(syncScript).toContain("detect_active_slot()");
     expect(syncScript).toContain("flovia-lightsail-develop-bff-blue-1");
     expect(syncScript).toContain("flovia-lightsail-develop-bff-green-1");
     expect(syncScript).toContain('blue_started_at="$(get_container_started_at');
     expect(syncScript).toContain('green_started_at="$(get_container_started_at');
-    expect(syncScript).toContain('detected_active_develop_slot="$(detect_active_develop_slot)"');
-    expect(syncScript).toContain('active_slot="$detected_active_develop_slot"');
+    expect(syncScript).toContain(
+      'detected_active_develop_slot="$(detect_active_slot develop "$develop_blue_container" "$develop_green_container")"',
+    );
+    expect(syncScript).toContain('active_slot="$detected_active"');
     expect(syncScript).toContain("next_slot");
     expect(syncScript).toContain('next_slot="blue"');
     expect(syncScript).toContain('next_slot="green"');
-    expect(syncScript).toContain('next_service="develop-bff-${next_slot}"');
+    expect(syncScript).toContain('next_service="${service_prefix}-${next_slot}"');
     expect(syncScript).toContain("wait_for_service_health_ready");
     expect(syncScript).toContain("local timeout_secs=600");
     expect(syncScript).toContain('health_url="http://${container_ip}:3001/health"');
@@ -120,7 +122,7 @@ describe("lightsail shared stack", () => {
     expect(syncScript).toContain("write_branch_analytics_env()");
     expect(syncScript).toContain("printf '%s_BFF_ANALYTICS_SOURCE=postgres");
     expect(syncScript).toContain("printf '%s_BFF_ANALYTICS_DATABASE_URL=%s");
-    expect(syncScript).toContain("printf '%s_BFF_ANALYTICS_POSTGRES_MODE=live");
+    expect(syncScript).toContain("printf '%s_BFF_ANALYTICS_POSTGRES_MODE=snapshot");
     expect(syncScript).toContain('write_branch_analytics_env MAIN "$main_analytics_url"');
     expect(syncScript).toContain(
       'print_optional_env_var MAIN_BFF_ANALYTICS_READ_MODEL_PATH "${MAIN_BFF_ANALYTICS_READ_MODEL_PATH:-}"',
@@ -137,14 +139,14 @@ describe("lightsail shared stack", () => {
     );
   });
 
-  test("compose passes live analytics postgres mode to both branches", () => {
+  test("compose passes snapshot analytics postgres mode to both branches", () => {
     const compose = read("../../docker-compose.lightsail.yml");
 
     expect(compose).toContain(
-      "BFF_ANALYTICS_POSTGRES_MODE: ${MAIN_BFF_ANALYTICS_POSTGRES_MODE:-${BFF_ANALYTICS_POSTGRES_MODE:-live}}",
+      "BFF_ANALYTICS_POSTGRES_MODE: ${MAIN_BFF_ANALYTICS_POSTGRES_MODE:-${BFF_ANALYTICS_POSTGRES_MODE:-snapshot}}",
     );
     expect(compose).toContain(
-      "BFF_ANALYTICS_POSTGRES_MODE: ${DEVELOP_BFF_ANALYTICS_POSTGRES_MODE:-${BFF_ANALYTICS_POSTGRES_MODE:-live}}",
+      "BFF_ANALYTICS_POSTGRES_MODE: ${DEVELOP_BFF_ANALYTICS_POSTGRES_MODE:-${BFF_ANALYTICS_POSTGRES_MODE:-snapshot}}",
     );
   });
 

@@ -41,6 +41,7 @@ export {
   createBunPostgresClient,
   isPostgresConnectionString,
   loadPostgresAnalyticsDataSource,
+  persistPostgresLiveAnalyticsSnapshot,
   resolvePostgresDatabaseUrl,
 } from "./postgres-source";
 export { buildRouteAnalytics, visibilityForRail } from "./route-analytics-builder";
@@ -87,7 +88,7 @@ export const resolveAnalyticsDataSource = (
       );
     }
     const client = options.postgresClient ?? createBunPostgresClient(databaseUrl as string);
-    if ((env.BFF_ANALYTICS_POSTGRES_MODE ?? "live") === "snapshot") {
+    if ((env.BFF_ANALYTICS_POSTGRES_MODE ?? "snapshot") === "snapshot") {
       return loadPostgresAnalyticsDataSource(
         client,
         env.BFF_ANALYTICS_SNAPSHOT_ID ?? "latest",
