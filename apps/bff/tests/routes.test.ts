@@ -249,6 +249,26 @@ describe("BFF routes", () => {
     });
   });
 
+  test("serves health without resolving the default analytics source", async () => {
+    process.env.BFF_ANALYTICS_SOURCE = "postgres";
+    delete process.env.BFF_ANALYTICS_DATABASE_URL;
+
+    try {
+      const handler = createBffHandler(undefined, null, runtimeMetadata);
+      const response = await handler(request("/health"));
+
+      expect(response.status).toBe(200);
+      await expect(response.json()).resolves.toEqual({
+        status: "ok",
+        service: "flovia-bff",
+        commitHash: runtimeMetadata.commitHash,
+        startedAt: runtimeMetadata.startedAt,
+      });
+    } finally {
+      process.env.BFF_ANALYTICS_SOURCE = "fixture";
+    }
+  });
+
   test("serves health with runtime metadata", async () => {
     const handler = createBffHandler(fixtureAnalyticsDataSource, null, runtimeMetadata);
     const response = await handler(request("/health"));
@@ -1180,6 +1200,45 @@ describe("BFF routes", () => {
 
     expect(dataSource.serviceSummary.generatedFrom).toBe("postgres-snapshot-default-test");
     expect(dataSource.serviceSummary.transactionCount).toBe(77);
+  });
+
+  test("uses postgres snapshot loader when mode is empty", async () => {
+    const dataSource = await resolveAnalyticsDataSource(undefined, {
+      env: {
+        BFF_ANALYTICS_SOURCE: "postgres",
+        BFF_ANALYTICS_POSTGRES_MODE: "",
+        BFF_ANALYTICS_SNAPSHOT_ID: "snapshot-test",
+      },
+      postgresClient: {
+        async query(sql, params) {
+          expect(sql).toBe("SELECT payload FROM bff_analytics_snapshots WHERE id = $1");
+          expect(params).toEqual(["snapshot-test"]);
+          return [
+            {
+              payload: {
+                serviceSummary: {
+                  ...serviceAnalyticsSummaryResponse,
+                  generatedFrom: "postgres-snapshot-empty-mode-test",
+                  transactionCount: 78,
+                },
+              },
+            },
+          ];
+        },
+      },
+    });
+
+    expect(dataSource.serviceSummary.generatedFrom).toBe("postgres-snapshot-empty-mode-test");
+    expect(dataSource.serviceSummary.transactionCount).toBe(78);
+  });
+
+  test("rejects unsupported postgres analytics mode", () => {
+    expect(() =>
+      resolveAnalyticsDataSource(undefined, {
+        env: { BFF_ANALYTICS_SOURCE: "postgres", BFF_ANALYTICS_POSTGRES_MODE: "typo" },
+        postgresClient: { query: async () => [] },
+      }),
+    ).toThrow("Unsupported BFF_ANALYTICS_POSTGRES_MODE: typo");
   });
 
   test("uses postgres live loader when live mode is configured", async () => {

@@ -88,11 +88,15 @@ export const resolveAnalyticsDataSource = (
       );
     }
     const client = options.postgresClient ?? createBunPostgresClient(databaseUrl as string);
-    if ((env.BFF_ANALYTICS_POSTGRES_MODE ?? "snapshot") === "snapshot") {
+    const postgresMode = env.BFF_ANALYTICS_POSTGRES_MODE?.trim() || "snapshot";
+    if (postgresMode === "snapshot") {
       return loadPostgresAnalyticsDataSource(
         client,
         env.BFF_ANALYTICS_SNAPSHOT_ID ?? "latest",
       ).then(overlay);
+    }
+    if (postgresMode !== "live") {
+      throw new Error(`Unsupported BFF_ANALYTICS_POSTGRES_MODE: ${postgresMode}`);
     }
     return loadPostgresLiveAnalyticsDataSource(client).then(overlay);
   }
