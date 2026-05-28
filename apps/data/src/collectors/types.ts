@@ -1,12 +1,13 @@
 export type CollectorServiceId =
   | "alchemy"
+  | "tempo-rpc"
   | "rpc-fast"
   | "dune-sim"
   | "goldrush"
   | "coingecko"
   | "nansen";
 
-export type SupportedChain = "base" | "solana";
+export type SupportedChain = "base" | "solana" | "tempo";
 
 export type CollectorTarget = {
   chain: SupportedChain;
@@ -25,6 +26,11 @@ export type CollectorWindow =
       toBlock: bigint | "latest";
     }
   | {
+      chain: "tempo";
+      fromBlock: bigint;
+      toBlock: bigint | "latest";
+    }
+  | {
       chain: "solana";
       fromSlot?: bigint;
       toSlot?: bigint;
@@ -38,6 +44,11 @@ export type CollectorCursor =
       chain: "base";
       /** Short-lived Alchemy Transfers API page key. Do not persist as a long-term checkpoint. */
       pageKey?: string;
+      lastProcessedBlock?: bigint;
+    }
+  | {
+      source: "tempo-rpc";
+      chain: "tempo";
       lastProcessedBlock?: bigint;
     }
   | {

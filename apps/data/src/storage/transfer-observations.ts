@@ -3,6 +3,7 @@ import type { PgExecutor } from "./postgres.js";
 
 export type TransferObservationUpsertResult = {
   base: number;
+  tempo: number;
   solana: number;
   skipped: number;
 };
@@ -11,11 +12,15 @@ export async function upsertTransferObservations(
   executor: PgExecutor,
   transfers: readonly NormalizedCollectorTransfer[],
 ): Promise<TransferObservationUpsertResult> {
-  const result: TransferObservationUpsertResult = { base: 0, solana: 0, skipped: 0 };
+  const result: TransferObservationUpsertResult = { base: 0, tempo: 0, solana: 0, skipped: 0 };
   for (const transfer of transfers) {
     if (transfer.chain === "base") {
-      await upsertBaseTransfer(executor, transfer);
+      await upsertEvmTransfer(executor, transfer);
+      await upsertBaseLiveReadTransfer(executor, transfer);
       result.base += 1;
+    } else if (transfer.chain === "tempo") {
+      await upsertEvmTransfer(executor, transfer);
+      result.tempo += 1;
     } else if (
       transfer.chain === "solana" &&
       transfer.direction === "incoming" &&
@@ -30,7 +35,7 @@ export async function upsertTransferObservations(
   return result;
 }
 
-async function upsertBaseTransfer(executor: PgExecutor, transfer: NormalizedCollectorTransfer) {
+async function upsertEvmTransfer(executor: PgExecutor, transfer: NormalizedCollectorTransfer) {
   const tokenAddress = required(
     transfer.assetAddress ?? transfer.queryTarget.assetAddress,
     "assetAddress",
@@ -58,7 +63,7 @@ async function upsertBaseTransfer(executor: PgExecutor, transfer: NormalizedColl
         fetched_at,
         metadata
       ) VALUES (
-        'base',
+        $11,
         lower($1),
         lower($2),
         $3,
@@ -102,8 +107,23 @@ async function upsertBaseTransfer(executor: PgExecutor, transfer: NormalizedColl
         queryTarget: transfer.queryTarget,
         rawPayload: transfer.rawPayload,
       }),
+      transfer.chain,
     ],
   );
+}
+
+async function upsertBaseLiveReadTransfer(
+  executor: PgExecutor,
+  transfer: NormalizedCollectorTransfer,
+) {
+  const tokenAddress = required(
+    transfer.assetAddress ?? transfer.queryTarget.assetAddress,
+    "assetAddress",
+  );
+  const blockNumber = required(transfer.blockNumber, "blockNumber");
+  const blockTimestamp = required(transfer.timestamp, "timestamp");
+  const fromAddress = required(transfer.fromAddress, "fromAddress");
+  const toAddress = required(transfer.toAddress, "toAddress");
   await executor.query(
     `
       INSERT INTO goldsky_webhook_transfers_x402_paytos (

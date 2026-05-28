@@ -7,7 +7,7 @@ describe("migration runner", () => {
     const migrations = await readMigrationFiles();
 
     expect(basename(defaultMigrationsDir())).toBe("migrations");
-    expect(migrations).toHaveLength(16);
+    expect(migrations).toHaveLength(17);
     expect(migrations.map((migration) => migration.version)).toEqual([
       "001",
       "002",
@@ -25,6 +25,7 @@ describe("migration runner", () => {
       "014",
       "015",
       "016",
+      "017",
     ]);
   });
 });

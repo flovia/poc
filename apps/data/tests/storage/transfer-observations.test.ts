@@ -29,7 +29,7 @@ describe("upsertTransferObservations", () => {
       },
     ]);
 
-    expect(result).toEqual({ base: 1, solana: 0, skipped: 0 });
+    expect(result).toEqual({ base: 1, tempo: 0, solana: 0, skipped: 0 });
     expect(queries.items[0]?.sql).toContain("INSERT INTO token_transfers");
     expect(queries.items[0]?.params.slice(0, 4)).toEqual([
       "0x833589fcd6edb6e08f4c7c32d4f71b54bdA02913",
@@ -74,7 +74,7 @@ describe("upsertTransferObservations", () => {
       },
     ]);
 
-    expect(result).toEqual({ base: 0, solana: 1, skipped: 0 });
+    expect(result).toEqual({ base: 0, tempo: 0, solana: 1, skipped: 0 });
     expect(queries.items[0]?.sql).toContain("INSERT INTO goldsky_webhook_token_transfers_solana");
     expect(queries.items[0]?.params.slice(0, 5)).toEqual([
       "alchemy:solana:sig-1:2:mint",
@@ -104,8 +104,47 @@ describe("upsertTransferObservations", () => {
       },
     ]);
 
-    expect(result).toEqual({ base: 0, solana: 0, skipped: 1 });
+    expect(result).toEqual({ base: 0, tempo: 0, solana: 0, skipped: 1 });
     expect(queries.items).toHaveLength(0);
+  });
+
+  test("upserts Tempo transfers into token_transfers only", async () => {
+    const queries = captureQueries();
+
+    const result = await upsertTransferObservations(queries.executor, [
+      {
+        source: "tempo-rpc",
+        chain: "tempo",
+        queryTarget: {
+          chain: "tempo",
+          address: "0x6086e37324f32d63bf30a027ea09bf166f96f3cf",
+          assetAddress: "0x20c000000000000000000000b9537d11c60e8b50",
+          providerId: "browserbase",
+        },
+        idempotencyKey: "tempo-rpc:tempo:0xtx:3",
+        transactionHash: "0xTX",
+        blockNumber: 42n,
+        timestamp: "2026-05-11T00:00:00Z",
+        fromAddress: "0xFrom",
+        toAddress: "0x6086e37324f32d63bf30a027ea09bf166f96f3cf",
+        direction: "incoming",
+        assetAddress: "0x20c000000000000000000000b9537d11c60e8b50",
+        amountBaseUnits: "1000000",
+        logIndex: 3,
+        rawPayload: { ok: true },
+      },
+    ]);
+
+    expect(result).toEqual({ base: 0, tempo: 1, solana: 0, skipped: 0 });
+    expect(queries.items).toHaveLength(1);
+    expect(queries.items[0]?.sql).toContain("INSERT INTO token_transfers");
+    expect(queries.items[0]?.params.slice(0, 4)).toEqual([
+      "0x20c000000000000000000000b9537d11c60e8b50",
+      "0xTX",
+      3,
+      "42",
+    ]);
+    expect(queries.items[0]?.params.at(-1)).toBe("tempo");
   });
 });
 

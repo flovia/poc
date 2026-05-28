@@ -20,6 +20,7 @@ export const RPC_FAST_SOLANA_RPC_URL = "https://solana-rpc.rpcfast.com/";
 
 export const supportedCollectorServiceIds = [
   "alchemy",
+  "tempo-rpc",
   "rpc-fast",
   "dune-sim",
   "goldrush",
@@ -38,6 +39,14 @@ export const collectorServiceDefinitions: Record<CollectorServiceId, CollectorSe
       "Construct Base JSON-RPC endpoints from the API key for alchemy_getAssetTransfers or eth_getLogs evaluation.",
       "Construct Solana JSON-RPC endpoints from the API key for getSignaturesForAddress and getTransaction evaluation.",
     ],
+  },
+  "tempo-rpc": {
+    id: "tempo-rpc",
+    label: "Tempo RPC",
+    role: "Direct Tempo JSON-RPC collection for ERC-20 payment transfer logs.",
+    supportedChains: ["tempo"],
+    requiredEnv: [],
+    notes: ["Uses TEMPO_RPC_URL when set, otherwise the public https://rpc.tempo.xyz endpoint."],
   },
   "rpc-fast": {
     id: "rpc-fast",

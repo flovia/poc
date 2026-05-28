@@ -11,6 +11,7 @@ describe("collector config", () => {
   test("lists phase1 collector services in a stable order", () => {
     expect(supportedCollectorServiceIds).toEqual([
       "alchemy",
+      "tempo-rpc",
       "rpc-fast",
       "dune-sim",
       "goldrush",
@@ -21,6 +22,8 @@ describe("collector config", () => {
 
   test("declares credential requirements for each service", () => {
     expect(collectorServiceDefinitions.alchemy.requiredEnv).toEqual(["ALCHEMY_API_KEY"]);
+    expect(collectorServiceDefinitions["tempo-rpc"].requiredEnv).toEqual([]);
+    expect(collectorServiceDefinitions["tempo-rpc"].supportedChains).toEqual(["tempo"]);
     expect(RPC_FAST_SOLANA_RPC_URL).toBe("https://solana-rpc.rpcfast.com/");
     expect(collectorServiceDefinitions["rpc-fast"].requiredEnv).toEqual(["RPC_FAST_API_KEY"]);
     expect(collectorServiceDefinitions["rpc-fast"].supportedChains).toEqual(["solana"]);
