@@ -1581,6 +1581,30 @@ describe("BFF routes", () => {
     }
   });
 
+  test("includes Tempo MPP token transfers in live facts", async () => {
+    let providerSql = "";
+    let customerSql = "";
+
+    await loadPostgresLiveAnalyticsDataSource({
+      async query(sql) {
+        if (sql.includes("attributed_grouped")) {
+          customerSql = sql;
+          return [];
+        }
+        providerSql = sql;
+        return [];
+      },
+    });
+
+    for (const sql of [providerSql, customerSql]) {
+      expect(sql).toContain("tempo_offer_prices AS");
+      expect(sql).toContain("FROM token_transfers t");
+      expect(sql).toContain("t.chain = 'tempo'");
+      expect(sql).toContain("0x20c000000000000000000000b9537d11c60e8b50");
+      expect(sql).toContain("t.amount_atomic::numeric <= 10000000");
+    }
+  });
+
   test("filters Base live facts to known x402 payment option amounts", async () => {
     let providerSql = "";
     let customerSql = "";
