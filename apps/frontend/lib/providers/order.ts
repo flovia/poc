@@ -1,13 +1,15 @@
 import type { StoredProvider } from "@/lib/types";
 
 // Display priority groups (lower rank = shown first):
-//   0: MPP-registry rows  (catalogSource === "mpp_registry")
-//   1: Nansen             (string match in identity)
-//   2: CoinGecko          (string match in identity)
-//   3: everything else    (preserves the upstream order)
+//   0: QuickNode          (current x402 data focus)
+//   1: MPP-registry rows  (catalogSource === "mpp_registry")
+//   2: Nansen             (string match in identity)
+//   3: CoinGecko          (string match in identity)
+//   4: everything else    (preserves the upstream order)
+const TOP_PROVIDER_MARK = "quicknode";
 const PINNED_PROVIDER_MARKS = ["nansen", "coingecko"] as const;
-const MPP_RANK = 0;
-const PINNED_BASE_RANK = 1;
+const MPP_RANK = 1;
+const PINNED_BASE_RANK = 2;
 const DEFAULT_RANK = PINNED_BASE_RANK + PINNED_PROVIDER_MARKS.length;
 
 function pinnedProviderRank(provider: StoredProvider): number {
@@ -18,13 +20,14 @@ function pinnedProviderRank(provider: StoredProvider): number {
   // rows.
   const aggregated = provider.catalogSources ?? [];
   const isMpp = aggregated.includes("mpp_registry") || provider.catalogSource === "mpp_registry";
-  if (isMpp) return MPP_RANK;
   const identity = `${provider.providerId} ${provider.serviceId ?? ""} ${provider.name} ${
     provider.serviceName ?? ""
   }`.toLowerCase();
+  if (identity.includes(TOP_PROVIDER_MARK)) return 0;
   for (let i = 0; i < PINNED_PROVIDER_MARKS.length; i++) {
     if (identity.includes(PINNED_PROVIDER_MARKS[i]!)) return PINNED_BASE_RANK + i;
   }
+  if (isMpp) return MPP_RANK;
   return DEFAULT_RANK;
 }
 

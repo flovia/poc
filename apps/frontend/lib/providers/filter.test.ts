@@ -207,7 +207,7 @@ describe("visibleProviderChains", () => {
 });
 
 describe("orderProvidersPinnedFirst", () => {
-  test("places MPP-registry rows first, then Nansen + CoinGecko, then the rest", () => {
+  test("places QuickNode first, then MPP-registry rows, then Nansen + CoinGecko", () => {
     const providers: StoredProvider[] = [
       make({ providerId: "quicknode", name: "QuickNode", serviceId: "quicknode/rpc" }),
       make({
@@ -232,6 +232,7 @@ describe("orderProvidersPinnedFirst", () => {
     ];
 
     expect(orderProvidersPinnedFirst(providers).map((p) => p.providerId)).toEqual([
+      "quicknode",
       // MPP rows first, in original-index order
       "mpp:agentmail::tempo:4217::USDC::0x6e3184c2",
       "mpp:openai::tempo:4217::USDC::0xca4e835f",
@@ -239,7 +240,6 @@ describe("orderProvidersPinnedFirst", () => {
       "static-api-nansen-ai",
       "static-pro-api-coingecko-com",
       // then everything else in original order
-      "quicknode",
       "stripe",
     ]);
   });
@@ -273,13 +273,13 @@ describe("orderProvidersPinnedFirst", () => {
     ];
 
     expect(orderProvidersPinnedFirst(providers).map((p) => p.providerId)).toEqual([
-      // Both MPP-aggregated and pure MPP rows share rank 0 (MPP first), in
+      "quicknode",
+      // Both MPP-aggregated and pure MPP rows share the MPP rank, in
       // their original input order.
       "agentmail-paysh",
       "anthropic-mpp",
       // Then Nansen / CoinGecko, then the rest.
       "static-pro-api-coingecko-com",
-      "quicknode",
     ]);
   });
 
@@ -296,9 +296,9 @@ describe("orderProvidersPinnedFirst", () => {
     ];
 
     expect(orderProvidersPinnedFirst(providers).map((p) => p.providerId)).toEqual([
+      "quicknode",
       "static-api-nansen-ai",
       "static-pro-api-coingecko-com",
-      "quicknode",
       "stripe",
     ]);
   });
