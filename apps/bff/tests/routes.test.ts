@@ -1260,6 +1260,18 @@ describe("BFF routes", () => {
               service_name: "Alpha",
               transaction_count: 4,
               total_volume_atomic: "400",
+              timeline_events: [
+                {
+                  at: "2026-05-02T00:00:00.000Z",
+                  amountAtomic: "100",
+                  transactionId: "0xalpha4",
+                },
+                {
+                  at: "2026-05-01T00:00:00.000Z",
+                  amountAtomic: "300",
+                  transactionId: "0xalpha1",
+                },
+              ],
             },
             {
               payer: "0x5555555555555555555555555555555555555555",
@@ -1268,6 +1280,13 @@ describe("BFF routes", () => {
               service_name: "Alpha",
               transaction_count: 3,
               total_volume_atomic: "300",
+              timeline_events: [
+                {
+                  at: "2026-05-03T00:00:00.000Z",
+                  amountAtomic: "300",
+                  transactionId: "0xalpha-other",
+                },
+              ],
             },
           ];
         }
@@ -1378,6 +1397,21 @@ describe("BFF routes", () => {
     expect(dataSource.walletUsageGraph.graph.providerWallets[0]?.payerWallets.length).toBe(2);
     expect(dataSource.serviceSummary.userCount).toBe(2);
     expect(dataSource.serviceSummary.transactionCount).toBe(7);
+    expect(
+      dataSource.getCustomerProfile("0x4444444444444444444444444444444444444444")?.profile
+        .timeline,
+    ).toEqual([
+      expect.objectContaining({
+        at: "2026-05-02T00:00:00.000Z",
+        description: "Payment to Alpha",
+        amountAtomic: "100",
+      }),
+      expect.objectContaining({
+        at: "2026-05-01T00:00:00.000Z",
+        description: "Payment to Alpha",
+        amountAtomic: "300",
+      }),
+    ]);
     expect(
       dataSource.serviceComparison.services.some((service) => service.serviceId === "coingecko"),
     ).toBe(true);

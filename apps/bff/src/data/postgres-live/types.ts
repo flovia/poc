@@ -62,6 +62,13 @@ export type CustomerRow = {
   totalVolumeAtomic: string;
   firstSeenAt: string;
   lastSeenAt: string;
+  timelineEvents: CustomerTransferEvent[];
+};
+
+export type CustomerTransferEvent = {
+  at: string;
+  amountAtomic: string;
+  transactionId?: string;
 };
 
 export type CustomerAggregate = {

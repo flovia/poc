@@ -108,16 +108,16 @@ function UpsellCardLive({
   const opp = metrics.upsellOpportunity;
   const headline =
     opp === "high"
-      ? "High upsell signal"
+      ? "High payment activity"
       : opp === "medium"
-      ? "Medium upsell opportunity"
-      : "Low upsell signal";
+        ? "Medium payment activity"
+        : "Low payment activity";
 
   return (
     <InsightCard
       tone="upsell"
       icon={<Icon.bolt width="11" height="11" />}
-      label="Upsell opportunity"
+      label="Activity signal"
       delay={60}
       stretch
     >
@@ -135,7 +135,7 @@ function UpsellCardLive({
             {headline}
           </div>
           <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 2 }}>
-            Derived from spend, provider count, growth, and entry-point ratio
+            Derived from observed spend and payment frequency. This is not a commercial plan limit.
           </div>
         </div>
         <span className={`chip ${opp === "high" ? "blue" : ""}`}>{opp}</span>
@@ -246,8 +246,8 @@ export function EntryPointInsight({
   return (
     <InsightCard
       tone="blue"
-      icon={<Icon.spark width="11" height="11" />}
-      label="Workflow position"
+        icon={<Icon.spark width="11" height="11" />}
+        label="Attribution coverage"
       delay={120}
       stretch
     >
@@ -257,10 +257,10 @@ export function EntryPointInsight({
             <span className="mono" style={{ color: "var(--mesh-blue)", fontWeight: 600 }}>
               {formatRatioPct(ratio, 0)}
             </span>{" "}
-            of this wallet&apos;s observations are tied to an attribution candidate, suggesting your endpoint sits on the wallet&apos;s identifiable workflow path.
+            of this wallet&apos;s observed payments matched a known payTo/provider candidate. Exact workflow position and endpoint attribution require SDK instrumentation.
           </>
         ) : (
-          <>No attribution candidates matched this wallet&apos;s observations yet.</>
+          <>No known payTo/provider candidates matched this wallet&apos;s observations yet.</>
         )}
       </div>
       <div
@@ -273,7 +273,7 @@ export function EntryPointInsight({
           color: "var(--text-mute)",
         }}
       >
-        Install the Flovia SDK on your API to capture exact step position and per-loop attribution.
+        Install the Flovia SDK on your API to capture exact step position, endpoint, and per-loop attribution.
       </div>
     </InsightCard>
   );

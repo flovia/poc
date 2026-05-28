@@ -385,7 +385,14 @@ export const POSTGRES_LIVE_CUSTOMER_QUERY = `
           COUNT(*)::int AS transaction_count,
           COALESCE(SUM(g.amount), 0)::text AS total_volume_atomic,
           to_timestamp(MIN(g.block_timestamp)) AS first_seen_at,
-          to_timestamp(MAX(g.block_timestamp)) AS last_seen_at
+          to_timestamp(MAX(g.block_timestamp)) AS last_seen_at,
+          jsonb_agg(
+            jsonb_build_object(
+              'at', to_timestamp(g.block_timestamp),
+              'amountAtomic', g.amount::text,
+              'transactionId', g.transaction_hash
+            ) ORDER BY g.block_timestamp DESC, g.transaction_hash DESC
+          ) AS timeline_events
         FROM goldsky_webhook_transfers_x402_paytos g
         LEFT JOIN x402_provider_activity a
           ON lower(a.pay_to_address) = lower(g.to_owner_address)
@@ -443,7 +450,14 @@ export const POSTGRES_LIVE_CUSTOMER_QUERY = `
           COUNT(*)::int AS transaction_count,
           COALESCE(SUM(s.amount), 0)::text AS total_volume_atomic,
           MIN(s.block_timestamp) AS first_seen_at,
-          MAX(s.block_timestamp) AS last_seen_at
+          MAX(s.block_timestamp) AS last_seen_at,
+          jsonb_agg(
+            jsonb_build_object(
+              'at', s.block_timestamp,
+              'amountAtomic', s.amount::text,
+              'transactionId', s.signature
+            ) ORDER BY s.block_timestamp DESC, s.signature DESC
+          ) AS timeline_events
         FROM payment_attributed_transfers_solana s
         CROSS JOIN LATERAL unnest(s.provider_fqns) AS provider(provider_fqn)
         JOIN pay_sh_solana_offer_prices offer_price
@@ -483,7 +497,8 @@ export const POSTGRES_LIVE_CUSTOMER_QUERY = `
         transaction_count,
         total_volume_atomic,
         first_seen_at,
-        last_seen_at
+        last_seen_at,
+        timeline_events
       FROM attributed_grouped
       ORDER BY total_volume_atomic::numeric DESC, transaction_count DESC
 `;

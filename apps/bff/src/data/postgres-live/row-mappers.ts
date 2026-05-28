@@ -1,4 +1,4 @@
-import type { CustomerRow, ProviderRow } from "./types";
+import type { CustomerRow, CustomerTransferEvent, ProviderRow } from "./types";
 
 const isBaseCuratedProvider = (serviceId: string) =>
   ["pro-api.coingecko.com", "coingecko", "api.nansen.ai", "nansen"].includes(
@@ -112,6 +112,26 @@ const parseOffers = (value: unknown): ProviderRow["offers"] => {
     ];
   });
 };
+const parseTimelineEvents = (value: unknown): CustomerTransferEvent[] => {
+  const raw = typeof value === "string" ? JSON.parse(value) : value;
+  if (!Array.isArray(raw)) return [];
+  return raw.flatMap((item) => {
+    if (!item || typeof item !== "object") return [];
+    const row = item as Record<string, unknown>;
+    const at = optionalText(row.at);
+    const amountAtomic = optionalText(row.amountAtomic ?? row.amount_atomic);
+    if (!at || !amountAtomic) return [];
+    return [
+      {
+        at: iso(at, new Date(0).toISOString()),
+        amountAtomic,
+        ...(optionalText(row.transactionId ?? row.transaction_id)
+          ? { transactionId: optionalText(row.transactionId ?? row.transaction_id) }
+          : {}),
+      },
+    ];
+  });
+};
 const iso = (value: unknown, fallback: string) => {
   if (value instanceof Date) return value.toISOString();
   const raw = String(value ?? "");
@@ -190,5 +210,6 @@ export const mapCustomerRow = (row: Record<string, unknown>): CustomerRow => {
     ),
     firstSeenAt: iso(row.first_seen_at ?? row.first_transfer_at, new Date(0).toISOString()),
     lastSeenAt: iso(row.last_seen_at ?? row.latest_transfer_at, new Date(0).toISOString()),
+    timelineEvents: parseTimelineEvents(row.timeline_events ?? row.timelineEvents),
   };
 };

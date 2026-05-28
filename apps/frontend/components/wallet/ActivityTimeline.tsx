@@ -201,7 +201,7 @@ export function ActivityTimeline({
                       marginTop: 4,
                     }}
                   >
-                    endpoint: {apiPathDisplay.text}
+                    {sdkExtra ? "endpoint" : "endpoint candidates"}: {apiPathDisplay.text}
                   </div>
                 )}
                 {(event.providerId || event.txHash) && (
