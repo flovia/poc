@@ -1,5 +1,6 @@
 import {
   type PhaseBCustomerProfileResponse,
+  type ProviderRankingResponse,
   type RouteAnalyticsSankeyResponse,
   type RouteAnalyticsSummaryResponse,
   type WalletUsageGraphResponse,
@@ -8,6 +9,7 @@ import {
   validatePhaseBCustomerProfileResponse,
   validatePhaseBWalletUsageGraphResponse,
   validateProviderCatalogResponse,
+  validateProviderRankingResponse,
   validateRouteAnalyticsSankeyResponse,
   validateRouteAnalyticsSummaryResponse,
 } from "contracts";
@@ -111,6 +113,16 @@ export async function getCustomerUpsellExplanation(
 export async function getProviders(): Promise<ProviderCatalogItemDto[]> {
   return adaptProviderCatalog(
     validateProviderCatalogResponse(await bffFetch<unknown>("/providers")),
+  );
+}
+
+export async function getProviderRanking(
+  sort: "transactions" | "settledAmount",
+  limit = 50,
+): Promise<ProviderRankingResponse> {
+  const params = new URLSearchParams({ sort, limit: String(limit) });
+  return validateProviderRankingResponse(
+    await bffFetch<unknown>(`/analytics/providers/ranking?${params.toString()}`),
   );
 }
 

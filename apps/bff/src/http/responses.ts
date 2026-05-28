@@ -38,6 +38,9 @@ export const cachedJson = (body: JsonValue, init: ResponseInit = {}) =>
 export const notFound = (path: string) =>
   json({ error: "not_found", message: `Route not found: ${path}` }, { status: 404 });
 
+export const badRequest = (message: string) =>
+  json({ error: "bad_request", message }, { status: 400 });
+
 export const methodNotAllowed = () =>
   json(
     {

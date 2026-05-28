@@ -486,7 +486,8 @@ a { color: inherit; text-decoration: none; }
 .showcase-comparison-grid,
 .showcase-join-equation,
 .showcase-provider-grid,
-.showcase-overview-flow {
+.showcase-overview-flow,
+.ranking-summary-grid {
   min-width: 0;
 }
 
@@ -810,7 +811,8 @@ a { color: inherit; text-decoration: none; }
   .showcase-comparison-grid,
   .showcase-join-equation,
   .showcase-provider-grid,
-  .showcase-overview-flow {
+  .showcase-overview-flow,
+  .ranking-summary-grid {
     grid-template-columns: 1fr !important;
   }
 

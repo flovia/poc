@@ -12,6 +12,7 @@ import type {
   ReportSummaryDto,
   WalletUsageGraphDto,
 } from "./api/types";
+import type { ProviderRankingResponse } from "contracts";
 import { mergeStaticProviders } from "@/lib/providers/static-merge";
 import type { StaticProviderCapability } from "@/lib/providers/static-capabilities";
 import type { SdkExtras, SdkForceNetwork } from "./sdk-fixtures/types";
@@ -64,6 +65,13 @@ export async function getProviders(): Promise<ProviderCatalogItemDto[]> {
   if (mode === "sdkConnected") return [];
   const liveProviders = await live.getProviders();
   return mergeStaticProviders(liveProviders, toServerStaticProvider);
+}
+
+export async function getProviderRanking(
+  sort: "transactions" | "settledAmount",
+  limit = 50,
+): Promise<ProviderRankingResponse> {
+  return live.getProviderRanking(sort, limit);
 }
 
 export type GetCustomersFilter = { payTo?: string; serviceId?: string };

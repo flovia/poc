@@ -24,8 +24,8 @@ import {
   PhaseBCustomerListResponseSchema,
   RealTransactionFixtureSchema,
 } from "./phase-b";
-import type { ProviderCatalogResponse } from "./provider-catalog";
-import { ProviderCatalogResponseSchema } from "./provider-catalog";
+import type { ProviderCatalogResponse, ProviderRankingResponse } from "./provider-catalog";
+import { ProviderCatalogResponseSchema, ProviderRankingResponseSchema } from "./provider-catalog";
 import type {
   CustomerIntelligenceFixture,
   CustomerIntelligenceResponse,
@@ -92,6 +92,9 @@ export const validatePhaseBCustomerListResponse = (value: unknown): PhaseBCustom
 
 export const validateProviderCatalogResponse = (value: unknown): ProviderCatalogResponse =>
   ProviderCatalogResponseSchema.parse(value);
+
+export const validateProviderRankingResponse = (value: unknown): ProviderRankingResponse =>
+  ProviderRankingResponseSchema.parse(value);
 
 export const validatePhaseBCustomerProfileResponse = (
   value: unknown,

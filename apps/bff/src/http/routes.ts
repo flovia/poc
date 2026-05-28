@@ -7,6 +7,7 @@ export const readonlyRoutes = new Set([
   "/analytics/services/coingecko/summary",
   "/analytics/services/comparison",
   "/analytics/services/quadrants",
+  "/analytics/providers/ranking",
   "/analytics/routes/summary",
   "/analytics/routes/sankey",
 ]);

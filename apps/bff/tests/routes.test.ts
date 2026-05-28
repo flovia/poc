@@ -35,6 +35,7 @@ import {
   validateMockEndpointAttributionFixture,
   validateCustomerIntelligenceResponse,
   validateProviderCatalogResponse,
+  validateProviderRankingResponse,
   validateRealTransactionFixture,
   validateServiceAnalyticsComparisonResponse,
   validateServiceAnalyticsQuadrantResponse,
@@ -322,6 +323,83 @@ describe("BFF routes", () => {
     expect(response.status).toBe(200);
     expect(parsed.providerCount).toBe(parsed.providers.length);
     expect(parsed.providers.some((provider) => provider.hasCustomerFacts)).toBe(true);
+  });
+
+  test("serves observed provider ranking by transaction count", async () => {
+    const providerCatalog = validateProviderCatalogResponse({
+      ...fixtureAnalyticsDataSource.providers,
+      providers: Array.from({ length: 3 }, (_, index) => ({
+        ...fixtureAnalyticsDataSource.providers.providers[
+          index % fixtureAnalyticsDataSource.providers.providers.length
+        ],
+        providerId: `ranking-provider-${index}`,
+        name: `Ranking Provider ${index}`,
+        transactionCount: [5, 25, 10][index] ?? 0,
+        uniqueSenderCount: [2, 4, 3][index] ?? 0,
+        totalVolumeAtomic: ["500", "100", "1000"][index] ?? "0",
+      })),
+      providerCount: 3,
+    });
+    const handler = createBffHandler({ ...fixtureAnalyticsDataSource, providers: providerCatalog });
+
+    const response = await handler(request("/analytics/providers/ranking?limit=2"));
+    const parsed = validateProviderRankingResponse(await response.json());
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("cache-control")).toBe(
+      "public, s-maxage=60, stale-while-revalidate=300",
+    );
+    expect(parsed.population).toBe("observed_providers");
+    expect(parsed.sort).toBe("transactions");
+    expect(parsed.limit).toBe(2);
+    expect(parsed.providerCount).toBe(2);
+    expect(parsed.totalProviderCount).toBe(3);
+    expect(parsed.providers.map((provider) => provider.providerId)).toEqual([
+      "ranking-provider-1",
+      "ranking-provider-2",
+    ]);
+    expect(parsed.providers.map((provider) => provider.rank)).toEqual([1, 2]);
+  });
+
+  test("serves observed provider ranking by settled amount", async () => {
+    const providerCatalog = validateProviderCatalogResponse({
+      ...fixtureAnalyticsDataSource.providers,
+      providers: Array.from({ length: 3 }, (_, index) => ({
+        ...fixtureAnalyticsDataSource.providers.providers[
+          index % fixtureAnalyticsDataSource.providers.providers.length
+        ],
+        providerId: `volume-provider-${index}`,
+        name: `Volume Provider ${index}`,
+        transactionCount: [5, 25, 10][index] ?? 0,
+        uniqueSenderCount: [2, 4, 3][index] ?? 0,
+        totalVolumeAtomic: ["500", "100", "1000"][index] ?? "0",
+      })),
+      providerCount: 3,
+    });
+    const handler = createBffHandler({ ...fixtureAnalyticsDataSource, providers: providerCatalog });
+
+    const response = await handler(
+      request("/analytics/providers/ranking?sort=settledAmount&limit=2"),
+    );
+    const parsed = validateProviderRankingResponse(await response.json());
+
+    expect(response.status).toBe(200);
+    expect(parsed.sort).toBe("settledAmount");
+    expect(parsed.providers.map((provider) => provider.providerId)).toEqual([
+      "volume-provider-2",
+      "volume-provider-0",
+    ]);
+  });
+
+  test("rejects invalid provider ranking query", async () => {
+    const handler = createBffHandler(fixtureAnalyticsDataSource);
+
+    const response = await handler(request("/analytics/providers/ranking?sort=volume"));
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.error).toBe("bad_request");
+    expect(response.headers.get("cache-control")).toBe("no-store");
   });
 
   test("marks snapshot-backed read endpoints as edge-cacheable", async () => {

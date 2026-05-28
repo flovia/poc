@@ -4,6 +4,7 @@ import { BffLlmUnavailableError, type BffLlmService, resolveBffLlmService } from
 import { buildWorkflowIntentInputFromProfile, toWorkflowIntentInput } from "./data/workflow-intent";
 import {
   json,
+  badRequest,
   cachedJson,
   llmFailed,
   llmUnavailable,
@@ -15,6 +16,7 @@ import {
   workflowIntentUnavailable,
 } from "./http/responses";
 import { matchCustomerRoute, normalizePath, readonlyRoutes } from "./http/routes";
+import { buildProviderRanking, parseProviderRankingQuery } from "./data/provider-ranking";
 import { handleShowcaseRoute, showcaseRoutes } from "./showcase";
 
 type RequestTimeoutController = {
@@ -121,6 +123,20 @@ export const createBffHandler = (
         return cachedJson(activeDataSource.serviceComparison);
       case "/analytics/services/quadrants":
         return cachedJson(activeDataSource.serviceQuadrants);
+      case "/analytics/providers/ranking": {
+        try {
+          return cachedJson(
+            buildProviderRanking(
+              activeDataSource.providers,
+              parseProviderRankingQuery(url.searchParams),
+            ),
+          );
+        } catch (error) {
+          return badRequest(
+            error instanceof Error ? error.message : "Invalid provider ranking query.",
+          );
+        }
+      }
       case "/analytics/routes/summary":
         return cachedJson(activeDataSource.routeSummary);
       case "/analytics/routes/sankey":
