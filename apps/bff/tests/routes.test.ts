@@ -324,6 +324,24 @@ describe("BFF routes", () => {
     expect(parsed.providers.some((provider) => provider.hasCustomerFacts)).toBe(true);
   });
 
+  test("marks snapshot-backed read endpoints as edge-cacheable", async () => {
+    const handler = createBffHandler(fixtureAnalyticsDataSource);
+
+    const response = await handler(request("/providers"));
+
+    expect(response.headers.get("cache-control")).toBe(
+      "public, s-maxage=60, stale-while-revalidate=300",
+    );
+  });
+
+  test("keeps error responses uncacheable", async () => {
+    const handler = createBffHandler(fixtureAnalyticsDataSource);
+
+    const response = await handler(request("/unknown"));
+
+    expect(response.headers.get("cache-control")).toBe("no-store");
+  });
+
   test("serves machine payment route analytics summary and sankey", async () => {
     const handler = createBffHandler(fixtureAnalyticsDataSource);
 

@@ -10,6 +10,7 @@ type JsonValue = unknown;
 
 const WORKFLOW_INTENT_GENERATED_FROM = "phase-b-wallet-workflow-intent-v1";
 const GENERIC_LLM_INFERENCE_ERROR_MESSAGE = "LLM upsell explanation inference failed.";
+export const SNAPSHOT_CACHE_CONTROL = "public, s-maxage=60, stale-while-revalidate=300";
 
 const workflowIntentReason = {
   provenance: "derived_insight" as const,
@@ -21,6 +22,15 @@ export const json = (body: JsonValue, init: ResponseInit = {}) =>
     ...init,
     headers: {
       "cache-control": "no-store",
+      ...(init.headers ?? {}),
+    },
+  });
+
+export const cachedJson = (body: JsonValue, init: ResponseInit = {}) =>
+  json(body, {
+    ...init,
+    headers: {
+      "cache-control": SNAPSHOT_CACHE_CONTROL,
       ...(init.headers ?? {}),
     },
   });

@@ -32,6 +32,7 @@ import type {
 
 const DEFAULT_BFF_URL = "http://localhost:3001";
 const DEFAULT_PUBLIC_BFF_URL = "/api";
+const SNAPSHOT_REVALIDATE_SECONDS = 60;
 
 function stripTrailingSlash(url: string): string {
   return url.replace(/\/$/, "");
@@ -51,7 +52,7 @@ function bffBaseUrl(): string {
 
 async function bffFetch<T>(path: string): Promise<T> {
   const response = await fetch(`${bffBaseUrl()}${path}`, {
-    cache: "no-store",
+    next: { revalidate: SNAPSHOT_REVALIDATE_SECONDS },
     headers: { accept: "application/json" },
   });
 
@@ -72,7 +73,7 @@ export async function getCustomerProfileRaw(
   address: string,
 ): Promise<PhaseBCustomerProfileResponse | null> {
   const response = await fetch(`${bffBaseUrl()}/customers/${encodeURIComponent(address)}/profile`, {
-    cache: "no-store",
+    next: { revalidate: SNAPSHOT_REVALIDATE_SECONDS },
     headers: { accept: "application/json" },
   });
   if (response.status === 404) return null;

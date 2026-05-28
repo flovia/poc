@@ -4,6 +4,7 @@ import { BffLlmUnavailableError, type BffLlmService, resolveBffLlmService } from
 import { buildWorkflowIntentInputFromProfile, toWorkflowIntentInput } from "./data/workflow-intent";
 import {
   json,
+  cachedJson,
   llmFailed,
   llmUnavailable,
   methodNotAllowed,
@@ -102,26 +103,28 @@ export const createBffHandler = (
 
     switch (path) {
       case "/providers":
-        return json(activeDataSource.providers);
+        return cachedJson(activeDataSource.providers);
       case "/customers": {
         const serviceId = url.searchParams.get("serviceId");
         if (serviceId) {
-          return json(activeDataSource.getCustomersByServiceId(serviceId));
+          return cachedJson(activeDataSource.getCustomersByServiceId(serviceId));
         }
-        return json(activeDataSource.getCustomers(url.searchParams.get("payTo") ?? undefined));
+        return cachedJson(
+          activeDataSource.getCustomers(url.searchParams.get("payTo") ?? undefined),
+        );
       }
       case "/wallet-usage-graph":
-        return json(activeDataSource.walletUsageGraph);
+        return cachedJson(activeDataSource.walletUsageGraph);
       case "/analytics/services/coingecko/summary":
-        return json(activeDataSource.serviceSummary);
+        return cachedJson(activeDataSource.serviceSummary);
       case "/analytics/services/comparison":
-        return json(activeDataSource.serviceComparison);
+        return cachedJson(activeDataSource.serviceComparison);
       case "/analytics/services/quadrants":
-        return json(activeDataSource.serviceQuadrants);
+        return cachedJson(activeDataSource.serviceQuadrants);
       case "/analytics/routes/summary":
-        return json(activeDataSource.routeSummary);
+        return cachedJson(activeDataSource.routeSummary);
       case "/analytics/routes/sankey":
-        return json(activeDataSource.routeSankey);
+        return cachedJson(activeDataSource.routeSankey);
       default:
         break;
     }
@@ -134,7 +137,7 @@ export const createBffHandler = (
         return notFound(path);
       }
 
-      return json(profile);
+      return cachedJson(profile);
     }
 
     if (customerRoute?.kind === "intelligence") {
@@ -145,7 +148,7 @@ export const createBffHandler = (
         return notFound(path);
       }
 
-      return json(intelligence);
+      return cachedJson(intelligence);
     }
 
     if (customerRoute?.kind === "upsellMetrics") {
@@ -156,7 +159,7 @@ export const createBffHandler = (
         return notFound(path);
       }
 
-      return json(metrics);
+      return cachedJson(metrics);
     }
 
     if (customerRoute?.kind === "upsellExplanation") {
