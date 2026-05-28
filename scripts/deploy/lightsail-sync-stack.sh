@@ -38,12 +38,7 @@ require_env GHCR_USERNAME
 require_env GHCR_TOKEN
 
 case "$DEPLOY_BRANCH" in
-  main)
-    service_name="main-bff"
-    ;;
-  develop)
-    service_name=""
-    ;;
+  main|develop) ;;
   *)
     echo "Unsupported branch: ${DEPLOY_BRANCH}" >&2
     exit 1
@@ -58,6 +53,8 @@ stack_caddy_dir="${stack_root}/deploy/caddy"
 stack_caddy_config="${stack_caddy_dir}/Caddyfile"
 main_data_dir="${apps_root}/main/data"
 develop_data_dir="${apps_root}/develop/data"
+main_blue_container="flovia-lightsail-main-bff-blue-1"
+main_green_container="flovia-lightsail-main-bff-green-1"
 develop_blue_container="flovia-lightsail-develop-bff-blue-1"
 develop_green_container="flovia-lightsail-develop-bff-green-1"
 
@@ -89,11 +86,14 @@ get_container_started_at() {
   docker inspect "$container" --format '{{if .State.Running}}{{.State.StartedAt}}{{end}}' 2>/dev/null || true
 }
 
-detect_active_develop_slot() {
+detect_active_slot() {
+  local branch="$1"
+  local blue_container="$2"
+  local green_container="$3"
   local blue_started_at green_started_at
 
-  blue_started_at="$(get_container_started_at "$develop_blue_container")"
-  green_started_at="$(get_container_started_at "$develop_green_container")"
+  blue_started_at="$(get_container_started_at "$blue_container")"
+  green_started_at="$(get_container_started_at "$green_container")"
 
   if [ -n "$blue_started_at" ] && [ -z "$green_started_at" ]; then
     printf 'blue'
@@ -106,7 +106,7 @@ detect_active_develop_slot() {
   fi
 
   if [ -n "$blue_started_at" ] && [ -n "$green_started_at" ]; then
-    echo "Both develop slots are running; selecting the newest container." >&2
+    echo "Both ${branch} slots are running; selecting the newest container." >&2
     if [[ "$green_started_at" > "$blue_started_at" ]]; then
       printf 'green'
     else
@@ -115,7 +115,10 @@ detect_active_develop_slot() {
   fi
 }
 
-detected_active_develop_slot="$(detect_active_develop_slot)"
+detected_active_main_slot="$(detect_active_slot main "$main_blue_container" "$main_green_container")"
+active_main_slot="${detected_active_main_slot:-blue}"
+
+detected_active_develop_slot="$(detect_active_slot develop "$develop_blue_container" "$develop_green_container")"
 active_develop_slot="${detected_active_develop_slot:-blue}"
 
 # Rebuild the shared stack env for both branches:
@@ -127,7 +130,7 @@ if [ "$DEPLOY_BRANCH" = "main" ]; then
   develop_image_tag="${develop_image_tag:-develop}"
 else
   develop_image_tag="$DEPLOY_GIT_SHA"
-  main_image_tag="$(get_running_image_tag "flovia-lightsail-main-bff-1")"
+  main_image_tag="$(get_running_image_tag "flovia-lightsail-main-bff-${active_main_slot}-1")"
   main_image_tag="${main_image_tag:-main}"
 fi
 
@@ -215,9 +218,11 @@ dc() {
 }
 
 write_caddyfile() {
-  local develop_slot="$1"
+  local main_slot="$1"
+  local develop_slot="$2"
 
   install -m 644 deploy/caddy/Caddyfile "$stack_caddy_config"
+  sed -i "s|main-bff-[a-z]*:3001|main-bff-${main_slot}:3001|g" "$stack_caddy_config"
   sed -i "s|develop-bff-[a-z]*:3001|develop-bff-${develop_slot}:3001|g" "$stack_caddy_config"
 }
 
@@ -290,23 +295,23 @@ wait_for_service_health_ready() {
 printf '%s\n' "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USERNAME" --password-stdin
 dc config >/dev/null
 
-if [ "$DEPLOY_BRANCH" = "develop" ]; then
-  active_slot="$detected_active_develop_slot"
+blue_green_deploy() {
+  local branch="$1"
+  local detected_active="$2"
+  local service_prefix="$3"
+  local main_caddy_slot="$4"
+  local develop_caddy_slot="$5"
+
+  local active_slot next_slot next_service old_service
+  active_slot="$detected_active"
   case "$active_slot" in
-    blue)
-      next_slot="green"
-      ;;
-    green)
-      next_slot="blue"
-      ;;
-    *)
-      next_slot="blue"
-      active_slot=""
-      ;;
+    blue)  next_slot="green" ;;
+    green) next_slot="blue" ;;
+    *)     next_slot="blue"; active_slot="" ;;
   esac
 
-  next_service="develop-bff-${next_slot}"
-  echo "Blue-Green: active=${active_slot:-none} -> next=${next_slot}"
+  next_service="${service_prefix}-${next_slot}"
+  echo "Blue-Green (${branch}): active=${active_slot:-none} -> next=${next_slot}"
 
   dc pull "$next_service" caddy
   dc up -d "$next_service"
@@ -318,20 +323,25 @@ if [ "$DEPLOY_BRANCH" = "develop" ]; then
     exit 1
   fi
 
-  write_caddyfile "$next_slot"
+  if [ "$branch" = "main" ]; then
+    write_caddyfile "$next_slot" "$develop_caddy_slot"
+  else
+    write_caddyfile "$main_caddy_slot" "$next_slot"
+  fi
   dc up -d caddy
   dc exec -T -w /etc/caddy caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile
 
   if [ -n "$active_slot" ]; then
-    old_service="develop-bff-${active_slot}"
+    old_service="${service_prefix}-${active_slot}"
     dc stop "$old_service"
     dc rm -f "$old_service"
   fi
+}
+
+if [ "$DEPLOY_BRANCH" = "main" ]; then
+  blue_green_deploy main "$detected_active_main_slot" main-bff "" "$active_develop_slot"
 else
-  write_caddyfile "$active_develop_slot"
-  dc pull "$service_name" caddy
-  dc up -d --remove-orphans "$service_name" caddy
-  dc exec -T -w /etc/caddy caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile
+  blue_green_deploy develop "$detected_active_develop_slot" develop-bff "$active_main_slot" ""
 fi
 
 docker image prune -a -f

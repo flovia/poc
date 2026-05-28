@@ -6,7 +6,7 @@
 
 	redir /main /main/ 308
 	handle_path /main/* {
-		reverse_proxy main-bff:3001 {
+		reverse_proxy main-bff-blue:3001 {
 			header_up X-Forwarded-Prefix /main
 		}
 	}
