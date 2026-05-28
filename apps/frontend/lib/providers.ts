@@ -1,4 +1,5 @@
 import type { StoredProvider } from "@/lib/types";
+import { extractBrandKey } from "@/lib/pay-sh/brand";
 
 // demo provider 識別子の単一の真実源。seedProviders() の providerId と一致させる。
 export const SEED_IDS = ["northwind-price", "lumen-vec", "halonet"] as const;
@@ -31,6 +32,15 @@ export function ensureUniqueId(desired: string, existing: string[]): string {
   let i = 2;
   while (existing.includes(`${desired}-${i}`)) i++;
   return `${desired}-${i}`;
+}
+
+export function aggregateProviderRouteId(serviceId: string): string {
+  const parts = serviceId
+    .split("/")
+    .filter(Boolean)
+    .map((part) => part.toLowerCase());
+  if (parts[0] === "paysponge" && parts[1]) return `paysponge-${slugifyProviderName(parts[1])}`;
+  return extractBrandKey(serviceId) ?? slugifyProviderName(serviceId);
 }
 
 type ProviderRouteLike = {
@@ -91,6 +101,9 @@ function providerRouteAliases(provider: ProviderRouteLike): Set<string> {
   // that capability under a longer providerId — accept the static- alias too
   // so links from older snapshots / shared URLs still resolve.
   if (provider.serviceId) {
+    aliases.add(aggregateProviderRouteId(provider.serviceId));
+    const brandKey = extractBrandKey(provider.serviceId);
+    if (brandKey) aliases.add(brandKey);
     aliases.add(`static-${slugifyProviderName(provider.serviceId)}`);
   }
 

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { findProviderByRouteId } from "./providers";
+import { aggregateProviderRouteId, findProviderByRouteId } from "./providers";
 
 const coingeckoProvider = {
   providerId: "pro-api-coingecko-com--base--usdc--0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
@@ -62,5 +62,32 @@ describe("provider route aliases", () => {
     expect(
       findProviderByRouteId([liveRow], "static-solana-foundation-alibaba-goodstech")?.providerId,
     ).toBe(liveRow.providerId);
+  });
+
+  test("resolves short aggregate provider route ids", () => {
+    const providers = [
+      { providerId: "quicknode-row", name: "QuickNode", serviceId: "quicknode/rpc" },
+      { providerId: "nansen-row", name: "Nansen", serviceId: "api.nansen.ai" },
+      { providerId: "coingecko-row", name: "CoinGecko", serviceId: "pro-api.coingecko.com" },
+      { providerId: "agentmail-row", name: "AgentMail", serviceId: "agentmail/email" },
+      { providerId: "rentcast-row", name: "RentCast", serviceId: "paysponge/rentcast" },
+    ];
+
+    expect(findProviderByRouteId(providers, "quicknode")?.providerId).toBe("quicknode-row");
+    expect(findProviderByRouteId(providers, "nansen")?.providerId).toBe("nansen-row");
+    expect(findProviderByRouteId(providers, "coingecko")?.providerId).toBe("coingecko-row");
+    expect(findProviderByRouteId(providers, "agentmail")?.providerId).toBe("agentmail-row");
+    expect(findProviderByRouteId(providers, "paysponge-rentcast")?.providerId).toBe(
+      "rentcast-row",
+    );
+    expect(findProviderByRouteId(providers, "rentcast")?.providerId).toBe("rentcast-row");
+  });
+
+  test("builds concise aggregate route ids", () => {
+    expect(aggregateProviderRouteId("quicknode/rpc")).toBe("quicknode");
+    expect(aggregateProviderRouteId("api.nansen.ai")).toBe("nansen");
+    expect(aggregateProviderRouteId("pro-api.coingecko.com")).toBe("coingecko");
+    expect(aggregateProviderRouteId("agentmail/email")).toBe("agentmail");
+    expect(aggregateProviderRouteId("paysponge/rentcast")).toBe("paysponge-rentcast");
   });
 });
