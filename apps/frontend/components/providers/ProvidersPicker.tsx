@@ -8,6 +8,7 @@ import { isDemoProvider } from "@/lib/providers";
 import { describeChain, type CustomerChain } from "@/lib/customers/chain";
 import { inferBrandDisplayName, inferBrandDomain } from "@/lib/pay-sh/brand";
 import { resolvePaySkill, usePaySkills } from "@/lib/pay-sh/skills";
+import { buildStaticProviderRouteId } from "@/lib/providers/static-merge";
 import {
   DEFAULT_PROVIDER_FILTER,
   chainsOfProvider,
@@ -157,10 +158,11 @@ export function ProvidersPicker() {
           fqn: skill?.fqn ?? p.serviceId,
           serviceUrl: skill?.service_url ?? p.serviceUrl,
         });
+        const routeProviderId = p.serviceId ? buildStaticProviderRouteId(p.serviceId) : p.providerId;
         return (
           <Link
             key={p.providerId}
-            href={`/providers/${p.providerId}/customers`}
+            href={`/providers/${routeProviderId}/customers`}
             className="card"
             style={{
               padding: 18,
