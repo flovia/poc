@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo } from "react";
 import type { CoUsageProviderRow } from "@/lib/customers/co-usage-providers";
 import { opportunityChipClass, opportunityLabel } from "@/lib/customers/co-usage-ui";
+import { walletProfileHref } from "@/lib/provider-routes";
 import { useClipboardCopy } from "@/lib/use-clipboard-copy";
 
 type Props = {
@@ -336,7 +337,7 @@ export function CoUsageProviderDrawer({ row, providerId, onClose }: Props) {
                     }}
                   >
                     <Link
-                      href={`/providers/${providerId}/wallet/${encodeURIComponent(p.wallet)}`}
+                      href={walletProfileHref(providerId, p.wallet)}
                       onClick={onClose}
                       className="mono"
                       title={`Open wallet profile for ${p.wallet}`}

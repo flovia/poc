@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { providerRouteId, walletProfileHref } from "./provider-routes";
 import { aggregateProviderRouteId, findProviderByRouteId } from "./providers";
 
 const coingeckoProvider = {
@@ -77,9 +78,7 @@ describe("provider route aliases", () => {
     expect(findProviderByRouteId(providers, "nansen")?.providerId).toBe("nansen-row");
     expect(findProviderByRouteId(providers, "coingecko")?.providerId).toBe("coingecko-row");
     expect(findProviderByRouteId(providers, "agentmail")?.providerId).toBe("agentmail-row");
-    expect(findProviderByRouteId(providers, "paysponge-rentcast")?.providerId).toBe(
-      "rentcast-row",
-    );
+    expect(findProviderByRouteId(providers, "paysponge-rentcast")?.providerId).toBe("rentcast-row");
     expect(findProviderByRouteId(providers, "rentcast")?.providerId).toBe("rentcast-row");
   });
 
@@ -89,5 +88,17 @@ describe("provider route aliases", () => {
     expect(aggregateProviderRouteId("pro-api.coingecko.com")).toBe("coingecko");
     expect(aggregateProviderRouteId("agentmail/email")).toBe("agentmail");
     expect(aggregateProviderRouteId("paysponge/rentcast")).toBe("paysponge-rentcast");
+  });
+
+  test("builds short wallet profile hrefs from provider aliases", () => {
+    const routeId = providerRouteId({
+      providerId: "quicknode-rpc--base--usdc--0xf46394addda95a3d5bcc1124605e3d15d204623c",
+      serviceId: "quicknode/rpc",
+    });
+
+    expect(routeId).toBe("quicknode");
+    expect(walletProfileHref(routeId, "581z5u78NkRjKxfGfq5pca7EMFzUeQLLkC4rg22sYNkx")).toBe(
+      "/quicknode/wallet/581z5u78NkRjKxfGfq5pca7EMFzUeQLLkC4rg22sYNkx",
+    );
   });
 });

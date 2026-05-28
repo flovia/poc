@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { Icon } from "@/components/ui/Icon";
 import type { CustomerIdentityDto, CustomerMetricsDto } from "@/lib/api/types";
 import type { DashboardMode } from "@/lib/data-mode";
@@ -10,11 +11,15 @@ import { useClipboardCopy } from "@/lib/use-clipboard-copy";
 type IdentityBarProps = {
   customer: CustomerIdentityDto;
   metrics: CustomerMetricsDto;
+  activity?: {
+    paymentCount: number;
+    providerCount: number;
+  };
   dataMode: DashboardMode;
   sdkExtras: SdkExtras | null;
 };
 
-export function IdentityBar({ customer, metrics, dataMode, sdkExtras }: IdentityBarProps) {
+export function IdentityBar({ customer, metrics, activity, dataMode, sdkExtras }: IdentityBarProps) {
   const { copied, copy } = useClipboardCopy(1400);
   const isSdkConnected = dataMode === "sdkConnected" && sdkExtras !== null;
   const hasSdkUpsell = isSdkConnected && sdkExtras!.upsell !== null; // 主役のみ
@@ -39,7 +44,7 @@ export function IdentityBar({ customer, metrics, dataMode, sdkExtras }: Identity
       }}
     >
       <div className="identity-bar-layout">
-        <div style={{ minWidth: 0, flex: 1 }}>
+        <div className="identity-bar-main" style={{ minWidth: 0, flex: 1 }}>
           <div className="identity-bar-address-row">
             <span
               className="mono display identity-bar-address"
@@ -119,43 +124,78 @@ export function IdentityBar({ customer, metrics, dataMode, sdkExtras }: Identity
         <div
           className="identity-bar-spend"
           style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "flex-end",
-            gap: 4,
+            display: "grid",
+            gridTemplateColumns: activity ? "repeat(2, max-content)" : "max-content",
+            gap: 24,
+            alignItems: "start",
+            justifyContent: "end",
             flexShrink: 0,
             minWidth: 0,
           }}
         >
-          <div
-            style={{
-              fontSize: 11,
-              fontWeight: 600,
-              letterSpacing: "0.08em",
-              textTransform: "uppercase",
-              color: "var(--text-mute)",
-            }}
-          >
-            Total spend
+          <div className="identity-bar-metric">
+            <MetricLabel>Total spend</MetricLabel>
+            <MetricValue title={totalSpendDisplay}>{totalSpendDisplay}</MetricValue>
+            <div className="identity-bar-metric-subtitle">{totalSpendSub}</div>
           </div>
-          <div
-            className="mono display"
-            style={{
-              fontSize: 26,
-              fontWeight: 700,
-              color: "var(--text-1)",
-              letterSpacing: "-0.01em",
-              whiteSpace: "nowrap",
-            }}
-            title={totalSpendDisplay}
-          >
-            {totalSpendDisplay}
-          </div>
-          <div style={{ fontSize: 12, color: "var(--text-3)" }}>{totalSpendSub}</div>
+          {activity && (
+            <div className="identity-bar-metric">
+              <MetricLabel>Activity</MetricLabel>
+              <MetricValue>
+                {activity.paymentCount.toLocaleString("en-US")} payment
+                {activity.paymentCount === 1 ? "" : "s"}
+              </MetricValue>
+              <div className="identity-bar-metric-subtitle">
+                {activity.providerCount} provider{activity.providerCount === 1 ? "" : "s"} · {activityLabel(metrics)}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
+}
+
+function MetricLabel({ children }: { children: ReactNode }) {
+  return (
+    <div
+      style={{
+        fontSize: 11,
+        fontWeight: 600,
+        letterSpacing: "0.08em",
+        textTransform: "uppercase",
+        color: "var(--text-mute)",
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+function MetricValue({ children, title }: { children: ReactNode; title?: string }) {
+  return (
+    <div
+      className="mono display"
+      style={{
+        fontSize: 26,
+        fontWeight: 700,
+        color: "var(--text-1)",
+        letterSpacing: "-0.01em",
+        whiteSpace: "nowrap",
+      }}
+      title={title}
+    >
+      {children}
+    </div>
+  );
+}
+
+function activityLabel(metrics: CustomerMetricsDto): string {
+  return metrics.upsellOpportunity === "high"
+    ? "High activity"
+    : metrics.upsellOpportunity === "medium"
+      ? "Medium activity"
+      : "Low activity";
 }
 
 function getWalletExplorer(address: string, network: string | undefined): { label: string; url: string } {

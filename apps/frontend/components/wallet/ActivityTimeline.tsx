@@ -193,7 +193,7 @@ export function ActivityTimeline({
                 </div>
                 {apiPathDisplay && (
                   <div
-                    className="mono"
+                    className="mono timeline-api-path"
                     style={{
                       fontSize: 12,
                       color: apiPathDisplay.unmapped ? "var(--text-mute)" : "var(--text-2)",

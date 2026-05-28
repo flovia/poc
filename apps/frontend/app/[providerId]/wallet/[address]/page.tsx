@@ -1,6 +1,6 @@
-import { WalletPageContent } from "./WalletPageContent";
+import { WalletPageContent } from "@/app/providers/[providerId]/wallet/[address]/WalletPageContent";
 
-export default async function WalletPage({
+export default async function WalletAliasPage({
   params,
 }: {
   params: Promise<{ providerId: string; address: string }>;
@@ -10,7 +10,7 @@ export default async function WalletPage({
     <WalletPageContent
       providerId={providerId}
       address={address}
-      walletHrefPrefix={`/providers/${providerId}/wallet`}
+      walletHrefPrefix={`/${providerId}/wallet`}
     />
   );
 }

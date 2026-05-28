@@ -33,4 +33,26 @@ describe("IdentityBar", () => {
     expect(html).toContain(`https://solscan.io/account/${address}`);
     expect(html).not.toContain("BaseScan");
   });
+
+  test("shows payment activity next to total spend", () => {
+    const html = renderToStaticMarkup(
+      <IdentityBar
+        customer={{
+          address: "0x1111111111111111111111111111111111111111",
+          label: "Wallet 0x1111",
+          role: "payer_wallet",
+          identityBasis: "wallet_address",
+          caveat: "Payer wallet identity is inferred from demo data.",
+        }}
+        metrics={metrics}
+        activity={{ paymentCount: 4285, providerCount: 1 }}
+        dataMode="onChainOnly"
+        sdkExtras={null}
+      />,
+    );
+
+    expect(html).toContain("10.005 USDC");
+    expect(html).toContain("4,285 payments");
+    expect(html).toContain("1 provider · High activity");
+  });
 });

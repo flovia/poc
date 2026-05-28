@@ -6,6 +6,7 @@ import { CustomersOverview } from "@/components/customers/overview/CustomersOver
 import { SnapshotIndicator } from "@/components/customers/SnapshotIndicator";
 import { getCustomers, getProviders, getSdkExtrasMap, getSummary } from "@/lib/data-source";
 import { buildNoCustomerFactsNotice } from "@/lib/customers/empty-state";
+import { providerRouteId } from "@/lib/provider-routes";
 import { findProviderByRouteId } from "@/lib/providers";
 import { getProviderBalanceContext } from "@/lib/provider-enrichment";
 import { getTopBarPageContext } from "@/lib/server/page-context";
@@ -20,6 +21,7 @@ export default async function CustomersPage({
   const activeProvider = findProviderByRouteId(providers, providerId);
   if (!activeProvider?.payTo) notFound();
   const resolvedProviderId = activeProvider.providerId;
+  const routeProviderId = providerRouteId(activeProvider);
   const filter = activeProvider?.serviceId
     ? { serviceId: activeProvider.serviceId }
     : { payTo: activeProvider.payTo };
@@ -102,7 +104,7 @@ export default async function CustomersPage({
 
           <CustomersBrowser
             customers={customers}
-            providerId={resolvedProviderId}
+            providerId={routeProviderId}
             dataMode={pageCtx.dataMode}
             extrasMap={extrasMap}
           />
