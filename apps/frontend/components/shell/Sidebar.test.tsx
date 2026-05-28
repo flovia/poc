@@ -13,8 +13,9 @@ mock.module("next/link", () => ({
   default: ({
     children,
     href,
+    prefetch: _prefetch,
     ...props
-  }: React.ComponentProps<"a"> & { href: string }) => (
+  }: React.ComponentProps<"a"> & { href: string; prefetch?: boolean }) => (
     <a href={href} {...props}>
       {children}
     </a>
