@@ -249,6 +249,26 @@ describe("BFF routes", () => {
     });
   });
 
+  test("serves health without resolving the default analytics source", async () => {
+    process.env.BFF_ANALYTICS_SOURCE = "postgres";
+    delete process.env.BFF_ANALYTICS_DATABASE_URL;
+
+    try {
+      const handler = createBffHandler(undefined, null, runtimeMetadata);
+      const response = await handler(request("/health"));
+
+      expect(response.status).toBe(200);
+      await expect(response.json()).resolves.toEqual({
+        status: "ok",
+        service: "flovia-bff",
+        commitHash: runtimeMetadata.commitHash,
+        startedAt: runtimeMetadata.startedAt,
+      });
+    } finally {
+      process.env.BFF_ANALYTICS_SOURCE = "fixture";
+    }
+  });
+
   test("serves health with runtime metadata", async () => {
     const handler = createBffHandler(fixtureAnalyticsDataSource, null, runtimeMetadata);
     const response = await handler(request("/health"));

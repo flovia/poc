@@ -50,15 +50,18 @@ export const resolveBffRuntimeMetadata = (
   startedAt: now.toISOString(),
 });
 
-export const createBffHandler =
-  (
-    dataSource:
-      | BffAnalyticsDataSource
-      | Promise<BffAnalyticsDataSource> = resolveAnalyticsDataSource(),
-    llmService: BffLlmService | null = resolveBffLlmService(),
-    runtimeMetadata: BffRuntimeMetadata = resolveBffRuntimeMetadata(),
-  ) =>
-  async (request: Request, server?: RequestTimeoutController) => {
+export const createBffHandler = (
+  dataSource: BffAnalyticsDataSource | Promise<BffAnalyticsDataSource> | undefined = undefined,
+  llmService: BffLlmService | null = resolveBffLlmService(),
+  runtimeMetadata: BffRuntimeMetadata = resolveBffRuntimeMetadata(),
+) => {
+  let resolvedDataSource = dataSource;
+  const getDataSource = () => {
+    resolvedDataSource ??= resolveAnalyticsDataSource();
+    return resolvedDataSource;
+  };
+
+  return async (request: Request, server?: RequestTimeoutController) => {
     const url = new URL(request.url);
     const path = normalizePath(url);
     const customerRoute = matchCustomerRoute(path);
@@ -95,37 +98,37 @@ export const createBffHandler =
     const showcaseResponse = handleShowcaseRoute(request, path);
     if (showcaseResponse) return showcaseResponse;
 
-    const resolvedDataSource = await dataSource;
+    const activeDataSource = await getDataSource();
 
     switch (path) {
       case "/providers":
-        return json(resolvedDataSource.providers);
+        return json(activeDataSource.providers);
       case "/customers": {
         const serviceId = url.searchParams.get("serviceId");
         if (serviceId) {
-          return json(resolvedDataSource.getCustomersByServiceId(serviceId));
+          return json(activeDataSource.getCustomersByServiceId(serviceId));
         }
-        return json(resolvedDataSource.getCustomers(url.searchParams.get("payTo") ?? undefined));
+        return json(activeDataSource.getCustomers(url.searchParams.get("payTo") ?? undefined));
       }
       case "/wallet-usage-graph":
-        return json(resolvedDataSource.walletUsageGraph);
+        return json(activeDataSource.walletUsageGraph);
       case "/analytics/services/coingecko/summary":
-        return json(resolvedDataSource.serviceSummary);
+        return json(activeDataSource.serviceSummary);
       case "/analytics/services/comparison":
-        return json(resolvedDataSource.serviceComparison);
+        return json(activeDataSource.serviceComparison);
       case "/analytics/services/quadrants":
-        return json(resolvedDataSource.serviceQuadrants);
+        return json(activeDataSource.serviceQuadrants);
       case "/analytics/routes/summary":
-        return json(resolvedDataSource.routeSummary);
+        return json(activeDataSource.routeSummary);
       case "/analytics/routes/sankey":
-        return json(resolvedDataSource.routeSankey);
+        return json(activeDataSource.routeSankey);
       default:
         break;
     }
 
     if (customerRoute?.kind === "profile") {
       const normalizedAddress = normalizePaymentRecipientAddress(customerRoute.address);
-      const profile = resolvedDataSource.getCustomerProfile(normalizedAddress);
+      const profile = activeDataSource.getCustomerProfile(normalizedAddress);
 
       if (!profile) {
         return notFound(path);
@@ -136,7 +139,7 @@ export const createBffHandler =
 
     if (customerRoute?.kind === "intelligence") {
       const normalizedAddress = normalizePaymentRecipientAddress(customerRoute.address);
-      const intelligence = resolvedDataSource.getCustomerIntelligence(normalizedAddress);
+      const intelligence = activeDataSource.getCustomerIntelligence(normalizedAddress);
 
       if (!intelligence) {
         return notFound(path);
@@ -147,7 +150,7 @@ export const createBffHandler =
 
     if (customerRoute?.kind === "upsellMetrics") {
       const normalizedAddress = normalizePaymentRecipientAddress(customerRoute.address);
-      const metrics = resolvedDataSource.getCustomerUpsellMetrics(normalizedAddress);
+      const metrics = activeDataSource.getCustomerUpsellMetrics(normalizedAddress);
 
       if (!metrics) {
         return notFound(path);
@@ -158,7 +161,7 @@ export const createBffHandler =
 
     if (customerRoute?.kind === "upsellExplanation") {
       const normalizedAddress = normalizePaymentRecipientAddress(customerRoute.address);
-      const metrics = resolvedDataSource.getCustomerUpsellMetrics(normalizedAddress);
+      const metrics = activeDataSource.getCustomerUpsellMetrics(normalizedAddress);
 
       if (!metrics) {
         return notFound(path);
@@ -183,7 +186,7 @@ export const createBffHandler =
 
     if (customerRoute?.kind === "workflowIntent") {
       const normalizedAddress = normalizePaymentRecipientAddress(customerRoute.address);
-      const profile = resolvedDataSource.getCustomerProfile(normalizedAddress);
+      const profile = activeDataSource.getCustomerProfile(normalizedAddress);
 
       if (!profile) {
         return notFound(path);
@@ -240,3 +243,4 @@ export const createBffHandler =
 
     return notFound(path);
   };
+};
