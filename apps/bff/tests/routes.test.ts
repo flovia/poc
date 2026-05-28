@@ -1202,6 +1202,45 @@ describe("BFF routes", () => {
     expect(dataSource.serviceSummary.transactionCount).toBe(77);
   });
 
+  test("uses postgres snapshot loader when mode is empty", async () => {
+    const dataSource = await resolveAnalyticsDataSource(undefined, {
+      env: {
+        BFF_ANALYTICS_SOURCE: "postgres",
+        BFF_ANALYTICS_POSTGRES_MODE: "",
+        BFF_ANALYTICS_SNAPSHOT_ID: "snapshot-test",
+      },
+      postgresClient: {
+        async query(sql, params) {
+          expect(sql).toBe("SELECT payload FROM bff_analytics_snapshots WHERE id = $1");
+          expect(params).toEqual(["snapshot-test"]);
+          return [
+            {
+              payload: {
+                serviceSummary: {
+                  ...serviceAnalyticsSummaryResponse,
+                  generatedFrom: "postgres-snapshot-empty-mode-test",
+                  transactionCount: 78,
+                },
+              },
+            },
+          ];
+        },
+      },
+    });
+
+    expect(dataSource.serviceSummary.generatedFrom).toBe("postgres-snapshot-empty-mode-test");
+    expect(dataSource.serviceSummary.transactionCount).toBe(78);
+  });
+
+  test("rejects unsupported postgres analytics mode", () => {
+    expect(() =>
+      resolveAnalyticsDataSource(undefined, {
+        env: { BFF_ANALYTICS_SOURCE: "postgres", BFF_ANALYTICS_POSTGRES_MODE: "typo" },
+        postgresClient: { query: async () => [] },
+      }),
+    ).toThrow("Unsupported BFF_ANALYTICS_POSTGRES_MODE: typo");
+  });
+
   test("uses postgres live loader when live mode is configured", async () => {
     const dataSource = await resolveAnalyticsDataSource(undefined, {
       env: { BFF_ANALYTICS_SOURCE: "postgres", BFF_ANALYTICS_POSTGRES_MODE: "live" },
