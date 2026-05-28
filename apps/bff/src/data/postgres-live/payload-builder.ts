@@ -87,9 +87,7 @@ const aggregateCustomers = (rows: CustomerRow[]) => {
 
 const timelineForCustomer = (customer: CustomerAggregate) =>
   customer.providers
-    .flatMap((provider) =>
-      provider.timelineEvents.map((event) => ({ provider, event })),
-    )
+    .flatMap((provider) => provider.timelineEvents.map((event) => ({ provider, event })))
     .sort((left, right) => Date.parse(right.event.at) - Date.parse(left.event.at))
     .slice(0, 20)
     .map(({ provider, event }) => ({
@@ -109,7 +107,9 @@ const timelineForCustomer = (customer: CustomerAggregate) =>
         {
           provenance: "derived_insight" as const,
           label: "postgres live transfer timeline",
-          ...(event.transactionId ? { description: `source transaction: ${event.transactionId}` } : {}),
+          ...(event.transactionId
+            ? { description: `source transaction: ${event.transactionId}` }
+            : {}),
         },
       ],
     }));

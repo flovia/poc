@@ -1398,8 +1398,7 @@ describe("BFF routes", () => {
     expect(dataSource.serviceSummary.userCount).toBe(2);
     expect(dataSource.serviceSummary.transactionCount).toBe(7);
     expect(
-      dataSource.getCustomerProfile("0x4444444444444444444444444444444444444444")?.profile
-        .timeline,
+      dataSource.getCustomerProfile("0x4444444444444444444444444444444444444444")?.profile.timeline,
     ).toEqual([
       expect.objectContaining({
         at: "2026-05-02T00:00:00.000Z",
