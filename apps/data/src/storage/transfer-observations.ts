@@ -37,6 +37,8 @@ async function upsertBaseTransfer(executor: PgExecutor, transfer: NormalizedColl
   );
   const blockNumber = required(transfer.blockNumber, "blockNumber");
   const blockTimestamp = required(transfer.timestamp, "timestamp");
+  const fromAddress = required(transfer.fromAddress, "fromAddress");
+  const toAddress = required(transfer.toAddress, "toAddress");
   await executor.query(
     `
       INSERT INTO token_transfers (
@@ -91,9 +93,65 @@ async function upsertBaseTransfer(executor: PgExecutor, transfer: NormalizedColl
       transfer.logIndex ?? 0,
       blockNumber.toString(),
       blockTimestamp,
-      required(transfer.fromAddress, "fromAddress"),
-      required(transfer.toAddress, "toAddress"),
+      fromAddress,
+      toAddress,
       transfer.amountBaseUnits,
+      transfer.source,
+      JSON.stringify({
+        collectorIdempotencyKey: transfer.idempotencyKey,
+        queryTarget: transfer.queryTarget,
+        rawPayload: transfer.rawPayload,
+      }),
+    ],
+  );
+  await executor.query(
+    `
+      INSERT INTO goldsky_webhook_transfers_x402_paytos (
+        id,
+        token_address,
+        from_owner_address,
+        to_owner_address,
+        amount,
+        block_number,
+        block_timestamp,
+        transaction_hash,
+        gs_op,
+        received_at,
+        raw_payload
+      ) VALUES (
+        $1,
+        lower($2),
+        lower($3),
+        lower($4),
+        $5,
+        $6,
+        EXTRACT(EPOCH FROM $7::timestamptz)::bigint,
+        lower($8),
+        $9,
+        now(),
+        $10::jsonb
+      )
+      ON CONFLICT (id) DO UPDATE SET
+        token_address = EXCLUDED.token_address,
+        from_owner_address = EXCLUDED.from_owner_address,
+        to_owner_address = EXCLUDED.to_owner_address,
+        amount = EXCLUDED.amount,
+        block_number = EXCLUDED.block_number,
+        block_timestamp = EXCLUDED.block_timestamp,
+        transaction_hash = EXCLUDED.transaction_hash,
+        gs_op = EXCLUDED.gs_op,
+        received_at = EXCLUDED.received_at,
+        raw_payload = EXCLUDED.raw_payload
+    `,
+    [
+      transfer.idempotencyKey,
+      tokenAddress,
+      fromAddress,
+      toAddress,
+      transfer.amountBaseUnits,
+      blockNumber.toString(),
+      blockTimestamp,
+      transfer.transactionHash,
       transfer.source,
       JSON.stringify({
         collectorIdempotencyKey: transfer.idempotencyKey,

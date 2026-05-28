@@ -3,7 +3,7 @@ import type { PgExecutor } from "../../src/storage/postgres.js";
 import { upsertTransferObservations } from "../../src/storage/transfer-observations.js";
 
 describe("upsertTransferObservations", () => {
-  test("upserts Base transfers into token_transfers", async () => {
+  test("upserts Base transfers into token_transfers and the live read source table", async () => {
     const queries = captureQueries();
 
     const result = await upsertTransferObservations(queries.executor, [
@@ -35,6 +35,15 @@ describe("upsertTransferObservations", () => {
       "0x833589fcd6edb6e08f4c7c32d4f71b54bdA02913",
       "0xTX",
       0,
+      "42",
+    ]);
+    expect(queries.items[1]?.sql).toContain("INSERT INTO goldsky_webhook_transfers_x402_paytos");
+    expect(queries.items[1]?.params.slice(0, 6)).toEqual([
+      "alchemy:base:1",
+      "0x833589fcd6edb6e08f4c7c32d4f71b54bdA02913",
+      "0xFrom",
+      "0xF46394adDdA95A3d5bCC1124605E3d15D204623C",
+      "1000000",
       "42",
     ]);
   });
