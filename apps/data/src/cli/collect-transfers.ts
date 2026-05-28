@@ -6,12 +6,16 @@ import { createGoldRushBaseTransfersCollector } from "../collectors/goldrush/bas
 import { createSolanaRpcTransferCollector } from "../collectors/solana/rpc-transfers.js";
 import {
   PAY_SH_SOLANA_USDC_COLLECTION_TARGETS,
+  QUICKNODE_SOLANA_USDC_COLLECTION_TARGET,
   toCollectorTargets,
 } from "../collectors/targets/pay-sh-solana.js";
 import type { CollectorTarget, TransferCollector } from "../collectors/types.js";
+import { createBunPostgresExecutor, closeBunPostgres } from "../storage/bun-postgres.js";
+import { upsertTransferObservations } from "../storage/transfer-observations.js";
 
 const BASE_USDC = "0x833589fcd6edb6e08f4c7c32d4f71b54bdA02913";
 const BASE_MPP_PAY_TO = "0x93053f1e7a5efeda532fe69cbbe43cbec3a0f13f";
+const QUICKNODE_BASE_PAY_TO = "0xF46394adDdA95A3d5bCC1124605E3d15D204623C";
 
 type CollectTransfersCliOptions = {
   source: "alchemy" | "rpc-fast" | "dune-sim" | "goldrush";
@@ -20,6 +24,7 @@ type CollectTransfersCliOptions = {
   limit: number;
   fromBlock?: bigint;
   toBlock: bigint | "latest";
+  target: "mpp" | "quicknode";
 };
 
 function parseArgs(args: readonly string[]): CollectTransfersCliOptions {
@@ -29,6 +34,7 @@ function parseArgs(args: readonly string[]): CollectTransfersCliOptions {
     dryRun: false,
     limit: 10,
     toBlock: "latest",
+    target: "quicknode",
   };
   for (let index = 0; index < args.length; index += 1) {
     const arg = args[index];
@@ -56,6 +62,11 @@ function parseArgs(args: readonly string[]): CollectTransfersCliOptions {
     } else if (arg === "--to-block") {
       const value = requiredValue(args[++index], "--to-block");
       options.toBlock = value === "latest" ? "latest" : BigInt(value);
+    } else if (arg === "--target") {
+      const value = requiredValue(args[++index], "--target");
+      if (value !== "mpp" && value !== "quicknode")
+        throw new Error("--target must be mpp or quicknode");
+      options.target = value;
     } else {
       throw new Error(`unknown argument: ${arg}`);
     }
@@ -87,7 +98,17 @@ async function main(): Promise<void> {
         ? { chain: "base", fromBlock: options.fromBlock ?? 0n, toBlock: options.toBlock }
         : { chain: "solana" },
   });
-  console.log(jsonStringify({ mode: options.dryRun ? "dry-run" : "stdout-only", result }));
+  if (options.dryRun) {
+    console.log(jsonStringify({ mode: "dry-run", result }));
+    return;
+  }
+  const executor = createBunPostgresExecutor();
+  try {
+    const upsert = await upsertTransferObservations(executor, result.transfers);
+    console.log(jsonStringify({ mode: "upsert", result, upsert }));
+  } finally {
+    await closeBunPostgres();
+  }
 }
 
 function createCollector(options: CollectTransfersCliOptions): TransferCollector {
@@ -115,8 +136,17 @@ function createCollector(options: CollectTransfersCliOptions): TransferCollector
 
 function defaultTargets(options: CollectTransfersCliOptions): CollectorTarget[] {
   if (options.chain === "base") {
-    return [{ chain: "base", address: BASE_MPP_PAY_TO, assetAddress: BASE_USDC }];
+    return [
+      {
+        chain: "base",
+        address: options.target === "quicknode" ? QUICKNODE_BASE_PAY_TO : BASE_MPP_PAY_TO,
+        assetAddress: BASE_USDC,
+        providerId: options.target === "quicknode" ? "quicknode/rpc" : "mpp/base/usdc",
+      },
+    ];
   }
+  if (options.target === "quicknode")
+    return toCollectorTargets([QUICKNODE_SOLANA_USDC_COLLECTION_TARGET]);
   return toCollectorTargets(PAY_SH_SOLANA_USDC_COLLECTION_TARGETS).slice(0, options.limit);
 }
 

@@ -2,6 +2,8 @@ import { paymentCollectionTargetToCollectorTarget } from "./types.js";
 import type { PaymentCollectionTarget } from "./types.js";
 
 export const SOLANA_USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
+export const QUICKNODE_SOLANA_PAY_TO = "2LWbc9Mi6dRUrdEHBttoNS4udDtH1A4xwBdm1EKqcT57";
+export const QUICKNODE_SOLANA_USDC_TOKEN_ACCOUNT = "6bMZDGaWLoJEVCwS6RCNaqfS3UipqG2d6mUNEqp6KQZ5";
 
 const payShSolanaUsdcResolutions = [
   ["Cs2zdfUNonRdRGsiZUQQLdTxzxVvJZmgiX2mpLYKuEqP", "3m3xS513PgjPwnLbmGbgL4Nk62QEtwzuoXphVN3kfMNh"],
@@ -34,6 +36,20 @@ export const PAY_SH_SOLANA_USDC_COLLECTION_TARGETS = payShSolanaUsdcResolutions.
       sharedPayto: false,
     }) satisfies PaymentCollectionTarget,
 );
+
+export const QUICKNODE_SOLANA_USDC_COLLECTION_TARGET = {
+  source: "pay_sh",
+  protocol: "x402",
+  providerFqn: "quicknode/rpc",
+  chain: "solana",
+  asset: "usdc",
+  payToAddress: QUICKNODE_SOLANA_PAY_TO,
+  resolvedReceiveAddress: QUICKNODE_SOLANA_USDC_TOKEN_ACCOUNT,
+  resolvedReceiveAddressType: "solana_token_account",
+  tokenMintAddress: SOLANA_USDC_MINT,
+  resolutionMethod: "manual_token_account_mapping",
+  sharedPayto: false,
+} satisfies PaymentCollectionTarget;
 
 export function toCollectorTargets(targets: readonly PaymentCollectionTarget[]) {
   return targets.map(paymentCollectionTargetToCollectorTarget);

@@ -1,6 +1,9 @@
 import { describe, expect, test } from "bun:test";
 import {
   PAY_SH_SOLANA_USDC_COLLECTION_TARGETS,
+  QUICKNODE_SOLANA_PAY_TO,
+  QUICKNODE_SOLANA_USDC_COLLECTION_TARGET,
+  QUICKNODE_SOLANA_USDC_TOKEN_ACCOUNT,
   SOLANA_USDC_MINT,
   toCollectorTargets,
 } from "../../src/collectors/targets/pay-sh-solana.js";
@@ -29,6 +32,31 @@ describe("Pay.sh Solana collection targets", () => {
         address: "3m3xS513PgjPwnLbmGbgL4Nk62QEtwzuoXphVN3kfMNh",
         assetAddress: SOLANA_USDC_MINT,
         providerId: "pay_sh:mpp:Cs2zdfUNonRdRGsiZUQQLdTxzxVvJZmgiX2mpLYKuEqP",
+      },
+    ]);
+  });
+
+  test("keeps QuickNode x402 Solana USDC target mapping", () => {
+    expect(QUICKNODE_SOLANA_PAY_TO).toBe("2LWbc9Mi6dRUrdEHBttoNS4udDtH1A4xwBdm1EKqcT57");
+    expect(QUICKNODE_SOLANA_USDC_TOKEN_ACCOUNT).toBe(
+      "6bMZDGaWLoJEVCwS6RCNaqfS3UipqG2d6mUNEqp6KQZ5",
+    );
+    expect(QUICKNODE_SOLANA_USDC_COLLECTION_TARGET).toMatchObject({
+      source: "pay_sh",
+      protocol: "x402",
+      providerFqn: "quicknode/rpc",
+      chain: "solana",
+      asset: "usdc",
+      payToAddress: QUICKNODE_SOLANA_PAY_TO,
+      resolvedReceiveAddress: QUICKNODE_SOLANA_USDC_TOKEN_ACCOUNT,
+      tokenMintAddress: SOLANA_USDC_MINT,
+    });
+    expect(toCollectorTargets([QUICKNODE_SOLANA_USDC_COLLECTION_TARGET])).toEqual([
+      {
+        chain: "solana",
+        address: QUICKNODE_SOLANA_USDC_TOKEN_ACCOUNT,
+        assetAddress: SOLANA_USDC_MINT,
+        providerId: "quicknode/rpc",
       },
     ]);
   });
