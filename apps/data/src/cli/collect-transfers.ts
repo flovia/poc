@@ -9,7 +9,12 @@ import {
   QUICKNODE_SOLANA_USDC_COLLECTION_TARGET,
   toCollectorTargets,
 } from "../collectors/targets/pay-sh-solana.js";
-import type { CollectorTarget, TransferCollector } from "../collectors/types.js";
+import type {
+  CollectorCursor,
+  CollectorTarget,
+  CollectTransfersResult,
+  TransferCollector,
+} from "../collectors/types.js";
 import { createBunPostgresExecutor, closeBunPostgres } from "../storage/bun-postgres.js";
 import { upsertTransferObservations } from "../storage/transfer-observations.js";
 
@@ -25,6 +30,8 @@ type CollectTransfersCliOptions = {
   fromBlock?: bigint;
   toBlock: bigint | "latest";
   target: "mpp" | "quicknode";
+  maxPages: number;
+  summary: boolean;
 };
 
 function parseArgs(args: readonly string[]): CollectTransfersCliOptions {
@@ -35,6 +42,8 @@ function parseArgs(args: readonly string[]): CollectTransfersCliOptions {
     limit: 10,
     toBlock: "latest",
     target: "quicknode",
+    maxPages: 1,
+    summary: false,
   };
   for (let index = 0; index < args.length; index += 1) {
     const arg = args[index];
@@ -67,9 +76,16 @@ function parseArgs(args: readonly string[]): CollectTransfersCliOptions {
       if (value !== "mpp" && value !== "quicknode")
         throw new Error("--target must be mpp or quicknode");
       options.target = value;
+    } else if (arg === "--max-pages") {
+      options.maxPages = Number.parseInt(requiredValue(args[++index], "--max-pages"), 10);
+    } else if (arg === "--summary") {
+      options.summary = true;
     } else {
       throw new Error(`unknown argument: ${arg}`);
     }
+  }
+  if (!Number.isInteger(options.maxPages) || options.maxPages < 1) {
+    throw new Error("--max-pages must be a positive integer");
   }
   if (options.source === "rpc-fast" && options.chain !== "solana") {
     throw new Error("rpc-fast collector only supports solana");
@@ -90,25 +106,41 @@ async function main(): Promise<void> {
   const options = parseArgs(process.argv.slice(2));
   const collector = createCollector(options);
   const targets = defaultTargets(options);
-  const result = await collector.collectTransfers({
-    targets,
-    limit: options.limit,
-    window:
-      options.chain === "base"
-        ? { chain: "base", fromBlock: options.fromBlock ?? 0n, toBlock: options.toBlock }
-        : { chain: "solana" },
-  });
+  const results: CollectTransfersResult[] = [];
+  let cursor: CollectorCursor | undefined;
+  let upsert = { base: 0, solana: 0, skipped: 0 };
+  const executor = options.dryRun ? undefined : createBunPostgresExecutor();
+  try {
+    for (let page = 0; page < options.maxPages; page += 1) {
+      const result = await collector.collectTransfers({
+        targets,
+        limit: options.limit,
+        ...(cursor ? { cursor } : {}),
+        window:
+          options.chain === "base"
+            ? { chain: "base", fromBlock: options.fromBlock ?? 0n, toBlock: options.toBlock }
+            : { chain: "solana" },
+      });
+      results.push(result);
+      if (executor) {
+        const pageUpsert = await upsertTransferObservations(executor, result.transfers);
+        upsert = {
+          base: upsert.base + pageUpsert.base,
+          solana: upsert.solana + pageUpsert.solana,
+          skipped: upsert.skipped + pageUpsert.skipped,
+        };
+      }
+      if (!hasContinuation(result.nextCursor)) break;
+      cursor = result.nextCursor;
+    }
+  } finally {
+    if (executor) await closeBunPostgres();
+  }
   if (options.dryRun) {
-    console.log(jsonStringify({ mode: "dry-run", result }));
+    console.log(jsonStringify(outputPayload(options, "dry-run", results)));
     return;
   }
-  const executor = createBunPostgresExecutor();
-  try {
-    const upsert = await upsertTransferObservations(executor, result.transfers);
-    console.log(jsonStringify({ mode: "upsert", result, upsert }));
-  } finally {
-    await closeBunPostgres();
-  }
+  console.log(jsonStringify(outputPayload(options, "upsert", results, upsert)));
 }
 
 function createCollector(options: CollectTransfersCliOptions): TransferCollector {
@@ -167,6 +199,35 @@ function jsonStringify(value: unknown): string {
     (_key, item) => (typeof item === "bigint" ? item.toString() : item),
     2,
   );
+}
+
+function hasContinuation(cursor: CollectorCursor | undefined): cursor is CollectorCursor {
+  if (!cursor) return false;
+  if (cursor.source === "alchemy" && cursor.chain === "base") return Boolean(cursor.pageKey);
+  if ((cursor.source === "alchemy" || cursor.source === "rpc-fast") && cursor.chain === "solana") {
+    return Boolean(cursor.oldestSeenSignature);
+  }
+  if (cursor.source === "dune-sim") return Boolean(cursor.nextOffset);
+  if (cursor.source === "goldrush") return Boolean(cursor.hasMore);
+  return false;
+}
+
+function outputPayload(
+  options: CollectTransfersCliOptions,
+  mode: "dry-run" | "upsert",
+  results: readonly CollectTransfersResult[],
+  upsert?: { base: number; solana: number; skipped: number },
+) {
+  if (!options.summary) return { mode, results, ...(upsert ? { upsert } : {}) };
+  return {
+    mode,
+    pages: results.length,
+    transfers: results.reduce((sum, result) => sum + result.transfers.length, 0),
+    rawRequestCount: results.reduce((sum, result) => sum + result.rawRequestCount, 0),
+    nextCursor: results.at(-1)?.nextCursor,
+    ...(upsert ? { upsert } : {}),
+    warnings: results.flatMap((result) => result.warnings ?? []),
+  };
 }
 
 if (import.meta.main) {
