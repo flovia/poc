@@ -1260,6 +1260,18 @@ describe("BFF routes", () => {
               service_name: "Alpha",
               transaction_count: 4,
               total_volume_atomic: "400",
+              timeline_events: [
+                {
+                  at: "2026-05-02T00:00:00.000Z",
+                  amountAtomic: "100",
+                  transactionId: "0xalpha4",
+                },
+                {
+                  at: "2026-05-01T00:00:00.000Z",
+                  amountAtomic: "300",
+                  transactionId: "0xalpha1",
+                },
+              ],
             },
             {
               payer: "0x5555555555555555555555555555555555555555",
@@ -1268,6 +1280,13 @@ describe("BFF routes", () => {
               service_name: "Alpha",
               transaction_count: 3,
               total_volume_atomic: "300",
+              timeline_events: [
+                {
+                  at: "2026-05-03T00:00:00.000Z",
+                  amountAtomic: "300",
+                  transactionId: "0xalpha-other",
+                },
+              ],
             },
           ];
         }
@@ -1378,6 +1397,20 @@ describe("BFF routes", () => {
     expect(dataSource.walletUsageGraph.graph.providerWallets[0]?.payerWallets.length).toBe(2);
     expect(dataSource.serviceSummary.userCount).toBe(2);
     expect(dataSource.serviceSummary.transactionCount).toBe(7);
+    expect(
+      dataSource.getCustomerProfile("0x4444444444444444444444444444444444444444")?.profile.timeline,
+    ).toEqual([
+      expect.objectContaining({
+        at: "2026-05-02T00:00:00.000Z",
+        description: "Payment to Alpha",
+        amountAtomic: "100",
+      }),
+      expect.objectContaining({
+        at: "2026-05-01T00:00:00.000Z",
+        description: "Payment to Alpha",
+        amountAtomic: "300",
+      }),
+    ]);
     expect(
       dataSource.serviceComparison.services.some((service) => service.serviceId === "coingecko"),
     ).toBe(true);
@@ -1522,7 +1555,7 @@ describe("BFF routes", () => {
     expect(customerSql).toContain("CROSS JOIN LATERAL unnest(s.provider_fqns)");
   });
 
-  test("filters Solana live facts to Pay.sh offer-priced transfers", async () => {
+  test("keeps Solana live facts to offer-priced or small variable-price transfers", async () => {
     let providerSql = "";
     let customerSql = "";
 
@@ -1543,6 +1576,31 @@ describe("BFF routes", () => {
       expect(sql).toContain("JOIN pay_sh_solana_offer_prices offer_price");
       expect(sql).toContain("provider.provider_fqn = offer_price.provider_fqn");
       expect(sql).toContain("s.amount::numeric = offer_price.amount_atomic");
+      expect(sql).toContain("s.amount::numeric <= 10000000");
+    }
+  });
+
+  test("includes Tempo MPP token transfers in live facts", async () => {
+    let providerSql = "";
+    let customerSql = "";
+
+    await loadPostgresLiveAnalyticsDataSource({
+      async query(sql) {
+        if (sql.includes("attributed_grouped")) {
+          customerSql = sql;
+          return [];
+        }
+        providerSql = sql;
+        return [];
+      },
+    });
+
+    for (const sql of [providerSql, customerSql]) {
+      expect(sql).toContain("tempo_offer_prices AS");
+      expect(sql).toContain("FROM token_transfers t");
+      expect(sql).toContain("t.chain = 'tempo'");
+      expect(sql).toContain("0x20c000000000000000000000b9537d11c60e8b50");
+      expect(sql).toContain("t.amount_atomic::numeric <= 10000000");
     }
   });
 

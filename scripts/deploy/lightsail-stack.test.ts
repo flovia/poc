@@ -69,12 +69,12 @@ describe("lightsail shared stack", () => {
     expect(syncScript).toContain('next_slot="blue"');
     expect(syncScript).toContain('next_slot="green"');
     expect(syncScript).toContain('next_service="develop-bff-${next_slot}"');
-    expect(syncScript).toContain("wait_for_service_providers_ready");
-    expect(syncScript).toContain("local timeout_secs=300");
-    expect(syncScript).toContain('providers_url="http://${container_ip}:3001/providers"');
-    expect(syncScript).toContain('curl -sf --max-time "$request_timeout" "$providers_url"');
-    expect(syncScript).toContain("grep -q '\"providerCount\"'");
-    expect(syncScript).toContain("grep -q '\"providers\"'");
+    expect(syncScript).toContain("wait_for_service_health_ready");
+    expect(syncScript).toContain("local timeout_secs=600");
+    expect(syncScript).toContain('health_url="http://${container_ip}:3001/health"');
+    expect(syncScript).toContain('curl -sf --max-time "$request_timeout" "$health_url"');
+    expect(syncScript).toContain('grep -q \'"status":"ok"\'');
+    expect(syncScript).toContain('grep -q \'"service":"flovia-bff"\'');
     expect(syncScript).toContain("Rolling back");
     expect(syncScript).toContain("write_caddyfile");
     expect(syncScript).toContain("caddy reload");

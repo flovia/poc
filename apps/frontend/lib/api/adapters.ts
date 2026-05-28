@@ -164,6 +164,7 @@ export function adaptCustomerProfile(response: PhaseBCustomerProfileResponse): C
     customer: {
       address: profile.identity.address,
       label: profile.identity.label,
+      network: profile.identity.network,
       role: "payer_wallet",
       identityBasis: "wallet_address",
       caveat: profile.identity.caveat ?? "Payer wallet identity is inferred from demo data.",

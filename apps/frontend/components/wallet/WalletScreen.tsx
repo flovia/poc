@@ -4,13 +4,6 @@ import type { CustomerProfileDto } from "@/lib/api/types";
 import type { DashboardMode } from "@/lib/data-mode";
 import type { SdkExtras, SdkForceNetwork } from "@/lib/sdk-fixtures/types";
 import { IdentityBar } from "./IdentityBar";
-import {
-  EntryPointInsight,
-  InsightsList,
-  RecentActivityInsight,
-  UpsellCard,
-} from "./Insights";
-import { WalletInsightsLayout } from "./WalletInsightsLayout";
 import { WalletInteractive } from "./WalletInteractive";
 
 type WalletScreenProps = {
@@ -28,6 +21,11 @@ export function WalletScreen({
   sdkExtras,
   sdkForceNetwork,
 }: WalletScreenProps) {
+  const activity = {
+    paymentCount: profile.providers.reduce((total, provider) => total + provider.transactionCount, 0),
+    providerCount: profile.providers.length,
+  };
+
   return (
     <div style={{ position: "relative", background: "var(--bg-shell)", minHeight: "100%" }}>
       <div className="wallet-screen-pad">
@@ -48,30 +46,9 @@ export function WalletScreen({
         <IdentityBar
           customer={profile.customer}
           metrics={profile.metrics}
+          activity={activity}
           dataMode={dataMode}
           sdkExtras={sdkExtras}
-        />
-
-        <WalletInsightsLayout
-          workflow={
-            <EntryPointInsight
-              metrics={profile.metrics}
-              dataMode={dataMode}
-              sdkExtras={sdkExtras}
-            />
-          }
-          recentActivity={
-            <RecentActivityInsight metrics={profile.metrics} providers={profile.providers} />
-          }
-          opportunity={<InsightsList insights={profile.insights} />}
-          upsell={
-            <UpsellCard
-              address={profile.customer.address}
-              metrics={profile.metrics}
-              dataMode={dataMode}
-              sdkExtras={sdkExtras}
-            />
-          }
         />
 
         <div
@@ -80,6 +57,7 @@ export function WalletScreen({
             gridTemplateColumns: "1fr",
             gap: 18,
             marginTop: 18,
+            minWidth: 0,
           }}
         >
           <WalletInteractive
@@ -90,7 +68,6 @@ export function WalletScreen({
             sdkExtras={sdkExtras}
             sdkForceNetwork={sdkForceNetwork}
           />
-
         </div>
       </div>
     </div>

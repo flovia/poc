@@ -85,6 +85,35 @@ const aggregateCustomers = (rows: CustomerRow[]) => {
   });
 };
 
+const timelineForCustomer = (customer: CustomerAggregate) =>
+  customer.providers
+    .flatMap((provider) => provider.timelineEvents.map((event) => ({ provider, event })))
+    .sort((left, right) => Date.parse(right.event.at) - Date.parse(left.event.at))
+    .slice(0, 20)
+    .map(({ provider, event }) => ({
+      at: event.at,
+      eventType: "payment" as const,
+      description: `Payment to ${provider.serviceName}`,
+      amountAtomic: event.amountAtomic,
+      relatedProviderId: providerIdFor({
+        serviceId: provider.serviceId,
+        network: provider.network,
+        asset: provider.asset,
+        payTo: provider.payTo,
+      }),
+      provenance: "derived_insight" as const,
+      provenanceByField: { amountAtomic: "onchain_fact" as const },
+      reasons: [
+        {
+          provenance: "derived_insight" as const,
+          label: "postgres live transfer timeline",
+          ...(event.transactionId
+            ? { description: `source transaction: ${event.transactionId}` }
+            : {}),
+        },
+      ],
+    }));
+
 export const buildPayload = (
   providerRows: ProviderRow[],
   customerRows: CustomerRow[],
@@ -427,21 +456,7 @@ export const buildPayload = (
               provenanceByField: { payToWallet: "onchain_fact", spendAtomic: "onchain_fact" },
               reasons: [{ provenance: "derived_insight", label: "postgres live wallet provider" }],
             })),
-            timeline: customer.providers.slice(0, 5).map((provider) => ({
-              at: provider.lastSeenAt,
-              eventType: "payment",
-              description: `Paid ${provider.serviceName}`,
-              amountAtomic: provider.totalVolumeAtomic,
-              relatedProviderId: providerIdFor({
-                serviceId: provider.serviceId,
-                network: provider.network,
-                asset: provider.asset,
-                payTo: provider.payTo,
-              }),
-              provenance: "derived_insight",
-              provenanceByField: { amountAtomic: "onchain_fact" },
-              reasons: [{ provenance: "derived_insight", label: "postgres live payment timeline" }],
-            })),
+            timeline: timelineForCustomer(customer),
             insights: [
               {
                 key: "x402-activity",

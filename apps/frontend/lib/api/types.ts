@@ -46,6 +46,7 @@ export type ProviderCatalogItemDto = Omit<
 
 // View model: compact identity used by legacy UI copy.
 export type CustomerIdentityDto = Pick<ContractCustomerProfile["identity"], "address" | "label"> & {
+  network?: ContractCustomerProfile["identity"]["network"];
   role: "payer_wallet";
   identityBasis: "wallet_address";
   caveat: string;

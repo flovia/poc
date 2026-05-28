@@ -9,6 +9,7 @@ import { classNames, formatAtomic, formatTimestamp } from "@/lib/format";
 import type { CustomerListItemDto } from "@/lib/api/types";
 import { getCustomerChainAttribution } from "@/lib/customers/chain";
 import type { DashboardMode } from "@/lib/data-mode";
+import { walletProfileHref } from "@/lib/provider-routes";
 import type { SdkExtras } from "@/lib/sdk-fixtures/types";
 
 type CustomersTableProps = {
@@ -139,7 +140,7 @@ export function CustomersTable({
         return (
           <Link
             key={c.address}
-            href={`/providers/${providerId}/wallet/${encodeURIComponent(c.address)}`}
+            href={walletProfileHref(providerId, c.address)}
             className={classNames(rowClass, "cust-row-link")}
             aria-label={`Open wallet profile for ${c.address}`}
             style={{

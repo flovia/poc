@@ -144,6 +144,9 @@ export function ProvidersContextProvider({ children }: { children: React.ReactNo
             networks: Set<string>;
             protocols: Set<Protocol>;
             catalogSources: Set<string>;
+            transactionCount: number;
+            uniqueSenderCount: number;
+            hasCustomerFacts: boolean;
           }
         >();
         const groupKey = (p: CatalogItem): string => {
@@ -168,18 +171,38 @@ export function ProvidersContextProvider({ children }: { children: React.ReactNo
             if (provider.protocol) protocols.add(provider.protocol);
             const catalogSources = new Set<string>();
             if (provider.catalogSource) catalogSources.add(provider.catalogSource);
-            groups.set(key, { winner: provider, networks, protocols, catalogSources });
+            groups.set(key, {
+              winner: provider,
+              networks,
+              protocols,
+              catalogSources,
+              transactionCount: provider.transactionCount,
+              uniqueSenderCount: provider.uniqueSenderCount,
+              hasCustomerFacts: provider.hasCustomerFacts,
+            });
             continue;
           }
           if (provider.network) existing.networks.add(provider.network);
           if (provider.protocol) existing.protocols.add(provider.protocol);
           if (provider.catalogSource) existing.catalogSources.add(provider.catalogSource);
+          existing.transactionCount += provider.transactionCount;
+          existing.uniqueSenderCount += provider.uniqueSenderCount;
+          existing.hasCustomerFacts ||= provider.hasCustomerFacts;
           if (score(provider) > score(existing.winner)) {
             existing.winner = provider;
           }
         }
         const deduped = Array.from(groups.values());
-        const generated = deduped.map(({ winner, networks, protocols, catalogSources }) => {
+        const generated = deduped.map((group) => {
+          const {
+            winner,
+            networks,
+            protocols,
+            catalogSources,
+            transactionCount,
+            uniqueSenderCount,
+            hasCustomerFacts,
+          } = group;
           const capability = winner.serviceId
             ? STATIC_PROVIDER_CAPABILITIES.find((entry) => entry.serviceId === winner.serviceId)
             : undefined;
@@ -235,9 +258,9 @@ export function ProvidersContextProvider({ children }: { children: React.ReactNo
             serviceId: winner.serviceId,
             serviceName: winner.serviceName,
             serviceUrl: winner.serviceUrl,
-            transactionCount: winner.transactionCount,
-            uniqueSenderCount: winner.uniqueSenderCount,
-            hasCustomerFacts: winner.hasCustomerFacts,
+            transactionCount,
+            uniqueSenderCount,
+            hasCustomerFacts,
           };
         });
         const merged = mergeStaticProviders<StoredProvider>(generated, (capability, routeId) => ({

@@ -2,7 +2,7 @@ import type { CollectorTarget } from "../types.js";
 
 export type PaymentCollectionTarget = {
   source: "pay_sh";
-  protocol: "mpp";
+  protocol: "mpp" | "x402";
   providerFqn: string;
   chain: "solana";
   asset: "usdc";

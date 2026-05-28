@@ -44,6 +44,42 @@ export const POSTGRES_LIVE_PROVIDER_QUERY = `
           )
         GROUP BY lower(g.to_owner_address), service_id, service_name
       ),
+      tempo_offer_prices AS (
+        SELECT DISTINCT
+          o.provider_fqn,
+          lower(o.pay_to_address) AS pay_to,
+          ROUND((o.probe_price_usd::numeric * 1000000))::numeric AS amount_atomic
+        FROM pay_sh_payment_offers o
+        WHERE lower(o.chain) = 'tempo'
+          AND lower(o.asset) = 'usd (tempo)'
+          AND lower(o.protocol) = 'mpp'
+          AND o.pay_to_address IS NOT NULL
+          AND o.probe_price_usd IS NOT NULL
+          AND o.probe_price_usd > 0
+      ),
+      tempo_provider_grouped AS (
+        SELECT
+          'tempo' AS network,
+          'USD (Tempo)' AS asset,
+          lower(t.to_owner_address) AS pay_to,
+          offer_price.provider_fqn AS service_id,
+          offer_price.provider_fqn AS service_name,
+          COUNT(*)::int AS transaction_count,
+          COUNT(DISTINCT lower(t.from_owner_address))::int AS unique_sender_count,
+          COALESCE(SUM(t.amount_atomic), 0)::text AS total_volume_atomic,
+          MIN(t.block_timestamp) AS first_seen_at,
+          MAX(t.block_timestamp) AS last_seen_at
+        FROM token_transfers t
+        JOIN tempo_offer_prices offer_price
+          ON offer_price.pay_to = lower(t.to_owner_address)
+        WHERE t.chain = 'tempo'
+          AND lower(t.token_address) = '0x20c000000000000000000000b9537d11c60e8b50'
+          AND (
+            t.amount_atomic::numeric = offer_price.amount_atomic
+            OR t.amount_atomic::numeric <= 10000000
+          )
+        GROUP BY lower(t.to_owner_address), offer_price.provider_fqn
+      ),
       pay_sh_solana_offer_prices AS (
         SELECT DISTINCT
           o.provider_fqn,
@@ -110,11 +146,16 @@ export const POSTGRES_LIVE_PROVIDER_QUERY = `
           AND array_length(s.provider_fqns, 1) >= 1
           AND s.from_token_account IS NOT NULL
           AND s.pay_to_address IS NOT NULL
-          AND s.amount::numeric = offer_price.amount_atomic
+          AND (
+            s.amount::numeric = offer_price.amount_atomic
+            OR s.amount::numeric <= 10000000
+          )
         GROUP BY 1, 2, 3, 4, 5
       ),
       provider_grouped AS (
         SELECT * FROM base_provider_grouped
+        UNION ALL
+        SELECT * FROM tempo_provider_grouped
         UNION ALL
         SELECT * FROM solana_provider_grouped
       ),
@@ -181,7 +222,7 @@ export const POSTGRES_LIVE_PROVIDER_QUERY = `
           END AS asset,
           chain AS display_chain,
           CASE
-            WHEN lower(chain) = 'base' THEN lower(pay_to_address)
+            WHEN lower(chain) IN ('base', 'tempo') THEN lower(pay_to_address)
             ELSE pay_to_address
           END AS pay_to,
           protocol
@@ -385,7 +426,14 @@ export const POSTGRES_LIVE_CUSTOMER_QUERY = `
           COUNT(*)::int AS transaction_count,
           COALESCE(SUM(g.amount), 0)::text AS total_volume_atomic,
           to_timestamp(MIN(g.block_timestamp)) AS first_seen_at,
-          to_timestamp(MAX(g.block_timestamp)) AS last_seen_at
+          to_timestamp(MAX(g.block_timestamp)) AS last_seen_at,
+          jsonb_agg(
+            jsonb_build_object(
+              'at', to_timestamp(g.block_timestamp),
+              'amountAtomic', g.amount::text,
+              'transactionId', g.transaction_hash
+            ) ORDER BY g.block_timestamp DESC, g.transaction_hash DESC
+          ) AS timeline_events
         FROM goldsky_webhook_transfers_x402_paytos g
         LEFT JOIN x402_provider_activity a
           ON lower(a.pay_to_address) = lower(g.to_owner_address)
@@ -398,6 +446,49 @@ export const POSTGRES_LIVE_CUSTOMER_QUERY = `
               AND g.amount::numeric = option_amount.amount_atomic
           )
         GROUP BY lower(g.from_owner_address), lower(g.to_owner_address), service_id, service_name
+      ),
+      tempo_offer_prices AS (
+        SELECT DISTINCT
+          o.provider_fqn,
+          lower(o.pay_to_address) AS pay_to,
+          ROUND((o.probe_price_usd::numeric * 1000000))::numeric AS amount_atomic
+        FROM pay_sh_payment_offers o
+        WHERE lower(o.chain) = 'tempo'
+          AND lower(o.asset) = 'usd (tempo)'
+          AND lower(o.protocol) = 'mpp'
+          AND o.pay_to_address IS NOT NULL
+          AND o.probe_price_usd IS NOT NULL
+          AND o.probe_price_usd > 0
+      ),
+      tempo_attributed_grouped AS (
+        SELECT
+          'tempo' AS network,
+          'USD (Tempo)' AS asset,
+          lower(t.from_owner_address) AS payer,
+          lower(t.to_owner_address) AS pay_to,
+          offer_price.provider_fqn AS service_id,
+          offer_price.provider_fqn AS service_name,
+          COUNT(*)::int AS transaction_count,
+          COALESCE(SUM(t.amount_atomic), 0)::text AS total_volume_atomic,
+          MIN(t.block_timestamp) AS first_seen_at,
+          MAX(t.block_timestamp) AS last_seen_at,
+          jsonb_agg(
+            jsonb_build_object(
+              'at', t.block_timestamp,
+              'amountAtomic', t.amount_atomic::text,
+              'transactionId', t.tx_id
+            ) ORDER BY t.block_timestamp DESC, t.tx_id DESC
+          ) AS timeline_events
+        FROM token_transfers t
+        JOIN tempo_offer_prices offer_price
+          ON offer_price.pay_to = lower(t.to_owner_address)
+        WHERE t.chain = 'tempo'
+          AND lower(t.token_address) = '0x20c000000000000000000000b9537d11c60e8b50'
+          AND (
+            t.amount_atomic::numeric = offer_price.amount_atomic
+            OR t.amount_atomic::numeric <= 10000000
+          )
+        GROUP BY lower(t.from_owner_address), lower(t.to_owner_address), offer_price.provider_fqn
       ),
       pay_sh_solana_offer_prices AS (
         SELECT DISTINCT
@@ -443,7 +534,14 @@ export const POSTGRES_LIVE_CUSTOMER_QUERY = `
           COUNT(*)::int AS transaction_count,
           COALESCE(SUM(s.amount), 0)::text AS total_volume_atomic,
           MIN(s.block_timestamp) AS first_seen_at,
-          MAX(s.block_timestamp) AS last_seen_at
+          MAX(s.block_timestamp) AS last_seen_at,
+          jsonb_agg(
+            jsonb_build_object(
+              'at', s.block_timestamp,
+              'amountAtomic', s.amount::text,
+              'transactionId', s.signature
+            ) ORDER BY s.block_timestamp DESC, s.signature DESC
+          ) AS timeline_events
         FROM payment_attributed_transfers_solana s
         CROSS JOIN LATERAL unnest(s.provider_fqns) AS provider(provider_fqn)
         JOIN pay_sh_solana_offer_prices offer_price
@@ -465,11 +563,16 @@ export const POSTGRES_LIVE_CUSTOMER_QUERY = `
           AND array_length(s.provider_fqns, 1) >= 1
           AND s.from_token_account IS NOT NULL
           AND s.pay_to_address IS NOT NULL
-          AND s.amount::numeric = offer_price.amount_atomic
+          AND (
+            s.amount::numeric = offer_price.amount_atomic
+            OR s.amount::numeric <= 10000000
+          )
         GROUP BY 1, 2, 3, 4, 5, 6
       ),
       attributed_grouped AS (
         SELECT * FROM base_attributed_grouped
+        UNION ALL
+        SELECT * FROM tempo_attributed_grouped
         UNION ALL
         SELECT * FROM solana_attributed_grouped
       )
@@ -483,7 +586,8 @@ export const POSTGRES_LIVE_CUSTOMER_QUERY = `
         transaction_count,
         total_volume_atomic,
         first_seen_at,
-        last_seen_at
+        last_seen_at,
+        timeline_events
       FROM attributed_grouped
       ORDER BY total_volume_atomic::numeric DESC, transaction_count DESC
 `;

@@ -56,7 +56,7 @@ export function WalletInteractive({
     dataMode === "sdkConnected" && sdkExtras !== null && sdkExtras.upsell !== null;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 14, minWidth: 0, width: "100%" }}>
       <WorkflowSummaryStrip
         timeline={timeline}
         providers={providers}
@@ -66,6 +66,7 @@ export function WalletInteractive({
         dataMode={dataMode}
         sdkExtras={sdkExtras}
       />
+      <CoUsageRanking address={address} providers={providers} />
       <ActivityTimeline
         timeline={timeline}
         providers={providers}
@@ -75,7 +76,6 @@ export function WalletInteractive({
         dataMode={dataMode}
         sdkExtras={sdkExtras}
       />
-      <CoUsageRanking address={address} providers={providers} />
       {isSdkProtagonist && sdkForceNetwork && (
         <SdkForceNetworkChart network={sdkForceNetwork} />
       )}
