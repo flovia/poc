@@ -110,7 +110,10 @@ export const POSTGRES_LIVE_PROVIDER_QUERY = `
           AND array_length(s.provider_fqns, 1) >= 1
           AND s.from_token_account IS NOT NULL
           AND s.pay_to_address IS NOT NULL
-          AND s.amount::numeric = offer_price.amount_atomic
+          AND (
+            s.amount::numeric = offer_price.amount_atomic
+            OR s.amount::numeric <= 10000000
+          )
         GROUP BY 1, 2, 3, 4, 5
       ),
       provider_grouped AS (
@@ -479,7 +482,10 @@ export const POSTGRES_LIVE_CUSTOMER_QUERY = `
           AND array_length(s.provider_fqns, 1) >= 1
           AND s.from_token_account IS NOT NULL
           AND s.pay_to_address IS NOT NULL
-          AND s.amount::numeric = offer_price.amount_atomic
+          AND (
+            s.amount::numeric = offer_price.amount_atomic
+            OR s.amount::numeric <= 10000000
+          )
         GROUP BY 1, 2, 3, 4, 5, 6
       ),
       attributed_grouped AS (

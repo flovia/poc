@@ -1556,7 +1556,7 @@ describe("BFF routes", () => {
     expect(customerSql).toContain("CROSS JOIN LATERAL unnest(s.provider_fqns)");
   });
 
-  test("filters Solana live facts to Pay.sh offer-priced transfers", async () => {
+  test("keeps Solana live facts to offer-priced or small variable-price transfers", async () => {
     let providerSql = "";
     let customerSql = "";
 
@@ -1577,6 +1577,7 @@ describe("BFF routes", () => {
       expect(sql).toContain("JOIN pay_sh_solana_offer_prices offer_price");
       expect(sql).toContain("provider.provider_fqn = offer_price.provider_fqn");
       expect(sql).toContain("s.amount::numeric = offer_price.amount_atomic");
+      expect(sql).toContain("s.amount::numeric <= 10000000");
     }
   });
 
