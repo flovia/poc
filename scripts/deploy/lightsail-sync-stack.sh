@@ -27,7 +27,7 @@ write_branch_analytics_env() {
   if [ -n "$database_url" ]; then
     printf '%s_BFF_ANALYTICS_SOURCE=postgres\n' "$prefix"
     printf '%s_BFF_ANALYTICS_DATABASE_URL=%s\n' "$prefix" "$database_url"
-    printf '%s_BFF_ANALYTICS_POSTGRES_MODE=live\n' "$prefix"
+    printf '%s_BFF_ANALYTICS_POSTGRES_MODE=snapshot\n' "$prefix"
   fi
 }
 

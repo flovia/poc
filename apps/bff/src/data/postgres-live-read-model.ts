@@ -1,1 +1,4 @@
-export { loadPostgresLiveAnalyticsDataSource } from "./postgres-live/source";
+export {
+  loadPostgresLiveAnalyticsDataSource,
+  loadPostgresLiveAnalyticsPayload,
+} from "./postgres-live/source";
