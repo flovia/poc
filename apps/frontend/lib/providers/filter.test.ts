@@ -207,7 +207,7 @@ describe("visibleProviderChains", () => {
 });
 
 describe("orderProvidersPinnedFirst", () => {
-  test("places QuickNode first, then Nansen + CoinGecko, then MPP-registry rows", () => {
+  test("places QuickNode first, then Nansen + CoinGecko, then other rows by observed usage", () => {
     const providers: StoredProvider[] = [
       make({ providerId: "quicknode", name: "QuickNode", serviceId: "quicknode/rpc" }),
       make({
@@ -221,13 +221,15 @@ describe("orderProvidersPinnedFirst", () => {
         name: "AgentMail",
         serviceId: "agentmail",
         catalogSource: "mpp_registry",
+        transactionCount: 0,
       }),
       make({ providerId: "static-api-nansen-ai", name: "Nansen", serviceId: "api.nansen.ai" }),
       make({
-        providerId: "mpp:openai::tempo:4217::USDC::0xca4e835f",
-        name: "OpenAI",
-        serviceId: "openai",
+        providerId: "mpp:stablesocial::tempo:4217::USDC::0xcfa26f13",
+        name: "StableSocial",
+        serviceId: "stablesocial",
         catalogSource: "mpp_registry",
+        transactionCount: 1_396,
       }),
     ];
 
@@ -235,14 +237,15 @@ describe("orderProvidersPinnedFirst", () => {
       "quicknode",
       "static-api-nansen-ai",
       "static-pro-api-coingecko-com",
-      // MPP rows follow, in original-index order.
-      "mpp:agentmail::tempo:4217::USDC::0x6e3184c2",
-      "mpp:openai::tempo:4217::USDC::0xca4e835f",
+      // Non-pinned rows follow by observed usage, so active MPP services appear
+      // before unused registry-only services.
+      "mpp:stablesocial::tempo:4217::USDC::0xcfa26f13",
       "stripe",
+      "mpp:agentmail::tempo:4217::USDC::0x6e3184c2",
     ]);
   });
 
-  test("ranks aggregated cards (catalogSources includes mpp_registry) at MPP rank, even if winner is Pay.sh", () => {
+  test("uses observed usage for aggregated cards instead of MPP registry rank", () => {
     // brand-key dedup picks a Pay.sh row as winner (so the URL stays stable),
     // but the card represents both Pay.sh + MPP because they were merged.
     // The pin order must reflect the aggregated catalogSources, not just the
@@ -256,12 +259,14 @@ describe("orderProvidersPinnedFirst", () => {
         // winner is Pay.sh, but the dedup also folded in an MPP sibling row.
         catalogSource: "pay_sh_curated",
         catalogSources: ["pay_sh_curated", "mpp_registry"],
+        transactionCount: 0,
       }),
       make({
-        providerId: "anthropic-mpp",
-        name: "Anthropic",
-        serviceId: "anthropic",
+        providerId: "stablesocial-mpp",
+        name: "StableSocial",
+        serviceId: "stablesocial",
         catalogSource: "mpp_registry",
+        transactionCount: 100,
       }),
       make({
         providerId: "static-pro-api-coingecko-com",
@@ -273,10 +278,8 @@ describe("orderProvidersPinnedFirst", () => {
     expect(orderProvidersPinnedFirst(providers).map((p) => p.providerId)).toEqual([
       "quicknode",
       "static-pro-api-coingecko-com",
-      // Both MPP-aggregated and pure MPP rows share the MPP rank, in
-      // their original input order.
+      "stablesocial-mpp",
       "agentmail-paysh",
-      "anthropic-mpp",
     ]);
   });
 
