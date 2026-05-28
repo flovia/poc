@@ -24,7 +24,7 @@ export function IdentityBar({ customer, metrics, dataMode, sdkExtras }: Identity
       : `${formatAtomic(metrics.spendAtomic)} USDC`;
   const totalSpendSub =
     isSdkConnected && hasSdkUpsell ? "USD · SDK preview (mock)" : "USDC spend";
-  const baseScanUrl = `https://basescan.org/address/${customer.address}#tokentxns`;
+  const explorer = getWalletExplorer(customer.address, customer.network);
   const copyAddress = () => void copy(customer.address);
 
   return (
@@ -67,15 +67,15 @@ export function IdentityBar({ customer, metrics, dataMode, sdkExtras }: Identity
             </button>
             <a
               className="btn ghost"
-              href={baseScanUrl}
+              href={explorer.url}
               target="_blank"
               rel="noreferrer"
               style={{ padding: "4px 7px", color: "var(--text-3)", flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 5 }}
-              title="Open on BaseScan"
-              aria-label="Open wallet on BaseScan"
+              title={`Open on ${explorer.label}`}
+              aria-label={`Open wallet on ${explorer.label}`}
             >
               <Icon.external width="13" height="13" />
-              <span style={{ fontSize: 12, fontWeight: 600 }}>BaseScan</span>
+              <span style={{ fontSize: 12, fontWeight: 600 }}>{explorer.label}</span>
             </a>
             {copied && (
               <span style={{ color: "var(--teal)", fontSize: 12, fontWeight: 600, flexShrink: 0 }}>
@@ -156,4 +156,13 @@ export function IdentityBar({ customer, metrics, dataMode, sdkExtras }: Identity
       </div>
     </div>
   );
+}
+
+function getWalletExplorer(address: string, network: string | undefined): { label: string; url: string } {
+  const normalizedNetwork = network?.toLowerCase() ?? "";
+  if (normalizedNetwork.includes("solana") || !address.startsWith("0x")) {
+    return { label: "Solscan", url: `https://solscan.io/account/${address}` };
+  }
+
+  return { label: "BaseScan", url: `https://basescan.org/address/${address}#tokentxns` };
 }
