@@ -12,7 +12,6 @@ import type {
   ReportSummaryDto,
   WalletUsageGraphDto,
 } from "./api/types";
-import type { ProviderRankingResponse } from "contracts";
 import { mergeStaticProviders } from "@/lib/providers/static-merge";
 import type { StaticProviderCapability } from "@/lib/providers/static-capabilities";
 import type { SdkExtras, SdkForceNetwork } from "./sdk-fixtures/types";
@@ -65,41 +64,6 @@ export async function getProviders(): Promise<ProviderCatalogItemDto[]> {
   if (mode === "sdkConnected") return [];
   const liveProviders = await live.getProviders();
   return mergeStaticProviders(liveProviders, toServerStaticProvider);
-}
-
-export async function getProviderRanking(
-  sort: "transactions" | "settledAmount",
-  limit = 50,
-): Promise<ProviderRankingResponse> {
-  try {
-    return await live.getProviderRanking(sort, limit);
-  } catch (error) {
-    console.warn(
-      "Falling back to an empty provider ranking because the BFF is unavailable.",
-      error,
-    );
-    return {
-      generatedAt: new Date().toISOString(),
-      generatedFrom: "frontend-fallback:provider-ranking",
-      population: "observed_providers",
-      sort,
-      limit,
-      providerCount: 0,
-      totalProviderCount: 0,
-      providers: [],
-      provenance: "demo_label",
-      provenanceByField: {
-        providers: "demo_label",
-      },
-      reasons: [
-        {
-          provenance: "demo_label",
-          label: "live_bff_unavailable",
-          description: "The live BFF ranking endpoint was unavailable during rendering.",
-        },
-      ],
-    };
-  }
 }
 
 export type GetCustomersFilter = { payTo?: string; serviceId?: string };

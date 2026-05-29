@@ -204,31 +204,17 @@ function defaultTargets(options: CollectTransfersCliOptions): CollectorTarget[] 
     ];
   }
   if (options.chain === "base") {
-    const defaultPayTo = options.target === "quicknode" ? QUICKNODE_BASE_PAY_TO : BASE_MPP_PAY_TO;
-    const defaultProviderId = options.target === "quicknode" ? "quicknode/rpc" : "mpp/base/usdc";
     return [
       {
         chain: "base",
-        address: options.payTo ?? defaultPayTo,
+        address: options.target === "quicknode" ? QUICKNODE_BASE_PAY_TO : BASE_MPP_PAY_TO,
         assetAddress: BASE_USDC,
-        providerId: options.providerId ?? defaultProviderId,
+        providerId: options.target === "quicknode" ? "quicknode/rpc" : "mpp/base/usdc",
       },
     ];
   }
   if (options.target === "quicknode")
     return toCollectorTargets([QUICKNODE_SOLANA_USDC_COLLECTION_TARGET]);
-  if (options.payTo) {
-    const target = PAY_SH_SOLANA_USDC_COLLECTION_TARGETS.find(
-      (item) => item.payToAddress === options.payTo,
-    );
-    if (!target) throw new Error(`Unknown Solana payTo target: ${options.payTo}`);
-    return toCollectorTargets([
-      {
-        ...target,
-        providerFqn: options.providerId ?? target.providerFqn,
-      },
-    ]);
-  }
   return toCollectorTargets(PAY_SH_SOLANA_USDC_COLLECTION_TARGETS).slice(0, options.limit);
 }
 

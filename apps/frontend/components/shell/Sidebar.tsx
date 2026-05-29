@@ -7,7 +7,7 @@ import { useMemo } from "react";
 import { useProviders } from "@/app/providers";
 import { Icon } from "@/components/ui/Icon";
 import { ProviderAvatar } from "@/components/shell/ProviderAvatar";
-import { inferBrandDomain, inferProviderDisplayName } from "@/lib/pay-sh/brand";
+import { inferBrandDisplayName, inferBrandDomain } from "@/lib/pay-sh/brand";
 import { resolvePaySkill, usePaySkills } from "@/lib/pay-sh/skills";
 import { findProviderByRouteId, isDemoProvider } from "@/lib/providers";
 import type { DashboardMode } from "@/lib/data-mode";
@@ -24,7 +24,6 @@ export type ActiveRoute =
   | "machine-payment-routes"
   | "macro-metrics"
   | "metrics-catalog"
-  | "rankings"
   | "showcase"
   | "setup"
   | "wallet"
@@ -63,13 +62,8 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode, className }: 
   const currentSkill = resolvePaySkill(skills, currentServiceId);
   const currentName =
     currentSkill?.title
-    ?? (current
-      ? inferProviderDisplayName({
-          serviceId: current.serviceId,
-          serviceUrl: current.serviceUrl,
-          fallbackName: current.name,
-        })
-      : undefined)
+    ?? inferBrandDisplayName({ fqn: currentServiceId })
+    ?? current?.name
     ?? (isViewingSdkDemo || isSdkEmpty
       ? SDK_DEMO_PROVIDER_NAME
       : hydrated
@@ -94,7 +88,6 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode, className }: 
   const coUsageHref = providerRouteId ? `/providers/${providerRouteId}/customers/co-usage-providers` : undefined;
   const customerOverviewActive = pathname === customerOverviewHref || activeRoute === "wallet";
   const customersSectionActive = customerOverviewActive || pathname === coUsageHref;
-  const rankingsSectionActive = pathname === "/rankings" || pathname.startsWith("/rankings/");
   const showcaseSectionActive = pathname === "/showcase" || pathname.startsWith("/showcase/");
 
   const navHrefFor = (
@@ -274,28 +267,6 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode, className }: 
             <GeoNavLabel />
           </Link>
         )}
-
-        <div className="nav-label" style={{ marginTop: 18 }}>
-          Rankings
-        </div>
-        <div className="nav-row">
-          <span
-            className={`nav-item nav-item--with-toggle nav-item--category${rankingsSectionActive ? " nav-item--category-active" : ""}`}
-          >
-            <Icon.spark width={16} height={16} />
-            <span style={{ flex: 1 }}>Provider Rankings</span>
-          </span>
-        </div>
-        <div id="nav-sub-rankings" className="nav-sub">
-          <Link
-            href="/rankings/provider-leaderboard"
-            prefetch={false}
-            className="nav-item nav-item--sub"
-            aria-current={pathname === "/rankings/provider-leaderboard"}
-          >
-            Provider Leaderboard
-          </Link>
-        </div>
 
         <div className="nav-label" style={{ marginTop: 18 }}>
           Showcase

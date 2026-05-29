@@ -1,5 +1,4 @@
 import { normalizeChain, type CustomerChain } from "@/lib/customers/chain";
-import { inferProviderDisplayName } from "@/lib/pay-sh/brand";
 import { isPreservedBaseProvider } from "@/lib/providers/preserved";
 import { STATIC_PROVIDER_CAPABILITY_BY_SERVICE_ID } from "@/lib/providers/static-capabilities";
 import type { StoredProvider } from "@/lib/types";
@@ -122,17 +121,6 @@ function matchesQuery(p: StoredProvider, query: string): boolean {
   const q = query.trim().toLowerCase();
   if (!q) return true;
   if (p.name.toLowerCase().includes(q)) return true;
-  if (
-    inferProviderDisplayName({
-      serviceId: p.serviceId,
-      serviceUrl: p.serviceUrl,
-      fallbackName: p.name,
-    })
-      .toLowerCase()
-      .includes(q)
-  ) {
-    return true;
-  }
   if (p.serviceId && p.serviceId.toLowerCase().includes(q)) return true;
   return false;
 }

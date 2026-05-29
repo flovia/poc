@@ -1,10 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import {
-  extractBrandKey,
-  inferBrandDisplayName,
-  inferBrandDomain,
-  inferProviderDisplayName,
-} from "./brand";
+import { extractBrandKey, inferBrandDisplayName, inferBrandDomain } from "./brand";
 
 describe("inferBrandDomain", () => {
   test("solana-foundation/google/* maps to google.com via curated map", () => {
@@ -92,14 +87,6 @@ describe("inferBrandDomain", () => {
     expect(inferBrandDomain({ fqn: "api.nansen.ai" }).domain).toBe("nansen.ai");
     expect(inferBrandDomain({ fqn: "api.nansen.ai" }).iconUrl).toBeDefined();
     expect(inferBrandDomain({ fqn: "pro-api.coingecko.com" }).domain).toBe("coingecko.com");
-  });
-
-  test("raw host-only providers resolve a usable favicon domain", () => {
-    expect(inferBrandDomain({ fqn: "x402.lucyos.ai" }).domain).toBe("lucyos.ai");
-    expect(inferBrandDomain({ fqn: "public.zapper.xyz" }).domain).toBe("zapper.xyz");
-    expect(inferBrandDomain({ fqn: "blockrun-web-vbsbhh7lea-uc.a.run.app" }).domain).toBe(
-      "blockrun-web-vbsbhh7lea-uc.a.run.app",
-    );
   });
 
   test("hostname-style serviceId resolves to a curated display name", () => {
@@ -243,34 +230,6 @@ describe("inferBrandDomain", () => {
         inferBrandDomain({ fqn: "hunter", serviceUrl: "https://hunter.mpp.paywithlocus.com" })
           .domain,
       ).toBe("hunter.io");
-    });
-  });
-
-  describe("inferProviderDisplayName", () => {
-    test("turns raw host-only x402 services into human display names", () => {
-      expect(inferProviderDisplayName({ serviceId: "x402.lucyos.ai" })).toBe("LucyOS");
-      expect(inferProviderDisplayName({ serviceId: "public.zapper.xyz" })).toBe("Zapper");
-      expect(inferProviderDisplayName({ serviceId: "orbisapi.com" })).toBe("Orbis API");
-      expect(inferProviderDisplayName({ serviceId: "x402-secure-api.t54.ai" })).toBe("T54 AI");
-      expect(inferProviderDisplayName({ serviceId: "x402.clashofcoins.com" })).toBe(
-        "Clash of Coins",
-      );
-    });
-
-    test("uses deployment slug when only a platform host is available", () => {
-      expect(inferProviderDisplayName({ serviceId: "blockrun-web-vbsbhh7lea-uc.a.run.app" })).toBe(
-        "Blockrun",
-      );
-      expect(inferProviderDisplayName({ serviceId: "basehub-alpha.vercel.app" })).toBe("Basehub");
-      expect(
-        inferProviderDisplayName({ serviceId: "x402-gateway-production.up.railway.app" }),
-      ).toBe("X402 Gateway");
-    });
-
-    test("preserves non-host fallback names", () => {
-      expect(
-        inferProviderDisplayName({ serviceId: "quicknode/rpc", fallbackName: "QuickNode" }),
-      ).toBe("QuickNode");
     });
   });
 });

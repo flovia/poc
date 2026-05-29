@@ -14,7 +14,6 @@ import {
   validatePhaseBWalletUsageGraphResponse,
   validatePortfolioSourceResult,
   validateProviderCatalogResponse,
-  validateProviderRankingResponse,
   validateRealTransactionFixture,
   validateRouteAnalyticsSankeyResponse,
   validateRouteAnalyticsSummaryResponse,
@@ -120,45 +119,6 @@ const readFixture = <T>(name: string): T => {
 };
 
 describe("contracts schema validation", () => {
-  test("accepts provider ranking response payloads", () => {
-    const ranking = validateProviderRankingResponse({
-      generatedAt: "2026-05-28T00:00:00.000Z",
-      generatedFrom: "analytics-data-store:provider-ranking",
-      population: "observed_providers",
-      sort: "settledAmount",
-      limit: 50,
-      providerCount: 1,
-      totalProviderCount: 1,
-      providers: [
-        {
-          rank: 1,
-          providerId: "coingecko--base--usdc--0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
-          name: "CoinGecko x402",
-          serviceId: "coingecko",
-          serviceName: "CoinGecko x402",
-          network: "base",
-          asset: "USDC",
-          payTo: "0x110cdbba7fe6434ec4ce3464cc523942ad6fb784",
-          transactionCount: 12,
-          uniqueSenderCount: 3,
-          totalVolumeAtomic: "120000",
-          provenance: "derived_insight",
-          provenanceByField: {
-            rank: "derived_insight",
-            transactionCount: "onchain_fact",
-            totalVolumeAtomic: "onchain_fact",
-          },
-          reasons: [{ provenance: "derived_insight", label: "provider ranking" }],
-        },
-      ],
-      provenance: "derived_insight",
-      provenanceByField: { providers: "derived_insight" },
-      reasons: [{ provenance: "derived_insight", label: "provider ranking" }],
-    });
-
-    expect(ranking.providers[0]?.rank).toBe(1);
-  });
-
   test("accepts machine payment route analytics summary and sankey payloads", () => {
     const summary = validateRouteAnalyticsSummaryResponse({
       generatedAt: "2026-05-06T00:00:00.000Z",

@@ -35,7 +35,6 @@ import {
   validateMockEndpointAttributionFixture,
   validateCustomerIntelligenceResponse,
   validateProviderCatalogResponse,
-  validateProviderRankingResponse,
   validateRealTransactionFixture,
   validateServiceAnalyticsComparisonResponse,
   validateServiceAnalyticsQuadrantResponse,
@@ -51,7 +50,6 @@ const originalAnalyticsSource = process.env.BFF_ANALYTICS_SOURCE;
 const runtimeMetadata = {
   commitHash: "abc123def456",
   startedAt: "2026-05-08T10:11:12.000Z",
-  startedAtMs: Date.now(),
 };
 
 const withTempFile = async (fn: (filePath: string) => Promise<void> | void) => {
@@ -248,7 +246,6 @@ describe("BFF routes", () => {
       service: "flovia-bff",
       commitHash: runtimeMetadata.commitHash,
       startedAt: runtimeMetadata.startedAt,
-      uptimeSeconds: expect.any(Number),
     });
   });
 
@@ -266,7 +263,6 @@ describe("BFF routes", () => {
         service: "flovia-bff",
         commitHash: runtimeMetadata.commitHash,
         startedAt: runtimeMetadata.startedAt,
-        uptimeSeconds: expect.any(Number),
       });
     } finally {
       process.env.BFF_ANALYTICS_SOURCE = "fixture";
@@ -283,7 +279,6 @@ describe("BFF routes", () => {
       service: "flovia-bff",
       commitHash: runtimeMetadata.commitHash,
       startedAt: runtimeMetadata.startedAt,
-      uptimeSeconds: expect.any(Number),
     });
   });
 
@@ -327,83 +322,6 @@ describe("BFF routes", () => {
     expect(response.status).toBe(200);
     expect(parsed.providerCount).toBe(parsed.providers.length);
     expect(parsed.providers.some((provider) => provider.hasCustomerFacts)).toBe(true);
-  });
-
-  test("serves observed provider ranking by transaction count", async () => {
-    const providerCatalog = validateProviderCatalogResponse({
-      ...fixtureAnalyticsDataSource.providers,
-      providers: Array.from({ length: 3 }, (_, index) => ({
-        ...fixtureAnalyticsDataSource.providers.providers[
-          index % fixtureAnalyticsDataSource.providers.providers.length
-        ],
-        providerId: `ranking-provider-${index}`,
-        name: `Ranking Provider ${index}`,
-        transactionCount: [5, 25, 10][index] ?? 0,
-        uniqueSenderCount: [2, 4, 3][index] ?? 0,
-        totalVolumeAtomic: ["500", "100", "1000"][index] ?? "0",
-      })),
-      providerCount: 3,
-    });
-    const handler = createBffHandler({ ...fixtureAnalyticsDataSource, providers: providerCatalog });
-
-    const response = await handler(request("/analytics/providers/ranking?limit=2"));
-    const parsed = validateProviderRankingResponse(await response.json());
-
-    expect(response.status).toBe(200);
-    expect(response.headers.get("cache-control")).toBe(
-      "public, s-maxage=60, stale-while-revalidate=300",
-    );
-    expect(parsed.population).toBe("observed_providers");
-    expect(parsed.sort).toBe("transactions");
-    expect(parsed.limit).toBe(2);
-    expect(parsed.providerCount).toBe(2);
-    expect(parsed.totalProviderCount).toBe(3);
-    expect(parsed.providers.map((provider) => provider.providerId)).toEqual([
-      "ranking-provider-1",
-      "ranking-provider-2",
-    ]);
-    expect(parsed.providers.map((provider) => provider.rank)).toEqual([1, 2]);
-  });
-
-  test("serves observed provider ranking by settled amount", async () => {
-    const providerCatalog = validateProviderCatalogResponse({
-      ...fixtureAnalyticsDataSource.providers,
-      providers: Array.from({ length: 3 }, (_, index) => ({
-        ...fixtureAnalyticsDataSource.providers.providers[
-          index % fixtureAnalyticsDataSource.providers.providers.length
-        ],
-        providerId: `volume-provider-${index}`,
-        name: `Volume Provider ${index}`,
-        transactionCount: [5, 25, 10][index] ?? 0,
-        uniqueSenderCount: [2, 4, 3][index] ?? 0,
-        totalVolumeAtomic: ["500", "100", "1000"][index] ?? "0",
-      })),
-      providerCount: 3,
-    });
-    const handler = createBffHandler({ ...fixtureAnalyticsDataSource, providers: providerCatalog });
-
-    const response = await handler(
-      request("/analytics/providers/ranking?sort=settledAmount&limit=2"),
-    );
-    const parsed = validateProviderRankingResponse(await response.json());
-
-    expect(response.status).toBe(200);
-    expect(parsed.sort).toBe("settledAmount");
-    expect(parsed.providers.map((provider) => provider.providerId)).toEqual([
-      "volume-provider-2",
-      "volume-provider-0",
-    ]);
-  });
-
-  test("rejects invalid provider ranking query", async () => {
-    const handler = createBffHandler(fixtureAnalyticsDataSource);
-
-    const response = await handler(request("/analytics/providers/ranking?sort=volume"));
-    const body = await response.json();
-
-    expect(response.status).toBe(400);
-    expect(body.error).toBe("bad_request");
-    expect(response.headers.get("cache-control")).toBe("no-store");
   });
 
   test("marks snapshot-backed read endpoints as edge-cacheable", async () => {
@@ -1859,12 +1777,11 @@ describe("BFF routes", () => {
     expect(providerSql).toContain("provider_metrics AS");
     expect(providerSql).toContain("LEFT JOIN provider_grouped pg");
     expect(providerSql).toContain("UNION ALL");
-    expect(providerSql).toContain("WHERE NOT EXISTS");
-    expect(providerSql).toContain("FROM provider_metrics represented_provider");
+    expect(providerSql).toContain("WHERE lower(pg.service_id) IN");
     expect(providerSql).not.toContain("OR pay_sh.provider_fqn IS NOT NULL");
   });
 
-  test("includes pay.sh catalog providers and observed raw live-only providers", async () => {
+  test("includes pay.sh catalog providers without live tx and excludes raw live-only providers", async () => {
     const payShWithLivePayTo = "0x1111111111111111111111111111111111111111";
     const payShWithoutLivePayTo = "0x2222222222222222222222222222222222222222";
     const rawLiveOnlyPayTo = "0x3333333333333333333333333333333333333333";
@@ -1931,10 +1848,9 @@ describe("BFF routes", () => {
     expect(dataSource.providers.providers.map((provider) => provider.serviceId)).toEqual([
       "pay-sh/live-provider",
       "pay-sh/no-live-provider",
-      "raw-live-only.example",
       "api.nansen.ai",
     ]);
-    expect(dataSource.providers.providerCount).toBe(4);
+    expect(dataSource.providers.providerCount).toBe(3);
     expect(dataSource.providers.providers).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -1954,19 +1870,16 @@ describe("BFF routes", () => {
           hasCustomerFacts: false,
         }),
         expect.objectContaining({
-          serviceId: "raw-live-only.example",
-          catalogSource: "raw_x402",
-          transactionCount: 99,
-          uniqueSenderCount: 10,
-          totalVolumeAtomic: "9900",
-          hasCustomerFacts: true,
-        }),
-        expect.objectContaining({
           serviceId: "api.nansen.ai",
           catalogSource: "base_curated",
         }),
       ]),
     );
+    expect(
+      dataSource.providers.providers.some(
+        (provider) => provider.serviceId === "raw-live-only.example",
+      ),
+    ).toBe(false);
   });
 
   test("keeps non-wallet pay.sh recipients out of wallet usage graph", async () => {
@@ -2064,11 +1977,9 @@ describe("BFF routes", () => {
     const payerWallet = coingeckoProvider?.payerWallets.find((wallet) => wallet.address === payer);
 
     expect(dataSource.providers.providers.map((provider) => provider.serviceId)).toEqual([
-      "generic-service",
       "pro-api.coingecko.com",
     ]);
-    expect(dataSource.providers.providers[0]?.catalogSource).toBe("raw_x402");
-    expect(dataSource.providers.providers[1]?.catalogSource).toBe("base_curated");
+    expect(dataSource.providers.providers[0]?.catalogSource).toBe("base_curated");
     expect(payerWallet?.overlapProviderCount).toBe(2);
     expect(payerWallet?.otherServiceCandidates).toEqual([
       expect.objectContaining({

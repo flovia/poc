@@ -120,7 +120,7 @@ export const buildPayload = (
 ): GeneratedReadModelFile => {
   const now = generatedAt();
   const providers = providerRows.filter((row) => row.payTo);
-  const catalogProviders = providers;
+  const catalogProviders = providers.filter((provider) => provider.catalogSource !== "raw_x402");
   const catalogProviderById = new Map<string, ProviderRow>();
   for (const provider of catalogProviders) {
     const providerId = providerIdFor({

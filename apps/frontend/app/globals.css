@@ -486,8 +486,7 @@ a { color: inherit; text-decoration: none; }
 .showcase-comparison-grid,
 .showcase-join-equation,
 .showcase-provider-grid,
-.showcase-overview-flow,
-.ranking-summary-grid {
+.showcase-overview-flow {
   min-width: 0;
 }
 
@@ -811,8 +810,7 @@ a { color: inherit; text-decoration: none; }
   .showcase-comparison-grid,
   .showcase-join-equation,
   .showcase-provider-grid,
-  .showcase-overview-flow,
-  .ranking-summary-grid {
+  .showcase-overview-flow {
     grid-template-columns: 1fr !important;
   }
 
@@ -2041,66 +2039,6 @@ body:has(.sdk-notice) > div:first-of-type > div.app {
   margin-right: 2px;
   font-size: 9px;
   vertical-align: middle;
-}
-
-/* ---- Rankings segmented control ---- */
-.ranking-metric-toggle {
-  display: inline-flex;
-  align-items: center;
-  overflow: hidden;
-  border: 1px solid var(--line-strong);
-  border-radius: 8px;
-  background: var(--surface-elevated);
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
-}
-.ranking-metric-toggle button {
-  min-width: 72px;
-  height: 32px;
-  padding: 0 14px;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  color: var(--text-2);
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  transition: background 120ms ease, color 120ms ease, box-shadow 120ms ease;
-}
-.ranking-metric-toggle button + button {
-  border-left: 1px solid var(--line);
-}
-.ranking-metric-toggle button:hover {
-  background: var(--surface-muted);
-}
-.ranking-metric-toggle button:focus-visible {
-  outline: 2px solid var(--mesh-blue);
-  outline-offset: -2px;
-}
-.ranking-metric-toggle button.active {
-  background: var(--mesh-blue);
-  color: var(--text-on-dark);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16);
-}
-.ranking-sort-button {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  color: var(--text-2);
-  font-size: inherit;
-  font-weight: 700;
-  letter-spacing: inherit;
-  text-transform: inherit;
-}
-.ranking-sort-button:hover {
-  color: var(--mesh-blue);
-}
-.ranking-sort-button:focus-visible {
-  outline: 2px solid var(--mesh-blue);
-  outline-offset: 2px;
-  border-radius: 4px;
-}
-.ranking-sort-button.active {
-  color: var(--mesh-blue);
 }
 
 .co-usage-host-toggle,

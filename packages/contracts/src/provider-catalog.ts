@@ -122,69 +122,6 @@ export const ProviderCatalogRowSchema = withDerivedInsightReasons(
 
 export type ProviderCatalogRow = z.infer<typeof ProviderCatalogRowSchema>;
 
-export const ProviderRankingSortSchema = z.enum(["transactions", "settledAmount"]);
-export type ProviderRankingSort = z.infer<typeof ProviderRankingSortSchema>;
-
-export const ProviderRankingPopulationSchema = z.enum(["observed_providers"]);
-export type ProviderRankingPopulation = z.infer<typeof ProviderRankingPopulationSchema>;
-
-export const ProviderRankingRowSchema = withDerivedInsightReasons(
-  z
-    .object({
-      rank: z.number().int().positive(),
-      providerId: z.string().min(1),
-      name: z.string().min(1),
-      serviceId: z.string().min(1).optional(),
-      serviceName: z.string().min(1).optional(),
-      network: z.string().min(1),
-      asset: z.string().min(1),
-      payTo: z.string().min(1),
-      transactionCount: z.number().int().nonnegative(),
-      uniqueSenderCount: z.number().int().nonnegative(),
-      totalVolumeAtomic: AtomicAmountSchema,
-      provenance: DataProvenanceSchema,
-      provenanceByField: ProvenanceByFieldSchema,
-      reasons: z.array(EvidenceLabelSchema).optional(),
-    })
-    .strict(),
-);
-export type ProviderRankingRow = z.infer<typeof ProviderRankingRowSchema>;
-
-export const ProviderRankingResponseSchema = withDerivedInsightReasons(
-  z
-    .object({
-      generatedAt: z.string().datetime(),
-      generatedFrom: z.string().min(1),
-      population: ProviderRankingPopulationSchema,
-      sort: ProviderRankingSortSchema,
-      limit: z.number().int().positive(),
-      providerCount: z.number().int().nonnegative(),
-      totalProviderCount: z.number().int().nonnegative(),
-      providers: z.array(ProviderRankingRowSchema).min(0),
-      provenance: DataProvenanceSchema,
-      provenanceByField: ProvenanceByFieldSchema,
-      reasons: z.array(EvidenceLabelSchema).optional(),
-    })
-    .strict()
-    .superRefine((value, ctx) => {
-      if (value.providerCount !== value.providers.length) {
-        ctx.addIssue({
-          code: "custom",
-          message: "providerCount must equal providers.length",
-          path: ["providerCount"],
-        });
-      }
-      if (value.providerCount > value.totalProviderCount) {
-        ctx.addIssue({
-          code: "custom",
-          message: "providerCount must be less than or equal to totalProviderCount",
-          path: ["providerCount"],
-        });
-      }
-    }),
-);
-export type ProviderRankingResponse = z.infer<typeof ProviderRankingResponseSchema>;
-
 export const ProviderCatalogResponseSchema = withDerivedInsightReasons(
   z
     .object({

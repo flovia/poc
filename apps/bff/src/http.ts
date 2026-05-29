@@ -4,7 +4,6 @@ import { BffLlmUnavailableError, type BffLlmService, resolveBffLlmService } from
 import { buildWorkflowIntentInputFromProfile, toWorkflowIntentInput } from "./data/workflow-intent";
 import {
   json,
-  badRequest,
   cachedJson,
   llmFailed,
   llmUnavailable,
@@ -16,7 +15,6 @@ import {
   workflowIntentUnavailable,
 } from "./http/responses";
 import { matchCustomerRoute, normalizePath, readonlyRoutes } from "./http/routes";
-import { buildProviderRanking, parseProviderRankingQuery } from "./data/provider-ranking";
 import { handleShowcaseRoute, showcaseRoutes } from "./showcase";
 
 type RequestTimeoutController = {
@@ -26,7 +24,6 @@ type RuntimeEnv = NodeJS.ProcessEnv;
 export type BffRuntimeMetadata = {
   commitHash: string | null;
   startedAt: string;
-  startedAtMs: number;
 };
 
 const COMMIT_HASH_PATTERN = /^[0-9a-f]{7,40}$/i;
@@ -52,7 +49,6 @@ export const resolveBffRuntimeMetadata = (
 ): BffRuntimeMetadata => ({
   commitHash: resolveCommitHash(env),
   startedAt: now.toISOString(),
-  startedAtMs: now.getTime(),
 });
 
 export const createBffHandler = (
@@ -95,7 +91,6 @@ export const createBffHandler = (
           service: "flovia-bff",
           commitHash: runtimeMetadata.commitHash,
           startedAt: runtimeMetadata.startedAt,
-          uptimeSeconds: Math.max(0, Math.floor((Date.now() - runtimeMetadata.startedAtMs) / 1000)),
         });
       default:
         break;
@@ -126,20 +121,6 @@ export const createBffHandler = (
         return cachedJson(activeDataSource.serviceComparison);
       case "/analytics/services/quadrants":
         return cachedJson(activeDataSource.serviceQuadrants);
-      case "/analytics/providers/ranking": {
-        try {
-          return cachedJson(
-            buildProviderRanking(
-              activeDataSource.providers,
-              parseProviderRankingQuery(url.searchParams),
-            ),
-          );
-        } catch (error) {
-          return badRequest(
-            error instanceof Error ? error.message : "Invalid provider ranking query.",
-          );
-        }
-      }
       case "/analytics/routes/summary":
         return cachedJson(activeDataSource.routeSummary);
       case "/analytics/routes/sankey":
