@@ -47,6 +47,24 @@ export const methodNotAllowed = () =>
     { status: 405, headers: { allow: "GET" } },
   );
 
+export const analyticsLoading = () =>
+  json(
+    {
+      error: "analytics_loading",
+      message: "Analytics read model is still loading.",
+    },
+    { status: 503 },
+  );
+
+export const analyticsUnavailable = (message = "Analytics read model is unavailable.") =>
+  json(
+    {
+      error: "analytics_unavailable",
+      message,
+    },
+    { status: 503 },
+  );
+
 export const llmUnavailable = () =>
   json(
     {

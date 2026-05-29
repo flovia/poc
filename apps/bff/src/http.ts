@@ -1,9 +1,15 @@
 import { normalizePaymentRecipientAddress } from "contracts";
-import { type BffAnalyticsDataSource, resolveAnalyticsDataSource } from "./data/analytics-source";
+import {
+  type BffAnalyticsDataSource,
+  fixtureAnalyticsDataSource,
+  resolveAnalyticsDataSource,
+} from "./data/analytics-source";
 import { BffLlmUnavailableError, type BffLlmService, resolveBffLlmService } from "./data/llm";
 import { buildWorkflowIntentInputFromProfile, toWorkflowIntentInput } from "./data/workflow-intent";
 import {
   json,
+  analyticsLoading,
+  analyticsUnavailable,
   cachedJson,
   llmFailed,
   llmUnavailable,
@@ -25,6 +31,29 @@ export type BffRuntimeMetadata = {
   commitHash: string | null;
   startedAt: string;
 };
+
+const isPromiseLike = <T>(value: T | Promise<T>): value is Promise<T> =>
+  typeof (value as Promise<T>).then === "function";
+
+type AnalyticsLoadState =
+  | {
+      status: "loading";
+      promise: Promise<BffAnalyticsDataSource>;
+      dataSource?: undefined;
+      error?: undefined;
+    }
+  | {
+      status: "ready" | "fallback";
+      promise: Promise<BffAnalyticsDataSource>;
+      dataSource: BffAnalyticsDataSource;
+      error?: string;
+    }
+  | {
+      status: "failed";
+      promise: Promise<BffAnalyticsDataSource>;
+      dataSource?: undefined;
+      error: string;
+    };
 
 const COMMIT_HASH_PATTERN = /^[0-9a-f]{7,40}$/i;
 
@@ -56,10 +85,71 @@ export const createBffHandler = (
   llmService: BffLlmService | null = resolveBffLlmService(),
   runtimeMetadata: BffRuntimeMetadata = resolveBffRuntimeMetadata(),
 ) => {
-  let resolvedDataSource = dataSource;
-  const getDataSource = () => {
-    resolvedDataSource ??= resolveAnalyticsDataSource();
-    return resolvedDataSource;
+  let analyticsState: AnalyticsLoadState;
+
+  const setFallbackState = (promise: Promise<BffAnalyticsDataSource>, error: unknown) => {
+    const message = error instanceof Error ? error.message : "Analytics preload failed.";
+    console.error("Analytics preload failed; falling back to fixture analytics.", error);
+    analyticsState = {
+      status: "fallback",
+      promise,
+      dataSource: fixtureAnalyticsDataSource,
+      error: message,
+    };
+    return fixtureAnalyticsDataSource;
+  };
+
+  const preloadAnalytics = (): Promise<BffAnalyticsDataSource> => {
+    try {
+      const resolved = dataSource ?? resolveAnalyticsDataSource();
+      if (!isPromiseLike(resolved)) {
+        const promise = Promise.resolve(resolved);
+        analyticsState = {
+          status: "ready",
+          promise,
+          dataSource: resolved,
+        };
+        return promise;
+      }
+
+      const sourcePromise = resolved;
+      const promise = sourcePromise.then(
+        (loaded) => {
+          analyticsState = {
+            status: "ready",
+            promise: sourcePromise,
+            dataSource: loaded,
+          };
+          return loaded;
+        },
+        (error) => setFallbackState(Promise.resolve(fixtureAnalyticsDataSource), error),
+      );
+      analyticsState = {
+        status: "loading",
+        promise,
+      };
+      return promise;
+    } catch (error) {
+      const promise = Promise.resolve(fixtureAnalyticsDataSource);
+      setFallbackState(promise, error);
+      return promise;
+    }
+  };
+
+  void preloadAnalytics();
+
+  const getReadyDataSource = () => {
+    if (analyticsState.status === "ready" || analyticsState.status === "fallback") {
+      return analyticsState.dataSource;
+    }
+    return null;
+  };
+
+  const analyticsStatusBody = () => {
+    const body: Record<string, string | null> = {
+      analyticsStatus: analyticsState.status,
+    };
+    return body;
   };
 
   return async (request: Request, server?: RequestTimeoutController) => {
@@ -91,6 +181,33 @@ export const createBffHandler = (
           service: "flovia-bff",
           commitHash: runtimeMetadata.commitHash,
           startedAt: runtimeMetadata.startedAt,
+          ...analyticsStatusBody(),
+        });
+      case "/ready":
+        if (analyticsState.status === "loading") {
+          return json(
+            {
+              status: "loading",
+              service: "flovia-bff",
+              ...analyticsStatusBody(),
+            },
+            { status: 503 },
+          );
+        }
+        if (analyticsState.status === "failed") {
+          return json(
+            {
+              status: "unavailable",
+              service: "flovia-bff",
+              ...analyticsStatusBody(),
+            },
+            { status: 503 },
+          );
+        }
+        return json({
+          status: "ok",
+          service: "flovia-bff",
+          ...analyticsStatusBody(),
         });
       default:
         break;
@@ -99,7 +216,16 @@ export const createBffHandler = (
     const showcaseResponse = handleShowcaseRoute(request, path);
     if (showcaseResponse) return showcaseResponse;
 
-    const activeDataSource = await getDataSource();
+    if (!readonlyRoutes.has(path) && customerRoute === null) {
+      return notFound(path);
+    }
+
+    const activeDataSource = getReadyDataSource();
+    if (!activeDataSource) {
+      return analyticsState.status === "loading"
+        ? analyticsLoading()
+        : analyticsUnavailable(analyticsState.error);
+    }
 
     switch (path) {
       case "/providers":

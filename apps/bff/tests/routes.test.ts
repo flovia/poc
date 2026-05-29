@@ -246,7 +246,65 @@ describe("BFF routes", () => {
       service: "flovia-bff",
       commitHash: runtimeMetadata.commitHash,
       startedAt: runtimeMetadata.startedAt,
+      analyticsStatus: "loading",
     });
+  });
+
+  test("reports readiness only after analytics data source is loaded", async () => {
+    const unresolvedDataSource = new Promise<never>(() => {});
+    const handler = createBffHandler(unresolvedDataSource, null, runtimeMetadata);
+
+    const response = await handler(request("/ready"));
+    const body = (await response.json()) as {
+      status: string;
+      service: string;
+      analyticsStatus: string;
+    };
+
+    expect(response.status).toBe(503);
+    expect(body).toEqual({
+      status: "loading",
+      service: "flovia-bff",
+      analyticsStatus: "loading",
+    });
+  });
+
+  test("does not block providers while analytics data source is loading", async () => {
+    const unresolvedDataSource = new Promise<never>(() => {});
+    const handler = createBffHandler(unresolvedDataSource, null, runtimeMetadata);
+
+    const response = await handler(request("/providers"));
+    const body = (await response.json()) as { error: string };
+
+    expect(response.status).toBe(503);
+    expect(body.error).toBe("analytics_loading");
+  });
+
+  test("falls back to fixture analytics when preload fails", async () => {
+    const handler = createBffHandler(
+      Promise.reject(new Error("snapshot unavailable")),
+      null,
+      runtimeMetadata,
+    );
+    await Promise.resolve();
+
+    const readyResponse = await handler(request("/ready"));
+    const readyBody = (await readyResponse.json()) as {
+      status: string;
+      service: string;
+      analyticsStatus: string;
+    };
+    const providersResponse = await handler(request("/providers"));
+    const providersBody = await providersResponse.json();
+
+    expect(readyResponse.status).toBe(200);
+    expect(readyBody).toEqual({
+      status: "ok",
+      service: "flovia-bff",
+      analyticsStatus: "fallback",
+    });
+    expect(providersResponse.status).toBe(200);
+    expect(validateProviderCatalogResponse(providersBody).providerCount).toBeGreaterThan(0);
   });
 
   test("serves health without resolving the default analytics source", async () => {
@@ -263,6 +321,7 @@ describe("BFF routes", () => {
         service: "flovia-bff",
         commitHash: runtimeMetadata.commitHash,
         startedAt: runtimeMetadata.startedAt,
+        analyticsStatus: "fallback",
       });
     } finally {
       process.env.BFF_ANALYTICS_SOURCE = "fixture";
@@ -279,6 +338,7 @@ describe("BFF routes", () => {
       service: "flovia-bff",
       commitHash: runtimeMetadata.commitHash,
       startedAt: runtimeMetadata.startedAt,
+      analyticsStatus: "ready",
     });
   });
 

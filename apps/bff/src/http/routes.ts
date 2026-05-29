@@ -1,6 +1,7 @@
 export const readonlyRoutes = new Set([
   "/",
   "/health",
+  "/ready",
   "/providers",
   "/customers",
   "/wallet-usage-graph",

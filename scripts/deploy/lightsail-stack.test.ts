@@ -37,7 +37,7 @@ describe("lightsail shared stack", () => {
     expect(caddyfile).toContain("import api_routes");
   });
 
-  test("deployment sync provisions caddy stack assets and prunes unused images", () => {
+  test("deployment sync provisions caddy stack assets without pruning images", () => {
     const syncScript = read("./lightsail-sync-stack.sh");
 
     expect(syncScript).toContain('stack_caddy_dir="${stack_root}/deploy/caddy"');
@@ -48,7 +48,7 @@ describe("lightsail shared stack", () => {
     expect(syncScript).toContain(
       "dc exec -T -w /etc/caddy caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile",
     );
-    expect(syncScript).toContain("docker image prune -a -f");
+    expect(syncScript).not.toContain("docker image prune -a -f");
     expect(syncScript).not.toContain("remove_old_bff_images");
     expect(syncScript).not.toContain("nginx");
   });
@@ -71,10 +71,10 @@ describe("lightsail shared stack", () => {
     expect(syncScript).toContain('next_slot="blue"');
     expect(syncScript).toContain('next_slot="green"');
     expect(syncScript).toContain('next_service="${service_prefix}-${next_slot}"');
-    expect(syncScript).toContain("wait_for_service_health_ready");
+    expect(syncScript).toContain("wait_for_service_ready");
     expect(syncScript).toContain("local timeout_secs=600");
-    expect(syncScript).toContain('health_url="http://${container_ip}:3001/health"');
-    expect(syncScript).toContain('curl -sf --max-time "$request_timeout" "$health_url"');
+    expect(syncScript).toContain('ready_url="http://${container_ip}:3001/ready"');
+    expect(syncScript).toContain('curl -sf --max-time "$request_timeout" "$ready_url"');
     expect(syncScript).toContain('grep -q \'"status":"ok"\'');
     expect(syncScript).toContain('grep -q \'"service":"flovia-bff"\'');
     expect(syncScript).toContain("Rolling back");

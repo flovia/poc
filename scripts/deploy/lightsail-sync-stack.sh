@@ -226,12 +226,12 @@ write_caddyfile() {
   sed -i "s|develop-bff-[a-z]*:3001|develop-bff-${develop_slot}:3001|g" "$stack_caddy_config"
 }
 
-wait_for_service_health_ready() {
+wait_for_service_ready() {
   local service="$1"
   local timeout_secs=600
   local interval=5
   local attempt=0
-  local container_id container_ip health_url response
+  local container_id container_ip ready_url response
   local start_time elapsed remaining request_timeout sleep_for
 
   container_id="$(dc ps -q "$service")"
@@ -247,10 +247,10 @@ wait_for_service_health_ready() {
     return 1
   fi
 
-  health_url="http://${container_ip}:3001/health"
+  ready_url="http://${container_ip}:3001/ready"
   start_time="$SECONDS"
 
-  echo "Waiting for $service health at ${health_url} ..."
+  echo "Waiting for $service readiness at ${ready_url} ..."
   while true; do
     elapsed=$((SECONDS - start_time))
     remaining=$((timeout_secs - elapsed))
@@ -263,10 +263,10 @@ wait_for_service_health_ready() {
       request_timeout="$remaining"
     fi
 
-    if response="$(curl -sf --max-time "$request_timeout" "$health_url" 2>/dev/null)" \
+    if response="$(curl -sf --max-time "$request_timeout" "$ready_url" 2>/dev/null)" \
       && printf '%s' "$response" | grep -q '"status":"ok"' \
       && printf '%s' "$response" | grep -q '"service":"flovia-bff"'; then
-      echo "$service health endpoint is ready."
+      echo "$service readiness endpoint is ready."
       return 0
     fi
 
@@ -288,7 +288,7 @@ wait_for_service_health_ready() {
     sleep "$sleep_for"
   done
 
-  echo "Health readiness check for $service timed out after ${timeout_secs}s" >&2
+  echo "Readiness check for $service timed out after ${timeout_secs}s" >&2
   return 1
 }
 
@@ -316,7 +316,7 @@ blue_green_deploy() {
   dc pull "$next_service" caddy
   dc up -d "$next_service"
 
-  if ! wait_for_service_health_ready "$next_service"; then
+  if ! wait_for_service_ready "$next_service"; then
     echo "Rolling back: stopping ${next_service}" >&2
     dc stop "$next_service" 2>/dev/null || true
     dc rm -f "$next_service" 2>/dev/null || true
@@ -344,5 +344,4 @@ else
   blue_green_deploy develop "$detected_active_develop_slot" develop-bff "$active_main_slot" ""
 fi
 
-docker image prune -a -f
 docker logout ghcr.io >/dev/null 2>&1 || true
