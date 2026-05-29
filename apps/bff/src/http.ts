@@ -26,6 +26,7 @@ type RuntimeEnv = NodeJS.ProcessEnv;
 export type BffRuntimeMetadata = {
   commitHash: string | null;
   startedAt: string;
+  startedAtMs: number;
 };
 
 const COMMIT_HASH_PATTERN = /^[0-9a-f]{7,40}$/i;
@@ -51,6 +52,7 @@ export const resolveBffRuntimeMetadata = (
 ): BffRuntimeMetadata => ({
   commitHash: resolveCommitHash(env),
   startedAt: now.toISOString(),
+  startedAtMs: now.getTime(),
 });
 
 export const createBffHandler = (
@@ -93,6 +95,7 @@ export const createBffHandler = (
           service: "flovia-bff",
           commitHash: runtimeMetadata.commitHash,
           startedAt: runtimeMetadata.startedAt,
+          uptimeSeconds: Math.max(0, Math.floor((Date.now() - runtimeMetadata.startedAtMs) / 1000)),
         });
       default:
         break;

@@ -51,6 +51,7 @@ const originalAnalyticsSource = process.env.BFF_ANALYTICS_SOURCE;
 const runtimeMetadata = {
   commitHash: "abc123def456",
   startedAt: "2026-05-08T10:11:12.000Z",
+  startedAtMs: Date.now(),
 };
 
 const withTempFile = async (fn: (filePath: string) => Promise<void> | void) => {
@@ -247,6 +248,7 @@ describe("BFF routes", () => {
       service: "flovia-bff",
       commitHash: runtimeMetadata.commitHash,
       startedAt: runtimeMetadata.startedAt,
+      uptimeSeconds: expect.any(Number),
     });
   });
 
@@ -264,6 +266,7 @@ describe("BFF routes", () => {
         service: "flovia-bff",
         commitHash: runtimeMetadata.commitHash,
         startedAt: runtimeMetadata.startedAt,
+        uptimeSeconds: expect.any(Number),
       });
     } finally {
       process.env.BFF_ANALYTICS_SOURCE = "fixture";
@@ -280,6 +283,7 @@ describe("BFF routes", () => {
       service: "flovia-bff",
       commitHash: runtimeMetadata.commitHash,
       startedAt: runtimeMetadata.startedAt,
+      uptimeSeconds: expect.any(Number),
     });
   });
 
