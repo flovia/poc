@@ -5,13 +5,11 @@ import { TopBar } from "@/components/shell/TopBar";
 import { getServerDashboardMode } from "@/lib/data-mode";
 import { getProviderRanking } from "@/lib/data-source";
 
-export const dynamic = "force-dynamic";
-
 export default async function ProviderLeaderboardPage() {
   const [dataMode, transactions, settledAmount] = await Promise.all([
     getServerDashboardMode(),
-    getProviderRanking("transactions", 500),
-    getProviderRanking("settledAmount", 500),
+    getProviderRanking("transactions", 100),
+    getProviderRanking("settledAmount", 100),
   ]);
 
   return (
