@@ -1,5 +1,83 @@
 export const POSTGRES_LIVE_PROVIDER_QUERY = `
-      WITH base_x402_payment_amounts AS (
+      WITH stableenrich_base_payment_amounts AS (
+        SELECT
+          lower('0x325bdf6f7efab24a2210c48c1b64cab2eae1d430') AS pay_to,
+          amount_atomic::numeric AS amount_atomic
+        FROM unnest(ARRAY[
+          2000, 10000, 12600, 20000, 25200, 30000, 40000, 49500,
+          50000, 80000, 100000, 200000, 400000, 440000
+        ]::numeric[]) AS amount_atomic
+      ),
+      discovered_base_payment_amounts AS (
+        SELECT
+          lower(pay_to) AS pay_to,
+          amount_atomic::numeric AS amount_atomic
+        FROM (VALUES
+          ('0x0495d60c927b97d67d5018c6aa65c9b2bebaeed9', 100),
+          ('0x0495d60c927b97d67d5018c6aa65c9b2bebaeed9', 100000),
+          ('0x43a2a720cd0911690c248075f4a29a5e7716f758', 1100),
+          ('0x43a2a720cd0911690c248075f4a29a5e7716f758', 1900),
+          ('0x43a2a720cd0911690c248075f4a29a5e7716f758', 3000),
+          ('0x43a2a720cd0911690c248075f4a29a5e7716f758', 5000),
+          ('0x43a2a720cd0911690c248075f4a29a5e7716f758', 12000),
+          ('0x5bb4b0c766e0d5d791d9403fc275c22064709f68', 6000),
+          ('0x5bb4b0c766e0d5d791d9403fc275c22064709f68', 8000),
+          ('0x5bb4b0c766e0d5d791d9403fc275c22064709f68', 18000),
+          ('0x5bb4b0c766e0d5d791d9403fc275c22064709f68', 60000),
+          ('0x5bb4b0c766e0d5d791d9403fc275c22064709f68', 120000),
+          ('0x5bb4b0c766e0d5d791d9403fc275c22064709f68', 150000),
+          ('0x5bb4b0c766e0d5d791d9403fc275c22064709f68', 200000),
+          ('0x7d2ceb7a0e0c39a3d0f7b5b491659fde4bb7bcfe', 400000),
+          ('0x7dd5be069f2d2ead75ec7c3423b116ff043c2629', 2000),
+          ('0x7dd5be069f2d2ead75ec7c3423b116ff043c2629', 5000),
+          ('0x7dd5be069f2d2ead75ec7c3423b116ff043c2629', 15000),
+          ('0x7dd5be069f2d2ead75ec7c3423b116ff043c2629', 50000),
+          ('0x7dd5be069f2d2ead75ec7c3423b116ff043c2629', 120000),
+          ('0xca1271e777c209e171826a681855351f4989cd0c', 10000),
+          ('0xc9368b30bd620164fd1a05a5d99dcaf8ae754775', 1150000),
+          ('0x7d9d1821d15b9e0b8ab98a058361233e255e405d', 1000),
+          ('0x7d9d1821d15b9e0b8ab98a058361233e255e405d', 2000),
+          ('0x7d9d1821d15b9e0b8ab98a058361233e255e405d', 5000),
+          ('0x7d9d1821d15b9e0b8ab98a058361233e255e405d', 20000),
+          ('0x7d9d1821d15b9e0b8ab98a058361233e255e405d', 100000),
+          ('0x7d9d1821d15b9e0b8ab98a058361233e255e405d', 150000),
+          ('0x7d9d1821d15b9e0b8ab98a058361233e255e405d', 250000),
+          ('0x7dd5be069f2d2ead75ec7c3423b116ff043c2629', 150000)
+        ) AS discovered(pay_to, amount_atomic)
+      ),
+      base_pay_sh_offer_prices AS (
+        SELECT DISTINCT
+          lower(o.pay_to_address) AS pay_to,
+          ROUND((o.probe_price_usd::numeric * 1000000))::numeric AS amount_atomic
+        FROM pay_sh_payment_offers o
+        WHERE lower(o.chain) = 'base'
+          AND lower(o.asset) = 'usdc'
+          AND lower(o.protocol) = 'x402'
+          AND o.pay_to_address IS NOT NULL
+          AND o.probe_price_usd IS NOT NULL
+          AND o.probe_price_usd > 0
+      ),
+      base_pay_sh_fixed_provider_prices AS (
+        SELECT DISTINCT
+          p.provider_fqn,
+          lower(a.pay_to_address) AS pay_to,
+          ROUND((p.price_range_min_usd::numeric * 1000000))::numeric AS amount_atomic
+        FROM pay_sh_providers p
+        JOIN x402_provider_activity a
+          ON lower(a.chain) = 'base'
+         AND (
+           lower(a.domain) = regexp_replace(regexp_replace(lower(p.service_url), '^https?://', ''), '/.*$', '')
+           OR lower(a.service) = regexp_replace(regexp_replace(lower(p.service_url), '^https?://', ''), '/.*$', '')
+           OR lower(a.provider) = regexp_replace(regexp_replace(lower(p.service_url), '^https?://', ''), '/.*$', '')
+         )
+        WHERE p.price_range_min_usd IS NOT NULL
+          AND p.price_range_max_usd IS NOT NULL
+          AND p.price_range_min_usd = p.price_range_max_usd
+          AND p.price_range_min_usd > 0
+          AND p.service_url IS NOT NULL
+          AND a.pay_to_address IS NOT NULL
+      ),
+      base_x402_payment_amounts AS (
         SELECT DISTINCT
           lower(po.pay_to_address) AS pay_to,
           po.amount_atomic::numeric AS amount_atomic
@@ -10,6 +88,28 @@ export const POSTGRES_LIVE_PROVIDER_QUERY = `
           AND po.amount_atomic IS NOT NULL
           AND po.active
           AND r.active
+        UNION
+        SELECT pay_to, amount_atomic
+        FROM stableenrich_base_payment_amounts
+        UNION
+        SELECT pay_to, amount_atomic
+        FROM discovered_base_payment_amounts
+        UNION
+        SELECT pay_to, amount_atomic
+        FROM base_pay_sh_offer_prices
+        UNION
+        SELECT pay_to, amount_atomic
+        FROM base_pay_sh_fixed_provider_prices
+      ),
+      base_x402_payment_ranges AS (
+        SELECT
+          lower(pay_to) AS pay_to,
+          min_amount_atomic::numeric AS min_amount_atomic,
+          max_amount_atomic::numeric AS max_amount_atomic
+        FROM (VALUES
+          ('0xe9030014f5dae217d0a152f02a043567b16c1abf', 100, 5000000),
+          ('0x8b29dabd6fbb5a09dacbc7978eaed66a8540721d', 90000, 900000000)
+        ) AS discovered(pay_to, min_amount_atomic, max_amount_atomic)
       ),
       base_provider_grouped AS (
         SELECT
@@ -36,11 +136,19 @@ export const POSTGRES_LIVE_PROVIDER_QUERY = `
           ON lower(a.pay_to_address) = lower(g.to_owner_address)
         WHERE g.from_owner_address IS NOT NULL
           AND g.to_owner_address IS NOT NULL
-          AND EXISTS (
+          AND (
+            EXISTS (
             SELECT 1
             FROM base_x402_payment_amounts option_amount
             WHERE option_amount.pay_to = lower(g.to_owner_address)
               AND g.amount::numeric = option_amount.amount_atomic
+            )
+            OR EXISTS (
+              SELECT 1
+              FROM base_x402_payment_ranges option_range
+              WHERE option_range.pay_to = lower(g.to_owner_address)
+                AND g.amount::numeric BETWEEN option_range.min_amount_atomic AND option_range.max_amount_atomic
+            )
           )
         GROUP BY lower(g.to_owner_address), service_id, service_name
       ),
@@ -228,6 +336,15 @@ export const POSTGRES_LIVE_PROVIDER_QUERY = `
           protocol
         FROM pay_sh_payment_offers
         WHERE pay_to_address IS NOT NULL
+        UNION
+        SELECT DISTINCT
+          provider_fqn,
+          'base' AS network,
+          'USDC' AS asset,
+          'Base' AS display_chain,
+          pay_to,
+          'x402' AS protocol
+        FROM base_pay_sh_fixed_provider_prices
       ),
       provider_metrics AS (
         SELECT
@@ -308,7 +425,13 @@ export const POSTGRES_LIVE_PROVIDER_QUERY = `
           AND po.active
           AND r.active
       ) resources ON true
-      WHERE lower(pg.service_id) IN ('pro-api.coingecko.com', 'coingecko', 'api.nansen.ai', 'nansen')
+      WHERE NOT EXISTS (
+        SELECT 1
+        FROM provider_metrics represented_provider
+        WHERE represented_provider.pay_to = pg.pay_to
+          AND represented_provider.network = pg.network
+          AND represented_provider.asset = pg.asset
+      )
       UNION ALL
       SELECT
         pm.network,
@@ -395,7 +518,85 @@ export const POSTGRES_LIVE_PROVIDER_QUERY = `
 `;
 
 export const POSTGRES_LIVE_CUSTOMER_QUERY = `
-      WITH base_x402_payment_amounts AS (
+      WITH stableenrich_base_payment_amounts AS (
+        SELECT
+          lower('0x325bdf6f7efab24a2210c48c1b64cab2eae1d430') AS pay_to,
+          amount_atomic::numeric AS amount_atomic
+        FROM unnest(ARRAY[
+          2000, 10000, 12600, 20000, 25200, 30000, 40000, 49500,
+          50000, 80000, 100000, 200000, 400000, 440000
+        ]::numeric[]) AS amount_atomic
+      ),
+      discovered_base_payment_amounts AS (
+        SELECT
+          lower(pay_to) AS pay_to,
+          amount_atomic::numeric AS amount_atomic
+        FROM (VALUES
+          ('0x0495d60c927b97d67d5018c6aa65c9b2bebaeed9', 100),
+          ('0x0495d60c927b97d67d5018c6aa65c9b2bebaeed9', 100000),
+          ('0x43a2a720cd0911690c248075f4a29a5e7716f758', 1100),
+          ('0x43a2a720cd0911690c248075f4a29a5e7716f758', 1900),
+          ('0x43a2a720cd0911690c248075f4a29a5e7716f758', 3000),
+          ('0x43a2a720cd0911690c248075f4a29a5e7716f758', 5000),
+          ('0x43a2a720cd0911690c248075f4a29a5e7716f758', 12000),
+          ('0x5bb4b0c766e0d5d791d9403fc275c22064709f68', 6000),
+          ('0x5bb4b0c766e0d5d791d9403fc275c22064709f68', 8000),
+          ('0x5bb4b0c766e0d5d791d9403fc275c22064709f68', 18000),
+          ('0x5bb4b0c766e0d5d791d9403fc275c22064709f68', 60000),
+          ('0x5bb4b0c766e0d5d791d9403fc275c22064709f68', 120000),
+          ('0x5bb4b0c766e0d5d791d9403fc275c22064709f68', 150000),
+          ('0x5bb4b0c766e0d5d791d9403fc275c22064709f68', 200000),
+          ('0x7d2ceb7a0e0c39a3d0f7b5b491659fde4bb7bcfe', 400000),
+          ('0x7dd5be069f2d2ead75ec7c3423b116ff043c2629', 2000),
+          ('0x7dd5be069f2d2ead75ec7c3423b116ff043c2629', 5000),
+          ('0x7dd5be069f2d2ead75ec7c3423b116ff043c2629', 15000),
+          ('0x7dd5be069f2d2ead75ec7c3423b116ff043c2629', 50000),
+          ('0x7dd5be069f2d2ead75ec7c3423b116ff043c2629', 120000),
+          ('0xca1271e777c209e171826a681855351f4989cd0c', 10000),
+          ('0xc9368b30bd620164fd1a05a5d99dcaf8ae754775', 1150000),
+          ('0x7d9d1821d15b9e0b8ab98a058361233e255e405d', 1000),
+          ('0x7d9d1821d15b9e0b8ab98a058361233e255e405d', 2000),
+          ('0x7d9d1821d15b9e0b8ab98a058361233e255e405d', 5000),
+          ('0x7d9d1821d15b9e0b8ab98a058361233e255e405d', 20000),
+          ('0x7d9d1821d15b9e0b8ab98a058361233e255e405d', 100000),
+          ('0x7d9d1821d15b9e0b8ab98a058361233e255e405d', 150000),
+          ('0x7d9d1821d15b9e0b8ab98a058361233e255e405d', 250000),
+          ('0x7dd5be069f2d2ead75ec7c3423b116ff043c2629', 150000)
+        ) AS discovered(pay_to, amount_atomic)
+      ),
+      base_pay_sh_offer_prices AS (
+        SELECT DISTINCT
+          lower(o.pay_to_address) AS pay_to,
+          ROUND((o.probe_price_usd::numeric * 1000000))::numeric AS amount_atomic
+        FROM pay_sh_payment_offers o
+        WHERE lower(o.chain) = 'base'
+          AND lower(o.asset) = 'usdc'
+          AND lower(o.protocol) = 'x402'
+          AND o.pay_to_address IS NOT NULL
+          AND o.probe_price_usd IS NOT NULL
+          AND o.probe_price_usd > 0
+      ),
+      base_pay_sh_fixed_provider_prices AS (
+        SELECT DISTINCT
+          p.provider_fqn,
+          lower(a.pay_to_address) AS pay_to,
+          ROUND((p.price_range_min_usd::numeric * 1000000))::numeric AS amount_atomic
+        FROM pay_sh_providers p
+        JOIN x402_provider_activity a
+          ON lower(a.chain) = 'base'
+         AND (
+           lower(a.domain) = regexp_replace(regexp_replace(lower(p.service_url), '^https?://', ''), '/.*$', '')
+           OR lower(a.service) = regexp_replace(regexp_replace(lower(p.service_url), '^https?://', ''), '/.*$', '')
+           OR lower(a.provider) = regexp_replace(regexp_replace(lower(p.service_url), '^https?://', ''), '/.*$', '')
+         )
+        WHERE p.price_range_min_usd IS NOT NULL
+          AND p.price_range_max_usd IS NOT NULL
+          AND p.price_range_min_usd = p.price_range_max_usd
+          AND p.price_range_min_usd > 0
+          AND p.service_url IS NOT NULL
+          AND a.pay_to_address IS NOT NULL
+      ),
+      base_x402_payment_amounts AS (
         SELECT DISTINCT
           lower(po.pay_to_address) AS pay_to,
           po.amount_atomic::numeric AS amount_atomic
@@ -406,6 +607,28 @@ export const POSTGRES_LIVE_CUSTOMER_QUERY = `
           AND po.amount_atomic IS NOT NULL
           AND po.active
           AND r.active
+        UNION
+        SELECT pay_to, amount_atomic
+        FROM stableenrich_base_payment_amounts
+        UNION
+        SELECT pay_to, amount_atomic
+        FROM discovered_base_payment_amounts
+        UNION
+        SELECT pay_to, amount_atomic
+        FROM base_pay_sh_offer_prices
+        UNION
+        SELECT pay_to, amount_atomic
+        FROM base_pay_sh_fixed_provider_prices
+      ),
+      base_x402_payment_ranges AS (
+        SELECT
+          lower(pay_to) AS pay_to,
+          min_amount_atomic::numeric AS min_amount_atomic,
+          max_amount_atomic::numeric AS max_amount_atomic
+        FROM (VALUES
+          ('0xe9030014f5dae217d0a152f02a043567b16c1abf', 100, 5000000),
+          ('0x8b29dabd6fbb5a09dacbc7978eaed66a8540721d', 90000, 900000000)
+        ) AS discovered(pay_to, min_amount_atomic, max_amount_atomic)
       ),
       base_attributed_grouped AS (
         SELECT
@@ -439,11 +662,19 @@ export const POSTGRES_LIVE_CUSTOMER_QUERY = `
           ON lower(a.pay_to_address) = lower(g.to_owner_address)
         WHERE g.from_owner_address IS NOT NULL
           AND g.to_owner_address IS NOT NULL
-          AND EXISTS (
+          AND (
+            EXISTS (
             SELECT 1
             FROM base_x402_payment_amounts option_amount
             WHERE option_amount.pay_to = lower(g.to_owner_address)
               AND g.amount::numeric = option_amount.amount_atomic
+            )
+            OR EXISTS (
+              SELECT 1
+              FROM base_x402_payment_ranges option_range
+              WHERE option_range.pay_to = lower(g.to_owner_address)
+                AND g.amount::numeric BETWEEN option_range.min_amount_atomic AND option_range.max_amount_atomic
+            )
           )
         GROUP BY lower(g.from_owner_address), lower(g.to_owner_address), service_id, service_name
       ),

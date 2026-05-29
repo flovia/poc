@@ -1855,11 +1855,12 @@ describe("BFF routes", () => {
     expect(providerSql).toContain("provider_metrics AS");
     expect(providerSql).toContain("LEFT JOIN provider_grouped pg");
     expect(providerSql).toContain("UNION ALL");
-    expect(providerSql).toContain("WHERE lower(pg.service_id) IN");
+    expect(providerSql).toContain("WHERE NOT EXISTS");
+    expect(providerSql).toContain("FROM provider_metrics represented_provider");
     expect(providerSql).not.toContain("OR pay_sh.provider_fqn IS NOT NULL");
   });
 
-  test("includes pay.sh catalog providers without live tx and excludes raw live-only providers", async () => {
+  test("includes pay.sh catalog providers and observed raw live-only providers", async () => {
     const payShWithLivePayTo = "0x1111111111111111111111111111111111111111";
     const payShWithoutLivePayTo = "0x2222222222222222222222222222222222222222";
     const rawLiveOnlyPayTo = "0x3333333333333333333333333333333333333333";
@@ -1926,9 +1927,10 @@ describe("BFF routes", () => {
     expect(dataSource.providers.providers.map((provider) => provider.serviceId)).toEqual([
       "pay-sh/live-provider",
       "pay-sh/no-live-provider",
+      "raw-live-only.example",
       "api.nansen.ai",
     ]);
-    expect(dataSource.providers.providerCount).toBe(3);
+    expect(dataSource.providers.providerCount).toBe(4);
     expect(dataSource.providers.providers).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -1948,16 +1950,19 @@ describe("BFF routes", () => {
           hasCustomerFacts: false,
         }),
         expect.objectContaining({
+          serviceId: "raw-live-only.example",
+          catalogSource: "raw_x402",
+          transactionCount: 99,
+          uniqueSenderCount: 10,
+          totalVolumeAtomic: "9900",
+          hasCustomerFacts: true,
+        }),
+        expect.objectContaining({
           serviceId: "api.nansen.ai",
           catalogSource: "base_curated",
         }),
       ]),
     );
-    expect(
-      dataSource.providers.providers.some(
-        (provider) => provider.serviceId === "raw-live-only.example",
-      ),
-    ).toBe(false);
   });
 
   test("keeps non-wallet pay.sh recipients out of wallet usage graph", async () => {
@@ -2055,9 +2060,11 @@ describe("BFF routes", () => {
     const payerWallet = coingeckoProvider?.payerWallets.find((wallet) => wallet.address === payer);
 
     expect(dataSource.providers.providers.map((provider) => provider.serviceId)).toEqual([
+      "generic-service",
       "pro-api.coingecko.com",
     ]);
-    expect(dataSource.providers.providers[0]?.catalogSource).toBe("base_curated");
+    expect(dataSource.providers.providers[0]?.catalogSource).toBe("raw_x402");
+    expect(dataSource.providers.providers[1]?.catalogSource).toBe("base_curated");
     expect(payerWallet?.overlapProviderCount).toBe(2);
     expect(payerWallet?.otherServiceCandidates).toEqual([
       expect.objectContaining({
