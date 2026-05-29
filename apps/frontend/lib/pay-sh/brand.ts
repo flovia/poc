@@ -107,6 +107,49 @@ const MPP_BRAND_BY_SERVICE: Record<string, BrandEntry> = {
 };
 
 const INFRA_PREFIXES = new Set(["x402", "api", "www", "pro-api", "mpp"]);
+const DISPLAY_INFRA_PREFIXES = new Set([...INFRA_PREFIXES, "public", "gateway"]);
+const PLATFORM_HOST_SUFFIXES = [
+  ".a.run.app",
+  ".run.app",
+  ".vercel.app",
+  ".up.railway.app",
+  ".onrender.com",
+  ".workers.dev",
+] as const;
+const DEPLOYMENT_NOISE_TOKENS = new Set([
+  "alpha",
+  "api",
+  "app",
+  "endpoint",
+  "production",
+  "prod",
+  "server",
+  "uc",
+  "web",
+  "www",
+  "x402",
+]);
+const DISPLAY_NAME_BY_BRAND_KEY: Record<string, string> = {
+  "402box": "402Box",
+  blackswan: "Black Swan",
+  clashofcoins: "Clash of Coins",
+  emc2ai: "EMC2AI",
+  genbase: "Genbase",
+  heurist: "Heurist",
+  itsgloria: "Gloria",
+  lucyos: "LucyOS",
+  minifetch: "MiniFetch",
+  molty: "Molty",
+  orbisapi: "Orbis API",
+  recoupable: "Recoupable",
+  slamai: "SlamAI",
+  slinkylayer: "SlinkyLayer",
+  t54: "T54 AI",
+  useotto: "Otto",
+  x402factory: "X402 Factory",
+  "x402-gateway-production": "X402 Gateway",
+  zapper: "Zapper",
+};
 
 function brandKeyCandidatesFromFqn(fqn: string | undefined): string[] {
   if (!fqn) return [];
@@ -194,12 +237,91 @@ function stripInfraPrefix(host: string): string {
   return labels.join(".");
 }
 
+function stripDisplayInfraPrefix(host: string): string {
+  const labels = host.split(".");
+  while (labels.length > 2 && DISPLAY_INFRA_PREFIXES.has(labels[0]!.toLowerCase())) {
+    labels.shift();
+  }
+  return labels.join(".");
+}
+
+function hostFromServiceIdentity(value: string | undefined): string | null {
+  if (!value) return null;
+  const asUrl = safeUrl(value);
+  if (asUrl?.hostname) return asUrl.hostname.toLowerCase();
+  if (value.includes("/") || !value.includes(".")) return null;
+  return value.toLowerCase();
+}
+
+function significantHostLabel(host: string): string | null {
+  const platformSuffix = PLATFORM_HOST_SUFFIXES.find((suffix) => host.endsWith(suffix));
+  if (platformSuffix) {
+    return host.slice(0, -platformSuffix.length).split(".").filter(Boolean).at(-1) ?? null;
+  }
+  const stripped = stripDisplayInfraPrefix(host);
+  const labels = stripped.split(".").filter(Boolean);
+  if (labels.length < 2) return labels[0] ?? null;
+  return labels[labels.length - 2] ?? null;
+}
+
+function displayLabelFromHostLabel(label: string): string {
+  const compact = label.toLowerCase();
+  const override = DISPLAY_NAME_BY_BRAND_KEY[compact];
+  if (override) return override;
+
+  const parts = compact
+    .split(/[-_]+/)
+    .filter((part) => part.length > 0 && !DEPLOYMENT_NOISE_TOKENS.has(part))
+    .filter((part) => !/^[a-z0-9]{8,}$/.test(part) || !/\d/.test(part));
+  const meaningful = parts.length > 0 ? parts : [compact];
+  return meaningful.map(titleizeBrandToken).join(" ");
+}
+
+function titleizeBrandToken(token: string): string {
+  if (/^\d+$/.test(token)) return token;
+  if (token === "ai") return "AI";
+  if (token === "api") return "API";
+  if (token === "rpc") return "RPC";
+  if (/^[a-z]+\d+[a-z0-9]*$/.test(token)) return token.toUpperCase();
+  return token.charAt(0).toUpperCase() + token.slice(1);
+}
+
+export function inferProviderDisplayName({
+  serviceId,
+  serviceUrl,
+  fallbackName,
+}: {
+  serviceId?: string | null;
+  serviceUrl?: string | null;
+  fallbackName?: string | null;
+}): string {
+  const known = inferBrandDisplayName({ fqn: serviceId ?? undefined });
+  if (known) return known;
+  if (fallbackName && !hostFromServiceIdentity(fallbackName)) return fallbackName;
+
+  const host =
+    hostFromServiceIdentity(serviceUrl ?? undefined) ??
+    hostFromServiceIdentity(serviceId ?? undefined) ??
+    hostFromServiceIdentity(fallbackName ?? undefined);
+  const label = host ? significantHostLabel(host) : null;
+  if (label) return displayLabelFromHostLabel(label);
+  return fallbackName ?? serviceId ?? "Provider";
+}
+
 export type BrandResolution = {
   domain: string | null;
   /** Direct icon URL when the brand entry overrides Google favicon resolution. */
   iconUrl?: string;
   reason: "curated" | "direct-host" | "fqn-fallback" | "none";
 };
+
+function inferHostBrandDomain(serviceId: string | undefined): string | null {
+  const host = hostFromServiceIdentity(serviceId);
+  if (!host) return null;
+  if (PLATFORM_HOST_SUFFIXES.some((suffix) => host.endsWith(suffix))) return host;
+  const stripped = stripDisplayInfraPrefix(host);
+  return stripped.includes(".") ? stripped : host;
+}
 
 function findCuratedBrandEntry(fqn: string | undefined): BrandEntry | undefined {
   const candidates = brandKeyCandidatesFromFqn(fqn);
@@ -329,6 +451,11 @@ export function inferBrandDomain({
         }
       }
     }
+  }
+
+  const hostBrandDomain = inferHostBrandDomain(fqn);
+  if (hostBrandDomain) {
+    return { domain: hostBrandDomain, reason: "direct-host" };
   }
 
   if (candidates.length > 0) {

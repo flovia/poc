@@ -51,8 +51,8 @@ mock.module("@/components/shell/ProviderAvatar", () => ({
 }));
 
 mock.module("@/lib/pay-sh/brand", () => ({
-  inferBrandDisplayName: () => undefined,
   inferBrandDomain: () => ({ domain: undefined, iconUrl: undefined }),
+  inferProviderDisplayName: ({ fallbackName }: { fallbackName?: string }) => fallbackName ?? "Provider",
 }));
 
 mock.module("@/lib/pay-sh/skills", () => ({

@@ -7,7 +7,7 @@ import { useMemo } from "react";
 import { useProviders } from "@/app/providers";
 import { Icon } from "@/components/ui/Icon";
 import { ProviderAvatar } from "@/components/shell/ProviderAvatar";
-import { inferBrandDisplayName, inferBrandDomain } from "@/lib/pay-sh/brand";
+import { inferBrandDomain, inferProviderDisplayName } from "@/lib/pay-sh/brand";
 import { resolvePaySkill, usePaySkills } from "@/lib/pay-sh/skills";
 import { findProviderByRouteId, isDemoProvider } from "@/lib/providers";
 import type { DashboardMode } from "@/lib/data-mode";
@@ -63,8 +63,13 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode, className }: 
   const currentSkill = resolvePaySkill(skills, currentServiceId);
   const currentName =
     currentSkill?.title
-    ?? inferBrandDisplayName({ fqn: currentServiceId })
-    ?? current?.name
+    ?? (current
+      ? inferProviderDisplayName({
+          serviceId: current.serviceId,
+          serviceUrl: current.serviceUrl,
+          fallbackName: current.name,
+        })
+      : undefined)
     ?? (isViewingSdkDemo || isSdkEmpty
       ? SDK_DEMO_PROVIDER_NAME
       : hydrated

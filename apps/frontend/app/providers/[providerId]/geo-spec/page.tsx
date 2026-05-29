@@ -3,6 +3,7 @@ import { getProviders } from "@/lib/api/client";
 import { findProviderByRouteId } from "@/lib/providers";
 import { TopBar } from "@/components/shell/TopBar";
 import { getGeoSpec } from "@/lib/geo-spec/source";
+import { inferProviderDisplayName } from "@/lib/pay-sh/brand";
 import { getTopBarPageContext } from "@/lib/server/page-context";
 import type { ProviderCatalogItemDto } from "@/lib/api/types";
 
@@ -21,12 +22,20 @@ export default async function GeoSpecPage({
   const allProviders = await getProviders().catch(() => [] as ProviderCatalogItemDto[]);
   const liveProvider = findProviderByRouteId(allProviders, providerId) ?? null;
 
+  const liveProviderDisplayName = liveProvider
+    ? inferProviderDisplayName({
+        serviceId: liveProvider.serviceId,
+        serviceUrl: liveProvider.serviceUrl,
+        fallbackName: liveProvider.name,
+      })
+    : null;
+
   const spec = getGeoSpec(
     providerId,
     liveProvider?.payTo
       ? {
           providerId: liveProvider.providerId,
-          name: liveProvider.name,
+          name: liveProviderDisplayName ?? liveProvider.name,
           title: liveProvider.title,
           description: liveProvider.description,
           mppDescription: liveProvider.mppDescription,

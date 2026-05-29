@@ -6,6 +6,7 @@ import { useActiveProvider } from "@/app/providers";
 import { PageOnboarding, type PageOnboardingContent } from "@/components/onboarding/PageOnboarding";
 import { MobileMenuButton } from "@/components/shell/MobileMenuButton";
 import type { DashboardMode } from "@/lib/data-mode";
+import { inferProviderDisplayName } from "@/lib/pay-sh/brand";
 
 export type Crumb = {
   label: string;
@@ -32,7 +33,13 @@ export function TopBar({
   let providerName = fallbackProviderName;
   if (providerId) {
     if (!hydrated) providerName = "…";
-    else if (active) providerName = active.name;
+    else if (active) {
+      providerName = inferProviderDisplayName({
+        serviceId: active.serviceId,
+        serviceUrl: active.serviceUrl,
+        fallbackName: active.name,
+      });
+    }
     else providerName = providerId;
   }
 
