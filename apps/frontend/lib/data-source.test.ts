@@ -11,7 +11,8 @@ describe("data source", () => {
   });
 
   test("falls back to an empty provider ranking when the live BFF is unavailable", async () => {
-    globalThis.fetch = (() => Promise.reject(new Error("connect timeout"))) as unknown as typeof fetch;
+    globalThis.fetch = (() =>
+      Promise.reject(new Error("connect timeout"))) as unknown as typeof fetch;
     console.warn = (() => {}) as typeof console.warn;
 
     const ranking = await getProviderRanking("settledAmount", 100);

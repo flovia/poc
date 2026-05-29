@@ -74,7 +74,10 @@ export async function getProviderRanking(
   try {
     return await live.getProviderRanking(sort, limit);
   } catch (error) {
-    console.warn("Falling back to an empty provider ranking because the BFF is unavailable.", error);
+    console.warn(
+      "Falling back to an empty provider ranking because the BFF is unavailable.",
+      error,
+    );
     return {
       generatedAt: new Date().toISOString(),
       generatedFrom: "frontend-fallback:provider-ranking",
