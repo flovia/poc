@@ -72,6 +72,19 @@ const resolveCommitHash = (env: RuntimeEnv) =>
   normalizeCommitHash(env.BFF_DEPLOY_ID) ??
   "unknown";
 
+const bytesToMib = (bytes: number) => Math.round(bytes / 1024 / 1024);
+
+const memoryUsageMib = () => {
+  const memory = process.memoryUsage();
+  return {
+    rss: bytesToMib(memory.rss),
+    heapTotal: bytesToMib(memory.heapTotal),
+    heapUsed: bytesToMib(memory.heapUsed),
+    external: bytesToMib(memory.external),
+    arrayBuffers: bytesToMib(memory.arrayBuffers),
+  };
+};
+
 export const resolveBffRuntimeMetadata = (
   env: RuntimeEnv = process.env,
   now: Date = new Date(),
@@ -181,6 +194,7 @@ export const createBffHandler = (
           service: "flovia-bff",
           commitHash: runtimeMetadata.commitHash,
           startedAt: runtimeMetadata.startedAt,
+          memory: memoryUsageMib(),
           ...analyticsStatusBody(),
         });
       case "/ready":

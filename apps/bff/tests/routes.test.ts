@@ -52,6 +52,16 @@ const runtimeMetadata = {
   startedAt: "2026-05-08T10:11:12.000Z",
 };
 
+const expectMemoryUsageBody = (memory: unknown) => {
+  expect(memory).toEqual({
+    rss: expect.any(Number),
+    heapTotal: expect.any(Number),
+    heapUsed: expect.any(Number),
+    external: expect.any(Number),
+    arrayBuffers: expect.any(Number),
+  });
+};
+
 const withTempFile = async (fn: (filePath: string) => Promise<void> | void) => {
   const directory = path.join(process.cwd(), "tmp", `bff-read-model-${randomUUID()}`);
   fs.mkdirSync(directory, { recursive: true });
@@ -241,13 +251,17 @@ describe("BFF routes", () => {
     const response = await handler(request("/health"));
 
     expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toEqual({
+    const body = await response.json();
+
+    expect(body).toEqual({
       status: "ok",
       service: "flovia-bff",
       commitHash: runtimeMetadata.commitHash,
       startedAt: runtimeMetadata.startedAt,
+      memory: expect.any(Object),
       analyticsStatus: "loading",
     });
+    expectMemoryUsageBody(body.memory);
   });
 
   test("reports readiness only after analytics data source is loaded", async () => {
@@ -316,13 +330,17 @@ describe("BFF routes", () => {
       const response = await handler(request("/health"));
 
       expect(response.status).toBe(200);
-      await expect(response.json()).resolves.toEqual({
+      const body = await response.json();
+
+      expect(body).toEqual({
         status: "ok",
         service: "flovia-bff",
         commitHash: runtimeMetadata.commitHash,
         startedAt: runtimeMetadata.startedAt,
+        memory: expect.any(Object),
         analyticsStatus: "fallback",
       });
+      expectMemoryUsageBody(body.memory);
     } finally {
       process.env.BFF_ANALYTICS_SOURCE = "fixture";
     }
@@ -333,13 +351,17 @@ describe("BFF routes", () => {
     const response = await handler(request("/health"));
 
     expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toEqual({
+    const body = await response.json();
+
+    expect(body).toEqual({
       status: "ok",
       service: "flovia-bff",
       commitHash: runtimeMetadata.commitHash,
       startedAt: runtimeMetadata.startedAt,
+      memory: expect.any(Object),
       analyticsStatus: "ready",
     });
+    expectMemoryUsageBody(body.memory);
   });
 
   test("rejects non-GET requests to read-only endpoints", async () => {
