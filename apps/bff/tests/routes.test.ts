@@ -52,6 +52,16 @@ const runtimeMetadata = {
   startedAt: "2026-05-08T10:11:12.000Z",
 };
 
+const expectMemoryUsageBody = (memory: unknown) => {
+  expect(memory).toEqual({
+    rss: expect.any(Number),
+    heapTotal: expect.any(Number),
+    heapUsed: expect.any(Number),
+    external: expect.any(Number),
+    arrayBuffers: expect.any(Number),
+  });
+};
+
 const withTempFile = async (fn: (filePath: string) => Promise<void> | void) => {
   const directory = path.join(process.cwd(), "tmp", `bff-read-model-${randomUUID()}`);
   fs.mkdirSync(directory, { recursive: true });
@@ -241,12 +251,74 @@ describe("BFF routes", () => {
     const response = await handler(request("/health"));
 
     expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toEqual({
+    const body = await response.json();
+
+    expect(body).toEqual({
       status: "ok",
       service: "flovia-bff",
       commitHash: runtimeMetadata.commitHash,
       startedAt: runtimeMetadata.startedAt,
+      memory: expect.any(Object),
+      analyticsStatus: "loading",
     });
+    expectMemoryUsageBody(body.memory);
+  });
+
+  test("reports readiness only after analytics data source is loaded", async () => {
+    const unresolvedDataSource = new Promise<never>(() => {});
+    const handler = createBffHandler(unresolvedDataSource, null, runtimeMetadata);
+
+    const response = await handler(request("/ready"));
+    const body = (await response.json()) as {
+      status: string;
+      service: string;
+      analyticsStatus: string;
+    };
+
+    expect(response.status).toBe(503);
+    expect(body).toEqual({
+      status: "loading",
+      service: "flovia-bff",
+      analyticsStatus: "loading",
+    });
+  });
+
+  test("does not block providers while analytics data source is loading", async () => {
+    const unresolvedDataSource = new Promise<never>(() => {});
+    const handler = createBffHandler(unresolvedDataSource, null, runtimeMetadata);
+
+    const response = await handler(request("/providers"));
+    const body = (await response.json()) as { error: string };
+
+    expect(response.status).toBe(503);
+    expect(body.error).toBe("analytics_loading");
+  });
+
+  test("falls back to fixture analytics when preload fails", async () => {
+    const handler = createBffHandler(
+      Promise.reject(new Error("snapshot unavailable")),
+      null,
+      runtimeMetadata,
+    );
+    await Promise.resolve();
+
+    const readyResponse = await handler(request("/ready"));
+    const readyBody = (await readyResponse.json()) as {
+      status: string;
+      service: string;
+      analyticsStatus: string;
+    };
+    const providersResponse = await handler(request("/providers"));
+    const providersBody = await providersResponse.json();
+
+    expect(readyResponse.status).toBe(200);
+    expect(readyBody).toEqual({
+      status: "ok",
+      service: "flovia-bff",
+      analyticsStatus: "fallback",
+    });
+    expect(providersResponse.status).toBe(200);
+    expect(validateProviderCatalogResponse(providersBody).providerCount).toBeGreaterThan(0);
   });
 
   test("serves health without resolving the default analytics source", async () => {
@@ -258,12 +330,17 @@ describe("BFF routes", () => {
       const response = await handler(request("/health"));
 
       expect(response.status).toBe(200);
-      await expect(response.json()).resolves.toEqual({
+      const body = await response.json();
+
+      expect(body).toEqual({
         status: "ok",
         service: "flovia-bff",
         commitHash: runtimeMetadata.commitHash,
         startedAt: runtimeMetadata.startedAt,
+        memory: expect.any(Object),
+        analyticsStatus: "fallback",
       });
+      expectMemoryUsageBody(body.memory);
     } finally {
       process.env.BFF_ANALYTICS_SOURCE = "fixture";
     }
@@ -274,12 +351,17 @@ describe("BFF routes", () => {
     const response = await handler(request("/health"));
 
     expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toEqual({
+    const body = await response.json();
+
+    expect(body).toEqual({
       status: "ok",
       service: "flovia-bff",
       commitHash: runtimeMetadata.commitHash,
       startedAt: runtimeMetadata.startedAt,
+      memory: expect.any(Object),
+      analyticsStatus: "ready",
     });
+    expectMemoryUsageBody(body.memory);
   });
 
   test("rejects non-GET requests to read-only endpoints", async () => {
@@ -322,6 +404,24 @@ describe("BFF routes", () => {
     expect(response.status).toBe(200);
     expect(parsed.providerCount).toBe(parsed.providers.length);
     expect(parsed.providers.some((provider) => provider.hasCustomerFacts)).toBe(true);
+  });
+
+  test("marks snapshot-backed read endpoints as edge-cacheable", async () => {
+    const handler = createBffHandler(fixtureAnalyticsDataSource);
+
+    const response = await handler(request("/providers"));
+
+    expect(response.headers.get("cache-control")).toBe(
+      "public, s-maxage=60, stale-while-revalidate=300",
+    );
+  });
+
+  test("keeps error responses uncacheable", async () => {
+    const handler = createBffHandler(fixtureAnalyticsDataSource);
+
+    const response = await handler(request("/unknown"));
+
+    expect(response.headers.get("cache-control")).toBe("no-store");
   });
 
   test("serves machine payment route analytics summary and sankey", async () => {

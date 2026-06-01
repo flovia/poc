@@ -10,6 +10,7 @@ type JsonValue = unknown;
 
 const WORKFLOW_INTENT_GENERATED_FROM = "phase-b-wallet-workflow-intent-v1";
 const GENERIC_LLM_INFERENCE_ERROR_MESSAGE = "LLM upsell explanation inference failed.";
+export const SNAPSHOT_CACHE_CONTROL = "public, s-maxage=60, stale-while-revalidate=300";
 
 const workflowIntentReason = {
   provenance: "derived_insight" as const,
@@ -25,6 +26,15 @@ export const json = (body: JsonValue, init: ResponseInit = {}) =>
     },
   });
 
+export const cachedJson = (body: JsonValue, init: ResponseInit = {}) =>
+  json(body, {
+    ...init,
+    headers: {
+      "cache-control": SNAPSHOT_CACHE_CONTROL,
+      ...(init.headers ?? {}),
+    },
+  });
+
 export const notFound = (path: string) =>
   json({ error: "not_found", message: `Route not found: ${path}` }, { status: 404 });
 
@@ -35,6 +45,24 @@ export const methodNotAllowed = () =>
       message: "The BFF only supports GET for read endpoints.",
     },
     { status: 405, headers: { allow: "GET" } },
+  );
+
+export const analyticsLoading = () =>
+  json(
+    {
+      error: "analytics_loading",
+      message: "Analytics read model is still loading.",
+    },
+    { status: 503 },
+  );
+
+export const analyticsUnavailable = (message = "Analytics read model is unavailable.") =>
+  json(
+    {
+      error: "analytics_unavailable",
+      message,
+    },
+    { status: 503 },
   );
 
 export const llmUnavailable = () =>
