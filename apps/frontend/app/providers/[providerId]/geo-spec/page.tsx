@@ -7,6 +7,9 @@ import { getGeoSpec } from "@/lib/geo-spec/source";
 import { getTopBarPageContext } from "@/lib/server/page-context";
 import type { ProviderCatalogItemDto } from "@/lib/api/types";
 
+export const dynamic = "force-static";
+export const revalidate = 10800;
+
 export default async function GeoSpecPage({
   params,
 }: {
@@ -32,30 +35,30 @@ export default async function GeoSpecPage({
     providerId,
     liveProvider?.payTo
       ? {
-          providerId: liveProvider.providerId,
-          name: liveProvider.name,
-          title: liveProvider.title,
-          description: liveProvider.description,
-          mppDescription: liveProvider.mppDescription,
-          useCase: liveProvider.useCase,
-          category: liveProvider.category,
-          serviceId: liveProvider.serviceId,
-          serviceName: liveProvider.serviceName,
-          serviceUrl: liveProvider.serviceUrl,
-          hasMetering: liveProvider.hasMetering,
-          hasFreeTier: liveProvider.hasFreeTier,
-          providerSha: liveProvider.providerSha,
-          registryVersion: liveProvider.registryVersion,
-          registryGeneratedAt: liveProvider.registryGeneratedAt,
-          registrySourceUrl: liveProvider.registrySourceUrl,
-          priceRangeUsd: liveProvider.priceRangeUsd,
-          offers: liveProvider.offers,
-          payTo: liveProvider.payTo,
-          network: liveProvider.network ?? "base",
-          asset: liveProvider.asset ?? "USDC",
-          endpointCount: liveProvider.endpointCount,
-          resources: liveProvider.resources,
-        }
+        providerId: liveProvider.providerId,
+        name: liveProvider.name,
+        title: liveProvider.title,
+        description: liveProvider.description,
+        mppDescription: liveProvider.mppDescription,
+        useCase: liveProvider.useCase,
+        category: liveProvider.category,
+        serviceId: liveProvider.serviceId,
+        serviceName: liveProvider.serviceName,
+        serviceUrl: liveProvider.serviceUrl,
+        hasMetering: liveProvider.hasMetering,
+        hasFreeTier: liveProvider.hasFreeTier,
+        providerSha: liveProvider.providerSha,
+        registryVersion: liveProvider.registryVersion,
+        registryGeneratedAt: liveProvider.registryGeneratedAt,
+        registrySourceUrl: liveProvider.registrySourceUrl,
+        priceRangeUsd: liveProvider.priceRangeUsd,
+        offers: liveProvider.offers,
+        payTo: liveProvider.payTo,
+        network: liveProvider.network ?? "base",
+        asset: liveProvider.asset ?? "USDC",
+        endpointCount: liveProvider.endpointCount,
+        resources: liveProvider.resources,
+      }
       : null,
   );
 

@@ -4,6 +4,9 @@ import { buildApiGrowthIntelligence } from "@/lib/api-growth/metrics";
 import { MACRO_METRICS_DEMO_DATA } from "@/lib/macro-metrics/demo";
 import { getTopBarPageContext } from "@/lib/server/page-context";
 
+export const dynamic = "force-static";
+export const revalidate = 10800;
+
 export default async function ApiGrowthPage({
   params,
 }: {

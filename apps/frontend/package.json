@@ -12,6 +12,7 @@
     "build": "next build",
     "start": "next start",
     "test": "bun test",
+    "test:e2e": "playwright test",
     "typecheck": "tsc --noEmit",
     "verify:geo-bake-fresh": "bun scripts/check-geo-bake-fresh.ts",
     "verify": "bun run typecheck && bun test"
@@ -29,6 +30,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.5",
     "@next/eslint-plugin-next": "^16.2.4",
+    "@playwright/test": "^1.61.1",
     "@tailwindcss/postcss": "^4.0.0",
     "@types/node": "^22.10.7",
     "@types/react": "^19.0.7",

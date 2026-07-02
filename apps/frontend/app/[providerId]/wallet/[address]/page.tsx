@@ -1,5 +1,8 @@
 import { WalletPageContent } from "@/app/providers/[providerId]/wallet/[address]/WalletPageContent";
 
+export const dynamic = "force-static";
+export const revalidate = 10800;
+
 export default async function WalletAliasPage({
   params,
 }: {

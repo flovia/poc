@@ -31,6 +31,8 @@ apps/*/reports/raw-transfer-facts/
 apps/*/reports/customer-intelligence/
 apps/*/reports/service-read-models/
 apps/*/fixtures/generated-analytics/
+apps/*/test-results/
+apps/*/playwright-report/
 
 tmp/
 

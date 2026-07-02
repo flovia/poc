@@ -11,6 +11,9 @@ import { findProviderByRouteId } from "@/lib/providers";
 import { getProviderBalanceContext } from "@/lib/provider-enrichment";
 import { getTopBarPageContext } from "@/lib/server/page-context";
 
+export const dynamic = "force-static";
+export const revalidate = 10800;
+
 export default async function CustomersPage({
   params,
 }: {

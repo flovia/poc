@@ -8,6 +8,9 @@ import { getProviders, getWalletUsageGraph } from "@/lib/data-source";
 import { findProviderByRouteId } from "@/lib/providers";
 import { getTopBarPageContext } from "@/lib/server/page-context";
 
+export const dynamic = "force-static";
+export const revalidate = 10800;
+
 export default async function CoUsageProvidersPage({
   params,
 }: {
@@ -23,12 +26,12 @@ export default async function CoUsageProvidersPage({
   const ownPayTo = ownProvider?.payTo;
   const ownPayTos = ownProvider
     ? providers
-        .filter((p) => {
-          if (ownProvider.serviceId && p.serviceId === ownProvider.serviceId) return true;
-          if (ownProvider.serviceName && p.serviceName === ownProvider.serviceName) return true;
-          return p.providerId === ownProvider.providerId;
-        })
-        .map((p) => p.payTo)
+      .filter((p) => {
+        if (ownProvider.serviceId && p.serviceId === ownProvider.serviceId) return true;
+        if (ownProvider.serviceName && p.serviceName === ownProvider.serviceName) return true;
+        return p.providerId === ownProvider.providerId;
+      })
+      .map((p) => p.payTo)
     : [];
 
   const metadataByPayTo = new Map(
@@ -63,12 +66,12 @@ export default async function CoUsageProvidersPage({
 
   const rows = graph
     ? aggregateCoUsageProviders(graph, {
-        ownPayTo,
-        ownPayTos,
-        resolveProviderName: resolveKnownProviderName,
-        resolveMetadata: (payToWallet) =>
-          metadataByPayTo.get(normalizePaymentRecipientAddress(payToWallet)) ?? null,
-      })
+      ownPayTo,
+      ownPayTos,
+      resolveProviderName: resolveKnownProviderName,
+      resolveMetadata: (payToWallet) =>
+        metadataByPayTo.get(normalizePaymentRecipientAddress(payToWallet)) ?? null,
+    })
     : [];
 
   const totalProviders = rows.length;

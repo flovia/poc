@@ -4,6 +4,9 @@ import { MACRO_METRICS_DEMO_DATA } from "@/lib/macro-metrics/demo";
 import { buildMacroMetrics } from "@/lib/macro-metrics/metrics";
 import { getTopBarPageContext } from "@/lib/server/page-context";
 
+export const dynamic = "force-static";
+export const revalidate = 10800;
+
 export default async function MacroMetricsPage({
   params,
 }: {

@@ -9,6 +9,8 @@
       "!**/node_modules/**/*",
       "!**/tmp/**/*",
       "!**/dist/**/*",
+      "!apps/*/test-results/**/*",
+      "!apps/*/playwright-report/**/*",
       "!apps/*/data/**/*.json",
       "!apps/*/fixtures/**/*.json",
       "!apps/*/reports/**/*.json",

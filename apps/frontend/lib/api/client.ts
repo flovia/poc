@@ -31,14 +31,14 @@ import type {
   ReportSummaryDto,
   WalletUsageGraphDto,
 } from "./types";
+import { DASHBOARD_REVALIDATE_SECONDS, DISCOVERY_REVALIDATE_SECONDS } from "./cache-policy";
 
 const DEFAULT_BFF_URL = "http://localhost:3001";
 const DEFAULT_PUBLIC_BFF_URL = "/api";
-const SNAPSHOT_REVALIDATE_SECONDS = 60;
 // Cap snapshot-backed BFF requests so a slow/cold BFF cannot hang a server
 // render (and the navigation that awaits it) indefinitely. LLM endpoints opt
 // out of this — they are intentionally long-running.
-const SNAPSHOT_FETCH_TIMEOUT_MS = 20 * 1000;
+const SNAPSHOT_FETCH_TIMEOUT_MS = 60 * 1000;
 
 function stripTrailingSlash(url: string): string {
   return url.replace(/\/$/, "");
@@ -58,7 +58,7 @@ function bffBaseUrl(): string {
 
 async function bffFetch<T>(path: string): Promise<T> {
   const response = await fetch(`${bffBaseUrl()}${path}`, {
-    next: { revalidate: SNAPSHOT_REVALIDATE_SECONDS },
+    next: { revalidate: DASHBOARD_REVALIDATE_SECONDS },
     headers: { accept: "application/json" },
     signal: AbortSignal.timeout(SNAPSHOT_FETCH_TIMEOUT_MS),
   });
@@ -80,7 +80,7 @@ export async function getCustomerProfileRaw(
   address: string,
 ): Promise<PhaseBCustomerProfileResponse | null> {
   const response = await fetch(`${bffBaseUrl()}/customers/${encodeURIComponent(address)}/profile`, {
-    next: { revalidate: SNAPSHOT_REVALIDATE_SECONDS },
+    next: { revalidate: DASHBOARD_REVALIDATE_SECONDS },
     headers: { accept: "application/json" },
     signal: AbortSignal.timeout(SNAPSHOT_FETCH_TIMEOUT_MS),
   });
@@ -136,7 +136,7 @@ export async function getAeoX402Discovery(
   const response = await fetch(
     `${bffBaseUrl()}/aeo/x402?service=${encodeURIComponent(candidates.join(","))}`,
     {
-      next: { revalidate: SNAPSHOT_REVALIDATE_SECONDS },
+      next: { revalidate: DISCOVERY_REVALIDATE_SECONDS },
       headers: { accept: "application/json" },
       signal: AbortSignal.timeout(SNAPSHOT_FETCH_TIMEOUT_MS),
     },

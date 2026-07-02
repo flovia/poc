@@ -3,6 +3,9 @@ import { TopBar } from "@/components/shell/TopBar";
 import { getRouteAnalyticsSummary } from "@/lib/api/client";
 import { getTopBarPageContext } from "@/lib/server/page-context";
 
+export const dynamic = "force-static";
+export const revalidate = 10800;
+
 export default async function MachinePaymentRoutesPage({
   params,
 }: {
