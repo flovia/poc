@@ -3,6 +3,7 @@
 import type { CSSProperties, ReactNode } from "react";
 import { useMemo, useRef, useState } from "react";
 import { mppFetch } from "@hit-pay/mpp-client";
+import { isFixtureDataSource } from "@/lib/data-source-mode";
 
 type ProviderKey = "stripe" | "hitpay" | "solana";
 type LiveState = "idle" | "calling" | "challenge" | "paid" | "error";
@@ -245,7 +246,20 @@ export function ShowcaseProviderScreen({ provider }: ShowcaseProviderScreenProps
     [config.endpoint, config.simulatedId, provider],
   );
 
+  const livePayments = !isFixtureDataSource();
+
   async function callPaidApi(withCredential: boolean) {
+    if (!livePayments) {
+      setState("error");
+      setResult({
+        status: 0,
+        body: {
+          error: "showcase_paused",
+          message: "Live payment demo is paused on this fixture-only deployment.",
+        },
+      });
+      return;
+    }
     if (provider === "hitpay") {
       if (withCredential) {
         hitPayContinueRef.current?.();
@@ -487,6 +501,16 @@ export function ShowcaseProviderScreen({ provider }: ShowcaseProviderScreenProps
         </Card>
 
         <div style={{ marginTop: 24 }}>
+          {livePayments ? null : (
+            <div
+              role="status"
+              className="card"
+              style={{ marginBottom: 16, padding: 16, color: "var(--text-2)", fontSize: 14 }}
+            >
+              Live payment demo is paused. This public site serves fixture data only and does not
+              call Stripe, HitPay, or Solana. Use Simulate to inspect a recorded flow.
+            </div>
+          )}
           <Card
             eyebrow="Live flow"
             title={config.callActionTitle}
@@ -504,14 +528,14 @@ export function ShowcaseProviderScreen({ provider }: ShowcaseProviderScreenProps
             }
           >
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 16 }}>
-              <button type="button" onClick={() => void callPaidApi(false)} style={buttonStyle(provider)} disabled={state === "calling"}>
+              <button type="button" onClick={() => void callPaidApi(false)} style={buttonStyle(provider)} disabled={!livePayments || state === "calling"}>
                 Call paid API
               </button>
               <button
                 type="button"
                 onClick={() => void callPaidApi(true)}
                 style={secondaryButtonStyle}
-                disabled={state === "calling" || (provider === "hitpay" && !hitPayCheckoutUrl)}
+                disabled={!livePayments || state === "calling" || (provider === "hitpay" && !hitPayCheckoutUrl)}
               >
                 {config.payButtonLabel}
               </button>

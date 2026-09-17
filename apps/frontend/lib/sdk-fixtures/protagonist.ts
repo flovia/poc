@@ -1,9 +1,9 @@
-// Phase 7 C2: 主役 wallet (0x7A91...C4E8) の完全データ.
+// Phase 7 C2: 主役 wallet の完全データ.
 // 数値は docs/vision/09_protagonist_wallet.md の値をそのまま転記.
 
 import type { CustomerListItemDto, CustomerProfileDto } from "@/lib/api/types";
 import type { SdkExtras, SdkForceNetwork } from "./types";
-import { PROTAGONIST_ADDRESS, T0 } from "./shared";
+import { PROVIDER_PAY_TO, PROTAGONIST_ADDRESS, T0 } from "./shared";
 
 // USD * 1_000_000 = atomic (USDC 6 decimals 仮定). UI は USD 表示で扱うが,
 // CustomerProfileDto.metrics.spendAtomic 互換のため atomic 形式も持つ.
@@ -172,7 +172,7 @@ export const PROTAGONIST_PROFILE: CustomerProfileDto = {
     {
       providerId: "northwind-price",
       name: "Northwind Price API",
-      payToWallet: "0xprovider...price",
+      payToWallet: PROVIDER_PAY_TO["northwind-price"],
       spendAtomic: usdToAtomic(0.068),
       transactionCount: 3,
       firstSeenAt: T0,
@@ -181,7 +181,7 @@ export const PROTAGONIST_PROFILE: CustomerProfileDto = {
     {
       providerId: "vectormind",
       name: "VectorMind AI",
-      payToWallet: "0xprovider...vector",
+      payToWallet: PROVIDER_PAY_TO.vectormind,
       spendAtomic: usdToAtomic(0.109),
       transactionCount: 3,
       firstSeenAt: T0 + 60,
@@ -190,7 +190,7 @@ export const PROTAGONIST_PROFILE: CustomerProfileDto = {
     {
       providerId: "routezero",
       name: "RouteZero DEX",
-      payToWallet: "0xprovider...route",
+      payToWallet: PROVIDER_PAY_TO.routezero,
       spendAtomic: usdToAtomic(0.511),
       transactionCount: 3,
       firstSeenAt: T0 + 180,
@@ -199,7 +199,7 @@ export const PROTAGONIST_PROFILE: CustomerProfileDto = {
     {
       providerId: "signalport",
       name: "SignalPort",
-      payToWallet: "0xprovider...signal",
+      payToWallet: PROVIDER_PAY_TO.signalport,
       spendAtomic: usdToAtomic(0.012),
       transactionCount: 3,
       firstSeenAt: T0 + 240,
@@ -279,7 +279,13 @@ export const PROTAGONIST_EXTRAS: SdkExtras = {
 // 16:9 SVG viewBox 800x500 を想定.
 export const PROTAGONIST_NETWORK: SdkForceNetwork = {
   nodes: [
-    { id: "self", label: "0x7A91...C4E8", x: 400, y: 250, role: "center" },
+    {
+      id: "self",
+      label: `${PROTAGONIST_ADDRESS.slice(0, 6)}...${PROTAGONIST_ADDRESS.slice(-4)}`,
+      x: 400,
+      y: 250,
+      role: "center",
+    },
     { id: "vectormind", label: "VectorMind AI", x: 400, y: 60, role: "satellite" },
     { id: "routezero", label: "RouteZero DEX", x: 670, y: 140, role: "satellite" },
     { id: "signalport", label: "SignalPort", x: 700, y: 360, role: "satellite" },

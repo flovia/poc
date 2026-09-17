@@ -4,6 +4,7 @@
 
 import { getServerDashboardMode } from "./data-mode";
 import * as live from "./api/client";
+import { syntheticAddress } from "./sdk-fixtures/wallets";
 import type {
   CustomerListItemDto,
   CustomerProfileDto,
@@ -17,7 +18,7 @@ import type { StaticProviderCapability } from "@/lib/providers/static-capabiliti
 import type { SdkExtras, SdkForceNetwork } from "./sdk-fixtures/types";
 
 // 主役 wallet の正規アドレス. wallet/[address]/page.tsx の redirect で使う.
-export const SDK_PROTAGONIST_ADDRESS = "0x7A91...C4E8";
+export const SDK_PROTAGONIST_ADDRESS = syntheticAddress("sdk:protagonist", "evm");
 
 async function sdkModule() {
   return import("./sdk-fixtures");
@@ -61,7 +62,10 @@ const toServerStaticProvider = (
 
 export async function getProviders(): Promise<ProviderCatalogItemDto[]> {
   const mode = await getServerDashboardMode();
-  if (mode === "sdkConnected") return [];
+  if (mode === "sdkConnected") {
+    const fixtures = await import("./sdk-fixtures/catalog");
+    return fixtures.getFixtureProviders();
+  }
   const liveProviders = await live.getProviders();
   return mergeStaticProviders(liveProviders, toServerStaticProvider);
 }

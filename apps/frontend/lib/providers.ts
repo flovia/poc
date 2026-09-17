@@ -1,5 +1,8 @@
 import type { StoredProvider } from "@/lib/types";
 import { extractBrandKey } from "@/lib/pay-sh/brand";
+import { syntheticAddress } from "@/lib/sdk-fixtures/wallets";
+
+const seedPayTo = (providerId: string) => syntheticAddress(`sdk:provider:${providerId}`, "evm");
 
 // demo provider 識別子の単一の真実源。seedProviders() の providerId と一致させる。
 export const SEED_IDS = ["northwind-price", "lumen-vec", "halonet"] as const;
@@ -167,10 +170,10 @@ export function seedProviders(): StoredProvider[] {
       name: "Northwind Price API",
       mode: "advanced",
       paths: [
-        { apiPath: "/v1/price/history", payTo: "0x4E2c91A9...8Df1" },
-        { apiPath: "/v1/price/snapshot", payTo: "0x4E2c91A9...8Df1" },
-        { apiPath: "/v1/market/ohlcv", payTo: "0x4E2c91A9...8Df1" },
-        { apiPath: "/v1/feeds/orderbook", payTo: "0x4E2c91A9...8Df1" },
+        { apiPath: "/v1/price/history", payTo: seedPayTo("northwind-price") },
+        { apiPath: "/v1/price/snapshot", payTo: seedPayTo("northwind-price") },
+        { apiPath: "/v1/market/ohlcv", payTo: seedPayTo("northwind-price") },
+        { apiPath: "/v1/feeds/orderbook", payTo: seedPayTo("northwind-price") },
       ],
       createdAt: now - 9 * day,
     },
@@ -178,14 +181,14 @@ export function seedProviders(): StoredProvider[] {
       providerId: "lumen-vec",
       name: "Lumen Vector",
       mode: "simple",
-      payTo: "0x91Ab33c0...41B7",
+      payTo: seedPayTo("lumen-vec"),
       createdAt: now - 22 * day,
     },
     {
       providerId: "halonet",
       name: "Halonet Geocode",
       mode: "simple",
-      payTo: "0x77fE0Bd1...9C03",
+      payTo: seedPayTo("halonet"),
       createdAt: now - 41 * day,
     },
   ];

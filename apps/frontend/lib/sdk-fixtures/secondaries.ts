@@ -4,7 +4,8 @@
 
 import type { CustomerListItemDto, CustomerProfileDto } from "@/lib/api/types";
 import type { Sdk7dVolumePoint, SdkExtras } from "./types";
-import { T0 } from "./shared";
+import { PROVIDER_PAY_TO, T0 } from "./shared";
+import { syntheticAddress } from "./wallets";
 
 const USDC_DECIMALS = 1_000_000;
 const usdToAtomic = (usd: number) => Math.round(usd * USDC_DECIMALS).toString();
@@ -40,7 +41,7 @@ type Secondary = {
 
 export const SECONDARIES: Secondary[] = [
   {
-    address: "0xpayer...claude",
+    address: syntheticAddress("sdk:secondary:claude", "evm"),
     agentType: "Claude Code",
     spendUsd: 980,
     observationCount: 6,
@@ -51,7 +52,7 @@ export const SECONDARIES: Secondary[] = [
     sparkline: flatSparkline(8),
   },
   {
-    address: "0xpayer...cursor",
+    address: syntheticAddress("sdk:secondary:cursor", "evm"),
     agentType: "Cursor",
     spendUsd: 320,
     observationCount: 4,
@@ -62,7 +63,7 @@ export const SECONDARIES: Secondary[] = [
     sparkline: flatSparkline(5),
   },
   {
-    address: "0xpayer...n8nflow",
+    address: syntheticAddress("sdk:secondary:n8n", "evm"),
     agentType: "n8n / workflow",
     spendUsd: 540,
     observationCount: 5,
@@ -73,7 +74,7 @@ export const SECONDARIES: Secondary[] = [
     sparkline: flatSparkline(4, -1),
   },
   {
-    address: "0xpayer...curl1",
+    address: syntheticAddress("sdk:secondary:curl", "evm"),
     agentType: "curl / unknown",
     spendUsd: 60,
     observationCount: 2,
@@ -134,7 +135,7 @@ export function getSecondaryProfile(address: string): CustomerProfileDto | null 
       {
         providerId: "northwind-price",
         name: "Northwind Price API",
-        payToWallet: "0xprovider...price",
+        payToWallet: PROVIDER_PAY_TO["northwind-price"],
         spendAtomic: usdToAtomic(s.spendUsd * 0.6),
         transactionCount: Math.max(1, Math.floor(s.observationCount * 0.6)),
         firstSeenAt: T0 - 6 * 86400,
