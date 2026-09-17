@@ -4,6 +4,7 @@ import type {
   MachinePaymentRail,
   RouteAnalyticsSummaryResponse,
 } from "contracts";
+import { railLabel } from "contracts";
 import { useMemo, useState } from "react";
 import { EndpointSankey } from "@/components/macro-metrics/EndpointSankey";
 import {
@@ -27,23 +28,6 @@ const formatUsd = (value: number) =>
   }).format(value);
 
 const formatPct = (value: number) => `${(value * 100).toFixed(1)}%`;
-
-const railLabel = (rail: MachinePaymentRail): string => {
-  switch (rail) {
-    case "stripe_mpp":
-      return "Stripe MPP";
-    case "hitpay_mpp":
-      return "HitPay MPP";
-    case "api_key":
-      return "API key";
-    case "subscription":
-      return "Subscription";
-    case "x402":
-      return "x402";
-    default:
-      return "Other";
-  }
-};
 
 function StatCard({ label, value, note }: { label: string; value: string; note?: string }) {
   return (

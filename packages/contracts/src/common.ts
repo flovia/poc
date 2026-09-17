@@ -176,3 +176,15 @@ export const withDerivedInsightReasons = <
 
 export const PaymentProtocolSchema = z.enum(["x402", "MPP"]);
 export type PaymentProtocol = z.infer<typeof PaymentProtocolSchema>;
+export const addAtomic = (left: string, right: string): string =>
+  (BigInt(left) + BigInt(right)).toString();
+export const sumAtomic = (values: string[]): string =>
+  values.reduce((acc, v) => addAtomic(acc, v), "0");
+export const DEFAULT_ATOMIC_DECIMALS = 6;
+export const atomicToUsd = (atomic: string, decimals = DEFAULT_ATOMIC_DECIMALS): number =>
+  Number(BigInt(atomic)) / 10 ** decimals;
+export const slug = (value: string): string =>
+  value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");

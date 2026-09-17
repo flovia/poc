@@ -4,7 +4,7 @@ import {
   validatePortfolioSourceResult,
 } from "contracts";
 import { z } from "zod";
-import type { FetchLike } from "./transport";
+import { readPath, type FetchLike } from "./transport";
 
 const DEFAULT_ZERION_ENDPOINT = "https://api.zerion.io/v1";
 
@@ -76,15 +76,6 @@ const toDecimalString = (value: string | number | null | undefined): string | nu
   const text = String(value);
   if (!/^\d+(\.\d+)?$/.test(text)) return null;
   return text;
-};
-
-const readPath = (value: unknown, path: string[]): unknown => {
-  let current = value;
-  for (const segment of path) {
-    if (typeof current !== "object" || current === null) return undefined;
-    current = (current as Record<string, unknown>)[segment];
-  }
-  return current;
 };
 
 const asString = (value: unknown): string | null =>

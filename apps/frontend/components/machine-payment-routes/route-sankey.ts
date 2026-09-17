@@ -1,3 +1,4 @@
+import { railLabel } from "contracts";
 import type { MachinePaymentRail, RouteAnalyticsSummaryResponse } from "contracts";
 import type { EndpointSankeyFlow } from "@/components/macro-metrics/EndpointSankey";
 
@@ -114,23 +115,6 @@ function selectSankeyRouteRows(summary: RouteAnalyticsSummaryResponse, view: Rou
 
 function middleNodeLabel(route: SampleRouteRow, view: RouteSankeyView): string | null {
   return view === "rail" ? railLabel(route.rail) : routerLabel(route);
-}
-
-function railLabel(rail: MachinePaymentRail): string {
-  switch (rail) {
-    case "stripe_mpp":
-      return "Stripe MPP";
-    case "hitpay_mpp":
-      return "HitPay MPP";
-    case "x402":
-      return "x402";
-    case "api_key":
-      return "API key";
-    case "subscription":
-      return "Subscription";
-    default:
-      return "Other";
-  }
 }
 
 function routerLabel(route: SampleRouteRow): string | null {

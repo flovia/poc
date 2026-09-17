@@ -15,6 +15,15 @@ export const MachinePaymentRailSchema = z.enum([
   "other",
 ]);
 export type MachinePaymentRail = z.infer<typeof MachinePaymentRailSchema>;
+export const RAIL_LABELS: Record<MachinePaymentRail, string> = {
+  x402: "x402",
+  stripe_mpp: "Stripe MPP",
+  hitpay_mpp: "HitPay MPP",
+  api_key: "API key",
+  subscription: "Subscription",
+  other: "Other",
+};
+export const railLabel = (rail: MachinePaymentRail): string => RAIL_LABELS[rail];
 
 export const MachinePaymentProtocolSchema = z.enum(["x402", "mpp", "legacy", "other"]);
 export type MachinePaymentProtocol = z.infer<typeof MachinePaymentProtocolSchema>;

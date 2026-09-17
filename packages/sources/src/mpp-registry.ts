@@ -4,7 +4,7 @@ import {
   type ProvenanceByField,
   validateProviderCatalogResponse,
 } from "contracts";
-import type { FetchLike } from "./transport";
+import { ensureFetch, type FetchLike } from "./transport";
 
 const DEFAULT_MPP_SERVICES_ENDPOINT = "https://mpp.dev/api/services";
 
@@ -179,9 +179,6 @@ export type MppCaptureRecord = {
     capturedAt?: string;
   };
 };
-
-const ensureFetch = (fetchFn: FetchLike | undefined): FetchLike =>
-  fetchFn ?? ((url, init) => fetch(url, init));
 
 export const fetchMppServices = async (
   options: { endpoint?: string; fetchFn?: FetchLike } = {},

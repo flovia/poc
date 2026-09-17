@@ -8,6 +8,7 @@ import type {
   NormalizedCollectorTransfer,
   TransferCollector,
 } from "../types.js";
+import { required, sameAddress } from "../utils.js";
 
 type AlchemyTransfer = {
   uniqueId?: string;
@@ -136,13 +137,4 @@ function amountBaseUnits(transfer: AlchemyTransfer): string {
 
 function toHex(value: bigint): string {
   return `0x${value.toString(16)}`;
-}
-
-function required(value: string | undefined, label: string): string {
-  if (!value) throw new Error(`Missing ${label}`);
-  return value;
-}
-
-function sameAddress(left: string | undefined, right: string): boolean {
-  return left?.toLowerCase() === right.toLowerCase();
 }

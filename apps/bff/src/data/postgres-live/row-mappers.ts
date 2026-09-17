@@ -1,4 +1,5 @@
 import type { CustomerRow, CustomerTransferEvent, ProviderRow } from "./types";
+import { normalizePaymentAddressForNetwork } from "./utils";
 
 const isBaseCuratedProvider = (serviceId: string) =>
   ["pro-api.coingecko.com", "coingecko", "api.nansen.ai", "nansen"].includes(
@@ -19,10 +20,6 @@ const optionalText = (value: unknown): string | undefined => {
 };
 const count = (value: unknown) => Number(value ?? 0);
 const amount = (value: unknown) => String(value ?? "0");
-const normalizePaymentAddressForNetwork = (value: unknown, network: string) => {
-  const raw = String(value ?? "");
-  return network.toLowerCase() === "base" ? raw.toLowerCase() : raw;
-};
 const optionalProtocol = (value: unknown): "x402" | "MPP" | undefined => {
   if (value === "x402" || value === "MPP") return value;
   return undefined;

@@ -18,11 +18,7 @@ import {
   sumAtomic,
 } from "./read-model-builders";
 import { createAnalyticsStore } from "./store";
-import {
-  listLatestCustomerIntelligenceSnapshots,
-  listServiceAnalyticsRows,
-  type ServiceAnalyticsRow,
-} from "./store/read-model-repo";
+import { type ServiceAnalyticsRow } from "./store/read-model-repo";
 
 export type GenerateServiceReadModelsOptions = {
   analyticsDbPath?: string;
@@ -342,8 +338,7 @@ const buildCustomerReadModels = (
             title: insight.title,
             summary: insight.summary,
             confidence: insight.confidence,
-            classification:
-              insight.classification === "defi_activity" ? "upsell" : insight.classification,
+            classification: insight.classification,
             provenance: insight.provenance,
             provenanceByField: insight.provenanceByField,
             reasons: insight.reasons,
@@ -495,11 +490,10 @@ export const generateServiceAnalyticsReadModels = (
   const outputPath = options.outputPath ?? DEFAULT_OUTPUT;
   log(`[analytics:read-models] start db=${options.analyticsDbPath ?? "default"} out=${outputPath}`);
   const store = createAnalyticsStore({ path: options.analyticsDbPath });
-  store.initialize();
   log("[analytics:read-models] analytics store initialized");
   const generatedAt = options.generatedAt ?? new Date().toISOString();
   const generatedFrom = "analytics-data-store:service-read-model-generation";
-  const rows = listServiceAnalyticsRows(store.db, options.aggregateRunIds ?? []);
+  const rows = store.listServiceAnalyticsRows(options.aggregateRunIds ?? []);
   log(`[analytics:read-models] loaded ${rows.length} service analytics row(s)`);
 
   const servicesById = new Map<string, ServiceAnalyticsRow[]>();
@@ -623,10 +617,7 @@ export const generateServiceAnalyticsReadModels = (
     reasons: [reason],
   });
 
-  const customerSnapshots = listLatestCustomerIntelligenceSnapshots(
-    store.db,
-    options.customerRunIds,
-  );
+  const customerSnapshots = store.listLatestCustomerIntelligenceSnapshots(options.customerRunIds);
   const growthByAddress = buildActivityGrowthByAddress(store, customerSnapshots);
   const customerReadModels = buildCustomerReadModels(
     customerSnapshots,

@@ -249,54 +249,6 @@ function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
 
-function SourceTable({ rows }: { rows: SourceMediumQualityRow[] }) {
-  return (
-    <div style={{ display: "grid", gap: 0, borderTop: "1px solid var(--line)" }}>
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1.2fr 0.55fr 0.85fr 0.7fr 0.85fr",
-          gap: 8,
-          padding: "8px 0",
-          color: "var(--text-mute)",
-          fontSize: 11,
-          fontWeight: 700,
-          letterSpacing: "0.06em",
-          textTransform: "uppercase",
-        }}
-      >
-        <span>Source</span>
-        <span style={{ textAlign: "right" }}>Wallets</span>
-        <span style={{ textAlign: "right" }}>Activated</span>
-        <span style={{ textAlign: "right" }}>W2 repeat</span>
-        <span style={{ textAlign: "right" }}>Calls / wallet</span>
-      </div>
-      {rows.slice(0, 6).map((row) => (
-        <div
-          key={row.source}
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1.2fr 0.55fr 0.85fr 0.7fr 0.85fr",
-            gap: 8,
-            alignItems: "center",
-            padding: "10px 0",
-            borderTop: "1px solid var(--line)",
-            fontSize: 12,
-          }}
-        >
-          <div style={{ minWidth: 0 }}>
-            <strong style={{ fontSize: 13 }}>{row.source}</strong>
-          </div>
-          <span className="mono" style={{ textAlign: "right", color: "var(--text-1)", fontWeight: 650 }}>{row.wallets}</span>
-          <span className="mono" style={{ textAlign: "right", color: "var(--text-1)", fontWeight: 650 }}>{row.firstPaid} · {formatRatioPct(row.activationRate)}</span>
-          <span className="mono" style={{ textAlign: "right", color: row.repeatQuality >= 0.7 ? "var(--teal)" : "var(--text-2)", fontWeight: 700 }}>{formatRatioPct(row.repeatQuality)}</span>
-          <span className="mono" style={{ textAlign: "right", color: "var(--mesh-blue)", fontWeight: 700 }}>{row.endpointFrequency.toFixed(1)}</span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 function EndpointFlow({ flows }: { flows: ApiGrowthEndpointFlow[] }) {
   const sankeyFlows: EndpointSankeyFlow[] = flows;
   const strongestFlow = [...flows].sort((left, right) => right.occurrences - left.occurrences)[0];

@@ -7,6 +7,7 @@ import type {
   MacroWallet,
   MacroWorkflowEvent,
 } from "./demo";
+import { atomicToUsd } from "contracts";
 
 const CATEGORY_LABELS: Record<MacroEndpointCategory, string> = {
   pool_search: "Pool search",
@@ -51,10 +52,6 @@ const INTERMEDIARY_LATENCY_MS: Record<MacroWallet["intermediary"], number> = {
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
-}
-
-function usdFromAtomic(atomic: string): number {
-  return Number(BigInt(atomic)) / 1_000_000;
 }
 
 function serviceDetails(service: MacroService | undefined): string {
@@ -233,7 +230,7 @@ export function buildMacroRouteSankeyChart(data: MacroMetricsDemoData): X402Sank
           right_detail: next.endpointLabel,
           flow_count: middle.txCount,
           paid_count: 1,
-          settled_usdc: usdFromAtomic(middle.spendAtomic),
+          settled_usdc: atomicToUsd(middle.spendAtomic),
           success_rate: quality.success_rate,
           p95_latency_ms: quality.p95_latency_ms,
           error_rate: quality.error_rate,

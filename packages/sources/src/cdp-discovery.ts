@@ -10,7 +10,7 @@ import {
   validateCdpPaymentOption,
   validateCdpResource,
 } from "contracts";
-import type { FetchLike } from "./transport";
+import { ensureFetch, type FetchLike } from "./transport";
 
 const DEFAULT_CDP_ENDPOINT = "https://api.cdp.coinbase.com/platform/v2/x402/discovery/resources";
 const DEFAULT_PAGE_SIZE = 50;
@@ -168,9 +168,6 @@ export const makeCdpDiscoveryBody = (cursor: string | null, limit: number) => ({
     first: limit,
   },
 });
-
-const ensureFetch = (fetchFn: FetchLike | undefined): FetchLike =>
-  fetchFn ?? ((url, init) => fetch(url, init));
 
 export const fetchCdpDiscoveryPage = async (
   options: CdpDiscoveryOptions & { cursor?: string | null },

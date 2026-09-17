@@ -4,6 +4,7 @@ import { fetchBitqueryBaseUsdcAggregates, fetchCdpDiscoveryResources } from "sou
 import type { FetchLike } from "sources";
 import { normalizeAsset, normalizeNetwork, paymentIdentityKey } from "contracts";
 import type { CdpPaymentOption, MarketSnapshot } from "contracts";
+import { parseArg } from "./cli-utils";
 import { writeAtomically } from "./io";
 import { renderMarketSnapshotMarkdown } from "./report";
 import { type AnalyticsStore, createAnalyticsStore } from "./store";
@@ -54,8 +55,6 @@ type RunResult = {
   analyticsRunId?: number;
   resources: Awaited<ReturnType<typeof fetchCdpDiscoveryResources>>["resources"];
 };
-
-const parseArg = (index: number, args: string[]): string | undefined => args[index + 1];
 
 const parseLimit = (value: string | undefined, name: string, minimum: number = 0): number => {
   const next = Number(value);

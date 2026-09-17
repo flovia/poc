@@ -5,6 +5,7 @@ import type {
   MacroServiceId,
   MacroWorkflowEvent,
 } from "./demo";
+import { addAtomic } from "contracts";
 import { buildMacroRouteSankeyChart } from "./route-sankey";
 import type { X402SankeyChartModel } from "@/lib/x402-analysis/transform";
 
@@ -102,10 +103,6 @@ export type MacroMetricsViewModel = {
 };
 
 const DAY = 86_400;
-
-function addAtomic(left: string, right: string): string {
-  return (BigInt(left) + BigInt(right)).toString();
-}
 
 function ratio(part: bigint, total: bigint): number {
   return total === 0n ? 0 : Number((part * 10_000n) / total) / 10_000;
