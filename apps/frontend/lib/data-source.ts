@@ -13,6 +13,7 @@ import type {
   WalletUsageGraphDto,
 } from "./api/types";
 import { mergeStaticProviders } from "@/lib/providers/static-merge";
+import { buildProviderRanking, type ProviderRanking } from "@/lib/provider-ranking";
 import type { StaticProviderCapability } from "@/lib/providers/static-capabilities";
 import type { SdkExtras, SdkForceNetwork } from "./sdk-fixtures/types";
 
@@ -64,6 +65,30 @@ export async function getProviders(): Promise<ProviderCatalogItemDto[]> {
   if (mode === "sdkConnected") return [];
   const liveProviders = await live.getProviders();
   return mergeStaticProviders(liveProviders, toServerStaticProvider);
+}
+
+export async function getProviderLeaderboards(limit = 50): Promise<{
+  transactions: ProviderRanking;
+  settledAmount: ProviderRanking;
+}> {
+  try {
+    // demo_label 行 (static capability 由来の合成データ, volume 0) は
+    // "observed providers" のランキングには載せない。
+    const providers = (await getProviders()).filter(
+      (provider) => provider.provenance !== "demo_label",
+    );
+    return {
+      transactions: buildProviderRanking(providers, "transactions", limit),
+      settledAmount: buildProviderRanking(providers, "settledAmount", limit),
+    };
+  } catch (error) {
+    // BFF 不達時 (build 時 prerender 含む) は空ランキングで描画を継続する。
+    console.warn("Falling back to empty provider leaderboards; BFF unavailable.", error);
+    return {
+      transactions: buildProviderRanking([], "transactions", limit),
+      settledAmount: buildProviderRanking([], "settledAmount", limit),
+    };
+  }
 }
 
 export type GetCustomersFilter = { payTo?: string; serviceId?: string };

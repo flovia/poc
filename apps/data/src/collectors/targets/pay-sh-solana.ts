@@ -1,7 +1,8 @@
 import { paymentCollectionTargetToCollectorTarget } from "./types.js";
+import { SOLANA_USDC_MINT } from "../utils.js";
 import type { PaymentCollectionTarget } from "./types.js";
 
-export const SOLANA_USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
+export { SOLANA_USDC_MINT };
 export const QUICKNODE_SOLANA_PAY_TO = "2LWbc9Mi6dRUrdEHBttoNS4udDtH1A4xwBdm1EKqcT57";
 export const QUICKNODE_SOLANA_USDC_TOKEN_ACCOUNT = "6bMZDGaWLoJEVCwS6RCNaqfS3UipqG2d6mUNEqp6KQZ5";
 

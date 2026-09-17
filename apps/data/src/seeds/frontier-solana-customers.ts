@@ -1,6 +1,6 @@
 import type { PgExecutor } from "../storage/postgres.js";
+import { SOLANA_USDC_MINT } from "../collectors/utils.js";
 
-export const SOLANA_USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
 export const FRONTIER_DEMO_SEED_SOURCE = "frontier-final-polish-demo";
 export const FRONTIER_DEMO_TARGET_SOURCE = "frontier_demo";
 

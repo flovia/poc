@@ -1,9 +1,16 @@
 import { normalizePaymentRecipientAddress } from "contracts";
-import { type BffAnalyticsDataSource, resolveAnalyticsDataSource } from "./data/analytics-source";
+import {
+  type BffAnalyticsDataSource,
+  fixtureAnalyticsDataSource,
+  resolveAnalyticsDataSource,
+} from "./data/analytics-source";
 import { BffLlmUnavailableError, type BffLlmService, resolveBffLlmService } from "./data/llm";
 import { buildWorkflowIntentInputFromProfile, toWorkflowIntentInput } from "./data/workflow-intent";
 import {
   json,
+  analyticsLoading,
+  analyticsUnavailable,
+  cachedJson,
   llmFailed,
   llmUnavailable,
   methodNotAllowed,
@@ -25,6 +32,29 @@ export type BffRuntimeMetadata = {
   startedAt: string;
 };
 
+const isPromiseLike = <T>(value: T | Promise<T>): value is Promise<T> =>
+  typeof (value as Promise<T>).then === "function";
+
+type AnalyticsLoadState =
+  | {
+      status: "loading";
+      promise: Promise<BffAnalyticsDataSource>;
+      dataSource?: undefined;
+      error?: undefined;
+    }
+  | {
+      status: "ready" | "fallback";
+      promise: Promise<BffAnalyticsDataSource>;
+      dataSource: BffAnalyticsDataSource;
+      error?: string;
+    }
+  | {
+      status: "failed";
+      promise: Promise<BffAnalyticsDataSource>;
+      dataSource?: undefined;
+      error: string;
+    };
+
 const COMMIT_HASH_PATTERN = /^[0-9a-f]{7,40}$/i;
 
 const normalizeCommitHash = (value: string | null | undefined) => {
@@ -42,6 +72,19 @@ const resolveCommitHash = (env: RuntimeEnv) =>
   normalizeCommitHash(env.BFF_DEPLOY_ID) ??
   "unknown";
 
+const bytesToMib = (bytes: number) => Math.round(bytes / 1024 / 1024);
+
+const memoryUsageMib = () => {
+  const memory = process.memoryUsage();
+  return {
+    rss: bytesToMib(memory.rss),
+    heapTotal: bytesToMib(memory.heapTotal),
+    heapUsed: bytesToMib(memory.heapUsed),
+    external: bytesToMib(memory.external),
+    arrayBuffers: bytesToMib(memory.arrayBuffers),
+  };
+};
+
 export const resolveBffRuntimeMetadata = (
   env: RuntimeEnv = process.env,
   now: Date = new Date(),
@@ -55,10 +98,71 @@ export const createBffHandler = (
   llmService: BffLlmService | null = resolveBffLlmService(),
   runtimeMetadata: BffRuntimeMetadata = resolveBffRuntimeMetadata(),
 ) => {
-  let resolvedDataSource = dataSource;
-  const getDataSource = () => {
-    resolvedDataSource ??= resolveAnalyticsDataSource();
-    return resolvedDataSource;
+  let analyticsState: AnalyticsLoadState;
+
+  const setFallbackState = (promise: Promise<BffAnalyticsDataSource>, error: unknown) => {
+    const message = error instanceof Error ? error.message : "Analytics preload failed.";
+    console.error("Analytics preload failed; falling back to fixture analytics.", error);
+    analyticsState = {
+      status: "fallback",
+      promise,
+      dataSource: fixtureAnalyticsDataSource,
+      error: message,
+    };
+    return fixtureAnalyticsDataSource;
+  };
+
+  const preloadAnalytics = (): Promise<BffAnalyticsDataSource> => {
+    try {
+      const resolved = dataSource ?? resolveAnalyticsDataSource();
+      if (!isPromiseLike(resolved)) {
+        const promise = Promise.resolve(resolved);
+        analyticsState = {
+          status: "ready",
+          promise,
+          dataSource: resolved,
+        };
+        return promise;
+      }
+
+      const sourcePromise = resolved;
+      const promise = sourcePromise.then(
+        (loaded) => {
+          analyticsState = {
+            status: "ready",
+            promise: sourcePromise,
+            dataSource: loaded,
+          };
+          return loaded;
+        },
+        (error) => setFallbackState(Promise.resolve(fixtureAnalyticsDataSource), error),
+      );
+      analyticsState = {
+        status: "loading",
+        promise,
+      };
+      return promise;
+    } catch (error) {
+      const promise = Promise.resolve(fixtureAnalyticsDataSource);
+      setFallbackState(promise, error);
+      return promise;
+    }
+  };
+
+  void preloadAnalytics();
+
+  const getReadyDataSource = () => {
+    if (analyticsState.status === "ready" || analyticsState.status === "fallback") {
+      return analyticsState.dataSource;
+    }
+    return null;
+  };
+
+  const analyticsStatusBody = () => {
+    const body: Record<string, string | null> = {
+      analyticsStatus: analyticsState.status,
+    };
+    return body;
   };
 
   return async (request: Request, server?: RequestTimeoutController) => {
@@ -90,6 +194,34 @@ export const createBffHandler = (
           service: "flovia-bff",
           commitHash: runtimeMetadata.commitHash,
           startedAt: runtimeMetadata.startedAt,
+          memory: memoryUsageMib(),
+          ...analyticsStatusBody(),
+        });
+      case "/ready":
+        if (analyticsState.status === "loading") {
+          return json(
+            {
+              status: "loading",
+              service: "flovia-bff",
+              ...analyticsStatusBody(),
+            },
+            { status: 503 },
+          );
+        }
+        if (analyticsState.status === "failed") {
+          return json(
+            {
+              status: "unavailable",
+              service: "flovia-bff",
+              ...analyticsStatusBody(),
+            },
+            { status: 503 },
+          );
+        }
+        return json({
+          status: "ok",
+          service: "flovia-bff",
+          ...analyticsStatusBody(),
         });
       default:
         break;
@@ -98,30 +230,41 @@ export const createBffHandler = (
     const showcaseResponse = handleShowcaseRoute(request, path);
     if (showcaseResponse) return showcaseResponse;
 
-    const activeDataSource = await getDataSource();
+    if (!readonlyRoutes.has(path) && customerRoute === null) {
+      return notFound(path);
+    }
+
+    const activeDataSource = getReadyDataSource();
+    if (!activeDataSource) {
+      return analyticsState.status === "loading"
+        ? analyticsLoading()
+        : analyticsUnavailable(analyticsState.error);
+    }
 
     switch (path) {
       case "/providers":
-        return json(activeDataSource.providers);
+        return cachedJson(activeDataSource.providers);
       case "/customers": {
         const serviceId = url.searchParams.get("serviceId");
         if (serviceId) {
-          return json(activeDataSource.getCustomersByServiceId(serviceId));
+          return cachedJson(activeDataSource.getCustomersByServiceId(serviceId));
         }
-        return json(activeDataSource.getCustomers(url.searchParams.get("payTo") ?? undefined));
+        return cachedJson(
+          activeDataSource.getCustomers(url.searchParams.get("payTo") ?? undefined),
+        );
       }
       case "/wallet-usage-graph":
-        return json(activeDataSource.walletUsageGraph);
+        return cachedJson(activeDataSource.walletUsageGraph);
       case "/analytics/services/coingecko/summary":
-        return json(activeDataSource.serviceSummary);
+        return cachedJson(activeDataSource.serviceSummary);
       case "/analytics/services/comparison":
-        return json(activeDataSource.serviceComparison);
+        return cachedJson(activeDataSource.serviceComparison);
       case "/analytics/services/quadrants":
-        return json(activeDataSource.serviceQuadrants);
+        return cachedJson(activeDataSource.serviceQuadrants);
       case "/analytics/routes/summary":
-        return json(activeDataSource.routeSummary);
+        return cachedJson(activeDataSource.routeSummary);
       case "/analytics/routes/sankey":
-        return json(activeDataSource.routeSankey);
+        return cachedJson(activeDataSource.routeSankey);
       default:
         break;
     }
@@ -134,7 +277,7 @@ export const createBffHandler = (
         return notFound(path);
       }
 
-      return json(profile);
+      return cachedJson(profile);
     }
 
     if (customerRoute?.kind === "intelligence") {
@@ -145,7 +288,7 @@ export const createBffHandler = (
         return notFound(path);
       }
 
-      return json(intelligence);
+      return cachedJson(intelligence);
     }
 
     if (customerRoute?.kind === "upsellMetrics") {
@@ -156,7 +299,7 @@ export const createBffHandler = (
         return notFound(path);
       }
 
-      return json(metrics);
+      return cachedJson(metrics);
     }
 
     if (customerRoute?.kind === "upsellExplanation") {

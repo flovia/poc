@@ -17,7 +17,7 @@ import {
   zeroBitqueryAggregate,
 } from "contracts";
 import { z } from "zod";
-import type { FetchLike } from "./transport";
+import { readPath, type FetchLike } from "./transport";
 
 const DEFAULT_BITQUERY_ENDPOINT = "https://streaming.bitquery.io/graphql";
 const TOKEN_DECIMALS = 6;
@@ -288,15 +288,6 @@ query BaseUsdcOutgoingTransfersByCustomer($customerAddress: String!, $limit: Int
     }
   }
 }`;
-};
-
-const readPath = (value: unknown, path: string[]): unknown => {
-  let current = value;
-  for (const segment of path) {
-    if (typeof current !== "object" || current === null) return undefined;
-    current = (current as Record<string, unknown>)[segment];
-  }
-  return current;
 };
 
 const normalizeBitqueryRows = (payload: z.infer<typeof BitqueryResponseSchema>) => {

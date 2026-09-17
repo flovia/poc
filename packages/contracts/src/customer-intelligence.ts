@@ -118,7 +118,7 @@ export const PhaseBCustomerInsightSchema = withDerivedInsightReasons(
       title: z.string().min(1),
       summary: z.string().min(1),
       confidence: z.number().min(0).max(1),
-      classification: z.enum(["retention", "upsell", "partnership"]),
+      classification: z.enum(["retention", "upsell", "partnership", "defi_activity"]),
       provenance: DataProvenanceSchema,
       provenanceByField: ProvenanceByFieldSchema,
       reasons: z.array(EvidenceLabelSchema).optional(),

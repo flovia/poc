@@ -7,6 +7,7 @@ import type {
   NormalizedCollectorTransfer,
   TransferCollector,
 } from "../types.js";
+import { required } from "../utils.js";
 
 type DuneSimActivity = {
   tx_hash?: string;
@@ -113,9 +114,4 @@ function normalizeDuneActivity(
     amountBaseUnits: activity.value?.toString() ?? "0",
     rawPayload: activity,
   };
-}
-
-function required(value: string | undefined, label: string): string {
-  if (!value) throw new Error(`Missing ${label}`);
-  return value;
 }

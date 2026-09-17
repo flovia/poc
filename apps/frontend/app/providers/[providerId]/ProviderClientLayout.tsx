@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { AppShell } from "@/components/shell/AppShell";
 import { useProviders } from "@/app/providers";
 import type { DashboardMode } from "@/lib/data-mode";
+import { shouldShowProviderLayoutSkeleton } from "./provider-layout-state";
 
 type RouteSegment =
   | "customers"
@@ -50,13 +51,13 @@ export function ProviderClientLayout({
     }
   }, [hydrated, dataMode, stored.length, router]);
 
-  // Phase 4 真理表 #3: fresh ブラウザで /providers/X/customers に直アクセスしたとき
-  // server component (children) は BFF を叩いて空に近い customers を生成しうるため、
-  // hydration が走り終わるまで skeleton で受ける。
-  // Phase 9: SDK connected モード時は stored が空でも fixture から表示できるので
-  // skeleton で覆わない. On-chain only モード + stored 空の場合のみ skeleton で
-  // 隠して useEffect の /setup リダイレクトを待つ.
-  const showSkeleton = !hydrated || (dataMode === "onChainOnly" && stored.length === 0);
+  // Provider catalog loading should not block the server-rendered page body.
+  // Only hide children after hydration confirms an on-chain setup has no providers.
+  const showSkeleton = shouldShowProviderLayoutSkeleton({
+    hydrated,
+    dataMode,
+    storedCount: stored.length,
+  });
 
   return (
     <AppShell

@@ -7,6 +7,7 @@ import type {
   NormalizedCollectorTransfer,
   TransferCollector,
 } from "../types.js";
+import { required, sameAddress } from "../utils.js";
 
 const TRANSFER_TOPIC = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
 
@@ -169,13 +170,4 @@ function toHex(value: bigint): string {
 
 function minBigInt(left: bigint, right: bigint): bigint {
   return left < right ? left : right;
-}
-
-function sameAddress(left: string | undefined, right: string): boolean {
-  return left?.toLowerCase() === right.toLowerCase();
-}
-
-function required<T>(value: T | null | undefined, label: string): T {
-  if (value === undefined || value === null || value === "") throw new Error(`Missing ${label}`);
-  return value;
 }

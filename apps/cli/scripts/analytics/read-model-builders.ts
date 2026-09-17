@@ -1,5 +1,4 @@
-export const sumAtomic = (values: string[]) =>
-  values.reduce((sum, value) => sum + BigInt(value), 0n).toString();
+export { sumAtomic } from "contracts";
 
 export const latestTimestamp = (items: Array<string | undefined>) =>
   items.filter((item) => item !== undefined).sort((left, right) => right.localeCompare(left))[0];

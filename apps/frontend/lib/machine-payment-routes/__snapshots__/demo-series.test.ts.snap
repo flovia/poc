@@ -1,0 +1,48 @@
+// Bun Snapshot v1, https://bun.sh/docs/test/snapshots
+
+exports[`buildDemoSeries returns expected shape 1`] = `
+[
+  {
+    "date": 2026-06-05T00:00:00.000Z,
+    "hitPayMpp": 63588,
+    "stripeMpp": 95171,
+    "x402": 109773,
+  },
+  {
+    "date": 2026-06-06T00:00:00.000Z,
+    "hitPayMpp": 47021,
+    "stripeMpp": 75370,
+    "x402": 84625,
+  },
+  {
+    "date": 2026-06-07T00:00:00.000Z,
+    "hitPayMpp": 63254,
+    "stripeMpp": 80977,
+    "x402": 67382,
+  },
+  {
+    "date": 2026-06-08T00:00:00.000Z,
+    "hitPayMpp": 82796,
+    "stripeMpp": 104574,
+    "x402": 81429,
+  },
+  {
+    "date": 2026-06-09T00:00:00.000Z,
+    "hitPayMpp": 89062,
+    "stripeMpp": 104544,
+    "x402": 85676,
+  },
+  {
+    "date": 2026-06-10T00:00:00.000Z,
+    "hitPayMpp": 89091,
+    "stripeMpp": 101094,
+    "x402": 75818,
+  },
+  {
+    "date": 2026-06-11T00:00:00.000Z,
+    "hitPayMpp": 78995,
+    "stripeMpp": 112501,
+    "x402": 69438,
+  },
+]
+`;

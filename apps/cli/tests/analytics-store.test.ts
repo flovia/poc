@@ -49,7 +49,6 @@ describe("analytics store", () => {
   test("initializes required SQLite tables and indexes in memory", () => {
     const store = createAnalyticsStore({ mode: "memory" });
     try {
-      store.initialize();
       const schema = store.getSchemaObjectNames();
 
       expect(schema.tables).toEqual(expect.arrayContaining([...analyticsSchema.requiredTables]));

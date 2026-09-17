@@ -24,6 +24,7 @@ export type ActiveRoute =
   | "machine-payment-routes"
   | "macro-metrics"
   | "metrics-catalog"
+  | "rankings"
   | "showcase"
   | "setup"
   | "wallet"
@@ -88,6 +89,7 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode, className }: 
   const coUsageHref = providerRouteId ? `/providers/${providerRouteId}/customers/co-usage-providers` : undefined;
   const customerOverviewActive = pathname === customerOverviewHref || activeRoute === "wallet";
   const customersSectionActive = customerOverviewActive || pathname === coUsageHref;
+  const rankingsSectionActive = pathname === "/rankings" || pathname.startsWith("/rankings/");
   const showcaseSectionActive = pathname === "/showcase" || pathname.startsWith("/showcase/");
 
   const navHrefFor = (
@@ -179,6 +181,7 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode, className }: 
               >
                 <Link
                   href={customerOverviewHref}
+                  prefetch={false}
                   className="nav-item nav-item--sub"
                   aria-current={customerOverviewActive}
                 >
@@ -186,6 +189,7 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode, className }: 
                 </Link>
                 <Link
                   href={coUsageHref}
+                  prefetch={false}
                   className="nav-item nav-item--sub"
                   aria-current={pathname === coUsageHref}
                 >
@@ -210,6 +214,7 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode, className }: 
         ) : (
           <Link
             href={navHrefFor("machine-payment-routes")}
+            prefetch={false}
             className="nav-item"
             aria-current={activeRoute === "machine-payment-routes"}
           >
@@ -233,6 +238,7 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode, className }: 
         ) : (
           <Link
             href={navHrefFor("api-growth")}
+            prefetch={false}
             className="nav-item"
             aria-current={activeRoute === "api-growth"}
           >
@@ -255,6 +261,7 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode, className }: 
         ) : (
           <Link
             href={navHrefFor("geo-spec")}
+            prefetch={false}
             className="nav-item"
             aria-current={activeRoute === "geo-spec"}
           >
@@ -262,6 +269,28 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode, className }: 
             <GeoNavLabel />
           </Link>
         )}
+
+        <div className="nav-label" style={{ marginTop: 18 }}>
+          Rankings
+        </div>
+        <div className="nav-row">
+          <span
+            className={`nav-item nav-item--with-toggle nav-item--category${rankingsSectionActive ? " nav-item--category-active" : ""}`}
+          >
+            <Icon.spark width={16} height={16} />
+            <span style={{ flex: 1 }}>Provider Rankings</span>
+          </span>
+        </div>
+        <div id="nav-sub-rankings" className="nav-sub">
+          <Link
+            href="/rankings/provider-leaderboard"
+            prefetch={false}
+            className="nav-item nav-item--sub"
+            aria-current={pathname === "/rankings/provider-leaderboard"}
+          >
+            Provider Leaderboard
+          </Link>
+        </div>
 
         <div className="nav-label" style={{ marginTop: 18 }}>
           Showcase
@@ -276,11 +305,17 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode, className }: 
           </span>
         </div>
         <div id="nav-sub-showcase" className="nav-sub">
-          <Link href="/showcase" className="nav-item nav-item--sub" aria-current={pathname === "/showcase"}>
+          <Link
+            href="/showcase"
+            prefetch={false}
+            className="nav-item nav-item--sub"
+            aria-current={pathname === "/showcase"}
+          >
             Overview
           </Link>
           <Link
             href="/showcase/stripe-mpp"
+            prefetch={false}
             className="nav-item nav-item--sub"
             aria-current={pathname === "/showcase/stripe-mpp"}
           >
@@ -288,6 +323,7 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode, className }: 
           </Link>
           <Link
             href="/showcase/hitpay-mpp"
+            prefetch={false}
             className="nav-item nav-item--sub"
             aria-current={pathname === "/showcase/hitpay-mpp"}
           >
@@ -295,6 +331,7 @@ export function Sidebar({ activeProviderId, activeRoute, dataMode, className }: 
           </Link>
           <Link
             href="/showcase/solana-mpp"
+            prefetch={false}
             className="nav-item nav-item--sub"
             aria-current={pathname === "/showcase/solana-mpp"}
           >

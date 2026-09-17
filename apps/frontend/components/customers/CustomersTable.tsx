@@ -141,6 +141,7 @@ export function CustomersTable({
           <Link
             key={c.address}
             href={walletProfileHref(providerId, c.address)}
+            prefetch={false}
             className={classNames(rowClass, "cust-row-link")}
             aria-label={`Open wallet profile for ${c.address}`}
             style={{

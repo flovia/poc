@@ -7,6 +7,7 @@ import type {
   NormalizedCollectorTransfer,
   TransferCollector,
 } from "../types.js";
+import { required, sameAddress } from "../utils.js";
 
 type GoldRushTransfer = {
   from_address?: string;
@@ -136,15 +137,6 @@ function normalizeGoldRushItem(
       amountBaseUnits: absoluteString(transfer.delta ?? "0"),
       rawPayload: { item, transfer },
     }));
-}
-
-function required(value: string | undefined, label: string): string {
-  if (!value) throw new Error(`Missing ${label}`);
-  return value;
-}
-
-function sameAddress(left: string | undefined, right: string): boolean {
-  return left?.toLowerCase() === right.toLowerCase();
 }
 
 function absoluteString(value: string): string {

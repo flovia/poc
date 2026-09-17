@@ -1,4 +1,5 @@
 import type { NormalizedCollectorTransfer } from "../collectors/types.js";
+import { required } from "../collectors/utils.js";
 import type { PgExecutor } from "./postgres.js";
 
 export type TransferObservationUpsertResult = {
@@ -239,11 +240,4 @@ async function upsertSolanaTransfer(executor: PgExecutor, transfer: NormalizedCo
       }),
     ],
   );
-}
-
-function required<T>(value: T | null | undefined, label: string): T {
-  if (value === undefined || value === null || (typeof value === "string" && value === "")) {
-    throw new Error(`Missing ${label}`);
-  }
-  return value;
 }

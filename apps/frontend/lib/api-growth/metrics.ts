@@ -4,6 +4,7 @@ import type {
   MacroServiceId,
   MacroWallet,
 } from "@/lib/macro-metrics/demo";
+import { addAtomic } from "contracts";
 import { buildMacroRouteSankeyChart } from "@/lib/macro-metrics/route-sankey";
 import type { X402SankeyChartModel } from "@/lib/x402-analysis/transform";
 
@@ -686,10 +687,6 @@ function buildRepeatWalletSegments(
     wallets: Math.max(0, Math.round(card.frequency)),
     endpointFlow: card.endpointFlow,
   }));
-}
-
-function addAtomic(left: string, right: string): string {
-  return (BigInt(left) + BigInt(right)).toString();
 }
 
 function serviceName(data: MacroMetricsDemoData, serviceId: MacroServiceId): string {

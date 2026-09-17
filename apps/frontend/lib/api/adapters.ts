@@ -57,6 +57,8 @@ function insightSeverity(
       return "warning";
     case "partnership":
       return "info";
+    case "defi_activity":
+      return "opportunity";
   }
 }
 

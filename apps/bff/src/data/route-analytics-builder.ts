@@ -3,6 +3,7 @@ import {
   type MachinePaymentRail,
   type ProviderCatalogResponse,
   type RouteAnalyticsEvent,
+  railLabel,
   RouteAnalyticsEventSchema,
   type RouteAnalyticsSankeyResponse,
   type RouteAnalyticsSummaryResponse,
@@ -21,23 +22,6 @@ export const visibilityForRail = (rail: MachinePaymentRail): RouteAnalyticsVisib
     : rail === "stripe_mpp" || rail === "hitpay_mpp"
       ? "provider_attested"
       : "first_party";
-
-const railLabel = (rail: MachinePaymentRail): string => {
-  switch (rail) {
-    case "stripe_mpp":
-      return "Stripe MPP";
-    case "hitpay_mpp":
-      return "HitPay MPP";
-    case "api_key":
-      return "API key";
-    case "subscription":
-      return "Subscription";
-    case "x402":
-      return "x402";
-    default:
-      return "Other";
-  }
-};
 
 const routeIdPart = (value: string): string =>
   value

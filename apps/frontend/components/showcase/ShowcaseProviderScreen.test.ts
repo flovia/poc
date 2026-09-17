@@ -4,7 +4,7 @@ import {
   parsePaymentReceiptHeader,
   solanaTxExplorerUrl,
   tempoReceiptExplorerUrl,
-} from "./ShowcaseProviderScreen";
+} from "../../lib/showcase/live-result";
 
 const encodeReceipt = (receipt: unknown) =>
   btoa(JSON.stringify(receipt)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");

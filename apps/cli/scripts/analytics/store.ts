@@ -5,6 +5,7 @@ import {
   resolveAnalyticsDbPath,
 } from "./store/connection";
 import { analyticsSchema, SCHEMA_SQL } from "./store/schema";
+import { type ServiceAnalyticsRow } from "./store/read-model-repo";
 import {
   type BitqueryAggregate,
   type BitqueryTransferFact,
@@ -199,30 +200,34 @@ const serviceKeyForResource = (resource: Pick<CdpResource, "provider" | "service
   ).toLowerCase();
 
 export class AnalyticsStore {
-  readonly db: Database;
+  private _db: Database;
+
+  get db(): Database {
+    return this._db;
+  }
   readonly dbPath: string;
 
   constructor(options: AnalyticsStoreOptions = {}) {
     this.dbPath = resolveAnalyticsDbPath(options);
-    this.db = openAnalyticsDatabase(this.dbPath);
+    this._db = openAnalyticsDatabase(this.dbPath);
+    this.initialize();
   }
 
   initialize() {
-    this.db.exec(SCHEMA_SQL);
-    const migration = this.db.prepare(
+    this._db.exec(SCHEMA_SQL);
+    const migration = this._db.prepare(
       "INSERT OR IGNORE INTO schema_migrations (version, applied_at) VALUES (?, ?)",
     );
     migration.run(1, new Date().toISOString());
   }
 
   close() {
-    this.db.close();
+    this._db.close();
   }
 
   beginCaptureRun(input: CaptureRunInput): number {
-    this.initialize();
     const startedAt = input.startedAt ?? new Date().toISOString();
-    const result = this.db
+    const result = this._db
       .prepare(
         `INSERT INTO capture_runs (kind, status, started_at, parameters_json, source_coverage_json)
          VALUES (?, 'running', ?, ?, ?)`,
@@ -237,7 +242,7 @@ export class AnalyticsStore {
   }
 
   completeCaptureRun(runId: number, sourceCoverage?: Record<string, unknown>) {
-    this.db
+    this._db
       .prepare(
         `UPDATE capture_runs
          SET status = 'success', finished_at = ?, source_coverage_json = COALESCE(?, source_coverage_json), error_json = NULL
@@ -247,7 +252,7 @@ export class AnalyticsStore {
   }
 
   failCaptureRun(runId: number, error: unknown, sourceCoverage?: Record<string, unknown>) {
-    this.db
+    this._db
       .prepare(
         `UPDATE capture_runs
          SET status = 'failed', finished_at = ?, source_coverage_json = COALESCE(?, source_coverage_json), error_json = ?
@@ -262,7 +267,7 @@ export class AnalyticsStore {
   }
 
   getCaptureRun(runId: number) {
-    const row = this.db.prepare("SELECT * FROM capture_runs WHERE id = ?").get(runId) as
+    const row = this._db.prepare("SELECT * FROM capture_runs WHERE id = ?").get(runId) as
       | Record<string, unknown>
       | undefined;
     if (!row) return null;
@@ -275,8 +280,7 @@ export class AnalyticsStore {
   }
 
   findSuccessfulPayToTransferRun(scope: TransferRunReuseScope): SuccessfulPayToTransferRun | null {
-    this.initialize();
-    const rows = this.db
+    const rows = this._db
       .prepare(
         `SELECT id, finished_at, parameters_json, source_coverage_json
          FROM capture_runs
@@ -317,8 +321,7 @@ export class AnalyticsStore {
   }
 
   persistCdpResources(resources: CdpResource[], sourceRunId?: number) {
-    this.initialize();
-    const insertResource = this.db.prepare(
+    const insertResource = this._db.prepare(
       `INSERT INTO cdp_resources
        (resource_id, resource_url, domain, provider, service, provenance_json, quality_json, metadata_json, raw_json, source_run_id)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -333,7 +336,7 @@ export class AnalyticsStore {
          raw_json = excluded.raw_json,
          source_run_id = excluded.source_run_id`,
     );
-    const insertOption = this.db.prepare(
+    const insertOption = this._db.prepare(
       `INSERT INTO payment_options
        (option_key, resource_id, network, asset, pay_to, amount_atomic, scheme, provenance_json, quality_json, metadata_json, raw_json, source_run_id)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -346,18 +349,18 @@ export class AnalyticsStore {
          raw_json = excluded.raw_json,
          source_run_id = excluded.source_run_id`,
     );
-    const insertSink = this.db.prepare(
+    const insertSink = this._db.prepare(
       `INSERT INTO payment_sinks (sink_key, network, asset, pay_to, first_seen_run_id, last_seen_run_id)
        VALUES (?, ?, ?, ?, ?, ?)
        ON CONFLICT(sink_key) DO UPDATE SET last_seen_run_id = excluded.last_seen_run_id`,
     );
-    const insertCandidate = this.db.prepare(
+    const insertCandidate = this._db.prepare(
       `INSERT INTO service_candidates (candidate_key, service_key, provider, service, domain, resource_id, sink_key, provenance_json)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(candidate_key) DO UPDATE SET provenance_json = excluded.provenance_json`,
     );
 
-    const transaction = this.db.transaction((items: CdpResource[]) => {
+    const transaction = this._db.transaction((items: CdpResource[]) => {
       for (const resource of items) {
         const domain = resourceDomain(resource.resource);
         insertResource.run(
@@ -425,13 +428,12 @@ export class AnalyticsStore {
   }
 
   persistPayToAggregates(aggregates: BitqueryAggregate[], sourceRunId?: number) {
-    this.initialize();
-    const insertSink = this.db.prepare(
+    const insertSink = this._db.prepare(
       `INSERT INTO payment_sinks (sink_key, network, asset, pay_to, first_seen_run_id, last_seen_run_id)
        VALUES (?, ?, ?, ?, ?, ?)
        ON CONFLICT(sink_key) DO UPDATE SET last_seen_run_id = excluded.last_seen_run_id`,
     );
-    const insertAggregate = this.db.prepare(
+    const insertAggregate = this._db.prepare(
       `INSERT INTO payto_aggregates
        (sink_key, network, asset, pay_to, transaction_count, unique_sender_count, total_volume_atomic,
         latest_tx_hash, latest_sender, latest_amount_atomic, latest_block_number, latest_block_timestamp,
@@ -450,7 +452,7 @@ export class AnalyticsStore {
          source_run_id = excluded.source_run_id`,
     );
 
-    const transaction = this.db.transaction((items: BitqueryAggregate[]) => {
+    const transaction = this._db.transaction((items: BitqueryAggregate[]) => {
       for (const aggregate of items) {
         const normalized = {
           network: normalizeNetwork(aggregate.network),
@@ -491,8 +493,7 @@ export class AnalyticsStore {
   }
 
   persistTransferFacts(facts: TransferFactInput[]) {
-    this.initialize();
-    const insert = this.db.prepare(
+    const insert = this._db.prepare(
       `INSERT INTO transfer_facts
        (network, asset, pay_to, tx_hash, transfer_index, payer_wallet, amount_atomic, block_number, block_timestamp, source_run_id)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -503,7 +504,7 @@ export class AnalyticsStore {
          block_timestamp = excluded.block_timestamp,
          source_run_id = excluded.source_run_id`,
     );
-    const transaction = this.db.transaction((items: TransferFactInput[]) => {
+    const transaction = this._db.transaction((items: TransferFactInput[]) => {
       for (const [index, fact] of items.entries()) {
         insert.run(
           normalizeNetwork(fact.network),
@@ -544,13 +545,12 @@ export class AnalyticsStore {
   }
 
   persistCustomerWallets(wallets: CustomerWalletInput[]) {
-    this.initialize();
-    const insert = this.db.prepare(
+    const insert = this._db.prepare(
       `INSERT INTO customer_wallets (address, labels_json, strata_json, source_run_id)
        VALUES (?, ?, ?, ?)
        ON CONFLICT(address) DO UPDATE SET labels_json = excluded.labels_json, strata_json = excluded.strata_json, source_run_id = excluded.source_run_id`,
     );
-    const transaction = this.db.transaction((items: CustomerWalletInput[]) => {
+    const transaction = this._db.transaction((items: CustomerWalletInput[]) => {
       for (const wallet of items) {
         insert.run(
           normalizePayTo(wallet.address),
@@ -568,13 +568,12 @@ export class AnalyticsStore {
     snapshots: CustomerIntelligenceResponse[],
     sourceRunId?: number,
   ) {
-    this.initialize();
-    const insert = this.db.prepare(
+    const insert = this._db.prepare(
       `INSERT INTO customer_intelligence_snapshots
        (wallet_address, generated_at, payload_json, source_coverage_json, source_run_id)
        VALUES (?, ?, ?, ?, ?)`,
     );
-    const transaction = this.db.transaction((items: CustomerIntelligenceResponse[]) => {
+    const transaction = this._db.transaction((items: CustomerIntelligenceResponse[]) => {
       for (const snapshot of items) {
         insert.run(
           snapshot.customerAddress,
@@ -590,8 +589,7 @@ export class AnalyticsStore {
   }
 
   detectAndPersistMappingPatterns(extraSinks: ScopedPaymentSink[] = []): MappingPatternRow[] {
-    this.initialize();
-    const sinkRows = this.db
+    const sinkRows = this._db
       .prepare("SELECT network, asset, pay_to FROM payment_sinks")
       .all() as Array<{
       network: string;
@@ -613,7 +611,7 @@ export class AnalyticsStore {
         payTo: normalizePayTo(sink.payTo),
       };
       const key = sinkKey(normalized);
-      this.db
+      this._db
         .prepare(
           `INSERT OR IGNORE INTO payment_sinks (sink_key, network, asset, pay_to)
            VALUES (?, ?, ?, ?)`,
@@ -622,7 +620,7 @@ export class AnalyticsStore {
       allSinks.set(key, normalized);
     }
 
-    const serviceSinkRows = this.db
+    const serviceSinkRows = this._db
       .prepare("SELECT service_key, sink_key FROM service_candidates")
       .all() as Array<{ service_key: string; sink_key: string }>;
     const payTosByService = new Map<string, Set<string>>();
@@ -632,7 +630,7 @@ export class AnalyticsStore {
       payTosByService.set(row.service_key, set);
     }
 
-    const insert = this.db.prepare(
+    const insert = this._db.prepare(
       `INSERT INTO endpoint_attribution
        (sink_key, network, asset, pay_to, mapping_pattern, endpoint_attribution_status, resource_count, service_count, confidence, provenance_json)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -647,7 +645,7 @@ export class AnalyticsStore {
     const rows: MappingPatternRow[] = [];
 
     for (const [key, sink] of allSinks.entries()) {
-      const candidates = this.db
+      const candidates = this._db
         .prepare(
           "SELECT DISTINCT resource_id, service_key FROM service_candidates WHERE sink_key = ?",
         )
@@ -707,8 +705,7 @@ export class AnalyticsStore {
   }
 
   persistGeneratedReadModel(input: GeneratedReadModelInput) {
-    this.initialize();
-    this.db
+    this._db
       .prepare(
         `INSERT INTO generated_read_models
          (model_kind, model_key, generated_at, payload_json, provenance_json, source_run_id)
@@ -756,7 +753,6 @@ export class AnalyticsStore {
   }
 
   listPayToCensusRows(scope: PayToCensusQueryScope = {}): PayToCensusQueryRow[] {
-    this.initialize();
     const network = scope.network ? normalizeNetwork(scope.network) : null;
     const asset = scope.asset ? normalizeAsset(scope.asset) : null;
     const aggregateRunIds = scope.aggregateRunIds ?? [];
@@ -787,7 +783,7 @@ export class AnalyticsStore {
       asset,
       asset,
     ];
-    const rows = this.db
+    const rows = this._db
       .prepare(
         `WITH pa AS (
            SELECT
@@ -871,7 +867,6 @@ export class AnalyticsStore {
   }
 
   listWalletTransferRows(scope: WalletTransferQueryScope = {}): WalletTransferQueryRow[] {
-    this.initialize();
     const network = scope.network ? normalizeNetwork(scope.network) : null;
     const asset = scope.asset ? normalizeAsset(scope.asset) : null;
     const transferRunIds = scope.transferRunIds ?? [];
@@ -889,7 +884,7 @@ export class AnalyticsStore {
       ...(scope.timeWindow?.from ? [scope.timeWindow.from] : []),
       ...(scope.timeWindow?.to ? [scope.timeWindow.to] : []),
     ];
-    const rows = this.db
+    const rows = this._db
       .prepare(
         `SELECT
            tf.network,
@@ -939,7 +934,6 @@ export class AnalyticsStore {
   listCustomerOutgoingTransferFacts(
     scope: CustomerOutgoingTransferQueryScope = {},
   ): CustomerOutgoingTransferFact[] {
-    this.initialize();
     const network = scope.network ? normalizeNetwork(scope.network) : null;
     const asset = scope.asset ? normalizeAsset(scope.asset) : null;
     const transferRunIds = scope.transferRunIds ?? [];
@@ -962,7 +956,7 @@ export class AnalyticsStore {
       ...(scope.timeWindow?.from ? [scope.timeWindow.from] : []),
       ...(scope.timeWindow?.to ? [scope.timeWindow.to] : []),
     ];
-    const rows = this.db
+    const rows = this._db
       .prepare(
         `SELECT network, asset, pay_to, tx_hash, payer_wallet, amount_atomic, block_number, block_timestamp
          FROM transfer_facts
@@ -986,8 +980,7 @@ export class AnalyticsStore {
   }
 
   readGeneratedReadModel<T>(modelKind: string, modelKey: string): T | null {
-    this.initialize();
-    const row = this.db
+    const row = this._db
       .prepare(
         "SELECT payload_json FROM generated_read_models WHERE model_kind = ? AND model_key = ?",
       )
@@ -995,8 +988,70 @@ export class AnalyticsStore {
     return row ? (JSON.parse(row.payload_json) as T) : null;
   }
 
+  listServiceAnalyticsRows(aggregateRunIds: number[] = []): ServiceAnalyticsRow[] {
+    const aggregateRunFilter = aggregateRunIds.length
+      ? `AND pa.source_run_id IN (${aggregateRunIds.map(() => "?").join(", ")})`
+      : "";
+    const aggregateRowFilter = aggregateRunIds.length ? "WHERE pa.source_run_id IS NOT NULL" : "";
+
+    return this._db
+      .prepare(
+        `WITH canonical_service_candidates AS (
+           SELECT
+             sink_key,
+             service_key,
+             COALESCE(MAX(service), MAX(provider), MAX(domain), service_key) AS service_name,
+             COUNT(DISTINCT resource_id) AS resource_count
+           FROM service_candidates
+           GROUP BY sink_key, service_key
+         )
+         SELECT
+           COALESCE(sc.service_key, ea.pay_to) AS service_key,
+           COALESCE(sc.service_name, ea.pay_to) AS service_name,
+           ea.sink_key,
+           ea.endpoint_attribution_status,
+           ea.confidence,
+           COALESCE(sc.resource_count, ea.resource_count) AS resource_count,
+           COALESCE(pa.transaction_count, 0) AS transaction_count,
+           COALESCE(pa.unique_sender_count, 0) AS unique_sender_count
+         FROM endpoint_attribution ea
+         LEFT JOIN canonical_service_candidates sc ON sc.sink_key = ea.sink_key
+         LEFT JOIN payto_aggregates pa ON pa.sink_key = ea.sink_key ${aggregateRunFilter}
+         ${aggregateRowFilter}
+         ORDER BY transaction_count DESC`,
+      )
+      .all(...aggregateRunIds) as ServiceAnalyticsRow[];
+  }
+
+  listLatestCustomerIntelligenceSnapshots(
+    customerRunIds?: number[],
+  ): CustomerIntelligenceResponse[] {
+    const runFilter = customerRunIds
+      ? customerRunIds.length
+        ? `WHERE source_run_id IN (${customerRunIds.map(() => "?").join(", ")})`
+        : "WHERE 0"
+      : "";
+    const rows = this._db
+      .prepare(
+        `SELECT wallet_address, payload_json
+         FROM customer_intelligence_snapshots
+         ${runFilter}
+         ORDER BY generated_at DESC`,
+      )
+      .all(...(customerRunIds ?? [])) as Array<{ wallet_address: string; payload_json: string }>;
+
+    const latestByAddress = new Map<string, CustomerIntelligenceResponse>();
+    for (const row of rows) {
+      const key = row.wallet_address.toLowerCase();
+      if (!latestByAddress.has(key)) {
+        latestByAddress.set(key, JSON.parse(row.payload_json) as CustomerIntelligenceResponse);
+      }
+    }
+    return [...latestByAddress.values()];
+  }
+
   getSchemaObjectNames() {
-    const rows = this.db
+    const rows = this._db
       .prepare("SELECT type, name FROM sqlite_master WHERE type IN ('table', 'index')")
       .all() as Array<{ type: "table" | "index"; name: string }>;
     return {

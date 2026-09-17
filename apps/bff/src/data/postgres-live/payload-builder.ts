@@ -1,5 +1,6 @@
 import type { GeneratedReadModelFile } from "../analytics-source";
-import { PaymentRecipientAddressSchema } from "contracts";
+import { addAtomic, PaymentRecipientAddressSchema } from "contracts";
+import { normalizePaymentAddressForNetwork } from "./utils";
 import {
   phaseBCustomerListResponse,
   phaseBWalletUsageGraphResponse,
@@ -10,11 +11,6 @@ import {
 import type { CustomerAggregate, CustomerRow, ProviderRow } from "./types";
 
 const generatedAt = () => new Date().toISOString();
-const normalizePaymentAddressForNetwork = (value: unknown, network: string) => {
-  const raw = String(value ?? "");
-  return network.toLowerCase() === "base" ? raw.toLowerCase() : raw;
-};
-const addAtomic = (left: string, right: string) => (BigInt(left) + BigInt(right)).toString();
 const slug = (value: string) =>
   value
     .toLowerCase()
