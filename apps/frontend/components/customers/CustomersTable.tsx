@@ -57,7 +57,7 @@ export function CustomersTable({
   const isSdkConnected = dataMode === "sdkConnected";
   const rowClass = isSdkConnected ? "cust-row cust-row-sdk" : "cust-row";
   return (
-    <div className="card customers-table-card" style={{ overflow: "visible" }}>
+    <div className="card customers-table-card">
       <div className={`${rowClass} cust-head`}>
         <div>
           <HeaderTooltip
@@ -231,17 +231,21 @@ export function CustomersTable({
             {isSdkConnected && (
               <div
                 data-testid="customers-endpoint"
-                className="cust-cell mono"
+                className="cust-cell cust-cell--endpoint mono"
                 data-label="Endpoint"
                 style={{
                   fontSize: 13,
+                  minWidth: 0,
+                  overflow: "hidden",
                   color: extras?.usedEndpointsTopK[0] ? "var(--text-2)" : "var(--text-mute)",
                   fontStyle: extras?.usedEndpointsTopK[0] ? "normal" : "italic",
                 }}
               >
                 <span
                   style={{
+                    display: "block",
                     minWidth: 0,
+                    maxWidth: "100%",
                     whiteSpace: "nowrap",
                     overflow: "hidden",
                     textOverflow: "ellipsis",
@@ -253,7 +257,7 @@ export function CustomersTable({
             )}
 
             {isSdkConnected && (
-              <div className="cust-cell" data-label="7d">
+              <div className="cust-cell cust-cell--sparkline" data-label="7d">
                 {extras && extras.sparkline7d.length === 7 ? (
                   <Sparkline7d points={extras.sparkline7d} width={90} height={28} />
                 ) : (
@@ -272,8 +276,17 @@ export function CustomersTable({
                 gap: 10,
               }}
             >
-              <span className="mono" style={{ fontSize: 12, color: "var(--text-3)" }}>
-                {formatTimestamp(c.lastSeenAt)}
+              <span
+                className="mono"
+                style={{
+                  fontSize: 12,
+                  color: "var(--text-3)",
+                  textAlign: "right",
+                  lineHeight: 1.35,
+                  whiteSpace: "pre-line",
+                }}
+              >
+                {formatTimestamp(c.lastSeenAt).replace(" ", "\n")}
               </span>
               <span className="row-arrow" style={{ display: "inline-flex", alignItems: "center" }}>
                 <Icon.arrow width="14" height="14" />

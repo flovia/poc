@@ -78,7 +78,7 @@ export async function getCustomers(
   const mode = await getServerDashboardMode();
   if (mode === "onChainOnly") return live.getCustomers(filter);
   const v = await sdkModule();
-  return v.getCustomers();
+  return v.getCustomers(filter);
 }
 
 export async function getCustomerProfile(address: string): Promise<CustomerProfileDto | null> {

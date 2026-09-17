@@ -165,7 +165,7 @@ export async function getCustomers(
 ): Promise<CustomerListItemDto[]> {
   if (isFixtureDataSource()) {
     const fixtures = await import("@/lib/sdk-fixtures");
-    return fixtures.getCustomers();
+    return fixtures.getCustomers(filter);
   }
   const opts: GetCustomersFilter = typeof filter === "string" ? { payTo: filter } : (filter ?? {});
   const params = new URLSearchParams();
