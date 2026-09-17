@@ -1,6 +1,8 @@
 // Server / Client 両対応の dashboard mode helper.
 // cookie が source of truth、localStorage は CSR ミラー (TopBar の useEffect で片方向再同期).
 
+import { isFixtureDataSource } from "./data-source-mode";
+
 export type DashboardMode = "onChainOnly" | "sdkConnected";
 
 export const DASHBOARD_MODE_COOKIE = "flovia-dashboard-mode";
@@ -25,15 +27,19 @@ function parseLegacyMode(raw: string | undefined | null): DashboardMode | null {
   return "onChainOnly";
 }
 
+function resolvedDashboardMode(): DashboardMode {
+  return isFixtureDataSource() ? "sdkConnected" : "onChainOnly";
+}
+
 // Server Component / Route Handler 専用.
-// The mode switch UI is hidden; default to the on-chain view regardless of
-// stale cookies left by older sessions.
+// Fixture data is the default public view. Live BFF builds opt in with
+// NEXT_PUBLIC_FLOVIA_DATA_SOURCE=bff. The mode switch UI remains hidden.
 export async function getServerDashboardMode(): Promise<DashboardMode> {
-  return "onChainOnly";
+  return resolvedDashboardMode();
 }
 
 export function readClientDashboardMode(): DashboardMode {
-  return "onChainOnly";
+  return resolvedDashboardMode();
 }
 
 export function writeClientDashboardMode(mode: DashboardMode): void {

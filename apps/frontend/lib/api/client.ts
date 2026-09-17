@@ -31,6 +31,7 @@ import type {
   ReportSummaryDto,
   WalletUsageGraphDto,
 } from "./types";
+import { isFixtureDataSource } from "@/lib/data-source-mode";
 import { DASHBOARD_REVALIDATE_SECONDS, DISCOVERY_REVALIDATE_SECONDS } from "./cache-policy";
 
 const DEFAULT_BFF_URL = "http://localhost:3001";
@@ -79,6 +80,7 @@ export async function getCustomerProfile(address: string): Promise<CustomerProfi
 export async function getCustomerProfileRaw(
   address: string,
 ): Promise<PhaseBCustomerProfileResponse | null> {
+  if (isFixtureDataSource()) return null;
   const response = await fetch(`${bffBaseUrl()}/customers/${encodeURIComponent(address)}/profile`, {
     next: { revalidate: DASHBOARD_REVALIDATE_SECONDS },
     headers: { accept: "application/json" },
@@ -96,6 +98,7 @@ export async function getCustomerProfileRaw(
 export async function getCustomerUpsellExplanation(
   address: string,
 ): Promise<CustomerUpsellExplanationDto | null> {
+  if (isFixtureDataSource()) return null;
   const response = await fetch(
     `${bffBaseUrl()}/customers/${encodeURIComponent(address)}/llm/upsell-explanation`,
     {
@@ -117,6 +120,10 @@ export async function getCustomerUpsellExplanation(
 }
 
 export async function getProviders(): Promise<ProviderCatalogItemDto[]> {
+  if (isFixtureDataSource()) {
+    const fixtures = await import("@/lib/sdk-fixtures/catalog");
+    return fixtures.getFixtureProviders();
+  }
   return adaptProviderCatalog(
     validateProviderCatalogResponse(await bffFetch<unknown>("/providers")),
   );
@@ -128,6 +135,7 @@ export async function getProviders(): Promise<ProviderCatalogItemDto[]> {
 export async function getAeoX402Discovery(
   services: string | string[],
 ): Promise<AeoDiscovery | null> {
+  if (isFixtureDataSource()) return null;
   const candidates = (Array.isArray(services) ? services : [services])
     .map((value) => value.trim())
     .filter(Boolean);
@@ -155,6 +163,10 @@ export type GetCustomersFilter = { payTo?: string; serviceId?: string };
 export async function getCustomers(
   filter?: string | GetCustomersFilter,
 ): Promise<CustomerListItemDto[]> {
+  if (isFixtureDataSource()) {
+    const fixtures = await import("@/lib/sdk-fixtures");
+    return fixtures.getCustomers();
+  }
   const opts: GetCustomersFilter = typeof filter === "string" ? { payTo: filter } : (filter ?? {});
   const params = new URLSearchParams();
   if (opts.serviceId) params.set("serviceId", opts.serviceId);
@@ -166,26 +178,44 @@ export async function getCustomers(
 }
 
 export async function getWalletUsageGraph(): Promise<WalletUsageGraphDto> {
+  if (isFixtureDataSource()) {
+    const fixtures = await import("@/lib/sdk-fixtures");
+    return fixtures.getWalletUsageGraph();
+  }
   return adaptWalletUsageGraph(await getWalletUsageGraphRaw());
 }
 
 export async function getWalletUsageGraphRaw(): Promise<WalletUsageGraphResponse> {
+  if (isFixtureDataSource()) {
+    throw new Error("Wallet usage graph raw envelope is not served in fixture mode");
+  }
   return validatePhaseBWalletUsageGraphResponse(await bffFetch<unknown>("/wallet-usage-graph"));
 }
 
 export async function getRouteAnalyticsSummary(): Promise<RouteAnalyticsSummaryResponse> {
+  if (isFixtureDataSource()) {
+    const fixtures = await import("@/lib/sdk-fixtures/route-analytics");
+    return fixtures.getFixtureRouteAnalyticsSummary();
+  }
   return validateRouteAnalyticsSummaryResponse(
     await bffFetch<unknown>("/analytics/routes/summary"),
   );
 }
 
 export async function getRouteAnalyticsSankey(): Promise<RouteAnalyticsSankeyResponse> {
+  if (isFixtureDataSource()) {
+    throw new Error("Route analytics sankey is derived from the fixture summary in the UI");
+  }
   return validateRouteAnalyticsSankeyResponse(await bffFetch<unknown>("/analytics/routes/sankey"));
 }
 
 // Phase B BFF は /observations を提供しないため、/wallet-usage-graph から合成する。
 // 用途: Patterns 画面の retention 計算 (payer x recipient ごとの first/last 比較)。
 export async function getObservations(): Promise<PaymentObservationDto[]> {
+  if (isFixtureDataSource()) {
+    const fixtures = await import("@/lib/sdk-fixtures");
+    return fixtures.getObservations();
+  }
   return adaptObservationsFromGraph(
     validatePhaseBWalletUsageGraphResponse(await bffFetch<unknown>("/wallet-usage-graph")),
   );
@@ -195,6 +225,10 @@ export async function getObservations(): Promise<PaymentObservationDto[]> {
 // freshness indicator (撤去済) 再導入用のヘルパー。詳細は
 // docs/future-work.md "Data freshness indicator" を参照。
 export async function getSummary(filter?: string | GetCustomersFilter): Promise<ReportSummaryDto> {
+  if (isFixtureDataSource()) {
+    const fixtures = await import("@/lib/sdk-fixtures");
+    return fixtures.getSummary();
+  }
   const opts: GetCustomersFilter = typeof filter === "string" ? { payTo: filter } : (filter ?? {});
   const params = new URLSearchParams();
   if (opts.serviceId) params.set("serviceId", opts.serviceId);

@@ -4,21 +4,29 @@ This is a prototype UI for x402 Co-usage Discovery, built with Next.js 15 (App R
 
 ## Usage
 
-Required tool: **Bun 1.3.13+**. This app runs as the monorepo `apps/frontend` workspace and expects `apps/bff` to be running at `http://localhost:3001` as its data source.
+Required tool: **Bun 1.3.13+**. This app runs as the monorepo `apps/frontend` workspace.
+
+The default data source is **fixture-only**: the app does not call the BFF.
+Copy `apps/frontend/.env.example` for optional site URL settings.
 
 ```bash
 bun install
 bun --filter frontend dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). On first access localStorage is empty, so three demo providers for the sidebar are seeded. You can also add your own `pay_to` from Setup.
+Open [http://localhost:3000](http://localhost:3000). The provider picker and
+dashboard pages render checked-in synthetic fixtures.
 
 ### Connect to BFF
 
-Each screen (Customers / Wallet 360° / Patterns) fetches BFF directly from Server Components. The Server Component target can be overridden with `BFF_URL` (default: `http://localhost:3001`). For browser-side calls, use `NEXT_PUBLIC_BFF_URL` (default: `/api`), which is forwarded to BFF through the rewrite in `next.config.ts`.
+Local development against `apps/bff` sets the data source to `bff`. Server
+Components use `BFF_URL` (default: `http://localhost:3001`). Browser calls use
+`NEXT_PUBLIC_BFF_URL` (default: `/api`), which `next.config.ts` rewrites to the
+BFF only in BFF mode.
 
 ```bash
-BFF_URL=http://localhost:3001 NEXT_PUBLIC_BFF_URL=/api bun --filter frontend dev
+NEXT_PUBLIC_FLOVIA_DATA_SOURCE=bff FLOVIA_FRONTEND_DATA_SOURCE=bff \
+  BFF_URL=http://localhost:3001 NEXT_PUBLIC_BFF_URL=/api bun --filter frontend dev
 ```
 
 The PoC BFF returns only customer projections at payer wallet level and does not split scope by provider. The sidebar `providerId` works only as a display identifier in localStorage; data shown in screens is aggregated across the full BFF dataset.

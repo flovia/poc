@@ -1,10 +1,10 @@
 import { expect, test } from "@playwright/test";
 
-test("provider picker renders with the BFF-backed catalog", async ({ page }) => {
+test("provider picker renders the fixture catalog without BFF", async ({ page }) => {
   await page.goto("/providers");
 
   await expect(page.getByRole("heading", { name: "API Providers" })).toBeVisible();
-  await expect(page.getByRole("link", { name: /^CoinGecko x402\b/i })).toBeVisible({
+  await expect(page.getByRole("link", { name: /Northwind Price API/i })).toBeVisible({
     timeout: 20_000,
   });
 });

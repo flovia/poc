@@ -3,9 +3,7 @@ import path from "node:path";
 
 const repoRoot = path.resolve(__dirname, "../..");
 const frontendPort = Number(process.env.PLAYWRIGHT_FRONTEND_PORT ?? 3333);
-const bffPort = Number(process.env.PLAYWRIGHT_BFF_PORT ?? 3334);
 const frontendUrl = `http://127.0.0.1:${frontendPort}`;
-const bffUrl = `http://127.0.0.1:${bffPort}`;
 
 export default defineConfig({
   testDir: "./e2e",
@@ -31,14 +29,7 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: `PORT=${bffPort} BFF_ANALYTICS_SOURCE=fixture bun --filter bff start`,
-      cwd: repoRoot,
-      reuseExistingServer: !process.env.CI,
-      timeout: 120_000,
-      url: `${bffUrl}/health`,
-    },
-    {
-      command: `BFF_URL=${bffUrl} NEXT_PUBLIC_BFF_URL=/api bun --filter frontend dev -- --hostname 127.0.0.1 --port ${frontendPort}`,
+      command: `NEXT_PUBLIC_FLOVIA_DATA_SOURCE=fixture FLOVIA_FRONTEND_DATA_SOURCE=fixture bun --filter frontend dev -- --hostname 127.0.0.1 --port ${frontendPort}`,
       cwd: repoRoot,
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,

@@ -23,6 +23,8 @@ WORKDIR /app/apps/frontend
 
 ENV BFF_URL=http://bff:3001 \
     NEXT_PUBLIC_BFF_URL=/api \
+    NEXT_PUBLIC_FLOVIA_DATA_SOURCE=bff \
+    FLOVIA_FRONTEND_DATA_SOURCE=bff \
     NEXT_TELEMETRY_DISABLED=1
 
 RUN bun run build
