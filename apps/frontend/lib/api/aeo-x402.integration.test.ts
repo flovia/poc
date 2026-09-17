@@ -48,6 +48,8 @@ const spec = (over: Partial<GeoSpec> = {}): GeoSpec => ({
 const serverPath = path.resolve(import.meta.dir, "../../../bff/src/server.ts");
 let proc: ReturnType<typeof Bun.spawn> | undefined;
 const bffUrlBackup = process.env.BFF_URL;
+const dataSourceBackup = process.env.NEXT_PUBLIC_FLOVIA_DATA_SOURCE;
+const serverDataSourceBackup = process.env.FLOVIA_FRONTEND_DATA_SOURCE;
 
 const waitForReady = async (baseUrl: string, timeoutMs: number) => {
   const deadline = Date.now() + timeoutMs;
@@ -72,6 +74,8 @@ beforeAll(async () => {
     stderr: "ignore",
   });
   process.env.BFF_URL = baseUrl;
+  process.env.NEXT_PUBLIC_FLOVIA_DATA_SOURCE = "bff";
+  process.env.FLOVIA_FRONTEND_DATA_SOURCE = "bff";
   await waitForReady(baseUrl, 30000);
 }, 35000);
 
@@ -80,6 +84,10 @@ afterAll(async () => {
   await proc?.exited;
   if (bffUrlBackup === undefined) delete process.env.BFF_URL;
   else process.env.BFF_URL = bffUrlBackup;
+  if (dataSourceBackup === undefined) delete process.env.NEXT_PUBLIC_FLOVIA_DATA_SOURCE;
+  else process.env.NEXT_PUBLIC_FLOVIA_DATA_SOURCE = dataSourceBackup;
+  if (serverDataSourceBackup === undefined) delete process.env.FLOVIA_FRONTEND_DATA_SOURCE;
+  else process.env.FLOVIA_FRONTEND_DATA_SOURCE = serverDataSourceBackup;
 });
 
 describe("AEO x402 BFF<->FE integration", () => {
