@@ -25,13 +25,36 @@ import {
 import { buildSdkObservations, buildSdkSummary } from "./patterns";
 import { buildSdkWalletUsageGraph } from "./graph";
 import { PROTAGONIST_ADDRESS } from "./shared";
+import {
+  getQuicknodeCustomerProfile,
+  getQuicknodeCustomers,
+  getQuicknodeExtras,
+  getQuicknodeExtrasMap,
+  isQuicknodeCustomerFilter,
+} from "./quicknode-customers";
 
-export async function getCustomers(): Promise<CustomerListItemDto[]> {
+export type FixtureCustomersFilter = { payTo?: string; serviceId?: string };
+
+export async function getCustomers(
+  filter?: string | FixtureCustomersFilter,
+): Promise<CustomerListItemDto[]> {
+  const opts: FixtureCustomersFilter =
+    typeof filter === "string" ? { payTo: filter } : (filter ?? {});
+  if (isQuicknodeCustomerFilter(opts)) return getQuicknodeCustomers();
+  if (
+    opts.serviceId &&
+    opts.serviceId !== "northwind-price" &&
+    !opts.serviceId.startsWith("northwind")
+  ) {
+    return [];
+  }
   return [PROTAGONIST_LIST_ITEM, ...SECONDARY_LIST_ITEMS];
 }
 
 export async function getCustomerProfile(address: string): Promise<CustomerProfileDto | null> {
   if (address === PROTAGONIST_ADDRESS) return PROTAGONIST_PROFILE;
+  const quicknode = getQuicknodeCustomerProfile(address);
+  if (quicknode) return quicknode;
   return getSecondaryProfile(address);
 }
 
@@ -49,11 +72,13 @@ export async function getWalletUsageGraph(): Promise<WalletUsageGraphDto> {
 
 export async function getExtras(address: string): Promise<SdkExtras | null> {
   if (address === PROTAGONIST_ADDRESS) return PROTAGONIST_EXTRAS;
+  const quicknode = getQuicknodeExtras(address);
+  if (quicknode) return quicknode;
   return getSecondaryExtras(address);
 }
 
 export async function getExtrasMap(): Promise<Map<string, SdkExtras>> {
-  const map = new Map<string, SdkExtras>();
+  const map = new Map<string, SdkExtras>(getQuicknodeExtrasMap());
   map.set(PROTAGONIST_ADDRESS, PROTAGONIST_EXTRAS);
   for (const s of SECONDARIES) {
     const ex = getSecondaryExtras(s.address);

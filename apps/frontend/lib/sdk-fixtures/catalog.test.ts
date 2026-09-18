@@ -20,6 +20,15 @@ describe("getFixtureProviders", () => {
     expect(providers.length).toBeGreaterThanOrEqual(STATIC_PROVIDER_CAPABILITIES.length);
   });
 
+  test("marks QuickNode as having snapshot customer facts", () => {
+    const quicknode = getFixtureProviders().find(
+      (provider) => provider.serviceId === "quicknode/rpc",
+    );
+    expect(quicknode?.hasCustomerFacts).toBe(true);
+    expect(quicknode?.customerFactCount).toBe(92);
+    expect(quicknode?.transactionCount).toBe(463);
+  });
+
   test("uses synthetic payTo addresses rather than known public wallets", () => {
     const providers = getFixtureProviders();
     for (const provider of providers) {

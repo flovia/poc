@@ -1,6 +1,7 @@
 import type { ProviderCatalogItemDto } from "@/lib/api/types";
 import type { StaticProviderCapability } from "@/lib/providers/static-capabilities";
 import { mergeStaticProviders } from "@/lib/providers/static-merge";
+import { QUICKNODE_FIXTURE_SUMMARY, QUICKNODE_SERVICE_ID } from "./quicknode-customers";
 import { PROVIDER_NAME, PROVIDER_PAY_TO } from "./shared";
 
 const SDK_PROVIDER_IDS = Object.keys(PROVIDER_NAME);
@@ -71,5 +72,16 @@ const sdkCatalogItem = (providerId: string): ProviderCatalogItemDto => {
 };
 
 export function getFixtureProviders(): ProviderCatalogItemDto[] {
-  return mergeStaticProviders(SDK_PROVIDER_IDS.map(sdkCatalogItem), toCatalogItem);
+  return mergeStaticProviders(SDK_PROVIDER_IDS.map(sdkCatalogItem), toCatalogItem).map(
+    (provider) => {
+      if (provider.serviceId !== QUICKNODE_SERVICE_ID) return provider;
+      return {
+        ...provider,
+        hasCustomerFacts: true,
+        customerFactCount: QUICKNODE_FIXTURE_SUMMARY.customerCount,
+        transactionCount: QUICKNODE_FIXTURE_SUMMARY.observationCount,
+        totalVolumeAtomic: QUICKNODE_FIXTURE_SUMMARY.totalVolumeAtomic,
+      };
+    },
+  );
 }

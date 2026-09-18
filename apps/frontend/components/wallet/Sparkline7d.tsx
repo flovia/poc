@@ -12,10 +12,11 @@ type Props = {
 export function Sparkline7d({ points, width = 180, height = 50 }: Props) {
   if (points.length === 0) return null;
 
-  const padX = 4;
+  const endCap = 4;
+  const padX = endCap;
   const padY = 6;
-  const innerW = width - padX * 2;
-  const innerH = height - padY * 2;
+  const innerW = Math.max(1, width - padX * 2);
+  const innerH = Math.max(1, height - padY * 2);
 
   const counts = points.map((p) => p.observationCount);
   const minV = Math.min(...counts);
@@ -37,11 +38,14 @@ export function Sparkline7d({ points, width = 180, height = 50 }: Props) {
   return (
     <svg
       data-testid="sparkline7d"
-      width={width}
+      width="100%"
       height={height}
       viewBox={`0 0 ${width} ${height}`}
+      preserveAspectRatio="xMidYMid meet"
+      overflow="hidden"
       role="img"
       aria-label="7-day volume sparkline"
+      style={{ display: "block", maxWidth: "100%" }}
     >
       <path
         d={d}
