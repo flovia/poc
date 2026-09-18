@@ -20,13 +20,18 @@ describe("getFixtureProviders", () => {
     expect(providers.length).toBeGreaterThanOrEqual(STATIC_PROVIDER_CAPABILITIES.length);
   });
 
-  test("marks QuickNode as having snapshot customer facts", () => {
-    const quicknode = getFixtureProviders().find(
-      (provider) => provider.serviceId === "quicknode/rpc",
-    );
+  test("marks snapshot-backed catalog providers as having customer facts", () => {
+    const providers = getFixtureProviders();
+    const quicknode = providers.find((provider) => provider.serviceId === "quicknode/rpc");
+    const nansen = providers.find((provider) => provider.serviceId === "api.nansen.ai");
+    const coingecko = providers.find((provider) => provider.serviceId === "pro-api.coingecko.com");
     expect(quicknode?.hasCustomerFacts).toBe(true);
     expect(quicknode?.customerFactCount).toBe(92);
-    expect(quicknode?.transactionCount).toBe(463);
+    expect(nansen?.hasCustomerFacts).toBe(true);
+    expect(nansen?.customerFactCount).toBe(7);
+    expect(coingecko?.hasCustomerFacts).toBe(true);
+    expect(coingecko?.customerFactCount).toBe(43);
+    expect(providers.filter((provider) => provider.hasCustomerFacts).length).toBeGreaterThan(50);
   });
 
   test("uses synthetic payTo addresses rather than known public wallets", () => {

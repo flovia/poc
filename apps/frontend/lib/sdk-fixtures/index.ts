@@ -26,12 +26,11 @@ import { buildSdkObservations, buildSdkSummary } from "./patterns";
 import { buildSdkWalletUsageGraph } from "./graph";
 import { PROTAGONIST_ADDRESS } from "./shared";
 import {
-  getQuicknodeCustomerProfile,
-  getQuicknodeCustomers,
-  getQuicknodeExtras,
-  getQuicknodeExtrasMap,
-  isQuicknodeCustomerFilter,
-} from "./quicknode-customers";
+  getSnapshotCustomerProfile,
+  getSnapshotCustomers,
+  getSnapshotExtras,
+  getSnapshotExtrasMap,
+} from "./snapshot-customers";
 
 export type FixtureCustomersFilter = { payTo?: string; serviceId?: string };
 
@@ -40,7 +39,8 @@ export async function getCustomers(
 ): Promise<CustomerListItemDto[]> {
   const opts: FixtureCustomersFilter =
     typeof filter === "string" ? { payTo: filter } : (filter ?? {});
-  if (isQuicknodeCustomerFilter(opts)) return getQuicknodeCustomers();
+  const snapshot = getSnapshotCustomers(opts);
+  if (snapshot) return snapshot;
   if (
     opts.serviceId &&
     opts.serviceId !== "northwind-price" &&
@@ -53,8 +53,8 @@ export async function getCustomers(
 
 export async function getCustomerProfile(address: string): Promise<CustomerProfileDto | null> {
   if (address === PROTAGONIST_ADDRESS) return PROTAGONIST_PROFILE;
-  const quicknode = getQuicknodeCustomerProfile(address);
-  if (quicknode) return quicknode;
+  const snapshot = getSnapshotCustomerProfile(address);
+  if (snapshot) return snapshot;
   return getSecondaryProfile(address);
 }
 
@@ -72,13 +72,13 @@ export async function getWalletUsageGraph(): Promise<WalletUsageGraphDto> {
 
 export async function getExtras(address: string): Promise<SdkExtras | null> {
   if (address === PROTAGONIST_ADDRESS) return PROTAGONIST_EXTRAS;
-  const quicknode = getQuicknodeExtras(address);
-  if (quicknode) return quicknode;
+  const snapshot = getSnapshotExtras(address);
+  if (snapshot) return snapshot;
   return getSecondaryExtras(address);
 }
 
 export async function getExtrasMap(): Promise<Map<string, SdkExtras>> {
-  const map = new Map<string, SdkExtras>(getQuicknodeExtrasMap());
+  const map = new Map<string, SdkExtras>(getSnapshotExtrasMap());
   map.set(PROTAGONIST_ADDRESS, PROTAGONIST_EXTRAS);
   for (const s of SECONDARIES) {
     const ex = getSecondaryExtras(s.address);
