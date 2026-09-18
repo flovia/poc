@@ -32,6 +32,7 @@ describe("getFixtureProviders", () => {
     expect(coingecko?.hasCustomerFacts).toBe(true);
     expect(coingecko?.customerFactCount).toBe(43);
     expect(providers.filter((provider) => provider.hasCustomerFacts).length).toBeGreaterThan(50);
+    expect(providers.every((provider) => (provider.customerFactCount ?? 0) > 0)).toBe(true);
   });
 
   test("uses synthetic payTo addresses rather than known public wallets", () => {

@@ -10,7 +10,7 @@ import {
   personaForRank,
   sparklineFromPattern,
 } from "./demo-shape";
-import { T0 } from "./shared";
+import { PROVIDER_NAME, T0 } from "./shared";
 import type { SdkExtras } from "./types";
 import { chainKindFromNetwork, syntheticAddress } from "./wallets";
 
@@ -230,7 +230,10 @@ for (const stat of STATS) {
   statsByService.set(stat.serviceId, list);
 }
 
-for (const [serviceId, rawStats] of statsByService) {
+const TEMPLATE_STATS = statsByService.get("quicknode/rpc") ?? STATS.slice(0, 92);
+
+function materializeCohort(serviceId: string, rawStats: SnapshotCustomerStat[]): void {
+  if (customersByServiceId.has(serviceId)) return;
   const stats = [...rawStats].sort((left, right) => {
     const delta = BigInt(right.spendAtomic) - BigInt(left.spendAtomic);
     if (delta === 0n) return 0;
@@ -260,9 +263,52 @@ for (const [serviceId, rawStats] of statsByService) {
   const brand = extractBrandKey(serviceId);
   if (brand) {
     const ids = serviceIdsByBrand.get(brand) ?? [];
-    ids.push(serviceId);
+    if (!ids.includes(serviceId)) ids.push(serviceId);
     serviceIdsByBrand.set(brand, ids);
   }
+}
+
+function cloneTemplateStats(
+  serviceId: string,
+  name: string,
+  chain: string,
+): SnapshotCustomerStat[] {
+  return TEMPLATE_STATS.map((stat) => ({
+    ...stat,
+    serviceId,
+    name,
+    chain,
+  }));
+}
+
+export function ensureDemoCohort(serviceId: string, name?: string, chain?: string): void {
+  if (!serviceId || customersByServiceId.has(serviceId)) return;
+  const capability = STATIC_PROVIDER_CAPABILITIES.find((item) => item.serviceId === serviceId);
+  materializeCohort(
+    serviceId,
+    cloneTemplateStats(
+      serviceId,
+      name ?? capability?.name ?? serviceId,
+      chain ?? capability?.network ?? "base",
+    ),
+  );
+}
+
+for (const [serviceId, rawStats] of statsByService) {
+  materializeCohort(serviceId, rawStats);
+}
+
+for (const capability of STATIC_PROVIDER_CAPABILITIES) {
+  ensureDemoCohort(capability.serviceId, capability.name, capability.network);
+}
+
+for (const [providerId, name] of Object.entries(PROVIDER_NAME)) {
+  if (providerId === "northwind-price") continue;
+  ensureDemoCohort(providerId, name, "base");
+}
+
+for (const seedId of ["lumen-vec", "halonet"] as const) {
+  ensureDemoCohort(seedId, seedId, "base");
 }
 
 export function resolveSnapshotServiceId(filter?: SnapshotCustomerFilter): string | null {
@@ -271,11 +317,12 @@ export function resolveSnapshotServiceId(filter?: SnapshotCustomerFilter): strin
     const brand = extractBrandKey(filter.serviceId);
     const ids = brand ? serviceIdsByBrand.get(brand) : undefined;
     if (ids?.length === 1) return ids[0] ?? null;
+    return filter.serviceId;
   }
   const payTo = filter?.payTo?.toLowerCase();
   if (payTo) {
     const serviceId = serviceIdByPayTo.get(payTo);
-    if (serviceId && customersByServiceId.has(serviceId)) return serviceId;
+    if (serviceId) return serviceId;
   }
   return null;
 }
@@ -285,6 +332,7 @@ export function getSnapshotCustomers(
 ): CustomerListItemDto[] | null {
   const serviceId = resolveSnapshotServiceId(filter);
   if (!serviceId) return null;
+  ensureDemoCohort(serviceId);
   return customersByServiceId.get(serviceId) ?? [];
 }
 
