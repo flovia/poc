@@ -20,4 +20,14 @@ describe("fixture getCustomers", () => {
     expect(coingecko.length).toBe(43);
     expect(agentmail.length).toBe(34);
   });
+
+  test("fills providers that have no snapshot rows with the QuickNode demo cohort", async () => {
+    const vectormind = await getCustomers({ serviceId: "vectormind" });
+    const lumen = await getCustomers({ serviceId: "lumen-vec" });
+    const unknown = await getCustomers({ serviceId: "brand-new-demo-api" });
+    expect(vectormind.length).toBe(92);
+    expect(lumen.length).toBe(92);
+    expect(unknown.length).toBe(92);
+    expect(vectormind.some((customer) => customer.providerCount >= 2)).toBe(true);
+  });
 });

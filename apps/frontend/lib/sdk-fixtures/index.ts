@@ -39,15 +39,11 @@ export async function getCustomers(
 ): Promise<CustomerListItemDto[]> {
   const opts: FixtureCustomersFilter =
     typeof filter === "string" ? { payTo: filter } : (filter ?? {});
-  const snapshot = getSnapshotCustomers(opts);
-  if (snapshot) return snapshot;
-  if (
-    opts.serviceId &&
-    opts.serviceId !== "northwind-price" &&
-    !opts.serviceId.startsWith("northwind")
-  ) {
-    return [];
+  if (opts.serviceId === "northwind-price" || opts.serviceId?.startsWith("northwind")) {
+    return [PROTAGONIST_LIST_ITEM, ...SECONDARY_LIST_ITEMS];
   }
+  const snapshot = getSnapshotCustomers(opts);
+  if (snapshot && snapshot.length > 0) return snapshot;
   return [PROTAGONIST_LIST_ITEM, ...SECONDARY_LIST_ITEMS];
 }
 
