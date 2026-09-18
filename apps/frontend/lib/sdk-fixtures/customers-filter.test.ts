@@ -12,8 +12,12 @@ describe("fixture getCustomers", () => {
     expect(customers).toHaveLength(5);
   });
 
-  test("does not reuse the SDK demo wallets for unrelated providers", async () => {
-    const customers = await getCustomers({ serviceId: "api.nansen.ai" });
-    expect(customers).toEqual([]);
+  test("returns snapshot payers for other catalog providers", async () => {
+    const nansen = await getCustomers({ serviceId: "api.nansen.ai" });
+    const coingecko = await getCustomers({ serviceId: "pro-api.coingecko.com" });
+    const agentmail = await getCustomers({ serviceId: "agentmail/email" });
+    expect(nansen.length).toBe(7);
+    expect(coingecko.length).toBe(43);
+    expect(agentmail.length).toBe(34);
   });
 });
