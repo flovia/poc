@@ -10,13 +10,13 @@ import type { CustomerListItemDto } from "@/lib/api/types";
 import { getCustomerChainAttribution } from "@/lib/customers/chain";
 import type { DashboardMode } from "@/lib/data-mode";
 import { walletProfileHref } from "@/lib/provider-routes";
-import type { SdkExtras } from "@/lib/sdk-fixtures/types";
+import type { SdkCustomerListExtras } from "@/lib/sdk-fixtures/types";
 
 type CustomersTableProps = {
   customers: CustomerListItemDto[];
   providerId: string;
   dataMode: DashboardMode;
-  extrasMap: Map<string, SdkExtras>;
+  extrasMap: Map<string, SdkCustomerListExtras>;
   // フィルタ適用前の元件数。フィルタで 0 件になった場合と、BFF projection が
   // 空の場合とで empty state の文言を出し分けるために使う。
   totalBeforeFilter: number;

@@ -9,19 +9,14 @@ import type {
   ReportSummaryDto,
   WalletUsageGraphDto,
 } from "@/lib/api/types";
-import type { SdkExtras, SdkForceNetwork } from "./types";
+import type { SdkCustomerListExtras, SdkExtras, SdkForceNetwork } from "./types";
 import {
   PROTAGONIST_EXTRAS,
   PROTAGONIST_LIST_ITEM,
   PROTAGONIST_NETWORK,
   PROTAGONIST_PROFILE,
 } from "./protagonist";
-import {
-  SECONDARIES,
-  SECONDARY_LIST_ITEMS,
-  getSecondaryExtras,
-  getSecondaryProfile,
-} from "./secondaries";
+import { SECONDARY_LIST_ITEMS, getSecondaryExtras, getSecondaryProfile } from "./secondaries";
 import { buildSdkObservations, buildSdkSummary } from "./patterns";
 import { buildSdkWalletUsageGraph } from "./graph";
 import { PROTAGONIST_ADDRESS } from "./shared";
@@ -29,7 +24,7 @@ import {
   getSnapshotCustomerProfile,
   getSnapshotCustomers,
   getSnapshotExtras,
-  getSnapshotExtrasMap,
+  getSnapshotListExtras,
 } from "./snapshot-customers";
 
 export type FixtureCustomersFilter = { payTo?: string; serviceId?: string };
@@ -73,12 +68,18 @@ export async function getExtras(address: string): Promise<SdkExtras | null> {
   return getSecondaryExtras(address);
 }
 
-export async function getExtrasMap(): Promise<Map<string, SdkExtras>> {
-  const map = new Map<string, SdkExtras>(getSnapshotExtrasMap());
-  map.set(PROTAGONIST_ADDRESS, PROTAGONIST_EXTRAS);
-  for (const s of SECONDARIES) {
-    const ex = getSecondaryExtras(s.address);
-    if (ex) map.set(s.address, ex);
+export async function getExtrasMap(
+  addresses: readonly string[],
+): Promise<Map<string, SdkCustomerListExtras>> {
+  const map = new Map<string, SdkCustomerListExtras>();
+  for (const address of addresses) {
+    const extras =
+      address === PROTAGONIST_ADDRESS
+        ? PROTAGONIST_EXTRAS
+        : (getSnapshotListExtras(address) ?? getSecondaryExtras(address));
+    if (!extras) continue;
+    const { agentType, sparkline7d, usedEndpointsTopK } = extras;
+    map.set(address, { agentType, sparkline7d, usedEndpointsTopK });
   }
   return map;
 }

@@ -15,7 +15,7 @@ import type {
 } from "./api/types";
 import { mergeStaticProviders } from "@/lib/providers/static-merge";
 import type { StaticProviderCapability } from "@/lib/providers/static-capabilities";
-import type { SdkExtras, SdkForceNetwork } from "./sdk-fixtures/types";
+import type { SdkCustomerListExtras, SdkExtras, SdkForceNetwork } from "./sdk-fixtures/types";
 
 // 主役 wallet の正規アドレス. wallet/[address]/page.tsx の redirect で使う.
 export const SDK_PROTAGONIST_ADDRESS = syntheticAddress("sdk:protagonist", "evm");
@@ -109,11 +109,13 @@ export async function getSdkExtras(address: string): Promise<SdkExtras | null> {
   return v.getExtras(address);
 }
 
-export async function getSdkExtrasMap(): Promise<Map<string, SdkExtras>> {
+export async function getSdkExtrasMap(
+  addresses: readonly string[],
+): Promise<Map<string, SdkCustomerListExtras>> {
   const mode = await getServerDashboardMode();
   if (mode === "onChainOnly") return new Map();
   const v = await sdkModule();
-  return v.getExtrasMap();
+  return v.getExtrasMap(addresses);
 }
 
 export async function getSdkForceNetwork(address: string): Promise<SdkForceNetwork | null> {

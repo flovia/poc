@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { getCustomers } from "./index";
+import { getCustomerProfile, getCustomers, getExtras } from "./index";
 
 describe("fixture getCustomers", () => {
   test("returns QuickNode snapshot payers for the QuickNode catalog", async () => {
@@ -21,13 +21,28 @@ describe("fixture getCustomers", () => {
     expect(agentmail.length).toBe(34);
   });
 
-  test("fills providers that have no snapshot rows with the QuickNode demo cohort", async () => {
+  test("fills providers without snapshots with a compact, varied demo cohort", async () => {
     const vectormind = await getCustomers({ serviceId: "vectormind" });
     const lumen = await getCustomers({ serviceId: "lumen-vec" });
     const unknown = await getCustomers({ serviceId: "brand-new-demo-api" });
-    expect(vectormind.length).toBe(92);
-    expect(lumen.length).toBe(92);
-    expect(unknown.length).toBe(92);
+    expect(vectormind.length).toBe(24);
+    expect(lumen.length).toBe(24);
+    expect(unknown.length).toBe(24);
     expect(vectormind.some((customer) => customer.providerCount >= 2)).toBe(true);
+    expect(vectormind.some((customer) => customer.providerCount === 1)).toBe(true);
+    expect(vectormind.some((customer) => customer.activityGrowth < 0)).toBe(true);
+  });
+
+  test("shared fallback shapes keep wallet details tied to the selected provider", async () => {
+    for (const serviceId of ["vectormind", "lumen-vec", "brand-new-demo-api"]) {
+      const customers = await getCustomers({ serviceId });
+      const address = customers[0]!.address;
+      const profile = await getCustomerProfile(address);
+      const extras = await getExtras(address);
+      expect(profile?.customer.address).toBe(address);
+      expect(profile?.providers[0]?.providerId).toBe(serviceId);
+      expect(extras?.usedEndpointsTopK[0]).toBe(`/${serviceId}`);
+      expect(profile?.timeline.length).toBeGreaterThanOrEqual(28);
+    }
   });
 });

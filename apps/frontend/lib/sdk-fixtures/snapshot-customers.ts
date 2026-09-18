@@ -1,7 +1,10 @@
 import type { CustomerListItemDto, CustomerProfileDto } from "@/lib/api/types";
 import snapshotStats from "@/data/snapshot-customer-stats.json";
 import { extractBrandKey } from "@/lib/pay-sh/brand";
-import { STATIC_PROVIDER_CAPABILITIES } from "@/lib/providers/static-capabilities";
+import {
+  STATIC_PROVIDER_CAPABILITIES,
+  STATIC_PROVIDER_CAPABILITY_BY_SERVICE_ID,
+} from "@/lib/providers/static-capabilities";
 import {
   buildDemoStory,
   companionChain,
@@ -11,9 +14,10 @@ import {
   personaForRank,
   sparklineFromPattern,
   type DemoProviderPeer,
+  type DemoStory,
 } from "./demo-shape";
 import { PROVIDER_NAME, T0 } from "./shared";
-import type { SdkExtras } from "./types";
+import type { SdkCustomerListExtras, SdkExtras } from "./types";
 import { chainKindFromNetwork, syntheticAddress } from "./wallets";
 
 export type SnapshotCustomerStat = {
@@ -105,40 +109,39 @@ function listItem(
   };
 }
 
+function listExtrasFor(stat: SnapshotCustomerStat, rank: number, n: number): SdkCustomerListExtras {
+  const persona = personaForRank(rank, n);
+  const lastSeenAt = T0 - persona.lastSeenOffsetDays * 86400;
+  return {
+    agentType: AGENT_BY_KIND[persona.kind],
+    sparkline7d: sparklineFromPattern(
+      persona.sparkPattern,
+      lastSeenAt,
+      demoSpendUsd(rank, n, persona),
+      demoCallCount(rank, n, persona),
+    ),
+    usedEndpointsTopK: demoEndpoints(stat.serviceId, persona),
+  };
+}
+
 function extrasFor(
   stat: SnapshotCustomerStat,
   address: string,
   rank: number,
   n: number,
+  story: DemoStory,
 ): SdkExtras {
   const persona = personaForRank(rank, n);
   const spendUsd = demoSpendUsd(rank, n, persona);
-  const observationCount = demoCallCount(rank, n, persona);
-  const lastSeenAt = T0 - persona.lastSeenOffsetDays * 86400;
   return {
+    ...listExtrasFor(stat, rank, n),
     address,
-    agentType: AGENT_BY_KIND[persona.kind],
     totalSpendUsd: spendUsd,
     growth7d: persona.activityGrowth,
     freeTierProgress: Math.min(0.96, spendUsd / 900),
     monthlyReqGrowth: persona.activityGrowth,
     entryPointPctText: persona.kind === "power" ? "entry point on 84% of workflows" : null,
-    timelineExtras: buildDemoStory({
-      persona,
-      rank,
-      home: {
-        providerId: stat.serviceId,
-        name: stat.name,
-        payToWallet:
-          STATIC_PROVIDER_CAPABILITIES.find((provider) => provider.serviceId === stat.serviceId)
-            ?.payTo ?? "",
-      },
-      catalog: DEMO_CATALOG,
-      lastSeenUnix: lastSeenAt,
-      firstSeenUnix: lastSeenAt - (18 + rank) * 86400,
-      spendUsd,
-      endpoints: demoEndpoints(stat.serviceId, persona),
-    }).timelineExtras,
+    timelineExtras: story.timelineExtras,
     upsell:
       persona.upsellOpportunity === "high"
         ? {
@@ -151,39 +154,18 @@ function extrasFor(
             ],
           }
         : null,
-    sparkline7d: sparklineFromPattern(persona.sparkPattern, lastSeenAt, spendUsd, observationCount),
-    usedEndpointsTopK: demoEndpoints(stat.serviceId, persona),
   };
 }
 
 function profileFor(
-  stat: SnapshotCustomerStat,
   address: string,
   rank: number,
   n: number,
+  story: DemoStory,
 ): CustomerProfileDto {
   const persona = personaForRank(rank, n);
   const spendUsd = demoSpendUsd(rank, n, persona);
   const spendAtomic = usdToAtomic(spendUsd);
-  const observationCount = demoCallCount(rank, n, persona);
-  const lastSeen = T0 - persona.lastSeenOffsetDays * 86400;
-  const firstSeen = lastSeen - (18 + rank) * 86400;
-  const story = buildDemoStory({
-    persona,
-    rank,
-    home: {
-      providerId: stat.serviceId,
-      name: stat.name,
-      payToWallet:
-        STATIC_PROVIDER_CAPABILITIES.find((provider) => provider.serviceId === stat.serviceId)
-          ?.payTo ?? "",
-    },
-    catalog: DEMO_CATALOG,
-    lastSeenUnix: lastSeen,
-    firstSeenUnix: firstSeen,
-    spendUsd,
-    endpoints: demoEndpoints(stat.serviceId, persona),
-  });
   return {
     customer: {
       address,
@@ -206,8 +188,11 @@ function profileFor(
 }
 
 const customersByServiceId = new Map<string, CustomerListItemDto[]>();
-const extrasByAddress = new Map<string, SdkExtras>();
-const profilesByAddress = new Map<string, CustomerProfileDto>();
+// Keep a small index for stable wallet deep links; stories are built on demand.
+type CustomerContext = { stat: SnapshotCustomerStat; rank: number; n: number };
+type CustomerDetail = { extras: SdkExtras; profile: CustomerProfileDto };
+const contextByAddress = new Map<string, CustomerContext>();
+const detailsByAddress = new Map<string, CustomerDetail>();
 const summariesByServiceId = new Map<string, SnapshotProviderSummary>();
 const serviceIdsByBrand = new Map<string, string[]>();
 const serviceIdByPayTo = new Map<string, string>();
@@ -223,7 +208,8 @@ for (const stat of STATS) {
   statsByService.set(stat.serviceId, list);
 }
 
-const TEMPLATE_STATS = statsByService.get("quicknode/rpc") ?? STATS.slice(0, 92);
+// A shared 24-customer shape retains all personas without cloning 92 wallets per provider.
+const TEMPLATE_STATS = (statsByService.get("quicknode/rpc") ?? STATS).slice(0, 24);
 
 function materializeCohort(serviceId: string, rawStats: SnapshotCustomerStat[]): void {
   if (customersByServiceId.has(serviceId)) return;
@@ -240,8 +226,7 @@ function materializeCohort(serviceId: string, rawStats: SnapshotCustomerStat[]):
     const address = addressFor(serviceId, rank, stat.chain);
     const customer = listItem(stat, address, rank, n);
     customers.push(customer);
-    extrasByAddress.set(address, extrasFor(stat, address, rank, n));
-    profilesByAddress.set(address, profileFor(stat, address, rank, n));
+    contextByAddress.set(address, { stat, rank, n });
     observationCount += customer.observationCount;
     volume += BigInt(customer.spendAtomic);
   });
@@ -276,7 +261,7 @@ function cloneTemplateStats(
 
 export function ensureDemoCohort(serviceId: string, name?: string, chain?: string): void {
   if (!serviceId || customersByServiceId.has(serviceId)) return;
-  const capability = STATIC_PROVIDER_CAPABILITIES.find((item) => item.serviceId === serviceId);
+  const capability = STATIC_PROVIDER_CAPABILITY_BY_SERVICE_ID.get(serviceId);
   materializeCohort(
     serviceId,
     cloneTemplateStats(
@@ -330,15 +315,46 @@ export function getSnapshotCustomers(
 }
 
 export function getSnapshotExtras(address: string): SdkExtras | null {
-  return extrasByAddress.get(address) ?? null;
+  return getSnapshotDetail(address)?.extras ?? null;
 }
 
-export function getSnapshotExtrasMap(): Map<string, SdkExtras> {
-  return extrasByAddress;
+export function getSnapshotListExtras(address: string): SdkCustomerListExtras | null {
+  const context = contextByAddress.get(address);
+  return context ? listExtrasFor(context.stat, context.rank, context.n) : null;
 }
 
 export function getSnapshotCustomerProfile(address: string): CustomerProfileDto | null {
-  return profilesByAddress.get(address) ?? null;
+  return getSnapshotDetail(address)?.profile ?? null;
+}
+
+function getSnapshotDetail(address: string): CustomerDetail | null {
+  const cached = detailsByAddress.get(address);
+  if (cached) return cached;
+  const context = contextByAddress.get(address);
+  if (!context) return null;
+  const { stat, rank, n } = context;
+  const persona = personaForRank(rank, n);
+  const lastSeen = T0 - persona.lastSeenOffsetDays * 86400;
+  const story = buildDemoStory({
+    persona,
+    rank,
+    home: {
+      providerId: stat.serviceId,
+      name: stat.name,
+      payToWallet: STATIC_PROVIDER_CAPABILITY_BY_SERVICE_ID.get(stat.serviceId)?.payTo ?? "",
+    },
+    catalog: DEMO_CATALOG,
+    lastSeenUnix: lastSeen,
+    firstSeenUnix: lastSeen - (18 + rank) * 86400,
+    spendUsd: demoSpendUsd(rank, n, persona),
+    endpoints: demoEndpoints(stat.serviceId, persona),
+  });
+  const detail = {
+    extras: extrasFor(stat, address, rank, n, story),
+    profile: profileFor(address, rank, n, story),
+  };
+  detailsByAddress.set(address, detail);
+  return detail;
 }
 
 export function getSnapshotSummaries(): ReadonlyMap<string, SnapshotProviderSummary> {

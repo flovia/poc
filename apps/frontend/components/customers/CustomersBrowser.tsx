@@ -5,7 +5,7 @@ import { CustomersTable } from "./CustomersTable";
 import { Toolbar } from "./Toolbar";
 import type { CustomerListItemDto } from "@/lib/api/types";
 import type { DashboardMode } from "@/lib/data-mode";
-import type { SdkExtras } from "@/lib/sdk-fixtures/types";
+import type { SdkCustomerListExtras } from "@/lib/sdk-fixtures/types";
 import {
   DEFAULT_CUSTOMER_FILTER,
   filterAndSortCustomers,
@@ -16,7 +16,7 @@ type CustomersBrowserProps = {
   customers: CustomerListItemDto[];
   providerId: string;
   dataMode: DashboardMode;
-  extrasMap: Map<string, SdkExtras>;
+  extrasMap: Map<string, SdkCustomerListExtras>;
 };
 
 export function CustomersBrowser({

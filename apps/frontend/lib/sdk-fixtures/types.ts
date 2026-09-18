@@ -39,6 +39,12 @@ export type SdkExtras = {
   usedEndpointsTopK: string[];
 };
 
+// Only the fields rendered by customer tables may cross the list-page boundary.
+export type SdkCustomerListExtras = Pick<
+  SdkExtras,
+  "agentType" | "sparkline7d" | "usedEndpointsTopK"
+>;
+
 // Force-directed network のノード位置は静的 (design.md §H1).
 export type SdkForceNetworkNode = {
   id: string;

@@ -28,12 +28,12 @@ export default async function CustomersPage({
   const filter = activeProvider?.serviceId
     ? { serviceId: activeProvider.serviceId }
     : { payTo: activeProvider.payTo };
-  const [customers, extrasMap, pageCtx, summary] = await Promise.all([
+  const [customers, pageCtx, summary] = await Promise.all([
     getCustomers(filter),
-    getSdkExtrasMap(),
     getTopBarPageContext(),
     getSummary(filter),
   ]);
+  const extrasMap = await getSdkExtrasMap(customers.map((customer) => customer.address));
 
   const totalSpendAtomic = customers
     .reduce((acc, c) => acc + BigInt(c.spendAtomic), 0n)
