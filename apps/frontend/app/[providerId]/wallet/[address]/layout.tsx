@@ -1,4 +1,3 @@
-import { SdkPreviewNoticeBar } from "@/components/shell/SdkPreviewNoticeBar";
 import { ProviderClientLayout } from "@/app/providers/[providerId]/ProviderClientLayout";
 import { getServerDashboardMode } from "@/lib/data-mode";
 
@@ -11,11 +10,8 @@ export default async function ProviderWalletAliasLayout({
 }) {
   const dataMode = await getServerDashboardMode();
   return (
-    <>
-      <SdkPreviewNoticeBar />
-      <ProviderClientLayout params={params} dataMode={dataMode}>
-        {children}
-      </ProviderClientLayout>
-    </>
+    <ProviderClientLayout params={params} dataMode={dataMode}>
+      {children}
+    </ProviderClientLayout>
   );
 }

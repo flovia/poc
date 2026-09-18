@@ -19,6 +19,20 @@ describe("snapshot fixture customers", () => {
     expect(summaries.get("agentmail/email")?.customerCount).toBe(34);
   });
 
+  test("shapes QuickNode into a demo co-usage mix instead of all-loyal payers", () => {
+    const customers = getSnapshotCustomers({ serviceId: "quicknode/rpc" }) ?? [];
+    const one = customers.filter((customer) => customer.providerCount === 1).length;
+    const two = customers.filter((customer) => customer.providerCount === 2).length;
+    const threePlus = customers.filter((customer) => customer.providerCount >= 3).length;
+    expect(two).toBeGreaterThan(10);
+    expect(threePlus).toBeGreaterThan(5);
+    expect(one).toBeGreaterThan(two);
+    expect(customers.some((customer) => customer.upsellOpportunity === "high")).toBe(true);
+    expect(customers.some((customer) => (customer.tags ?? []).includes("co-usage"))).toBe(true);
+    expect(customers.some((customer) => customer.activityGrowth > 0.5)).toBe(true);
+    expect(Number(customers[0]?.spendAtomic ?? "0")).toBeGreaterThan(2_000_000_000);
+  });
+
   test("builds synthetic QuickNode payers from the snapshot", () => {
     const customers = getSnapshotCustomers({ serviceId: "quicknode/rpc" });
     expect(customers).toHaveLength(92);

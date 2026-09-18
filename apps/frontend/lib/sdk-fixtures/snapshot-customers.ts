@@ -2,7 +2,16 @@ import type { CustomerListItemDto, CustomerProfileDto } from "@/lib/api/types";
 import snapshotStats from "@/data/snapshot-customer-stats.json";
 import { extractBrandKey } from "@/lib/pay-sh/brand";
 import { STATIC_PROVIDER_CAPABILITIES } from "@/lib/providers/static-capabilities";
-import type { Sdk7dVolumePoint, SdkExtras } from "./types";
+import {
+  companionChain,
+  demoCallCount,
+  demoEndpoints,
+  demoSpendUsd,
+  personaForRank,
+  sparklineFromPattern,
+} from "./demo-shape";
+import { T0 } from "./shared";
+import type { SdkExtras } from "./types";
 import { chainKindFromNetwork, syntheticAddress } from "./wallets";
 
 export type SnapshotCustomerStat = {
@@ -29,92 +38,114 @@ export type SnapshotProviderSummary = {
 };
 
 const STATS = snapshotStats as SnapshotCustomerStat[];
-const AGENT_TYPES = ["RPC proxy", "Indexer", "Trading bot", "Research agent", "Keepalive"] as const;
+const AGENT_BY_KIND = {
+  power: "Trading bot",
+  explorer: "Research agent",
+  loyal: "RPC proxy",
+  fading: "Keepalive",
+} as const;
 
-const toUnix = (iso: string): number => Math.floor(Date.parse(iso) / 1000);
-const dayUtc = (unixSec: number): string => new Date(unixSec * 1000).toISOString().slice(0, 10);
-
-const endpointFor = (serviceId: string): string => {
-  const tail = serviceId.split("/").filter(Boolean).pop() ?? "api";
-  return `/${tail}`;
-};
-
-function sparklineFor(stat: SnapshotCustomerStat): Sdk7dVolumePoint[] {
-  const last = toUnix(stat.lastSeenAt);
-  const spendUsd = Number(stat.spendAtomic) / 1_000_000;
-  const dailyObs = Array.from({ length: 7 }, (_, i) => {
-    const weight = i === 6 ? 2 : 1;
-    return Math.max(0, Math.round((stat.observationCount * weight) / 8));
-  });
-  const obsSum = dailyObs.reduce((acc, n) => acc + n, 0) || 1;
-  return dailyObs.map((observationCount, i) => ({
-    day: dayUtc(last - (6 - i) * 86400),
-    observationCount,
-    amountUsd: Math.round(((spendUsd * observationCount) / obsSum) * 100) / 100,
-  }));
-}
+const usdToAtomic = (usd: number): string => Math.round(usd * 1_000_000).toString();
 
 function addressFor(serviceId: string, index: number, chain: string): string {
   return syntheticAddress(`snapshot:${serviceId}:payer:${index}`, chainKindFromNetwork(chain));
 }
 
-function listItem(stat: SnapshotCustomerStat, address: string): CustomerListItemDto {
+function listItem(
+  stat: SnapshotCustomerStat,
+  address: string,
+  rank: number,
+  n: number,
+): CustomerListItemDto {
+  const persona = personaForRank(rank, n);
+  const spendUsd = demoSpendUsd(rank, n, persona);
+  const lastSeenAt = T0 - persona.lastSeenOffsetDays * 86400;
+  const chains = persona.multiChain
+    ? [stat.chain, companionChain(stat.chain)].filter(
+        (chain, index, all) => all.indexOf(chain) === index,
+      )
+    : [stat.chain];
   return {
     address,
     label: null,
-    observationCount: stat.observationCount,
-    spendAtomic: stat.spendAtomic,
-    providerCount: stat.providerCount,
-    lastSeenAt: toUnix(stat.lastSeenAt),
-    activityGrowth: stat.activityGrowth,
-    upsellOpportunity: stat.upsellOpportunity,
-    chains: [stat.chain],
+    observationCount: demoCallCount(rank, n, persona),
+    spendAtomic: usdToAtomic(spendUsd),
+    providerCount: persona.providerCount,
+    lastSeenAt,
+    activityGrowth: Math.round(persona.activityGrowth * 100) / 100,
+    upsellOpportunity: persona.upsellOpportunity,
+    chains,
     assets: ["USDC"],
+    tags: persona.tags,
     provenance: "demo_label",
     provenanceByField: {
       address: "demo_label",
-      observationCount: "onchain_fact",
-      spendAtomic: "onchain_fact",
-      providerCount: "derived_insight",
-      activityGrowth: "derived_insight",
-      upsellOpportunity: "derived_insight",
+      observationCount: "demo_label",
+      spendAtomic: "demo_label",
+      providerCount: "demo_label",
+      activityGrowth: "demo_label",
+      upsellOpportunity: "demo_label",
     },
     reasons: [
       {
         provenance: "demo_label",
-        label: "analytics snapshot",
+        label: "demo customer shape",
         description:
-          "Synthetic payer identity. Spend, call count, recency, and chain follow the analytics snapshot.",
+          "Cohort size and chain mix follow the analytics snapshot; spend, co-usage, and recency are shaped for the public demo.",
       },
     ],
   };
 }
 
-function extrasFor(stat: SnapshotCustomerStat, address: string, index: number): SdkExtras {
-  const spendUsd = Number(stat.spendAtomic) / 1_000_000;
+function extrasFor(
+  stat: SnapshotCustomerStat,
+  address: string,
+  rank: number,
+  n: number,
+): SdkExtras {
+  const persona = personaForRank(rank, n);
+  const spendUsd = demoSpendUsd(rank, n, persona);
+  const observationCount = demoCallCount(rank, n, persona);
+  const lastSeenAt = T0 - persona.lastSeenOffsetDays * 86400;
   return {
     address,
-    agentType: AGENT_TYPES[index % AGENT_TYPES.length] ?? "RPC proxy",
+    agentType: AGENT_BY_KIND[persona.kind],
     totalSpendUsd: spendUsd,
-    growth7d: stat.activityGrowth,
-    freeTierProgress: Math.min(0.95, spendUsd / 80),
-    monthlyReqGrowth: stat.activityGrowth,
-    entryPointPctText: null,
+    growth7d: persona.activityGrowth,
+    freeTierProgress: Math.min(0.96, spendUsd / 900),
+    monthlyReqGrowth: persona.activityGrowth,
+    entryPointPctText: persona.kind === "power" ? "entry point on 84% of workflows" : null,
     timelineExtras: [],
-    upsell: null,
-    sparkline7d: sparklineFor(stat),
-    usedEndpointsTopK: [endpointFor(stat.serviceId)],
+    upsell:
+      persona.upsellOpportunity === "high"
+        ? {
+            planName: "Scale 50M",
+            projectedMrrUsd: Math.round(spendUsd * 0.18),
+            whyNow: [
+              "Spend concentrated on a few hot endpoints",
+              "Already paying 3+ providers for overlapping work",
+              "7d volume is still accelerating",
+            ],
+          }
+        : null,
+    sparkline7d: sparklineFromPattern(persona.sparkPattern, lastSeenAt, spendUsd, observationCount),
+    usedEndpointsTopK: demoEndpoints(stat.serviceId, persona),
   };
 }
 
 function profileFor(
   stat: SnapshotCustomerStat,
   address: string,
-  index: number,
+  rank: number,
+  n: number,
 ): CustomerProfileDto {
-  const firstSeen = toUnix(stat.firstSeenAt);
-  const lastSeen = toUnix(stat.lastSeenAt);
-  const endpoint = endpointFor(stat.serviceId);
+  const persona = personaForRank(rank, n);
+  const spendUsd = demoSpendUsd(rank, n, persona);
+  const spendAtomic = usdToAtomic(spendUsd);
+  const observationCount = demoCallCount(rank, n, persona);
+  const lastSeen = T0 - persona.lastSeenOffsetDays * 86400;
+  const firstSeen = lastSeen - (18 + rank) * 86400;
+  const endpoint = demoEndpoints(stat.serviceId, persona)[0] ?? `/${stat.serviceId}`;
   const payTo =
     STATIC_PROVIDER_CAPABILITIES.find((provider) => provider.serviceId === stat.serviceId)?.payTo ??
     "";
@@ -127,19 +158,19 @@ function profileFor(
       caveat: "Wallet-address based and do not claim verified human identity",
     },
     metrics: {
-      spendAtomic: stat.spendAtomic,
-      activityGrowth: stat.activityGrowth,
-      freeTierProgress: Math.min(0.95, Number(stat.spendAtomic) / 80_000_000),
-      entryPointRatio: 0.6,
-      upsellOpportunity: stat.upsellOpportunity,
+      spendAtomic,
+      activityGrowth: Math.round(persona.activityGrowth * 100) / 100,
+      freeTierProgress: Math.min(0.96, spendUsd / 900),
+      entryPointRatio: persona.kind === "power" ? 0.84 : 0.41,
+      upsellOpportunity: persona.upsellOpportunity,
     },
     providers: [
       {
         providerId: stat.serviceId,
         name: stat.name,
         payToWallet: payTo,
-        spendAtomic: stat.spendAtomic,
-        transactionCount: stat.observationCount,
+        spendAtomic,
+        transactionCount: observationCount,
         firstSeenAt: firstSeen,
         lastSeenAt: lastSeen,
       },
@@ -151,16 +182,31 @@ function profileFor(
         type: "payment",
         title: stat.name,
         description: endpoint,
-        amountAtomic: stat.spendAtomic,
+        amountAtomic: spendAtomic,
         providerId: stat.serviceId,
-        txHash: syntheticAddress(`snapshot:${stat.serviceId}:tx:${index}`, "evm"),
+        txHash: syntheticAddress(`snapshot:${stat.serviceId}:tx:${rank}`, "evm"),
       },
     ],
     insights: [
       {
-        severity: "info",
-        title: `${stat.chain} demand`,
-        description: `Payer activity reconstructed from the ${stat.name} analytics snapshot.`,
+        severity:
+          persona.kind === "power" ? "opportunity" : persona.kind === "fading" ? "warning" : "info",
+        title:
+          persona.kind === "power"
+            ? "Multi-home whale"
+            : persona.kind === "explorer"
+              ? "Co-usage overlap"
+              : persona.kind === "fading"
+                ? "Going quiet"
+                : `${stat.chain} regular`,
+        description:
+          persona.kind === "power"
+            ? "High spend across several providers. Strong upsell and packaging candidate."
+            : persona.kind === "explorer"
+              ? "Pays this API and at least one peer. Partnership or bundling signal."
+              : persona.kind === "fading"
+                ? "Used to be active; last seen is slipping. Re-engage before they churn."
+                : "Mostly loyal to this provider with a steady call pattern.",
       },
     ],
   };
@@ -184,17 +230,24 @@ for (const stat of STATS) {
   statsByService.set(stat.serviceId, list);
 }
 
-for (const [serviceId, stats] of statsByService) {
+for (const [serviceId, rawStats] of statsByService) {
+  const stats = [...rawStats].sort((left, right) => {
+    const delta = BigInt(right.spendAtomic) - BigInt(left.spendAtomic);
+    if (delta === 0n) return 0;
+    return delta > 0n ? 1 : -1;
+  });
+  const n = stats.length;
   const customers: CustomerListItemDto[] = [];
   let observationCount = 0;
   let volume = 0n;
-  stats.forEach((stat, index) => {
-    const address = addressFor(serviceId, index, stat.chain);
-    customers.push(listItem(stat, address));
-    extrasByAddress.set(address, extrasFor(stat, address, index));
-    profilesByAddress.set(address, profileFor(stat, address, index));
-    observationCount += stat.observationCount;
-    volume += BigInt(stat.spendAtomic);
+  stats.forEach((stat, rank) => {
+    const address = addressFor(serviceId, rank, stat.chain);
+    const customer = listItem(stat, address, rank, n);
+    customers.push(customer);
+    extrasByAddress.set(address, extrasFor(stat, address, rank, n));
+    profilesByAddress.set(address, profileFor(stat, address, rank, n));
+    observationCount += customer.observationCount;
+    volume += BigInt(customer.spendAtomic);
   });
   customersByServiceId.set(serviceId, customers);
   summariesByServiceId.set(serviceId, {
