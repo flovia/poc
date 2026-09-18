@@ -3,12 +3,14 @@ import snapshotStats from "@/data/snapshot-customer-stats.json";
 import { extractBrandKey } from "@/lib/pay-sh/brand";
 import { STATIC_PROVIDER_CAPABILITIES } from "@/lib/providers/static-capabilities";
 import {
+  buildDemoStory,
   companionChain,
   demoCallCount,
   demoEndpoints,
   demoSpendUsd,
   personaForRank,
   sparklineFromPattern,
+  type DemoProviderPeer,
 } from "./demo-shape";
 import { PROVIDER_NAME, T0 } from "./shared";
 import type { SdkExtras } from "./types";
@@ -46,6 +48,12 @@ const AGENT_BY_KIND = {
 } as const;
 
 const usdToAtomic = (usd: number): string => Math.round(usd * 1_000_000).toString();
+
+const DEMO_CATALOG: DemoProviderPeer[] = STATIC_PROVIDER_CAPABILITIES.map((capability) => ({
+  providerId: capability.serviceId,
+  name: capability.name,
+  payToWallet: capability.payTo,
+}));
 
 function addressFor(serviceId: string, index: number, chain: string): string {
   return syntheticAddress(`snapshot:${serviceId}:payer:${index}`, chainKindFromNetwork(chain));
@@ -115,7 +123,22 @@ function extrasFor(
     freeTierProgress: Math.min(0.96, spendUsd / 900),
     monthlyReqGrowth: persona.activityGrowth,
     entryPointPctText: persona.kind === "power" ? "entry point on 84% of workflows" : null,
-    timelineExtras: [],
+    timelineExtras: buildDemoStory({
+      persona,
+      rank,
+      home: {
+        providerId: stat.serviceId,
+        name: stat.name,
+        payToWallet:
+          STATIC_PROVIDER_CAPABILITIES.find((provider) => provider.serviceId === stat.serviceId)
+            ?.payTo ?? "",
+      },
+      catalog: DEMO_CATALOG,
+      lastSeenUnix: lastSeenAt,
+      firstSeenUnix: lastSeenAt - (18 + rank) * 86400,
+      spendUsd,
+      endpoints: demoEndpoints(stat.serviceId, persona),
+    }).timelineExtras,
     upsell:
       persona.upsellOpportunity === "high"
         ? {
@@ -145,10 +168,22 @@ function profileFor(
   const observationCount = demoCallCount(rank, n, persona);
   const lastSeen = T0 - persona.lastSeenOffsetDays * 86400;
   const firstSeen = lastSeen - (18 + rank) * 86400;
-  const endpoint = demoEndpoints(stat.serviceId, persona)[0] ?? `/${stat.serviceId}`;
-  const payTo =
-    STATIC_PROVIDER_CAPABILITIES.find((provider) => provider.serviceId === stat.serviceId)?.payTo ??
-    "";
+  const story = buildDemoStory({
+    persona,
+    rank,
+    home: {
+      providerId: stat.serviceId,
+      name: stat.name,
+      payToWallet:
+        STATIC_PROVIDER_CAPABILITIES.find((provider) => provider.serviceId === stat.serviceId)
+          ?.payTo ?? "",
+    },
+    catalog: DEMO_CATALOG,
+    lastSeenUnix: lastSeen,
+    firstSeenUnix: firstSeen,
+    spendUsd,
+    endpoints: demoEndpoints(stat.serviceId, persona),
+  });
   return {
     customer: {
       address,
@@ -164,51 +199,9 @@ function profileFor(
       entryPointRatio: persona.kind === "power" ? 0.84 : 0.41,
       upsellOpportunity: persona.upsellOpportunity,
     },
-    providers: [
-      {
-        providerId: stat.serviceId,
-        name: stat.name,
-        payToWallet: payTo,
-        spendAtomic,
-        transactionCount: observationCount,
-        firstSeenAt: firstSeen,
-        lastSeenAt: lastSeen,
-      },
-    ],
-    timeline: [
-      {
-        date: new Date(lastSeen * 1000).toISOString(),
-        timestamp: lastSeen,
-        type: "payment",
-        title: stat.name,
-        description: endpoint,
-        amountAtomic: spendAtomic,
-        providerId: stat.serviceId,
-        txHash: syntheticAddress(`snapshot:${stat.serviceId}:tx:${rank}`, "evm"),
-      },
-    ],
-    insights: [
-      {
-        severity:
-          persona.kind === "power" ? "opportunity" : persona.kind === "fading" ? "warning" : "info",
-        title:
-          persona.kind === "power"
-            ? "Multi-home whale"
-            : persona.kind === "explorer"
-              ? "Co-usage overlap"
-              : persona.kind === "fading"
-                ? "Going quiet"
-                : `${stat.chain} regular`,
-        description:
-          persona.kind === "power"
-            ? "High spend across several providers. Strong upsell and packaging candidate."
-            : persona.kind === "explorer"
-              ? "Pays this API and at least one peer. Partnership or bundling signal."
-              : persona.kind === "fading"
-                ? "Used to be active; last seen is slipping. Re-engage before they churn."
-                : "Mostly loyal to this provider with a steady call pattern.",
-      },
-    ],
+    providers: story.providers,
+    timeline: story.timeline,
+    insights: story.insights,
   };
 }
 
