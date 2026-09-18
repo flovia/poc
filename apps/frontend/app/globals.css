@@ -1948,52 +1948,11 @@ a { color: inherit; text-decoration: none; }
 }
 .scroll::-webkit-scrollbar-thumb:hover { background: #BFC6CF; background-clip: padding-box; }
 
-/* ---- SDK preview notice bar ---- */
 :root {
-  --sdk-notice-h: 32px;
   --sdk-purple: #7B61A8;
   --sdk-purple-strong: #5F4988;
   --sdk-purple-soft: rgba(123, 97, 168, 0.10);
   --sdk-purple-dim:  rgba(123, 97, 168, 0.04);
-}
-
-.sdk-notice {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: var(--sdk-notice-h);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  background: var(--sdk-purple);
-  color: #FFFFFF;
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  z-index: 100;
-  border-bottom: 1px solid var(--sdk-purple-strong);
-}
-
-.sdk-notice-dot {
-  font-size: 11px;
-  line-height: 1;
-  color: #C4B5FD;
-}
-
-/* When the notice bar is rendered, push the app down by its height.
-   The bar itself is server-rendered conditionally, so we use :has() to
-   detect its presence. Falls back gracefully if :has() is unsupported. */
-body:has(.sdk-notice) .app {
-  height: calc(100vh - var(--sdk-notice-h));
-  margin-top: var(--sdk-notice-h);
-}
-
-/* setup layout の場合 setup の最上位 wrapper も同じ扱い */
-body:has(.sdk-notice) > div:first-of-type > div.app {
-  height: calc(100vh - var(--sdk-notice-h));
-  margin-top: var(--sdk-notice-h);
 }
 
 /* ---- Dashboard mode segmented control (TopBar) ---- */
@@ -2028,7 +1987,7 @@ body:has(.sdk-notice) > div:first-of-type > div.app {
   Active color follows the selected mode:
   - On-chain only = Primary (mesh-blue) — the everyday dashboard color
   - SDK connected = Purple (sdk-purple) — Highlights/preview indicator,
-    matching the .sdk-notice banner and SDK-only badges across the app
+    matching SDK-only badges across the app
   This keeps "purple = SDK preview" consistent app-wide instead of having
   the toggle paint On-chain mode purple too.
 */

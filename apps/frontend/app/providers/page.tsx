@@ -1,6 +1,5 @@
 import { AppShell } from "@/components/shell/AppShell";
 import { MobileMenuButton } from "@/components/shell/MobileMenuButton";
-import { SdkPreviewNoticeBar } from "@/components/shell/SdkPreviewNoticeBar";
 import { ProvidersPicker } from "@/components/providers/ProvidersPicker";
 import { getServerDashboardMode } from "@/lib/data-mode";
 
@@ -8,7 +7,6 @@ export default async function ProvidersIndexPage() {
   const dataMode = await getServerDashboardMode();
   return (
     <>
-      <SdkPreviewNoticeBar />
       <AppShell activeProviderId={undefined} activeRoute={undefined} dataMode={dataMode}>
           <div className="scroll" style={{ background: "var(--bg-shell)" }}>
             <div className="page-pad page-pad--wide">
