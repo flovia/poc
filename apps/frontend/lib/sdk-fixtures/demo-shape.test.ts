@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { computeProviderSpread } from "@/lib/customers/overview";
 import {
+  buildDemoStory,
   companionChain,
   demoCallCount,
   demoSpendUsd,
@@ -58,5 +59,37 @@ describe("demo persona shaping", () => {
   test("pairs Solana power users with Base for multi-chain stories", () => {
     expect(companionChain("solana")).toBe("base");
     expect(companionChain("base")).toBe("solana");
+  });
+});
+
+describe("demo timeline story", () => {
+  const catalog = [
+    { providerId: "quicknode/rpc", name: "QuickNode", payToWallet: "0xabc" },
+    { providerId: "api.nansen.ai", name: "Nansen", payToWallet: "0xdef" },
+    { providerId: "pro-api.coingecko.com", name: "CoinGecko", payToWallet: "0x123" },
+    { providerId: "agentmail/email", name: "AgentMail", payToWallet: "0x456" },
+  ];
+
+  test("gives power users a long mixed timeline instead of a single payment", () => {
+    const persona = personaForRank(0, 92);
+    const story = buildDemoStory({
+      persona,
+      rank: 0,
+      home: catalog[0]!,
+      catalog,
+      lastSeenUnix: 1_777_366_800,
+      firstSeenUnix: 1_776_000_000,
+      spendUsd: 4200,
+      endpoints: ["/rpc", "/rpc/stream"],
+    });
+    expect(story.timeline.length).toBeGreaterThanOrEqual(28);
+    const types = new Set(story.timeline.map((event) => event.type));
+    expect(types.has("payment")).toBe(true);
+    expect(types.has("provider_usage")).toBe(true);
+    expect(types.has("growth")).toBe(true);
+    expect(types.has("upsell_signal")).toBe(true);
+    expect(story.providers.length).toBeGreaterThanOrEqual(3);
+    expect(story.timelineExtras.length).toBeGreaterThan(10);
+    expect(story.insights.length).toBeGreaterThan(1);
   });
 });

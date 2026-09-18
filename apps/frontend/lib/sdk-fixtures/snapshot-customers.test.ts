@@ -49,6 +49,17 @@ describe("snapshot fixture customers", () => {
     }
   });
 
+  test("fills whale wallet profiles with many mixed timeline events", () => {
+    const customers = getSnapshotCustomers({ serviceId: "quicknode/rpc" }) ?? [];
+    const whale = getSnapshotCustomerProfile(customers[0]?.address ?? "");
+    expect(whale?.timeline.length).toBeGreaterThanOrEqual(28);
+    expect(new Set(whale?.timeline.map((event) => event.type)).size).toBeGreaterThanOrEqual(3);
+    expect(whale?.providers.length).toBeGreaterThanOrEqual(3);
+    expect((getSnapshotExtras(customers[0]?.address ?? "")?.timelineExtras.length ?? 0) > 10).toBe(
+      true,
+    );
+  });
+
   test("resolves catalog filters by serviceId, brand, and synthetic payTo", () => {
     expect(resolveSnapshotServiceId({ serviceId: "quicknode/rpc" })).toBe("quicknode/rpc");
     expect(resolveSnapshotServiceId({ serviceId: "quicknode" })).toBe("quicknode/rpc");
